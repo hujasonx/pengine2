@@ -39,7 +39,7 @@ public class PApplicationWindow {
     windowSpriteBatch.setProjectionMatrix(orthoCamera.combined);
 
     for (ResizeListener resizeListener : resizeListeners) {
-      resizeListener.onResize(rawWidth, rawHeight);
+      resizeListener.onApplicationWindowResize(rawWidth, rawHeight);
     }
   }
 
@@ -57,12 +57,7 @@ public class PApplicationWindow {
     windowSpriteBatch.end();
   }
 
-  public static void clearScreen(float r, float g, float b, float a) {
-    Gdx.gl.glClearColor(r, g, b, a);
-    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-  }
-
-  public static class ResizeListener {
-    public void onResize(int width, int height) {}
+  public static interface ResizeListener {
+    void onApplicationWindowResize(int width, int height);
   }
 }
