@@ -53,6 +53,7 @@ public class PEngine extends ApplicationAdapter {
 
     PApplicationWindow.init();
     PAssetManager.init();
+    game.init();
   }
 
   @Override

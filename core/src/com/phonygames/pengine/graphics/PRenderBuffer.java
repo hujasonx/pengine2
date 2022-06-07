@@ -30,6 +30,8 @@ public class PRenderBuffer {
   }
 
   public static class Builder {
-
+    public PRenderBuffer build() {
+      return new PRenderBuffer();
+    }
   }
 }

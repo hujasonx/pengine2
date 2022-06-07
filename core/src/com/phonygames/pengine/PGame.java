@@ -1,31 +1,21 @@
 package com.phonygames.pengine;
 
-public class PGame {
-  public void init() {
+import com.phonygames.pengine.graphics.PApplicationWindow;
+import com.phonygames.pengine.graphics.PRenderBuffer;
 
-  }
+public interface PGame {
 
-  public void preLogicUpdate() {
+  void init();
 
-  }
+  void preLogicUpdate();
 
-  public void logicUpdate() {
+  void logicUpdate();
 
-  }
+  void postLogicUpdate();
 
-  public void postLogicUpdate() {
+  void preFrameUpdate();
 
-  }
+  void frameUpdate();
 
-  public void preFrameUpdate() {
-
-  }
-
-  public void frameUpdate() {
-
-  }
-
-  public void postFrameUpdate() {
-
-  }
+  void postFrameUpdate();
 }
