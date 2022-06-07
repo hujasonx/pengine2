@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.WindowedMean;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.phonygames.pengine.exception.PRuntimeException;
+import com.phonygames.pengine.graphics.PApplicationWindow;
 
 import lombok.Getter;
 
@@ -25,6 +26,8 @@ public class PEngine extends ApplicationAdapter {
   private static PGame game;
 
   @Getter
+  private static Phase currentPhase = Phase.INIT;
+  @Getter
   private static PEngine pEngine;
 
   public PEngine(PGame game) {
@@ -36,11 +39,9 @@ public class PEngine extends ApplicationAdapter {
     pEngine = this;
   }
 
-  private enum Phase {
+  public enum Phase {
     INIT, LOGIC, FRAME
   }
-
-  private static Phase currentPhase = Phase.INIT;
 
   @Override
   public void create() {
@@ -50,6 +51,7 @@ public class PEngine extends ApplicationAdapter {
       e.printStackTrace();
     }
 
+    PApplicationWindow.init();
     PAssetManager.init();
   }
 
@@ -84,6 +86,7 @@ public class PEngine extends ApplicationAdapter {
   }
 
   private void frameUpdate() {
+    PApplicationWindow.preFrameUpdate();
     game.preFrameUpdate();
 
     game.frameUpdate();
@@ -93,5 +96,11 @@ public class PEngine extends ApplicationAdapter {
 
   @Override
   public void dispose() {
+  }
+
+  @Override
+  public void resize(int width, int height) {
+    super.resize(width, height);
+    PApplicationWindow.triggerResize(width, height);
   }
 }
