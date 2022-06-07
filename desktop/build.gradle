@@ -1,5 +1,6 @@
-sourceCompatibility = 1.7
-sourceSets.main.java.srcDirs = [ "src/" ]
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+sourceSets.main.java.srcDirs = ["src/"]
 sourceSets.main.resources.srcDirs = ["../android/assets"]
 
 project.ext.mainClassName = "com.phonygames.pengine.desktop.DesktopLauncher"
@@ -31,6 +32,10 @@ task dist(type: Jar) {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     with jar
+}
+
+dependencies {
+    implementation project(path: ':core')
 }
 
 
