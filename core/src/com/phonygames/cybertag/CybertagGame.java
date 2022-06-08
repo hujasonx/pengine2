@@ -61,7 +61,7 @@ public class CybertagGame implements PGame {
 
     if (PMesh.FULLSCREEN_QUAD_MESH != null) {
       testShader.start();
-//      testShader.render(testMaterial, PMesh.FULLSCREEN_QUAD_MESH, PMesh.ShapeType.Filled.getGlType());
+      PMesh.FULLSCREEN_QUAD_MESH.getBackingMesh().render(testShader.getShaderProgram(), PMesh.ShapeType.Filled.getGlType());
       testShader.end();
     }
 

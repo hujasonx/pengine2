@@ -10,30 +10,30 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class PModel {
-  private final PMap<String, Node> nodes = new PMap<>();
-  private final PList<String> rootNodeIds = new PList<>();
+  final PMap<String, Node> nodes = new PMap<>();
+  final PList<String> rootNodeIds = new PList<>();
 
   private PModel() {
 
   }
 
   protected static class Node {
-    private final String id;
+    final String id;
     @Getter
-    private final PMat4 transform = new PMat4();
+    final PMat4 transform = new PMat4();
     @Getter
-    private final Node parent;
+    final Node parent;
     @Getter
-    private final PList<Node> children = new PList<>();
-    private final PList<PGlNode> glNodes = new PList<>();
+    final PList<Node> children = new PList<>();
+    final PList<PGlNode> glNodes = new PList<>();
     @Getter
     @Setter
-    private boolean inheritTransform;
+    boolean inheritTransform;
 
     private Node(String id, Node parent, PList<PGlNode> glNodes) {
       this.id = id;
       this.parent = parent;
-        this.glNodes.addAll(glNodes);
+      this.glNodes.addAll(glNodes);
       if (parent != null) {
         parent.children.add(this);
       }

@@ -27,8 +27,21 @@ public class PGlNode {
   @Getter
   private final PMat4 worldTransformI = new PMat4();
 
+  @Getter
+  @Setter
+  private PShader defaultShader = null;
+
   public PGlNode(String id) {
     this.id = id;
+  }
+
+  public boolean tryRenderDefault() {
+    if (defaultShader == null) {
+      return false;
+    }
+
+    render(defaultShader);
+    return true;
   }
 
   public void render(PShader shader) {
@@ -41,5 +54,14 @@ public class PGlNode {
     this.worldTransform.set(worldTransform);
     this.worldTransformI.set(worldTransform).inv();
     return this;
+  }
+
+  public PGlNode tryDeepCopy() {
+    PGlNode node = new PGlNode(id);
+    node.id = this.id;
+    node.material = this.material.copy(node.material.getId());
+    node.worldTransform.set(this.worldTransform);
+    node.worldTransformI.set(this.worldTransformI);
+    return node;
   }
 }
