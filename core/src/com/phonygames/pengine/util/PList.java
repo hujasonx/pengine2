@@ -96,4 +96,8 @@ public class PList<E> extends ArrayList<E> {
     super.ensureCapacity(i + 1);
     super.add(i, e);
   }
+
+  public E removeLast() {
+    return super.remove(size() - 1);
+  }
 }

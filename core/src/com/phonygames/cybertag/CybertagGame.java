@@ -2,12 +2,15 @@ package com.phonygames.cybertag;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL30;
+import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.material.PMaterial;
+import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
+import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.shader.PShader;
 
 public class CybertagGame implements PGame {
@@ -16,6 +19,7 @@ public class CybertagGame implements PGame {
   protected final PRenderBuffer[] gBuffers = new PRenderBuffer[4];
 
   private PMaterial testMaterial;
+  private PModel testModel;
 
   public void init() {
     for (int a = 0; a < gBuffers.length; a++) {
@@ -23,7 +27,16 @@ public class CybertagGame implements PGame {
     }
 
     testMaterial = new PMaterial("testMaterial");
-    testShader = new PShader(Gdx.files.local("shader/fullscreen_quad.vert.glsl"), Gdx.files.local("shader/test.frag.glsl"));
+    testShader = new PShader(Gdx.files.local("engine/shader/fullscreen_quad.vert.glsl"), Gdx.files.local("shader/test.frag.glsl"));
+
+    new PGltf("engine/model/duck.glb").loadThenDo(
+        new PGltf.OnloadCallback() {
+          @Override
+          public void onLoad(PGltf gltf) {
+            testModel = gltf.getModel();
+          }
+        }
+    );
   }
 
   public void preLogicUpdate() {
@@ -48,7 +61,7 @@ public class CybertagGame implements PGame {
 
     if (PMesh.FULLSCREEN_QUAD_MESH != null) {
       testShader.start();
-      testShader.render(testMaterial, PMesh.FULLSCREEN_QUAD_MESH, PMesh.ShapeType.Filled.getGlType());
+//      testShader.render(testMaterial, PMesh.FULLSCREEN_QUAD_MESH, PMesh.ShapeType.Filled.getGlType());
       testShader.end();
     }
 

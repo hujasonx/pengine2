@@ -21,7 +21,7 @@ import com.phonygames.pengine.util.PStringUtils;
 import lombok.Getter;
 
 public class PShader {
-
+@Getter
   private final ShaderProgram shaderProgram;
 
   @Getter
@@ -133,14 +133,6 @@ public class PShader {
     } catch (IllegalArgumentException e) {
       PLog.w("Illegal argument: " + uniform, e);
     }
-    return this;
-  }
-
-  public PShader render(PMaterial material, PMesh mesh, int primitiveType) {
-    PAssert.isTrue(isActive());
-    material.applyUniforms(this);
-    mesh.getBackingMesh().render(shaderProgram, primitiveType);
-
     return this;
   }
 }

@@ -1,36 +1,41 @@
 package com.phonygames.pengine.math;
 
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector;
+import com.badlogic.gdx.math.Vector3;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
 public class PVec3 extends PVec {
-  private float x, y, z;
+  @Getter
+  private final Vector3 backingVec3 = new Vector3();
 
   public float x() {
-    return x;
+    return backingVec3.x;
   }
 
   public PVec3 x(float x) {
-    this.x = x;
+    backingVec3.x = x;
     return this;
   }
 
   public float y() {
-    return y;
+    return backingVec3.y;
   }
 
   public PVec3 y(float y) {
-    this.y = y;
+    backingVec3.y = y;
     return this;
   }
 
   public float z() {
-    return z;
+    return backingVec3.z;
   }
 
   public PVec3 z(float z) {
-    this.z = z;
+    backingVec3.z = z;
     return this;
   }
 
@@ -41,7 +46,7 @@ public class PVec3 extends PVec {
 
   @Override
   public float len2() {
-    return x * x + y * y + z * z;
+    return backingVec3.len2();
   }
 
   /**
@@ -51,9 +56,7 @@ public class PVec3 extends PVec {
    * @return caller for chaining
    */
   public PVec3 add(PVec3 other) {
-    x += other.x;
-    y += other.y;
-    z += other.z;
+    backingVec3.add(other.backingVec3);
     return this;
   }
 
@@ -64,9 +67,7 @@ public class PVec3 extends PVec {
    * @return caller for chaining
    */
   public PVec3 sub(PVec3 other) {
-    x -= other.x;
-    y -= other.y;
-    z -= other.z;
+    backingVec3.sub(other.backingVec3);
     return this;
   }
 
@@ -77,9 +78,9 @@ public class PVec3 extends PVec {
    * @return caller for chaining
    */
   public PVec3 mul(PVec3 other) {
-    x *= other.x;
-    y *= other.y;
-    z *= other.z;
+    backingVec3.x *= other.backingVec3.x;
+    backingVec3.y *= other.backingVec3.y;
+    backingVec3.z *= other.backingVec3.z;
     return this;
   }
 
@@ -91,9 +92,7 @@ public class PVec3 extends PVec {
    * @return caller for chaining
    */
   public PVec3 add(PVec3 other, float scale) {
-    x += scale * other.x;
-    y += scale * other.y;
-    z += scale * other.z;
+    backingVec3.mulAdd(other.backingVec3, scale);
     return this;
   }
 
@@ -104,21 +103,32 @@ public class PVec3 extends PVec {
    * @return caller (dot) other
    */
   public float dot(PVec3 other) {
-    return x * other.x + y * other.y + z * other.z;
+    return backingVec3.dot(other.backingVec3);
   }
 
   @Override
   public void reset() {
-    this.x = 0;
-    this.y = 0;
-    this.z = 0;
+    backingVec3.setZero();
+  }
+
+  public PVec3 set(float x, float y, float z) {
+    backingVec3.set(x, y, z);
+    return this;
   }
 
   public PVec3 set(PVec3 other) {
-    this.x = other.x;
-    this.y = other.y;
-    this.z = other.z;
+    backingVec3.set(other.backingVec3);
     return this;
+  }
+
+  public PVec3 mul(PMat4 mat4, float w) {
+    float[] l_mat = mat4.values();
+    float x = backingVec3.x;
+    float y = backingVec3.y;
+    float z = backingVec3.z;
+    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03], x
+        * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13], x * l_mat[Matrix4.M20] + y
+        * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23]);
   }
 
   public PVec3 cpy() {

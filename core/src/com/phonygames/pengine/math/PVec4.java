@@ -1,5 +1,8 @@
 package com.phonygames.pengine.math;
 
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
+
 public class PVec4 extends PVec {
   private float x, y, z, w;
 
@@ -124,12 +127,28 @@ public class PVec4 extends PVec {
     this.w = 0;
   }
 
+  public PVec4 set(float x, float y, float z, float w) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.w = w;
+    return this;
+  }
+
   public PVec4 set(PVec4 other) {
     this.x = other.x;
     this.y = other.y;
     this.z = other.z;
     this.w = other.w;
     return this;
+  }
+
+  public PVec4 mul(PMat4 mat4) {
+    float[] l_mat = mat4.values();
+    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03], x
+        * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13], x * l_mat[Matrix4.M20] + y
+        * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23], x * l_mat[Matrix4.M30] + y
+        * l_mat[Matrix4.M31] + z * l_mat[Matrix4.M32] + w * l_mat[Matrix4.M33]);
   }
 
   public PVec4 cpy() {

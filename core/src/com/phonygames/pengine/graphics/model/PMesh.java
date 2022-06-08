@@ -57,6 +57,10 @@ public class PMesh {
   @Getter
   private final Mesh backingMesh;
 
+  public PMesh(Mesh mesh) {
+    backingMesh = mesh;
+  }
+
   public PMesh(boolean isStatic, int maxVertices, int maxIndices, PVertexAttributes vertexAttributes) {
     backingMesh = new Mesh(isStatic, maxVertices, maxIndices, vertexAttributes.vertexAttributes);
   }

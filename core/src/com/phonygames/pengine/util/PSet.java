@@ -63,9 +63,11 @@ public class PSet<E> implements Set<E> {
     invalid = new boolean[bufferSize];
     elements = new Object[bufferSize];
 
-    for (int a = 0; a < elementsPrev.length; a++) {
-      if (!invalidPrev[a]) {
-        addNeverRegen((E) elementsPrev[a]);
+    if (elementsPrev != null) {
+      for (int a = 0; a < elementsPrev.length; a++) {
+        if (!invalidPrev[a]) {
+          addNeverRegen((E) elementsPrev[a]);
+        }
       }
     }
   }

@@ -114,6 +114,12 @@ public class PVec2 extends PVec {
     this.y = 0;
   }
 
+  public PVec2 set(float x, float y) {
+    this.x = x;
+    this.y = y;
+    return this;
+  }
+
   public PVec2 set(PVec2 other) {
     this.x = other.x;
     this.y = other.y;

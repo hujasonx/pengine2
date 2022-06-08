@@ -91,6 +91,11 @@ public class PVec1 extends PVec {
     this.x = 0;
   }
 
+  public PVec1 set(float x) {
+    this.x = x;
+    return this;
+  }
+
   public PVec1 set(PVec1 other) {
     this.x = other.x;
     return this;

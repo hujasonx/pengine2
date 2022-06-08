@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.phonygames.pengine.exception.PRuntimeException;
 import com.phonygames.pengine.graphics.PApplicationWindow;
+import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PNumberUtils;
@@ -93,6 +94,7 @@ public class PEngine extends ApplicationAdapter {
 
   private void frameUpdate() {
     PApplicationWindow.preFrameUpdate();
+    PAssetManager.preFrameUpdate();
     game.preFrameUpdate();
 
     game.frameUpdate();

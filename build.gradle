@@ -30,6 +30,7 @@ allprojects {
         aiVersion = '1.8.2'
         gdxControllersVersion = '2.1.0'
         recastVersion = '1.5.3'
+        gltfVersion = '2.0.0-rc.1'
     }
 
     repositories {
@@ -39,6 +40,7 @@ allprojects {
         gradlePluginPortal()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven { url "https://jitpack.io" }
     }
 }
 
@@ -126,6 +128,7 @@ project(":core") {
         compileOnly 'org.projectlombok:lombok:1.18.24'
         annotationProcessor 'org.projectlombok:lombok:1.18.24'
         implementation fileTree(dir: "../libs", include: "*.jar")
+        api "com.github.mgsx-dev.gdx-gltf:gltf:$gltfVersion"
 
     }
 }
