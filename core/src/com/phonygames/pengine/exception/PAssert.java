@@ -3,8 +3,21 @@ package com.phonygames.pengine.exception;
 import com.phonygames.pengine.PEngine;
 
 public class PAssert {
+
+  public static void failNotImplemented() {
+    fail("Not implemented");
+  }
+
   public static void fail(String message) {
     throw new PRuntimeException(message);
+  }
+
+  public static void equals(float x, float y) {
+    isTrue(x == y);
+  }
+
+  public static void equals(float x, float y, String message) {
+    isTrue(x == y, message);
   }
 
   public static boolean isTrue(boolean b, String message) {
@@ -16,6 +29,10 @@ public class PAssert {
 
   public static void isTrue(boolean b) {
     isTrue(b, "*** PAssert :: isTrue ***");
+  }
+
+  public static void isFalse(boolean b) {
+    isTrue(!b, "*** PAssert :: isFalse ***");
   }
 
   public static void isNotNull(Object o, String message) {

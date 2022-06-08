@@ -4,7 +4,12 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.phonygames.pengine.math.PVec2;
+import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PCollectionUtils;
+import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,10 +21,9 @@ import lombok.Getter;
 import lombok.val;
 
 public class PVertexAttributes {
-  @Getter
-  private final List<VertexAttribute> vertexAttributes = new ArrayList<>();
+  private final PList<VertexAttribute> vertexAttributes = new PList<>();
 
-  private final Map<VertexAttribute, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
+  private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
   @Getter
   private final int numFloatsPerVertex;
 
@@ -33,13 +37,19 @@ public class PVertexAttributes {
       public static final String col[] = new String[4];
     }
 
-    private static final Map<String, VertexAttribute> attributes = new HashMap<>();
+    public static final Class[] VectorClasses = new Class[]{null, null, PVec2.class, PVec3.class, PVec4.class};
+
+    private static final PMap<String, VertexAttribute> list = new PMap<>();
 
     private static void registerAttribute(String id, int numComponents) {
-      attributes.put(id, new VertexAttribute(0 /* Usage is ignored */, numComponents, id));
+      list.put(id, new VertexAttribute(0 /* Usage is ignored */, numComponents, id));
     }
 
-    static {
+    public static VertexAttribute get(String key) {
+      return list.get(key);
+    }
+
+    private static void init() {
       registerAttribute(Keys.pos, 3);
       registerAttribute(Keys.nor, 3);
 
@@ -55,12 +65,14 @@ public class PVertexAttributes {
     }
   }
 
-  public static final class Templates {
-    public static final PVertexAttributes DEFAULT =
-        new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked()});
-    public static final PVertexAttributes PHYSICS =
-        new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position()});
+  public static void init() {
+    Attribute.init();
   }
+
+  public static final PVertexAttributes DEFAULT =
+      new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked()});
+  public static final PVertexAttributes PHYSICS =
+      new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position()});
 
   public PVertexAttributes(VertexAttribute[] vertexAttributes) {
     int floatsPerVertex = 0;
@@ -68,9 +80,10 @@ public class PVertexAttributes {
     for (int a = 0; a < vertexAttributes.length; a++) {
       val va = vertexAttributes[a];
       this.vertexAttributes.add(va);
-      vertexAttributeFloatIndexInVertex.put(va, floatsPerVertex);
-      floatsPerVertex += va.numComponents;
+      vertexAttributeFloatIndexInVertex.put(va.alias, floatsPerVertex);
       combinedAliases.append("|").append(va.alias);
+
+      floatsPerVertex += va.numComponents;
     }
 
     this.combinedAttributeAliases = combinedAliases.toString();
@@ -92,7 +105,11 @@ public class PVertexAttributes {
     return false;
   }
 
+  public int indexForVertexAttribute(String alias) {
+    return vertexAttributeFloatIndexInVertex.get(alias);
+  }
+
   public int indexForVertexAttribute(VertexAttribute vertexAttribute) {
-    return vertexAttributeFloatIndexInVertex.get(vertexAttribute);
+    return vertexAttributeFloatIndexInVertex.get(vertexAttribute.alias);
   }
 }

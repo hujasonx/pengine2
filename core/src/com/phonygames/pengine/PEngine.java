@@ -9,6 +9,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.phonygames.pengine.exception.PRuntimeException;
 import com.phonygames.pengine.graphics.PApplicationWindow;
+import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.math.PNumberUtils;
 
 import lombok.Getter;
 
@@ -48,10 +50,10 @@ public class PEngine extends ApplicationAdapter {
     try {
       new SharedLibraryLoader().load(LIBRARY_NAME);
     } catch (Exception e) {
-      e.printStackTrace();
     }
 
     PApplicationWindow.init();
+    PVertexAttributes.init();
     PAssetManager.init();
     game.init();
   }

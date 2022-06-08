@@ -4,6 +4,16 @@ import com.phonygames.pengine.logging.PLogMessage;
 
 public class PNumberUtils {
 
+
+  public static boolean isPrimeBruteForce(int number) {
+    for (int i = 2; i < number; i++) {
+      if (number % i == 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /**
    * Returns the true modulus a mod b.
    *
