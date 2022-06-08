@@ -37,6 +37,10 @@ public class PLog {
     return log(PLogMessage.WARNING, message);
   }
 
+  public static PLogMessage w(String message, Exception e) {
+    return log(PLogMessage.WARNING, message).setException(e);
+  }
+
   public static PLogMessage v(String message) {
     return log(PLogMessage.VERBOSE, message);
   }

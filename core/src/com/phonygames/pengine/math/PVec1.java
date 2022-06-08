@@ -1,47 +1,34 @@
 package com.phonygames.pengine.math;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
-
-public class PVec3 extends PVec {
-  private float x, y, z;
+public class PVec1 extends PVec {
+  private float x;
 
   public float x() {
     return x;
   }
 
-  public PVec3 x(float x) {
+  public PVec1 x(float x) {
     this.x = x;
     return this;
   }
 
-  public float y() {
-    return y;
+  public float u() {
+    return x;
   }
 
-  public PVec3 y(float y) {
-    this.y = y;
-    return this;
-  }
-
-  public float z() {
-    return z;
-  }
-
-  public PVec3 z(float z) {
-    this.z = z;
+  public PVec1 u(float u) {
+    this.x = u;
     return this;
   }
 
   @Override
   public int numComponents() {
-    return 3;
+    return 1;
   }
 
   @Override
   public float len2() {
-    return x * x + y * y + z * z;
+    return x * x;
   }
 
   /**
@@ -50,10 +37,8 @@ public class PVec3 extends PVec {
    * @param other
    * @return caller for chaining
    */
-  public PVec3 add(PVec3 other) {
+  public PVec1 add(PVec1 other) {
     x += other.x;
-    y += other.y;
-    z += other.z;
     return this;
   }
 
@@ -63,10 +48,8 @@ public class PVec3 extends PVec {
    * @param other
    * @return caller for chaining
    */
-  public PVec3 sub(PVec3 other) {
+  public PVec1 sub(PVec1 other) {
     x -= other.x;
-    y -= other.y;
-    z -= other.z;
     return this;
   }
 
@@ -76,10 +59,8 @@ public class PVec3 extends PVec {
    * @param other
    * @return caller for chaining
    */
-  public PVec3 mul(PVec3 other) {
+  public PVec1 mul(PVec1 other) {
     x *= other.x;
-    y *= other.y;
-    z *= other.z;
     return this;
   }
 
@@ -90,10 +71,8 @@ public class PVec3 extends PVec {
    * @param scale
    * @return caller for chaining
    */
-  public PVec3 add(PVec3 other, float scale) {
+  public PVec1 add(PVec1 other, float scale) {
     x += scale * other.x;
-    y += scale * other.y;
-    z += scale * other.z;
     return this;
   }
 
@@ -103,25 +82,21 @@ public class PVec3 extends PVec {
    * @param other
    * @return caller (dot) other
    */
-  public float dot(PVec3 other) {
-    return x * other.x + y * other.y + z * other.z;
+  public float dot(PVec1 other) {
+    return x * other.x;
   }
 
   @Override
   public void reset() {
     this.x = 0;
-    this.y = 0;
-    this.z = 0;
   }
 
-  public PVec3 set(PVec3 other) {
+  public PVec1 set(PVec1 other) {
     this.x = other.x;
-    this.y = other.y;
-    this.z = other.z;
     return this;
   }
 
-  public PVec3 cpy() {
-    return new PVec3().set(this);
+  public PVec1 cpy() {
+    return new PVec1().set(this);
   }
 }

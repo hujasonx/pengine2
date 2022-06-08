@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.val;
 
 public class PVertexAttributes {
-  private final PList<VertexAttribute> vertexAttributes = new PList<>();
+  final VertexAttributes vertexAttributes;
 
   private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
   @Getter
@@ -30,6 +30,8 @@ public class PVertexAttributes {
   private final String combinedAttributeAliases;
 
   public static final class Attribute {
+    private static int maxUsage = 1;
+
     public static final class Keys {
       public static final String pos = "pos";
       public static final String nor = "nor";
@@ -42,7 +44,7 @@ public class PVertexAttributes {
     private static final PMap<String, VertexAttribute> list = new PMap<>();
 
     private static void registerAttribute(String id, int numComponents) {
-      list.put(id, new VertexAttribute(0 /* Usage is ignored */, numComponents, id));
+      list.put(id, new VertexAttribute(maxUsage *= 2, numComponents, id));
     }
 
     public static VertexAttribute get(String key) {
@@ -79,12 +81,13 @@ public class PVertexAttributes {
     StringBuilder combinedAliases = new StringBuilder();
     for (int a = 0; a < vertexAttributes.length; a++) {
       val va = vertexAttributes[a];
-      this.vertexAttributes.add(va);
       vertexAttributeFloatIndexInVertex.put(va.alias, floatsPerVertex);
       combinedAliases.append("|").append(va.alias);
 
       floatsPerVertex += va.numComponents;
     }
+
+    this.vertexAttributes = new VertexAttributes(vertexAttributes);
 
     this.combinedAttributeAliases = combinedAliases.toString();
     this.numFloatsPerVertex = floatsPerVertex;

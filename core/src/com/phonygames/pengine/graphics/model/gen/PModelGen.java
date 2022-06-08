@@ -1,7 +1,9 @@
 package com.phonygames.pengine.graphics.model.gen;
 
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -15,6 +17,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 public class PModelGen {
+  private boolean finished = false;
   private final PMap<String, Part> parts = new PMap<>();
   private final PMap<String, Part> physicsParts = new PMap<>();
 
@@ -41,6 +44,8 @@ public class PModelGen {
     private final PList<Float> vertices = new PList<>();
     private final PList<Short> indices = new PList<>();
 
+    @Getter
+    private int numVertices = 0;
 
     private Part(@NonNull String name, boolean isPhysicsPart, PVertexAttributes vertexAttributes) {
       this.name = name;
@@ -95,9 +100,36 @@ public class PModelGen {
       return this;
     }
 
-    public Part emitVertex() {
-      PAssert.failNotImplemented();
-      short index = 0;
+    public Part emitVertex(int maxLookbackAmount) {
+      short index = (short) numVertices;
+      for (int lookbackAmount = 1; lookbackAmount < maxLookbackAmount; lookbackAmount++) {
+        int lookbackIndex = index - lookbackAmount;
+        if (lookbackIndex < 0) {
+          break;
+        }
+
+        int verticesIndex = lookbackIndex * vertexAttributes.getNumFloatsPerVertex();
+        boolean isEqual = true;
+        for (int a = 0; a < vertexAttributes.getNumFloatsPerVertex(); a++) {
+          if (!PNumberUtils.epsilonEquals(vertices.get(verticesIndex + a), currentVertexValues[a])) {
+            isEqual = false;
+            break;
+          }
+        }
+
+        if (isEqual) {
+          index = (short) lookbackIndex;
+          break;
+        }
+      }
+
+      // Need to add a new vertex.
+      if (index == numVertices) {
+        numVertices++;
+        for (int a = 0; a < vertexAttributes.getNumFloatsPerVertex(); a++) {
+          vertices.add(currentVertexValues[a]);
+        }
+      }
 
       latestIndices.addInt(index);
       return this;
@@ -111,8 +143,26 @@ public class PModelGen {
     }
 
     public Part quad(boolean flip) {
-      PAssert.failNotImplemented();
+      indices.add((short) latestIndices.get(3));
+      indices.add((short) latestIndices.get(flip ? 1 : 2));
+      indices.add((short) latestIndices.get(flip ? 2 : 1));
+
+      indices.add((short) latestIndices.get(3));
+      indices.add((short) latestIndices.get(flip ? 0 : 1));
+      indices.add((short) latestIndices.get(flip ? 1 : 0));
       return this;
+    }
+
+    public Part clear() {
+      vertices.clear();
+      indices.clear();
+      numVertices = 0;
+      return this;
+    }
+
+    public PMesh getMesh() {
+      PMesh ret = new PMesh(true, vertices.size(), indices.size(), vertexAttributes);
+      return ret;
     }
   }
 }

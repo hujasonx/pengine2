@@ -20,8 +20,34 @@ import lombok.val;
 /**
  * List class whose iterator() does not allocate.
  */
-public class PMap<K, V> extends HashMap<K, V> {
+public class PMap<K, V> extends HashMap<K, V> implements Iterable<Map.Entry<K, V>> {
+  public PMap<K, V> tryDeepCopyFrom(PMap<K, V> target) {
+    for (val e : target.entrySet()) {
+      put(tryDeepCopyKey(e.getKey()), tryDeepCopyValue(e.getValue()));
+    }
 
+    return this;
+  }
+
+  public PMap<K, V> tryDeepCopy() {
+    PMap<K, V> ret = new PMap<>();
+    return ret.tryDeepCopyFrom(this);
+  }
+
+  // Can be overridden to help with deep copies.
+  public K tryDeepCopyKey(K k) {
+    return k;
+  }
+
+  // Can be overridden to help with deep copies.
+  public V tryDeepCopyValue(V v) {
+    return v;
+  }
+
+  @Override
+  public Iterator<Entry<K, V>> iterator() {
+    return entrySet().iterator();
+  }
 }
 
 //implements Map<K, V> {

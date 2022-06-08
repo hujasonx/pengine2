@@ -43,4 +43,23 @@ public class PNumberUtils {
     }
     return out;
   }
+
+  public static int clamp(int n, int min, int max) {
+    return Math.max(Math.min(n, max), min);
+  }
+
+  public static float clamp(float n, float min, float max) {
+    return Math.max(Math.min(n, max), min);
+  }
+
+
+  public static boolean epsilonEquals(float x, float y) {
+    return Math.abs(x - y) < 0.001f;
+  }
+
+  public static boolean epsilonEquals(float x, float y, float epsilon) {
+    return Math.abs(x - y) < epsilon;
+  }
+
+
 }

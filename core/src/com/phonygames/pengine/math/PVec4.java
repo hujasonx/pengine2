@@ -123,4 +123,16 @@ public class PVec4 extends PVec {
     this.z = 0;
     this.w = 0;
   }
+
+  public PVec4 set(PVec4 other) {
+    this.x = other.x;
+    this.y = other.y;
+    this.z = other.z;
+    this.w = other.w;
+    return this;
+  }
+
+  public PVec4 cpy() {
+    return new PVec4().set(this);
+  }
 }
