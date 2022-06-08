@@ -39,7 +39,17 @@ public class PAssert {
     if (o == null) {
       throw new PRuntimeException(message);
     }
-    ;
+  }
+
+  public static void isNull(Object o, String message) {
+    if (o != null) {
+      throw new PRuntimeException(message);
+    }
+  }
+
+
+  public static void isNull(Object o) {
+    isNull(o, "*** PAssert :: isNull ***");
   }
 
   public static void isNotNull(Object o) {

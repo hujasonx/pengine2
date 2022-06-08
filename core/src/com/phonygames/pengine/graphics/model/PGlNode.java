@@ -2,6 +2,7 @@ package com.phonygames.pengine.graphics.model;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PMat4;
@@ -18,10 +19,10 @@ public class PGlNode {
   private String id;
   @Getter
   @Setter
-  private PMesh mesh;
+  PMesh mesh;
   @Getter
   @Setter
-  private PMaterial material;
+  PMaterial material;
   @Getter
   private final PMat4 worldTransform = new PMat4();
   @Getter
@@ -35,16 +36,20 @@ public class PGlNode {
     this.id = id;
   }
 
-  public boolean tryRenderDefault() {
+  public boolean tryRenderDefault(PRenderContext renderContext) {
     if (defaultShader == null) {
       return false;
     }
 
-    render(defaultShader);
+    render(defaultShader, renderContext);
     return true;
   }
 
-  public void render(PShader shader) {
+  public void render(PShader shader, PRenderContext renderContext) {
+    renderContext.enqueue(shader, this);
+  }
+
+  public void renderGl(PShader shader) {
     PAssert.isTrue(shader.isActive());
     material.applyUniforms(shader);
     mesh.getBackingMesh().render(shader.getShaderProgram(), GL20.GL_TRIANGLES);
@@ -59,9 +64,18 @@ public class PGlNode {
   public PGlNode tryDeepCopy() {
     PGlNode node = new PGlNode(id);
     node.id = this.id;
-    node.material = this.material.copy(node.material.getId());
+    if (material != null) {
+      node.material = material.cpy(material.getId());
+    }
+
+    node.setMesh(mesh);
+
     node.worldTransform.set(this.worldTransform);
     node.worldTransformI.set(this.worldTransformI);
     return node;
+  }
+
+  public PVertexAttributes getVertexAttributes() {
+    return mesh.getVertexAttributes();
   }
 }

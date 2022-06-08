@@ -19,9 +19,10 @@ import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.Getter;
+import lombok.Setter;
 
 public class PShader {
-@Getter
+  @Getter
   private final ShaderProgram shaderProgram;
 
   @Getter
@@ -30,7 +31,10 @@ public class PShader {
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
 
-  public PShader(FileHandle vert, FileHandle frag) {
+  @Getter
+  private boolean useAlphaBlend = false;
+
+  public PShader(FileHandle vert, FileHandle frag, boolean useAlphaBlend) {
     StringBuilder vertexStringBuilder = new StringBuilder();
     StringBuilder fragmentStringBuilder = new StringBuilder();
 
@@ -39,6 +43,8 @@ public class PShader {
 
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
+
+    this.useAlphaBlend = useAlphaBlend;
 
     shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
     if (!shaderProgram.isCompiled()) {

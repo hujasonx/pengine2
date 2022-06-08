@@ -73,7 +73,7 @@ public class PList<E> extends ArrayList<E> {
 
   @Override
   public ListIterator<E> listIterator(int i) {
-    iterator.currentIndex = i;
+    iterator.currentIndex = i - 1; // Offset the index by 1 so that the element at i is returned first.
     return iterator;
   }
 

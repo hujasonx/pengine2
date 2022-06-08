@@ -12,6 +12,7 @@ import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.util.PMap;
 
@@ -58,6 +59,7 @@ public class PEngine extends ApplicationAdapter {
     PApplicationWindow.init();
     PVertexAttributes.init();
     PMesh.init();
+    PShaderProvider.init();
     PAssetManager.init();
     game.init();
   }

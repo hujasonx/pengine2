@@ -48,6 +48,20 @@ public class PMap<K, V> extends HashMap<K, V> implements Iterable<Map.Entry<K, V
   public Iterator<Entry<K, V>> iterator() {
     return entrySet().iterator();
   }
+
+  public V getOrMake(K k) {
+    V v = get(k);
+    if (v == null) {
+      v = (V)makeNew(k);
+      put(k, v);
+    }
+
+    return v;
+  }
+
+  protected Object makeNew(K k) {
+    return null;
+  }
 }
 
 //implements Map<K, V> {

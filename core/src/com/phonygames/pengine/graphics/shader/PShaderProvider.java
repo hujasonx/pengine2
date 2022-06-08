@@ -1,17 +1,36 @@
 package com.phonygames.pengine.graphics.shader;
 
 import com.phonygames.pengine.graphics.material.PMaterial;
+import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PSet;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public abstract class PShaderProvider {
+  static class Defaults {
+    public static PShaderProvider gltfShaderProvider = new PMapShaderProvider();
+  }
+
+  public static void init() {
+    PMapShaderProvider gltfShaderProvider = (PMapShaderProvider) Defaults.gltfShaderProvider;
+  }
+
+  public PShader provide (PGlNode node) {
+    return provide(node.getVertexAttributes(), node.getMaterial());
+  }
+
   public abstract PShader provide(PVertexAttributes vertexAttributes, PMaterial material);
 
   public static class PMapShaderProvider extends PShaderProvider {
-    private static PMap<PVertexAttributes, PShader> vertexAttributesMap = new PMap<>();
-    private static PMap<String, PShader> materialIdMap = new PMap<>();
-    private static PMap<String, PMap<PVertexAttributes, PShader>> combinedMap = new PMap<>();
+    private PMap<PVertexAttributes, PShader> vertexAttributesMap = new PMap<>();
+    private PMap<String, PShader> materialIdMap = new PMap<>();
+    private PMap<String, PMap<PVertexAttributes, PShader>> combinedMap = new PMap<>();
+
+    @Getter @Setter
+    private PShader defaultShader = null;
 
     @Override
     public PShader provide(PVertexAttributes vertexAttributes, PMaterial material) {
@@ -33,7 +52,7 @@ public abstract class PShaderProvider {
         return shader;
       }
 
-      return null;
+      return defaultShader;
     }
 
     public PMapShaderProvider set(PVertexAttributes vertexAttributes, String materialId, PShader shader) {

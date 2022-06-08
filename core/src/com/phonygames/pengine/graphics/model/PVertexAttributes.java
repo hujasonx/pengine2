@@ -37,6 +37,7 @@ public class PVertexAttributes {
       public static final String nor = "a_nor";
       public static final String uv[] = new String[4];
       public static final String col[] = new String[4];
+      public static final String colPacked[] = new String[4];
     }
 
     public static final Class[] VectorClasses = new Class[]{null, null, PVec2.class, PVec3.class, PVec4.class};
@@ -62,7 +63,9 @@ public class PVertexAttributes {
 
       for (int a = 0; a < Keys.col.length; a++) {
         Keys.col[a] = "a_col" + a;
+        Keys.colPacked[a] = "a_col" + a;
         registerAttribute(Keys.col[a], 4);
+        registerAttribute(Keys.colPacked[a], 4);
       }
 
       DEFAULT = new PVertexAttributes(

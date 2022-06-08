@@ -134,4 +134,13 @@ public class PVec3 extends PVec {
   public PVec3 cpy() {
     return new PVec3().set(this);
   }
+
+  public Vector3 out(Vector3 in) {
+    in.set(backingVec3);
+    return in;
+  }
+
+  public float dst(PVec3 other) {
+    return backingVec3.dst(other.backingVec3);
+  }
 }

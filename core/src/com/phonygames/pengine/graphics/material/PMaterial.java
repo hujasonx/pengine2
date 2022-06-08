@@ -87,7 +87,7 @@ public class PMaterial {
     return this;
   }
 
-  public PMaterial copy(String newName) {
+  public PMaterial cpy(String newName) {
     PMaterial ret = new PMaterial(newName);
     ret.vec1s.tryDeepCopyFrom(vec1s);
     ret.vec2s.tryDeepCopyFrom(vec2s);
