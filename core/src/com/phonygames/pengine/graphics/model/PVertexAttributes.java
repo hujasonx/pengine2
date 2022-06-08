@@ -33,8 +33,8 @@ public class PVertexAttributes {
     private static int maxUsage = 1;
 
     public static final class Keys {
-      public static final String pos = "pos";
-      public static final String nor = "nor";
+      public static final String pos = "a_pos";
+      public static final String nor = "a_nor";
       public static final String uv[] = new String[4];
       public static final String col[] = new String[4];
     }
@@ -56,14 +56,19 @@ public class PVertexAttributes {
       registerAttribute(Keys.nor, 3);
 
       for (int a = 0; a < Keys.uv.length; a++) {
-        Keys.uv[a] = "uv" + a;
+        Keys.uv[a] = "a_uv" + a;
         registerAttribute(Keys.uv[a], 2);
       }
 
       for (int a = 0; a < Keys.col.length; a++) {
-        Keys.col[a] = "col" + a;
+        Keys.col[a] = "a_col" + a;
         registerAttribute(Keys.col[a], 4);
       }
+
+      DEFAULT = new PVertexAttributes(
+          new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor), Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Attribute.Keys.uv[1])});
+      POSITION = new PVertexAttributes(
+          new VertexAttribute[]{Attribute.get(Attribute.Keys.pos)});
     }
   }
 
@@ -71,10 +76,13 @@ public class PVertexAttributes {
     Attribute.init();
   }
 
-  public static final PVertexAttributes DEFAULT =
-      new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked()});
-  public static final PVertexAttributes PHYSICS =
+  @Getter
+  private static PVertexAttributes DEFAULT;
+  @Getter
+  private static PVertexAttributes PHYSICS =
       new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position()});
+  @Getter
+  private static PVertexAttributes POSITION;
 
   public PVertexAttributes(VertexAttribute[] vertexAttributes) {
     int floatsPerVertex = 0;

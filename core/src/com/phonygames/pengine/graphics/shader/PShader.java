@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.shaders.BaseShader;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.exception.PRuntimeException;
+import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PVec1;
@@ -19,10 +21,11 @@ import com.phonygames.pengine.util.PStringUtils;
 import lombok.Getter;
 
 public class PShader {
-  @Getter
-  private boolean active;
 
   private final ShaderProgram shaderProgram;
+
+  @Getter
+  private static PShader activeShader;
 
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
@@ -39,6 +42,7 @@ public class PShader {
 
     shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
     if (!shaderProgram.isCompiled()) {
+      throw new PRuntimeException("Shader was not compiled");
     }
   }
 
@@ -61,15 +65,19 @@ public class PShader {
     }
   }
 
+  public boolean isActive() {
+    return activeShader == this;
+  }
+
   public void start() {
-    PAssert.isFalse(active);
-    active = true;
+    PAssert.isFalse(isActive());
+    activeShader = this;
     shaderProgram.bind();
   }
 
   public void end() {
-    PAssert.isTrue(active);
-    active = false;
+    PAssert.isTrue(isActive());
+    activeShader = null;
   }
 
   public PShader set(String uniform, PVec1 v) {
@@ -77,7 +85,7 @@ public class PShader {
   }
 
   public PShader set(String uniform, float x) {
-    PAssert.isTrue(active);
+    PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x);
     } catch (IllegalArgumentException e) {
@@ -91,7 +99,7 @@ public class PShader {
   }
 
   public PShader set(String uniform, float x, float y) {
-    PAssert.isTrue(active);
+    PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x, y);
     } catch (IllegalArgumentException e) {
@@ -105,7 +113,7 @@ public class PShader {
   }
 
   public PShader set(String uniform, float x, float y, float z) {
-    PAssert.isTrue(active);
+    PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x, y, z);
     } catch (IllegalArgumentException e) {
@@ -119,7 +127,7 @@ public class PShader {
   }
 
   public PShader set(String uniform, float x, float y, float z, float w) {
-    PAssert.isTrue(active);
+    PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x, y, z, w);
     } catch (IllegalArgumentException e) {
@@ -128,9 +136,11 @@ public class PShader {
     return this;
   }
 
-  public PShader render(Mesh mesh) {
-    PAssert.isTrue(active);
-    mesh.render(shaderProgram, PMesh.ShapeType.Filled.getGlType());
+  public PShader render(PMaterial material, PMesh mesh, int primitiveType) {
+    PAssert.isTrue(isActive());
+    material.applyUniforms(this);
+    mesh.getBackingMesh().render(shaderProgram, primitiveType);
+
     return this;
   }
 }

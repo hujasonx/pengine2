@@ -34,7 +34,7 @@ public class PApplicationWindow {
     width = rawWidth;
     height = rawHeight;
 
-    orthoCamera.setToOrtho(false, rawWidth, rawHeight);
+    orthoCamera.setToOrtho(true, rawWidth, rawHeight);
     orthoCamera.update(true);
     windowSpriteBatch.setProjectionMatrix(orthoCamera.combined);
 

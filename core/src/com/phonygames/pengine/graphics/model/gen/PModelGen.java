@@ -9,6 +9,8 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PPostableTask;
+import com.phonygames.pengine.util.PPostableTaskQueue;
 import com.phonygames.pengine.util.PWindowedBuffer;
 
 import java.util.Optional;
@@ -16,7 +18,10 @@ import java.util.Optional;
 import lombok.Getter;
 import lombok.NonNull;
 
-public class PModelGen {
+public class PModelGen implements PPostableTask {
+  @Getter
+  private static final PPostableTaskQueue postableTaskQueue = new PPostableTaskQueue();
+
   private boolean finished = false;
   private final PMap<String, Part> parts = new PMap<>();
   private final PMap<String, Part> physicsParts = new PMap<>();
@@ -26,10 +31,37 @@ public class PModelGen {
   }
 
   public Part addPhysicsPart(String name) {
-    return new Part(name, true, PVertexAttributes.PHYSICS);
+    return new Part(name, true, PVertexAttributes.getPHYSICS());
   }
 
-  static class Part {
+  @Override
+  public void intro() {
+    modelIntro();
+  }
+
+  protected void modelIntro() {
+
+  }
+
+  @Override
+  public void middle() {
+    modelMiddle();
+  }
+
+  protected void modelMiddle() {
+
+  }
+
+  @Override
+  public void end() {
+    modelEnd();
+  }
+
+  protected void modelEnd() {
+
+  }
+
+  public static class Part {
     private final PVertexAttributes vertexAttributes;
     @Getter
     private final String name;
@@ -100,6 +132,44 @@ public class PModelGen {
       return this;
     }
 
+    public Part set(String alias, float x) {
+      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
+      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      currentVertexValues[ind + 0] = x;
+      return this;
+    }
+
+    public Part set(String alias, float x, float y) {
+      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
+      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      currentVertexValues[ind + 0] = x;
+      currentVertexValues[ind + 1] = y;
+      return this;
+    }
+
+    public Part set(String alias, float x, float y, float z) {
+      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
+      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      currentVertexValues[ind + 0] = x;
+      currentVertexValues[ind + 1] = y;
+      currentVertexValues[ind + 2] = z;
+      return this;
+    }
+
+    public Part set(String alias, float x, float y, float z, float w) {
+      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
+      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      currentVertexValues[ind + 0] = x;
+      currentVertexValues[ind + 1] = y;
+      currentVertexValues[ind + 2] = z;
+      currentVertexValues[ind + 3] = w;
+      return this;
+    }
+
+    public Part emitVertex() {
+      return emitVertex(100);
+    }
+
     public Part emitVertex(int maxLookbackAmount) {
       short index = (short) numVertices;
       for (int lookbackAmount = 1; lookbackAmount < maxLookbackAmount; lookbackAmount++) {
@@ -161,7 +231,7 @@ public class PModelGen {
     }
 
     public PMesh getMesh() {
-      PMesh ret = new PMesh(true, vertices.size(), indices.size(), vertexAttributes);
+      PMesh ret = new PMesh(true, vertices, indices, vertexAttributes);
       return ret;
     }
   }

@@ -33,4 +33,22 @@ public class PCollectionUtils {
     }
     return true;
   }
+
+  public static float[] toFloatArray(PList<Float> floats) {
+    float[] ret = new float[floats.size()];
+    for (int a = 0; a < ret.length; a++) {
+      ret[a] = floats.get(a);
+    }
+
+    return ret;
+  }
+
+  public static short[] toShortArray(PList<Short> shorts) {
+    short[] ret = new short[shorts.size()];
+    for (int a = 0; a < ret.length; a++) {
+      ret[a] = shorts.get(a);
+    }
+
+    return ret;
+  }
 }
