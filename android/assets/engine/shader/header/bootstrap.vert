@@ -8,7 +8,7 @@ out vec3 v_aPos;
 
 #ifdef a_norFlag
 in vec3 a_nor;
-out vec3 v_nor;
+out vec3 v_worldNor;
 #endif
 
 #ifdef a_uv0Flag

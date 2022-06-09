@@ -132,6 +132,12 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
       return this;
     }
 
+    public Builder addDepthAttachment() {
+      checkLock();
+      renderBuffer.attachmentSpecs.add(new AttachmentSpec("depth", GL30.GL_DEPTH_COMPONENT32F, GL30.GL_DEPTH_COMPONENT, GL30.GL_FLOAT, AttachmentSpec.AttachmentType.DepthTexture));
+      return this;
+    }
+
     public PRenderBuffer build() {
       lockBuilder();
       return renderBuffer;
@@ -156,7 +162,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
       PAssert.isTrue(attachmentType == AttachmentType.Float, "Non-float must use the other constructor");
     }
 
-    public AttachmentSpec(String name, int internalFormat, int format, int type, AttachmentType attachmentType) {
+    private AttachmentSpec(String name, int internalFormat, int format, int type, AttachmentType attachmentType) {
       this.name = name;
       this.internalFormat = internalFormat;
       this.format = format;
@@ -167,7 +173,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
       this.isStencil = attachmentType == AttachmentType.StencilTexture;
     }
 
-    public PGLFrameBuffer.PFrameBufferBuilder addAttachment(PGLFrameBuffer.PFrameBufferBuilder builder) {
+    private PGLFrameBuffer.PFrameBufferBuilder addAttachment(PGLFrameBuffer.PFrameBufferBuilder builder) {
       switch (attachmentType) {
         case ColorBuffer:
           builder.addColorTextureAttachment(internalFormat, format, type, isGpuOnly);

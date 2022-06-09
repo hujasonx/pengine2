@@ -1,6 +1,7 @@
 package com.phonygames.cybertag;
 
 import com.badlogic.gdx.graphics.GL30;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PRenderBuffer;
@@ -31,7 +32,7 @@ public class CybertagGame implements PGame {
 
   public void init() {
     for (int a = 0; a < gBuffers.length; a++) {
-      gBuffers[a] = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse", GL30.GL_RGBA16F, GL30.GL_RGBA).build();
+      gBuffers[a] = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse", GL30.GL_RGBA16F, GL30.GL_RGBA).addDepthAttachment().build();
     }
 
     new PGltf("engine/model/blender.glb").loadThenDo(
@@ -95,7 +96,7 @@ public class CybertagGame implements PGame {
   public void frameUpdate() {
     gBuffers[0].begin();
     renderContext.getCameraRange().y(1000);
-    renderContext.getCameraPos().set(500, 500, 500);
+    renderContext.getCameraPos().set(5, 5, 5);
     renderContext.getCameraUp().set(0, 1, 0);
     renderContext.getCameraDir().set(-1, -1, -1);
     renderContext.setRenderBuffer(gBuffers[0]);
@@ -108,6 +109,7 @@ public class CybertagGame implements PGame {
     }
 
     if (testModelInstance != null) {
+      testModelInstance.getWorldTransform().idt().scl(1, 1, 1).rot(0, 1, 0, PEngine.t);
       testModelInstance.renderDefault(renderContext);
     }
 

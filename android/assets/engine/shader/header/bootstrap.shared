@@ -1,6 +1,6 @@
 uniform vec4 u_tdtuituidt;
 uniform mat4 u_viewProjTransform;
-uniform mat4 u_viewProjInvTraTransform;
+uniform mat4 u_viewProjTransformInvTra;
 uniform mat4 u_worldTransform;
 uniform mat4 u_worldTransformInvTra;
 

@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
+import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.PEngine;
@@ -35,6 +37,7 @@ public class PRenderContext {
       public final static String u_cameraDir = "u_cameraDir";
       public final static String u_cameraUp = "u_cameraUp";
     }
+
     public static class Vec4 {
       public final static String u_tdtuituidt = "u_tdtuituidt";
     }
@@ -47,7 +50,7 @@ public class PRenderContext {
 
     public static class Mat4 {
       public final static String u_viewProjTransform = "u_viewProjTransform";
-      public final static String u_viewProjInvTraTransform = "u_viewProjInvTraTransform";
+      public final static String u_viewProjTransformInvTra = "u_viewProjTransformInvTra";
     }
   }
 
@@ -60,6 +63,7 @@ public class PRenderContext {
 
   @Getter
   private static PRenderContext activeContext = null;
+  private final RenderContext backingRenderContext = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
 
   @Getter
   private final PVec3 cameraPos = new PVec3();
@@ -75,7 +79,6 @@ public class PRenderContext {
   private final PMat4 viewProjTransform = new PMat4();
   @Getter
   private final PMat4 viewProjInvTraTransform = new PMat4();
-
   @Getter
   private PRenderBuffer currentRenderBuffer;
 
@@ -135,14 +138,17 @@ public class PRenderContext {
     cameraFov.set(camera.fieldOfView);
     cameraRange.set(camera.near, camera.far);
     viewProjTransform.set(camera.combined.val);
-    viewProjInvTraTransform.set(camera.invProjectionView.val);
+    viewProjInvTraTransform.set(camera.invProjectionView.val).tra();
     return this;
   }
 
   public void start() {
     PAssert.isNull(activeContext);
     activeContext = this;
-    Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+    backingRenderContext.begin();
+    setCullFaceBack();
+    setBlending(true, GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+    setDepthTest(GL20.GL_LESS);
   }
 
   public void setRenderBuffer(PRenderBuffer renderBuffer) {
@@ -156,10 +162,11 @@ public class PRenderContext {
   }
 
   public void end() {
+    PAssert.isTrue(isActive());
+    backingRenderContext.end();
     currentRenderBuffer = null;
     clearQueueMap(enqueuedDrawCalls);
     clearQueueMap(enqueuedAlphaBlendDrawCalls);
-    PAssert.isTrue(activeContext == this);
     activeContext = null;
   }
 
@@ -172,7 +179,7 @@ public class PRenderContext {
       shader.start();
       shader.set(UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
       shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
-      shader.set(UniformConstants.Mat4.u_viewProjInvTraTransform, viewProjInvTraTransform);
+      shader.set(UniformConstants.Mat4.u_viewProjTransformInvTra, viewProjInvTraTransform);
       shader.set(UniformConstants.Vec3.u_cameraPos, cameraPos);
       shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
       shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
@@ -239,4 +246,49 @@ public class PRenderContext {
       return 0;
     }
   }
+
+  public PRenderContext setCullFaceFront() {
+    setCullFace(GL20.GL_BACK);
+    return this;
+  }
+
+  public PRenderContext setCullFaceBack() {
+    setCullFace(GL20.GL_BACK);
+    return this;
+  }
+
+  public PRenderContext setCullFaceBoth() {
+    setCullFace(GL20.GL_FRONT_AND_BACK);
+    return this;
+  }
+
+  public PRenderContext setCullFaceDisabled() {
+    setCullFace(-1);
+    return this;
+  }
+
+  public PRenderContext setCullFace(final int face) {
+    PAssert.isTrue(isActive());
+    backingRenderContext.setCullFace(face);
+    return this;
+  }
+
+  public PRenderContext setDepthMask(final boolean depthMask) {
+    PAssert.isTrue(isActive());
+    backingRenderContext.setDepthMask(depthMask);
+    return this;
+  }
+
+  public PRenderContext setDepthTest(final int depthFunction) {
+    PAssert.isTrue(isActive());
+    backingRenderContext.setDepthTest(depthFunction);
+    return this;
+  }
+
+  public PRenderContext setBlending(final boolean enabled, final int sFactor, final int dFactor) {
+    PAssert.isTrue(isActive());
+    backingRenderContext.setBlending(enabled, sFactor, dFactor);
+    return this;
+  }
+
 }

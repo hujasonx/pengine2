@@ -81,7 +81,7 @@ public class PModelInstance {
     final PList<PGlNode> glNodes = new PList<>();
     @Getter
     @Setter
-    boolean inheritTransform, enabled;
+    boolean inheritTransform = true, enabled = true;
 
     @Getter
     final PMat4 worldTransform = new PMat4();

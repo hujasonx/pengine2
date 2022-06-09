@@ -1,7 +1,7 @@
 // MAIN START
 
 #ifdef a_norFlag
-vec3 nor = v_nor;
+vec3 nor = v_worldNor;
 #else
 vec3 nor = vec3(0.0);
 #endif

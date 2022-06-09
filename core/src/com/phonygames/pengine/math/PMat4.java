@@ -93,6 +93,28 @@ public class PMat4 implements Pool.Poolable {
     return backingMatrix4.val;
   }
 
+  public PMat4 idt() {
+    set(IDT);
+    return this;
+  }
+
+  public PMat4 tra(float x, float y, float z) {
+    backingMatrix4.translate(x, y, z);
+    return this;
+  }
+
+  public PMat4 scl(float x, float y, float z) {
+    backingMatrix4.scale(x, y, z);
+    return this;
+  }
+
+  public PMat4 rot(float axisX, float axisY, float axisZ, float rad) {
+    synchronized (IDT) {
+      backingMatrix4.rotateRad(axisX, axisY, axisZ, rad);
+    }
+    return this;
+  }
+
   public PMat4 cpy() {
     return new PMat4().set(this);
   }
