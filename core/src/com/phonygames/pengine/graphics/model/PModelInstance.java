@@ -2,13 +2,10 @@ package com.phonygames.pengine.graphics.model;
 
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
-import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
-
-import net.mgsx.gltf.scene3d.model.NodePlus;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +23,9 @@ public class PModelInstance {
 
   @Getter
   private final PMap<String, PMaterial> materials = new PMap<>();
+
+  @Getter
+  private final PMat4 worldTransform = new PMat4();
 
   public PModelInstance(PModel model) {
     this(model, null);
@@ -64,6 +64,7 @@ public class PModelInstance {
 
   public void renderDefault(PRenderContext renderContext) {
     for (val node : rootNodes) {
+      node.recalcNodeWorldTransformsRecursive(worldTransform);
       node.renderDefault(renderContext);
     }
   }
@@ -85,11 +86,12 @@ public class PModelInstance {
     @Getter
     final PMat4 worldTransform = new PMat4();
     @Getter
-    final PMat4 worldTransformI = new PMat4();
+    final PMat4 worldTransformInvTra = new PMat4();
 
     private Node(PModel.Node templateNode, Node parent, PShaderProvider defaultShaderProvider) {
       this.templateNode = templateNode;
       this.parent = parent;
+      this.transform.set(templateNode.transform);
       for (PGlNode node : templateNode.glNodes) {
         PGlNode newNode = node.tryDeepCopy();
         if (defaultShaderProvider != null) {
@@ -115,6 +117,24 @@ public class PModelInstance {
 
       for (Node child : children) {
         child.renderDefault(renderContext);
+      }
+    }
+
+    public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform) {
+      if (inheritTransform) {
+        worldTransform.set(parentWorldTransform).mul(transform);
+      } else {
+        worldTransform.set(transform);
+      }
+
+      worldTransformInvTra.set(worldTransform).invTra();
+
+      for (PGlNode node : glNodes) {
+        node.setWorldTransform(worldTransform, worldTransformInvTra);
+      }
+
+      for (Node child : children) {
+        child.recalcNodeWorldTransformsRecursive(worldTransform);
       }
     }
   }

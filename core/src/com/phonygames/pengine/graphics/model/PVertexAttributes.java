@@ -32,7 +32,6 @@ public class PVertexAttributes {
       public static final String nor = "a_nor";
       public static final String uv[] = new String[4];
       public static final String col[] = new String[4];
-      public static final String colPacked[] = new String[4];
     }
 
     public static final Class[] VectorClasses = new Class[]{null, null, PVec2.class, PVec3.class, PVec4.class};
@@ -58,9 +57,7 @@ public class PVertexAttributes {
 
       for (int a = 0; a < Keys.col.length; a++) {
         Keys.col[a] = "a_col" + a;
-        Keys.colPacked[a] = "a_col" + a;
         registerAttribute(Keys.col[a], 4);
-//        registerAttribute(Keys.colPacked[a], 4); // TODO: handle packed.
       }
 
       DEFAULT = new PVertexAttributes(
@@ -126,21 +123,21 @@ public class PVertexAttributes {
 
   @Override
   public int hashCode() {
-    return prefix.hashCode();
+    return vertexAttributes.hashCode();
   }
 
   @Override
   public boolean equals(Object o) {
     if (o instanceof PVertexAttributes) {
       val other = (PVertexAttributes) o;
-      return prefix.equals(other.prefix);
+      return vertexAttributes.equals(other.vertexAttributes);
     }
 
     return false;
   }
 
   public int indexForVertexAttribute(String alias) {
-    PAssert.isTrue(vertexAttributeFloatIndexInVertex.containsKey(alias), alias + " not vertexAttributeFloatIndexInVertex");
+    PAssert.isTrue(vertexAttributeFloatIndexInVertex.containsKey(alias), alias + " not found in vertexAttributeFloatIndexInVertex");
     return vertexAttributeFloatIndexInVertex.get(alias);
   }
 

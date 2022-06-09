@@ -85,8 +85,6 @@ public class PMesh {
           attr.alias = PVertexAttributes.Attribute.Keys.uv[attr.unit];
           break;
         case VertexAttributes.Usage.ColorPacked:
-          attr.alias = PVertexAttributes.Attribute.Keys.colPacked[attr.unit];
-          break;
         case VertexAttributes.Usage.ColorUnpacked:
           attr.alias = PVertexAttributes.Attribute.Keys.col[attr.unit];
           break;

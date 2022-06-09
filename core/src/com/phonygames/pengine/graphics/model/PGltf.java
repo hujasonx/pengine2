@@ -116,7 +116,7 @@ public class PGltf {
         }
       }
 
-      PModel.Node node = modelBuilder.addNode(nodePlus.id, childToParentNodeMap.get(nodePlus), glNodes, new PMat4(nodePlus.localTransform));
+      PModel.Node node = modelBuilder.addNode(nodePlus.id, childToParentNodeMap.get(nodePlus), glNodes, new PMat4().set(nodePlus.translation, nodePlus.rotation, nodePlus.scale));
       node.setInheritTransform(nodePlus.inheritTransform);
 
       for (val child : nodePlus.getChildren()) {

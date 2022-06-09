@@ -37,12 +37,12 @@ public class CybertagGame implements PGame {
 
     testMaterial = new PMaterial("testMaterial");
 
-    new PGltf("engine/model/blender.glb").loadThenDo(
+    new PGltf("engine/model/four-spheres.glb").loadThenDo(
         new PGltf.OnloadCallback() {
           @Override
           public void onLoad(PGltf gltf) {
             testModel = gltf.getModel();
-//            testModelInstance = new PModelInstance(testModel, PGltf.DEFAULT_SHADER_PROVIDER);
+            testModelInstance = new PModelInstance(testModel, PGltf.DEFAULT_SHADER_PROVIDER);
           }
         }
     );
@@ -111,11 +111,11 @@ public class CybertagGame implements PGame {
     }
 
     if (testModelInstance != null) {
-//      testModelInstance.renderDefault(renderContext);
+      testModelInstance.renderDefault(renderContext);
     }
 
     if (testBoxModelInstance != null) {
-      testBoxModelInstance.renderDefault(renderContext);
+//      testBoxModelInstance.renderDefault(renderContext);
     }
     renderContext.emit();
     renderContext.end();

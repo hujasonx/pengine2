@@ -220,6 +220,7 @@ public class PMaterial {
   }
 
   public PMaterial set(Attribute attribute) {
+    PLog.i("Setting attribute " + attribute);
     if (attribute.type == PBRColorAttribute.Diffuse) {
       set(UniformConstants.Vec4.u_diffuseCol, ((ColorAttribute) attribute).color);
     } else if (attribute.type == PBRColorAttribute.Ambient) {

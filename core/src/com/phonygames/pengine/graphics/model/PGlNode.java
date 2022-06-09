@@ -79,9 +79,9 @@ public class PGlNode {
     mesh.getBackingMesh().render(shader.getShaderProgram(), GL20.GL_TRIANGLES);
   }
 
-  private final PGlNode setWorldTransform(PMat4 worldTransform) {
+  public final PGlNode setWorldTransform(PMat4 worldTransform, PMat4 worldTransformInvTrad) {
     this.worldTransform.set(worldTransform);
-    this.worldTransformInvTra.set(worldTransform).inv();
+    this.worldTransformInvTra.set(worldTransformInvTrad);
     return this;
   }
 

@@ -39,12 +39,12 @@ public class PShader {
   private boolean useAlphaBlend = false;
 
   public PShader(PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag, boolean useAlphaBlend) {
-    this.prefix = "#version 330\n// PREFIX START\n" + vertexAttributes.getPrefix() + "\n//PREFIX END\n\n";
-    StringBuilder vertexStringBuilder = new StringBuilder(this.prefix);
-    StringBuilder fragmentStringBuilder = new StringBuilder(this.prefix);
+    this.prefix = "" + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
+    StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
+    StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix);
 
-    loadRaw(vert, vertexStringBuilder,  "");
-    loadRaw(frag, fragmentStringBuilder,"");
+    loadRaw(vert, vertexStringBuilder, "");
+    loadRaw(frag, fragmentStringBuilder, "");
 
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
