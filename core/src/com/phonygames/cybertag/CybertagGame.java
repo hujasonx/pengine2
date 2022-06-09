@@ -32,7 +32,7 @@ public class CybertagGame implements PGame {
     }
 
     testMaterial = new PMaterial("testMaterial");
-    testShader = new PShader(Gdx.files.local("engine/shader/fullscreen_quad.vert.glsl"), Gdx.files.local("shader/test.frag.glsl"), false);
+    testShader = new PShader("", Gdx.files.local("engine/shader/gltf/default.vert.glsl"), Gdx.files.local("engine/shader/gltf/default.frag.glsl"), false);
     final PShaderProvider.PMapShaderProvider gltfShaderProvider = new PShaderProvider.PMapShaderProvider();
     gltfShaderProvider.setDefaultShader(testShader);
 

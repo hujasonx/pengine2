@@ -3,7 +3,10 @@ package com.phonygames.pengine.math;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.Pool;
 
+import lombok.Getter;
+
 public class PMat4 implements Pool.Poolable {
+  @Getter
   private final Matrix4 backingMatrix4;
 
   public PMat4() {

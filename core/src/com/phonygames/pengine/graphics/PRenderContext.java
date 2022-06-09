@@ -3,10 +3,9 @@ package com.phonygames.pengine.graphics;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.utils.Pool;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
-import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
@@ -19,6 +18,26 @@ import lombok.Getter;
 import lombok.val;
 
 public class PRenderContext {
+  public static class UniformConstants {
+    public static class Vec4 {
+      public final static String u_tdtuituidt = "u_tdtuituidt";
+    }
+
+    public static class Sampler2d {
+    }
+
+    public static class Vec2 {
+    }
+
+    public static class Float {
+    }
+
+    public static class Mat4 {
+      public final static String u_viewProjTransform = "u_viewProjTransform";
+      public final static String u_viewProjInvTraTransform = "u_viewProjInvTraTransform";
+    }
+  }
+
   private static Pool<DrawCall> drawCallPool = new Pool<DrawCall>() {
     @Override
     protected DrawCall newObject() {
@@ -38,7 +57,7 @@ public class PRenderContext {
   @Getter
   private final PMat4 viewProjTransform = new PMat4();
   @Getter
-  private final PMat4 viewProjTransformI = new PMat4();
+  private final PMat4 viewProjInvTraTransform = new PMat4();
 
   private final OrthographicCamera camera = new OrthographicCamera();
   private final PerspectiveCamera perspectiveCamera = new PerspectiveCamera();
@@ -63,7 +82,7 @@ public class PRenderContext {
     cameraUp.out(camera.up);
     camera.update(true);
     viewProjTransform.set(camera.combined.val);
-    viewProjTransformI.set(camera.invProjectionView.val);
+    viewProjInvTraTransform.set(camera.invProjectionView.val);
     return this;
   }
 
@@ -86,6 +105,11 @@ public class PRenderContext {
   private void emit(PMap<PShader, PList<DrawCall>> queueMap) {
     for (PShader shader : queueMap.keySet()) {
       shader.start();
+      shader.set(UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
+      shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
+      shader.set(UniformConstants.Mat4.u_viewProjInvTraTransform, viewProjInvTraTransform);
+
+
       val queue = queueMap.get(shader);
       Collections.sort(queue);
       for (DrawCall drawCall : queue) {

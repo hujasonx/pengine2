@@ -12,6 +12,7 @@ import com.phonygames.pengine.exception.PRuntimeException;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.logging.PLog;
+import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
@@ -22,6 +23,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class PShader {
+  private final String prefix;
+
   @Getter
   private final ShaderProgram shaderProgram;
 
@@ -34,9 +37,10 @@ public class PShader {
   @Getter
   private boolean useAlphaBlend = false;
 
-  public PShader(FileHandle vert, FileHandle frag, boolean useAlphaBlend) {
-    StringBuilder vertexStringBuilder = new StringBuilder();
-    StringBuilder fragmentStringBuilder = new StringBuilder();
+  public PShader(String prefix, FileHandle vert, FileHandle frag, boolean useAlphaBlend) {
+    this.prefix = "#version 330\n\n" + prefix;
+    StringBuilder vertexStringBuilder = new StringBuilder(this.prefix);
+    StringBuilder fragmentStringBuilder = new StringBuilder(this.prefix);
 
     loadRaw(vert, vertexStringBuilder, true);
     loadRaw(frag, fragmentStringBuilder, false);
@@ -59,9 +63,19 @@ public class PShader {
     for (int a = 0; a < split.length; a++) {
       String line = split[a];
       if (line.startsWith("#include ")) {
-        String fname = line.split("\"")[1];
-        if (fileHandle.parent() != null) {
-          fname = fileHandle.parent().path() + "/" + fname;
+        char delim = line.charAt("#include ".length());
+        String fname = "";
+        switch (delim) {
+          case '"':
+            fname = line.split("\"")[1];
+            if (fileHandle.parent() != null) {
+              fname = fileHandle.parent().path() + "/" + fname;
+            }
+            break;
+          case '<':
+            // Absolute path.
+            fname = line.split("<")[1].split(">")[0];
+            break;
         }
         loadRaw(Gdx.files.local(fname), out, isVertexShader);
       } else {
@@ -84,6 +98,16 @@ public class PShader {
   public void end() {
     PAssert.isTrue(isActive());
     activeShader = null;
+  }
+
+  public PShader set(String uniform, PMat4 mat4) {
+    PAssert.isTrue(isActive());
+    try {
+      shaderProgram.setUniformMatrix(uniform, mat4.getBackingMatrix4());
+    } catch (IllegalArgumentException e) {
+      PLog.w("Illegal argument: " + uniform, e);
+    }
+    return this;
   }
 
   public PShader set(String uniform, PVec1 v) {
