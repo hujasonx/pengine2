@@ -32,7 +32,7 @@ public class CybertagGame implements PGame {
 
   public void init() {
     for (int a = 0; a < gBuffers.length; a++) {
-      gBuffers[a] = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse").addDepthAttachment().build();
+      gBuffers[a] = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addDepthAttachment().build();
     }
 
     new PGltf("engine/model/blender.glb").loadThenDo(

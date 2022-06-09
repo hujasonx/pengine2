@@ -36,8 +36,8 @@ public class PShader {
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
 
-  public PShader(PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
-    this.prefix = "" + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
+  public PShader(String prefix, PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
+    this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix);
 
@@ -128,6 +128,16 @@ public class PShader {
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x);
+    } catch (IllegalArgumentException e) {
+      PLog.w("Illegal argument: " + uniform, e);
+    }
+    return this;
+  }
+
+  public PShader setI(String uniform, int i) {
+    PAssert.isTrue(isActive());
+    try {
+      shaderProgram.setUniformi(uniform, i);
     } catch (IllegalArgumentException e) {
       PLog.w("Illegal argument: " + uniform, e);
     }

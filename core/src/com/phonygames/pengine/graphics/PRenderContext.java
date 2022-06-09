@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.graphics.g3d.utils.TextureBinder;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.PEngine;
@@ -289,6 +290,10 @@ public class PRenderContext {
     PAssert.isTrue(isActive());
     backingRenderContext.setBlending(enabled, sFactor, dFactor);
     return this;
+  }
+
+  public TextureBinder getTextureBinder() {
+    return backingRenderContext.textureBinder;
   }
 
 }

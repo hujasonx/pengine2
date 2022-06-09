@@ -16,4 +16,14 @@ in vec4 v_col0;
 in vec2 v_uv0;
 #endif
 
-layout(location = 0) out vec4 o_dif;
+#ifdef pbrFlag
+uniform vec2 u_metallicRoughness;
+uniform vec4 u_diffuseCol;
+uniform vec4 u_emissiveCol;
+
+uniform sampler2D u_diffuseTex;
+uniform sampler2D u_emissiveTex;
+uniform sampler2D u_metallicRoughnessTex;
+#endif
+
+layout(location = 0) out vec4 o_diffuseM;

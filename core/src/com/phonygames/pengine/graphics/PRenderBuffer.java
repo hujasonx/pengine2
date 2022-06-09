@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
+import lombok.val;
 
 public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListener {
   @Getter
@@ -52,11 +53,18 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   public Texture getTexture() {
     createFrameBuffersIfNeeded();
     return frameBuffer.getTextureAttachments().first();
+  }
 
-//    if (testTexture == null) {
-//      testTexture = new Texture(Gdx.files.internal("badlogic.jpg"));
-//    }
-//    return testTexture;
+  public Texture getTexture(String id) {
+    createFrameBuffersIfNeeded();
+    for (int a = 0; a < attachmentSpecs.size(); a++) {
+      val spec = attachmentSpecs.get(a);
+      if (id.equals(spec.name)) {
+        return frameBuffer.getTextureAttachments().get(a);
+      }
+    }
+
+    return null;
   }
 
   public void begin() {
