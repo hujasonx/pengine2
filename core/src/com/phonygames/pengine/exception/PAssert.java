@@ -12,6 +12,18 @@ public class PAssert {
     throw new PRuntimeException(message);
   }
 
+  public static void warnNotImplemented() {
+    warn("Not implemented");
+  }
+
+  public static void warn(String message) {
+    try {
+      throw new PRuntimeException(message);
+    } catch (PRuntimeException e) {
+      e.printStackTrace();
+    }
+  }
+
   public static void equals(float x, float y) {
     isTrue(x == y);
   }

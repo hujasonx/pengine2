@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics.model;
 
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
@@ -20,6 +21,9 @@ public class PModelInstance {
   @Getter
   private final PMap<String, Node> nodes = new PMap<>();
   private final PList<Node> rootNodes = new PList<>();
+
+  @Getter
+  private final PMap<String, PMaterial> materials = new PMap<>();
 
   public PModelInstance(PModel model, PShaderProvider defaultShaderProvider) {
     this.model = model;
@@ -79,6 +83,7 @@ public class PModelInstance {
       for (PGlNode node : templateNode.glNodes) {
         PGlNode newNode = node.tryDeepCopy();
         newNode.setDefaultShader(defaultShaderProvider.provide(node));
+        materials.put(newNode.material.getId(), newNode.material);
 
         this.glNodes.add(newNode);
       }

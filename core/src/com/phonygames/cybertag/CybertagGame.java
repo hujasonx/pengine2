@@ -36,7 +36,7 @@ public class CybertagGame implements PGame {
     final PShaderProvider.PMapShaderProvider gltfShaderProvider = new PShaderProvider.PMapShaderProvider();
     gltfShaderProvider.setDefaultShader(testShader);
 
-    new PGltf("engine/model/duck.glb").loadThenDo(
+    new PGltf("engine/model/blender.glb").loadThenDo(
         new PGltf.OnloadCallback() {
           @Override
           public void onLoad(PGltf gltf) {

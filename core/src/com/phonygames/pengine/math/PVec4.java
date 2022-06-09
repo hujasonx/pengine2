@@ -1,5 +1,6 @@
 package com.phonygames.pengine.math;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 
@@ -153,5 +154,13 @@ public class PVec4 extends PVec {
 
   public PVec4 cpy() {
     return new PVec4().set(this);
+  }
+
+  public PVec4 fromColor(Color color) {
+    this.x = color.r;
+    this.y = color.g;
+    this.z = color.b;
+    this.w = color.a;
+    return this;
   }
 }

@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics.model;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.phonygames.pengine.PAssetManager;
@@ -12,6 +13,7 @@ import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PPostableTask;
 import com.phonygames.pengine.util.PSet;
 
+import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 import net.mgsx.gltf.scene3d.model.NodePlus;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
 
@@ -43,6 +45,9 @@ public class PGltf {
   private PMaterial genMaterial(Material material) {
     val ret = new PMaterial(material.id);
 
+    for (Attribute attribute : material) {
+      ret.set(attribute);
+    }
     return ret;
   }
 
