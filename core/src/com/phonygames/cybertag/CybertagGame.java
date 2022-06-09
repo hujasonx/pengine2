@@ -1,5 +1,7 @@
 package com.phonygames.cybertag;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL30;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
@@ -32,7 +34,8 @@ public class CybertagGame implements PGame {
 
   public void init() {
     for (int a = 0; a < gBuffers.length; a++) {
-      gBuffers[a] = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addDepthAttachment().build();
+      gBuffers[a] =
+          new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addFloatAttachment("emissiveR").addFloatAttachment("normalI").addDepthAttachment().build();
     }
 
     new PGltf("engine/model/blender.glb").loadThenDo(
@@ -125,5 +128,11 @@ public class CybertagGame implements PGame {
   public void postFrameUpdate() {
     PGLUtils.clearScreen(1, 1, 1, 1);
     PApplicationWindow.drawTextureToScreen(gBuffers[0].getTexture());
+    for (int a = 0; a < gBuffers[0].numTextures(); a++) {
+      if (Gdx.input.isKeyPressed(Input.Keys.NUM_1 + a)) {
+        PApplicationWindow.drawTextureToScreen(gBuffers[0].getTexture(a));
+
+      }
+    }
   }
 }

@@ -41,7 +41,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   private PFrameBuffer frameBuffer, frameBufferPrev;
 
   @Getter
-  private String fragmentLayout = "";
+  private String fragmentLayout = "// LAYOUT\n";
 
   private static Texture testTexture = null;
 
@@ -56,6 +56,16 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   public Texture getTexture() {
     createFrameBuffersIfNeeded();
     return frameBuffer.getTextureAttachments().first();
+  }
+
+  public Texture getTexture(int index) {
+    createFrameBuffersIfNeeded();
+    return frameBuffer.getTextureAttachments().get(index);
+  }
+
+  public int numTextures() {
+    createFrameBuffersIfNeeded();
+    return frameBuffer.getTextureAttachments().size;
   }
 
   public Texture getTexture(String id) {
@@ -143,7 +153,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
 
     public Builder addFloatAttachment(String name, int internalFormat, int format) {
       checkLock();
-      renderBuffer.fragmentLayout += "layout(location = " + renderBuffer.attachmentSpecs.size() + ") out vec4 o_" + name + ";\n";
+      renderBuffer.fragmentLayout += "layout(location = " + renderBuffer.attachmentSpecs.size() + ") out vec4 " + name + ";\n";
       renderBuffer.attachmentSpecs.add(new AttachmentSpec(name, internalFormat, format, GL30.GL_FLOAT, AttachmentSpec.AttachmentType.Float));
       return this;
     }

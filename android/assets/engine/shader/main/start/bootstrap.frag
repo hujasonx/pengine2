@@ -1,12 +1,12 @@
 // MAIN START
 
-vec4 diffuseM = vec4(1.0);
-vec4 emissiveR = vec4(0.0, 0.0, 0.0, 1.0);
+diffuseM = vec4(1.0);
+emissiveR = vec4(0.0, 0.0, 0.0, 1.0);
 
 #ifdef a_norFlag
-vec3 nor = v_worldNor;
+normalI = vec4(v_worldNor, 1.0);
 #else
-vec3 nor = vec3(0.0);
+normalI = vec4(0.0, 0.0, 0.0, 1.0);
 #endif
 
 #ifdef a_uv0Flag
