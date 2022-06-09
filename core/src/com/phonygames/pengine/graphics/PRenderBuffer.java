@@ -126,6 +126,10 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
       return this;
     }
 
+    public Builder addFloatAttachment(String name) {
+      return addFloatAttachment(name, GL30.GL_RGBA16F, GL30.GL_RGBA);
+    }
+
     public Builder addFloatAttachment(String name, int internalFormat, int format) {
       checkLock();
       renderBuffer.attachmentSpecs.add(new AttachmentSpec(name, internalFormat, format, GL30.GL_FLOAT, AttachmentSpec.AttachmentType.Float));
