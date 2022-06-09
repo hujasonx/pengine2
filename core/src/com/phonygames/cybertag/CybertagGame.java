@@ -1,24 +1,22 @@
 package com.phonygames.cybertag;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL30;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.phonygames.pengine.PAssetManager;
-import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.material.PMaterial;
+import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.model.gen.PModelGen;
 import com.phonygames.pengine.graphics.shader.PShader;
-import com.phonygames.pengine.graphics.shader.PShaderProvider;
-
-import lombok.val;
+import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.util.PList;
 
 public class CybertagGame implements PGame {
 
@@ -27,7 +25,9 @@ public class CybertagGame implements PGame {
 
   private PMaterial testMaterial;
   private PModel testModel;
+  private PModel testBoxModel;
   private PModelInstance testModelInstance;
+  private PModelInstance testBoxModelInstance;
   private PRenderContext renderContext;
 
   public void init() {
@@ -42,12 +42,41 @@ public class CybertagGame implements PGame {
           @Override
           public void onLoad(PGltf gltf) {
             testModel = gltf.getModel();
-            testModelInstance = new PModelInstance(testModel, PGltf.DEFAULT_SHADER_PROVIDER);
+//            testModelInstance = new PModelInstance(testModel, PGltf.DEFAULT_SHADER_PROVIDER);
           }
         }
     );
 
     renderContext = new PRenderContext();
+
+
+    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
+      PModelGen.Part basePart;
+
+      @Override
+      protected void modelIntro() {
+        basePart = addPart("base", PVertexAttributes.getPOSITION());
+      }
+
+      @Override
+      protected void modelMiddle() {
+        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, -1, 0).emitVertex();
+        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, -1, 0).emitVertex();
+        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, 1, 0).emitVertex();
+        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, 1, 0).emitVertex();
+        basePart.quad(false);
+      }
+
+      @Override
+      protected void modelEnd() {
+        PList<PGlNode> glNodes = new PList<>();
+        chainGlNode(glNodes, basePart, new PMaterial(basePart.getName()), null);
+        PModel.Builder builder = new PModel.Builder();
+        builder.addNode("box", null, glNodes, PMat4.IDT);
+        testBoxModel = builder.build();
+        testBoxModelInstance = new PModelInstance(testBoxModel, PGltf.DEFAULT_SHADER_PROVIDER);
+      }
+    });
   }
 
   public void preLogicUpdate() {
@@ -72,7 +101,8 @@ public class CybertagGame implements PGame {
     renderContext.getCameraPos().set(10, 10, 10);
     renderContext.getCameraUp().set(0, 1, 0);
     renderContext.getCameraDir().set(-1, -1, -1);
-    renderContext.setPerspectiveCamera();
+    renderContext.setRenderBuffer(gBuffers[0]);
+    renderContext.updatePerspectiveCamera();
     renderContext.start();
     PGLUtils.clearScreen(0, 1, 1, 1);
 
@@ -81,7 +111,11 @@ public class CybertagGame implements PGame {
     }
 
     if (testModelInstance != null) {
-      testModelInstance.renderDefault(renderContext);
+//      testModelInstance.renderDefault(renderContext);
+    }
+
+    if (testBoxModelInstance != null) {
+      testBoxModelInstance.renderDefault(renderContext);
     }
     renderContext.emit();
     renderContext.end();

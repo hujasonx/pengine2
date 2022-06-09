@@ -11,6 +11,28 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class PGlNode {
+  public static class UniformConstants {
+
+    public static class Vec2 {
+    }
+
+    public static class Vec3 {
+    }
+    public static class Vec4 {
+    }
+
+    public static class Sampler2d {
+    }
+
+    public static class Float {
+    }
+
+    public static class Mat4 {
+      public final static String u_worldTransform = "u_worldTransform";
+      public final static String u_worldTransformInvTra = "u_worldTransformInvTra";
+    }
+  }
+
   public static final int MAX_BONES = 64;
   private static final float[] boneTransformBuffer = new float[MAX_BONES * 16];
 
@@ -26,7 +48,7 @@ public class PGlNode {
   @Getter
   private final PMat4 worldTransform = new PMat4();
   @Getter
-  private final PMat4 worldTransformI = new PMat4();
+  private final PMat4 worldTransformInvTra = new PMat4();
 
   @Getter
   @Setter
@@ -51,13 +73,15 @@ public class PGlNode {
 
   public void renderGl(PShader shader) {
     PAssert.isTrue(shader.isActive());
+    shader.set(UniformConstants.Mat4.u_worldTransform, worldTransform);
+    shader.set(UniformConstants.Mat4.u_worldTransformInvTra, worldTransformInvTra);
     material.applyUniforms(shader);
     mesh.getBackingMesh().render(shader.getShaderProgram(), GL20.GL_TRIANGLES);
   }
 
   private final PGlNode setWorldTransform(PMat4 worldTransform) {
     this.worldTransform.set(worldTransform);
-    this.worldTransformI.set(worldTransform).inv();
+    this.worldTransformInvTra.set(worldTransform).inv();
     return this;
   }
 
@@ -72,7 +96,7 @@ public class PGlNode {
     node.setDefaultShader(defaultShader);
 
     node.worldTransform.set(this.worldTransform);
-    node.worldTransformI.set(this.worldTransformI);
+    node.worldTransformInvTra.set(this.worldTransformInvTra);
     return node;
   }
 

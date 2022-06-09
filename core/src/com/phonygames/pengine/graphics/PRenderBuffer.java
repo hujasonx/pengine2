@@ -41,6 +41,14 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
 
   private static Texture testTexture = null;
 
+  public int width() {
+    return frameBuffer.getWidth();
+  }
+
+  public int height() {
+    return frameBuffer.getHeight();
+  }
+
   public Texture getTexture() {
     createFrameBuffersIfNeeded();
     return frameBuffer.getTextureAttachments().first();

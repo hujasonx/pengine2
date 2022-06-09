@@ -54,8 +54,7 @@ public abstract class PShaderProvider {
         return shader;
       }
 
-      PLog.w("No selector found for va: " + vertexAttributes + " and material " + material.getId() + ", using default");
-      return defaultShader;
+      return genShaderInternal(vertexAttributes, material);
     }
 
     public PMapShaderProvider set(PVertexAttributes vertexAttributes, String materialId, PShader shader) {
@@ -81,6 +80,38 @@ public abstract class PShaderProvider {
 
     public boolean has(PVertexAttributes vertexAttributes) {
       return vertexAttributesMap.containsKey(vertexAttributes);
+    }
+
+    private PShader genShaderInternal(PVertexAttributes vertexAttributes, PMaterial material) {
+      PShader ret;
+      ret = genShader(vertexAttributes, material.getId());
+      if (ret != null) {
+        return ret;
+      }
+
+      ret = genShader(material.getId());
+      if (ret != null) {
+        return ret;
+      }
+
+      ret = genShader(vertexAttributes);
+      if (ret != null) {
+        return ret;
+      }
+
+      return defaultShader;
+    }
+
+    public PShader genShader(PVertexAttributes vertexAttributes) {
+      return null;
+    }
+
+    public PShader genShader(PVertexAttributes vertexAttributes, String materialId) {
+      return null;
+    }
+
+    public PShader genShader(String materialId) {
+      return null;
     }
   }
 }

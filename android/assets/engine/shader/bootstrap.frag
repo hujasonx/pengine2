@@ -3,7 +3,7 @@
 in vec3 v_aPos;
 in vec4 v_worldPos;
 
-#ifdef v_norFlag
+#ifdef a_norFlag
 in vec3 v_nor;
 vec3 nor() {
     return v_nor;
@@ -14,11 +14,11 @@ vec3 nor() {
 }
     #endif
 
-    #ifdef v_uv0Flag
+    #ifdef a_uv0Flag
 in vec2 v_uv0;
 #endif
 
-#ifdef v_col0Flag
+#ifdef a_col0Flag
 in vec4 v_col0;
 #endif
 

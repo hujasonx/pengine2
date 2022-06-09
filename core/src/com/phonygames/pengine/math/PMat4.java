@@ -6,6 +6,8 @@ import com.badlogic.gdx.utils.Pool;
 import lombok.Getter;
 
 public class PMat4 implements Pool.Poolable {
+  public static final PMat4 IDT = new PMat4();
+
   @Getter
   private final Matrix4 backingMatrix4;
 

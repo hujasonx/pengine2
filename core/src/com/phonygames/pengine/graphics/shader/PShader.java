@@ -39,12 +39,12 @@ public class PShader {
   private boolean useAlphaBlend = false;
 
   public PShader(PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag, boolean useAlphaBlend) {
-    this.prefix = "#version 330\n\n" + vertexAttributes.getPrefix();
+    this.prefix = "#version 330\n// PREFIX START\n" + vertexAttributes.getPrefix() + "\n//PREFIX END\n\n";
     StringBuilder vertexStringBuilder = new StringBuilder(this.prefix);
     StringBuilder fragmentStringBuilder = new StringBuilder(this.prefix);
 
-    loadRaw(vert, vertexStringBuilder, true);
-    loadRaw(frag, fragmentStringBuilder, false);
+    loadRaw(vert, vertexStringBuilder,  "");
+    loadRaw(frag, fragmentStringBuilder,"");
 
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
@@ -59,14 +59,24 @@ public class PShader {
     }
   }
 
-  private static void loadRaw(FileHandle fileHandle, StringBuilder out, boolean isVertexShader) {
-    boolean isFragmentShader = !isVertexShader;
+  private static void loadRaw(FileHandle fileHandle, StringBuilder out, String linePrefix) {
     String shader = fileHandle.readString();
     String[] split = PStringUtils.splitByLine(shader);
     for (int a = 0; a < split.length; a++) {
       String line = split[a];
-      if (line.startsWith("#include ")) {
-        char delim = line.charAt("#include ".length());
+      int fileLineSpaceCount = 0;
+      for (int b = 0; b < line.length(); b++) {
+        if (line.charAt(b) == ' ') {
+          fileLineSpaceCount++;
+        } else {
+          break;
+        }
+      }
+
+      String fileLineTabString = line.substring(0, fileLineSpaceCount);
+      String lineWithoutTab = line.substring(fileLineSpaceCount);
+      if (lineWithoutTab.startsWith("#include ")) {
+        char delim = lineWithoutTab.charAt("#include ".length());
         String fname = "";
         switch (delim) {
           case '"':
@@ -80,8 +90,9 @@ public class PShader {
             fname = line.split("<")[1].split(">")[0];
             break;
         }
-        loadRaw(Gdx.files.local(fname), out, isVertexShader);
+        loadRaw(Gdx.files.local(fname), out, linePrefix + fileLineTabString);
       } else {
+        out.append(linePrefix);
         out.append(line);
       }
       out.append('\n');

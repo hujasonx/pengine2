@@ -65,16 +65,22 @@ public class PRenderContext {
   @Getter
   private final PVec3 cameraUp = new PVec3();
   @Getter
-  private final PVec2 cameraRange = new PVec2();
+  private final PVec2 cameraRange = new PVec2().set(1, 100);
   @Getter
-  private final PVec1 cameraFov = new PVec1();
+  private final PVec1 cameraFov = new PVec1().set(60);
   @Getter
   private final PMat4 viewProjTransform = new PMat4();
   @Getter
   private final PMat4 viewProjInvTraTransform = new PMat4();
 
+  @Getter
+  private PRenderBuffer currentRenderBuffer;
+
   private final PerspectiveCamera perspectiveCamera = new PerspectiveCamera();
   private final OrthographicCamera orthographicCamera = new OrthographicCamera();
+
+  @Getter
+  private int width = 1, height = 1;
 
   private PMap<PShader, PList<DrawCall>> enqueuedDrawCalls = new PMap() {
     @Override
@@ -90,39 +96,40 @@ public class PRenderContext {
     }
   };
 
-  public PRenderContext setPerspectiveCamera() {
-    return putIntoBackingCamera(perspectiveCamera).setFromBackingCamera(perspectiveCamera);
+  public PRenderContext updatePerspectiveCamera() {
+    PAssert.isNotNull(currentRenderBuffer, "currentRenderBuffer should be set, as the camera viewport needs to be set.");
+    return putIntoBackingCamera(perspectiveCamera).setFromBackingCamera(perspectiveCamera, true);
   }
 
-  public PRenderContext setOrtho() {
-    return putIntoBackingCamera(orthographicCamera).setFromBackingCamera(orthographicCamera);
-  }
-
-  public PRenderContext setOrtho(float w, float h) {
-    orthographicCamera.setToOrtho(true, w, h);
-    return setFromBackingCamera(orthographicCamera);
-  }
-
-  public PRenderContext putIntoBackingCamera(Camera camera) {
+  public PRenderContext putIntoBackingCamera(PerspectiveCamera camera) {
+    camera.viewportWidth = width;
+    camera.viewportHeight = height;
     cameraPos.putInto(camera.position);
     cameraDir.putInto(camera.direction);
+    camera.direction.nor();
     cameraUp.putInto(camera.up);
+    camera.normalizeUp();
     camera.near = cameraRange.x();
     camera.far = cameraRange.y();
-    if (camera instanceof PerspectiveCamera) {
-      ((PerspectiveCamera)camera).fieldOfView = cameraFov.x();
-    }
+    camera.fieldOfView = cameraFov.x();
 
     camera.update(true);
-    setFromBackingCamera(camera);
     return this;
   }
 
-  public PRenderContext setFromBackingCamera(Camera camera) {
+  public PRenderContext setFromBackingCamera(PerspectiveCamera camera) {
+    return setFromBackingCamera(camera, false);
+  }
+
+  public PRenderContext setFromBackingCamera(PerspectiveCamera camera, boolean stableSize) {
+    if (!stableSize) {
+      width = (int) camera.viewportWidth;
+      height = (int) camera.viewportHeight;
+    }
     cameraPos.set(camera.position);
     cameraDir.set(camera.direction);
     cameraUp.set(camera.up);
-    cameraFov.set((camera instanceof PerspectiveCamera) ? ((PerspectiveCamera)camera).fieldOfView : MathUtils.HALF_PI);
+    cameraFov.set(camera.fieldOfView);
     cameraRange.set(camera.near, camera.far);
     viewProjTransform.set(camera.combined.val);
     viewProjInvTraTransform.set(camera.invProjectionView.val);
@@ -134,7 +141,18 @@ public class PRenderContext {
     activeContext = this;
   }
 
+  public void setRenderBuffer(PRenderBuffer renderBuffer) {
+    this.currentRenderBuffer = renderBuffer;
+    width = renderBuffer.width();
+    height = renderBuffer.height();
+
+    orthographicCamera.setToOrtho(true, width, height);
+
+    updatePerspectiveCamera();
+  }
+
   public void end() {
+    currentRenderBuffer = null;
     clearQueueMap(enqueuedDrawCalls);
     clearQueueMap(enqueuedAlphaBlendDrawCalls);
     PAssert.isTrue(activeContext == this);

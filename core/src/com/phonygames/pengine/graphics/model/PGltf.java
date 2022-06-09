@@ -35,7 +35,13 @@ public class PGltf {
   private final PSet<OnloadCallback> onLoadTasks = new PSet<>();
   private final PGltf self = this;
 
-  public static PShaderProvider DEFAULT_SHADER_PROVIDER = new PShaderProvider.PMapShaderProvider();
+  public static PShaderProvider DEFAULT_SHADER_PROVIDER = new PShaderProvider.PMapShaderProvider() {
+    @Override
+    public PShader genShader(PVertexAttributes vertexAttributes) {
+      return new PShader(vertexAttributes, Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
+                         Gdx.files.local("engine/shader/gltf/default.frag.glsl"), false);
+    }
+  };
 
   @Getter
   private boolean isLoaded;
@@ -104,14 +110,7 @@ public class PGltf {
           node.setMesh(mesh);
           node.setMaterial(genMaterial(gdxNodePart.material));
 
-
-          PShader defaultShader = DEFAULT_SHADER_PROVIDER.provide(node.getVertexAttributes(), node.getMaterial());
-          if (defaultShader == null) {
-            ((PShaderProvider.PMapShaderProvider) DEFAULT_SHADER_PROVIDER)
-                .set(node.getVertexAttributes(), defaultShader = new PShader(node.getVertexAttributes(), Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
-                                                                             Gdx.files.local("engine/shader/gltf/default.frag.glsl"), false));
-          }
-
+          PShader defaultShader = DEFAULT_SHADER_PROVIDER.provide(node);
           node.setDefaultShader(defaultShader);
           glNodes.add(node);
         }

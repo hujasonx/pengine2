@@ -27,6 +27,10 @@ public class PModelInstance {
   @Getter
   private final PMap<String, PMaterial> materials = new PMap<>();
 
+  public PModelInstance(PModel model) {
+    this(model, null);
+  }
+
   public PModelInstance(PModel model, PShaderProvider defaultShaderProvider) {
     this.model = model;
 
@@ -88,7 +92,9 @@ public class PModelInstance {
       this.parent = parent;
       for (PGlNode node : templateNode.glNodes) {
         PGlNode newNode = node.tryDeepCopy();
-        newNode.setDefaultShader(defaultShaderProvider.provide(node));
+        if (defaultShaderProvider != null) {
+          newNode.setDefaultShader(defaultShaderProvider.provide(node));
+        }
         materials.put(newNode.material.getId(), newNode.material);
 
         this.glNodes.add(newNode);

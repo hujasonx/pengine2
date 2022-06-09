@@ -62,36 +62,38 @@ public class PMesh {
   @Getter
   private final Mesh backingMesh;
 
-  public PMesh(Mesh mesh) {
+  public PMesh(Mesh mesh, PVertexAttributes vertexAttributes) {
     backingMesh = mesh;
-    this.vertexAttributes = getVertexAttributesForMesh(mesh);
+    this.vertexAttributes = vertexAttributes;
   }
 
-  private PVertexAttributes getVertexAttributesForMesh(Mesh mesh) {
-    VertexAttributes vertexAttributes = mesh.getVertexAttributes();
-    VertexAttribute[] attributes = new VertexAttribute[vertexAttributes.size()];
-    for (int a = 0; a < attributes.length; a++) {
-      val va = vertexAttributes.get(a);
-      switch (va.usage) {
+  /**
+   * Generates a new PMesh, doing any necessary renaming.
+   * @param mesh
+   */
+  public PMesh(Mesh mesh) {
+    backingMesh = mesh;
+    for (val attr : mesh.getVertexAttributes()) {
+      switch (attr.usage) {
         case VertexAttributes.Usage.Position:
-          attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos);
+          attr.alias = PVertexAttributes.Attribute.Keys.pos;
           break;
         case VertexAttributes.Usage.Normal:
-          attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.nor);
+          attr.alias = PVertexAttributes.Attribute.Keys.nor;
           break;
         case VertexAttributes.Usage.TextureCoordinates:
-          attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.uv[va.unit]);
+          attr.alias = PVertexAttributes.Attribute.Keys.uv[attr.unit];
           break;
         case VertexAttributes.Usage.ColorPacked:
-          PAssert.warnNotImplemented();
-//          attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.colPacked[va.unit]);
+          attr.alias = PVertexAttributes.Attribute.Keys.colPacked[attr.unit];
           break;
         case VertexAttributes.Usage.ColorUnpacked:
-          attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.col[va.unit]);
+          attr.alias = PVertexAttributes.Attribute.Keys.col[attr.unit];
           break;
       }
     }
-    return new PVertexAttributes(attributes);
+
+    this.vertexAttributes = new PVertexAttributes(backingMesh.getVertexAttributes());
   }
 
   public PMesh(boolean isStatic, int maxVertices, int maxIndices, PVertexAttributes vertexAttributes) {

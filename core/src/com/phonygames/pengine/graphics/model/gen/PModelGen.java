@@ -1,8 +1,11 @@
 package com.phonygames.pengine.graphics.model.gen;
 
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.material.PMaterial;
+import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
@@ -17,21 +20,33 @@ import java.util.Optional;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.val;
 
 public class PModelGen implements PPostableTask {
   @Getter
   private static final PPostableTaskQueue postableTaskQueue = new PPostableTaskQueue();
+
+
+  protected static final PList<PGlNode> tempGlNodesBuffer = new PList<>();
 
   private boolean finished = false;
   private final PMap<String, Part> parts = new PMap<>();
   private final PMap<String, Part> physicsParts = new PMap<>();
 
   public Part addPart(String name, PVertexAttributes vertexAttributes) {
-    return new Part(name, false, vertexAttributes);
+    Part p = new Part(name, false, vertexAttributes);
+    parts.put(name, p);
+    return p;
   }
 
   public Part addPhysicsPart(String name) {
-    return new Part(name, true, PVertexAttributes.getPHYSICS());
+    Part p = new Part(name, false, PVertexAttributes.getPHYSICS());
+    physicsParts.put(name, p);
+    return p;
+  }
+
+  public Part addPbrPart(String name) {
+    return addPart(name, PVertexAttributes.getGLTF_UNSKINNED());
   }
 
   @Override
@@ -59,6 +74,23 @@ public class PModelGen implements PPostableTask {
 
   protected void modelEnd() {
 
+  }
+
+  protected PModelGen chainGlNode(PList<PGlNode> list, Part part, PMaterial defaultMaterial, PShaderProvider defaultShaderProvider) {
+    if (list == null) {
+      list = new PList<>();
+    }
+
+    val glNode = new PGlNode(part.name);
+    glNode.setMesh(part.getMesh());
+    glNode.setMaterial(defaultMaterial);
+    if (defaultShaderProvider != null) {
+      glNode.setDefaultShader(defaultShaderProvider.provide(glNode));
+    }
+
+    list.add(glNode);
+
+    return this;
   }
 
   public static class Part {
