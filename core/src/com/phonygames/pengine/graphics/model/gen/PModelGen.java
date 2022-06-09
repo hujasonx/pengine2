@@ -76,7 +76,7 @@ public class PModelGen implements PPostableTask {
 
   }
 
-  protected PModelGen chainGlNode(PList<PGlNode> list, Part part, PMaterial defaultMaterial, PShaderProvider defaultShaderProvider) {
+  protected PModelGen chainGlNode(PList<PGlNode> list, Part part, PMaterial defaultMaterial) {
     if (list == null) {
       list = new PList<>();
     }
@@ -84,9 +84,6 @@ public class PModelGen implements PPostableTask {
     val glNode = new PGlNode(part.name);
     glNode.setMesh(part.getMesh());
     glNode.setMaterial(defaultMaterial);
-    if (defaultShaderProvider != null) {
-      glNode.setDefaultShader(defaultShaderProvider.provide(glNode));
-    }
 
     list.add(glNode);
 

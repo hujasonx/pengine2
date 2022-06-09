@@ -2,6 +2,7 @@ package com.phonygames.pengine.graphics.model;
 
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
+import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
@@ -88,15 +89,17 @@ public class PModelInstance {
     @Getter
     final PMat4 worldTransformInvTra = new PMat4();
 
+    @Getter
+    @Setter
+    PShaderProvider defaultShaderProvider;
+
     private Node(PModel.Node templateNode, Node parent, PShaderProvider defaultShaderProvider) {
       this.templateNode = templateNode;
       this.parent = parent;
       this.transform.set(templateNode.transform);
       for (PGlNode node : templateNode.glNodes) {
         PGlNode newNode = node.tryDeepCopy();
-        if (defaultShaderProvider != null) {
-          newNode.setDefaultShader(defaultShaderProvider.provide(node));
-        }
+        this.defaultShaderProvider = defaultShaderProvider;
         materials.put(newNode.material.getId(), newNode.material);
 
         this.glNodes.add(newNode);
@@ -112,6 +115,10 @@ public class PModelInstance {
 
     public void renderDefault(PRenderContext renderContext) {
       for (val node : glNodes) {
+        if (node.getDefaultShader() == null && defaultShaderProvider != null) {
+          node.setDefaultShader(defaultShaderProvider.provide(renderContext.getCurrentRenderBuffer().getFragmentLayout(), node));
+        }
+
         node.tryRenderDefault(renderContext);
       }
 

@@ -26,4 +26,3 @@ uniform sampler2D u_emissiveTex;
 uniform sampler2D u_metallicRoughnessTex;
 #endif
 
-layout(location = 0) out vec4 o_diffuseM;

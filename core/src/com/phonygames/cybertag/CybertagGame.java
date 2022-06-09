@@ -68,7 +68,7 @@ public class CybertagGame implements PGame {
       @Override
       protected void modelEnd() {
         PList<PGlNode> glNodes = new PList<>();
-        chainGlNode(glNodes, basePart, new PMaterial(basePart.getName()), null);
+        chainGlNode(glNodes, basePart, new PMaterial(basePart.getName()));
         PModel.Builder builder = new PModel.Builder();
         builder.addNode("box", null, glNodes, PMat4.IDT);
         testBoxModel = builder.build();

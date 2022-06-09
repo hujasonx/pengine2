@@ -37,8 +37,8 @@ public class PGltf {
 
   public static PShaderProvider DEFAULT_SHADER_PROVIDER = new PShaderProvider.PMapShaderProvider() {
     @Override
-    public PShader genShader(PVertexAttributes vertexAttributes) {
-      return new PShader("#define pbrFlag\n", vertexAttributes, Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
+    public PShader genShader(String fragmentLayout, PVertexAttributes vertexAttributes) {
+      return new PShader("#define pbrFlag\n", fragmentLayout, vertexAttributes, Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
                          Gdx.files.local("engine/shader/gltf/default.frag.glsl"));
     }
   };
@@ -109,9 +109,6 @@ public class PGltf {
           PGlNode node = new PGlNode(gdxNodePart.meshPart.id);
           node.setMesh(mesh);
           node.setMaterial(genMaterial(gdxNodePart.material));
-
-          PShader defaultShader = DEFAULT_SHADER_PROVIDER.provide(node);
-          node.setDefaultShader(defaultShader);
           glNodes.add(node);
         }
       }

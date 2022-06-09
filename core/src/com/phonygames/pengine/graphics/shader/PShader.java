@@ -36,10 +36,10 @@ public class PShader {
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
 
-  public PShader(String prefix, PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
+  public PShader(String prefix, String fragmentLayout, PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
-    StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix);
+    StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout);
 
     loadRaw(vert, vertexStringBuilder, "");
     loadRaw(frag, fragmentStringBuilder, "");
