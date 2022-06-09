@@ -78,5 +78,9 @@ public abstract class PShaderProvider {
       materialIdMap.put(materialId, shader);
       return this;
     }
+
+    public boolean has(PVertexAttributes vertexAttributes) {
+      return vertexAttributesMap.containsKey(vertexAttributes);
+    }
   }
 }

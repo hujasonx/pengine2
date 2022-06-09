@@ -11,6 +11,7 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.exception.PRuntimeException;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
+import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
@@ -37,8 +38,8 @@ public class PShader {
   @Getter
   private boolean useAlphaBlend = false;
 
-  public PShader(String prefix, FileHandle vert, FileHandle frag, boolean useAlphaBlend) {
-    this.prefix = "#version 330\n\n" + prefix;
+  public PShader(PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag, boolean useAlphaBlend) {
+    this.prefix = "#version 330\n\n" + vertexAttributes.getPrefix();
     StringBuilder vertexStringBuilder = new StringBuilder(this.prefix);
     StringBuilder fragmentStringBuilder = new StringBuilder(this.prefix);
 
@@ -52,7 +53,9 @@ public class PShader {
 
     shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
     if (!shaderProgram.isCompiled()) {
-      throw new PRuntimeException("Shader was not compiled");
+      PLog.w(shaderProgram.getVertexShaderSource());
+      PLog.w(shaderProgram.getFragmentShaderSource());
+      throw new PRuntimeException("Shader was not compiled:\n" + shaderProgram.getLog());
     }
   }
 

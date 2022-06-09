@@ -116,6 +116,11 @@ public class PVec3 extends PVec {
     return this;
   }
 
+  public PVec3 set(Vector3 other) {
+    backingVec3.set(other);
+    return this;
+  }
+
   public PVec3 set(PVec3 other) {
     backingVec3.set(other.backingVec3);
     return this;
@@ -135,7 +140,7 @@ public class PVec3 extends PVec {
     return new PVec3().set(this);
   }
 
-  public Vector3 out(Vector3 in) {
+  public Vector3 putInto(Vector3 in) {
     in.set(backingVec3);
     return in;
   }

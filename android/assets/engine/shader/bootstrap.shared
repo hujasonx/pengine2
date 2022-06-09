@@ -1,3 +1,7 @@
 uniform vec4 u_tdtuituidt;
+uniform mat4 u_worldTrans;
 uniform mat4 u_viewProjTransform;
 uniform mat4 u_viewProjInvTraTransform;
+uniform vec3 u_cameraPos;
+uniform vec3 u_cameraDir;
+uniform vec3 u_cameraUp;

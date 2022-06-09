@@ -1,49 +1,25 @@
 #include <engine/shader/bootstrap.shared>
 
+in vec3 v_aPos;
+in vec4 v_worldPos;
 
-
-#ifdef u_pos;
-in vec3 v_pos;
-#endif// u_pos;
-
-#ifdef u_nor;
+#ifdef v_norFlag
 in vec3 v_nor;
-#endif// u_nor;
+vec3 nor() {
+    return v_nor;
+}
+    #else
+vec3 nor() {
+    return vec3(0.0);
+}
+    #endif
 
-#ifdef u_uv0;
+    #ifdef v_uv0Flag
 in vec2 v_uv0;
-#endif// u_uv0;
+#endif
 
-#ifdef u_uv1;
-in vec2 v_uv1;
-#endif// u_uv1;
-
-#ifdef u_uv2;
-in vec2 v_uv2;
-#endif// u_uv2;
-
-#ifdef u_uv3;
-in vec2 v_uv3;
-#endif// u_uv3;
-
-#ifdef u_col0;
+#ifdef v_col0Flag
 in vec4 v_col0;
-#endif// u_col0;
-
-#ifdef u_col1;
-in vec4 v_col1;
-#endif// u_col1;
-
-#ifdef u_col2;
-in vec4 v_col2;
-#endif// u_col2;
-
-#ifdef u_col3;
-in vec4 v_col3;
-#endif// u_col3;
+#endif
 
 layout(location = 0) out vec4 o_dif;
-
-uniform mat4 u_projViewTrans;
-uniform mat4 u_worldTrans;
-uniform mat4 u_worldTransInvTrans;

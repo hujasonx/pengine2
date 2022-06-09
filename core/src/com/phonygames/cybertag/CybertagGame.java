@@ -2,7 +2,9 @@ package com.phonygames.cybertag;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.phonygames.pengine.PAssetManager;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PRenderBuffer;
@@ -15,6 +17,8 @@ import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
+
+import lombok.val;
 
 public class CybertagGame implements PGame {
 
@@ -32,16 +36,13 @@ public class CybertagGame implements PGame {
     }
 
     testMaterial = new PMaterial("testMaterial");
-    testShader = new PShader("", Gdx.files.local("engine/shader/gltf/default.vert.glsl"), Gdx.files.local("engine/shader/gltf/default.frag.glsl"), false);
-    final PShaderProvider.PMapShaderProvider gltfShaderProvider = new PShaderProvider.PMapShaderProvider();
-    gltfShaderProvider.setDefaultShader(testShader);
 
     new PGltf("engine/model/blender.glb").loadThenDo(
         new PGltf.OnloadCallback() {
           @Override
           public void onLoad(PGltf gltf) {
             testModel = gltf.getModel();
-            testModelInstance = new PModelInstance(testModel, gltfShaderProvider);
+            testModelInstance = new PModelInstance(testModel, PGltf.DEFAULT_SHADER_PROVIDER);
           }
         }
     );
@@ -67,13 +68,16 @@ public class CybertagGame implements PGame {
 
   public void frameUpdate() {
     gBuffers[0].begin();
+
+    renderContext.getCameraPos().set(10, 10, 10);
+    renderContext.getCameraUp().set(0, 1, 0);
+    renderContext.getCameraDir().set(-1, -1, -1);
+    renderContext.setPerspectiveCamera();
     renderContext.start();
     PGLUtils.clearScreen(0, 1, 1, 1);
 
     if (PMesh.FULLSCREEN_QUAD_MESH != null) {
-      testShader.start();
 //      PMesh.FULLSCREEN_QUAD_MESH.getBackingMesh().render(testShader.getShaderProgram(), PMesh.ShapeType.Filled.getGlType());
-      testShader.end();
     }
 
     if (testModelInstance != null) {

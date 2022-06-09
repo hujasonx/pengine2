@@ -1,13 +1,17 @@
 package com.phonygames.pengine.graphics;
 
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec1;
+import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
@@ -19,14 +23,20 @@ import lombok.val;
 
 public class PRenderContext {
   public static class UniformConstants {
+
+    public static class Vec2 {
+    }
+
+    public static class Vec3 {
+      public final static String u_cameraPos = "u_cameraPos";
+      public final static String u_cameraDir = "u_cameraDir";
+      public final static String u_cameraUp = "u_cameraUp";
+    }
     public static class Vec4 {
       public final static String u_tdtuituidt = "u_tdtuituidt";
     }
 
     public static class Sampler2d {
-    }
-
-    public static class Vec2 {
     }
 
     public static class Float {
@@ -55,12 +65,16 @@ public class PRenderContext {
   @Getter
   private final PVec3 cameraUp = new PVec3();
   @Getter
+  private final PVec2 cameraRange = new PVec2();
+  @Getter
+  private final PVec1 cameraFov = new PVec1();
+  @Getter
   private final PMat4 viewProjTransform = new PMat4();
   @Getter
   private final PMat4 viewProjInvTraTransform = new PMat4();
 
-  private final OrthographicCamera camera = new OrthographicCamera();
   private final PerspectiveCamera perspectiveCamera = new PerspectiveCamera();
+  private final OrthographicCamera orthographicCamera = new OrthographicCamera();
 
   private PMap<PShader, PList<DrawCall>> enqueuedDrawCalls = new PMap() {
     @Override
@@ -77,10 +91,39 @@ public class PRenderContext {
   };
 
   public PRenderContext setPerspectiveCamera() {
-    cameraPos.out(camera.position);
-    cameraDir.out(camera.direction);
-    cameraUp.out(camera.up);
+    return putIntoBackingCamera(perspectiveCamera).setFromBackingCamera(perspectiveCamera);
+  }
+
+  public PRenderContext setOrtho() {
+    return putIntoBackingCamera(orthographicCamera).setFromBackingCamera(orthographicCamera);
+  }
+
+  public PRenderContext setOrtho(float w, float h) {
+    orthographicCamera.setToOrtho(true, w, h);
+    return setFromBackingCamera(orthographicCamera);
+  }
+
+  public PRenderContext putIntoBackingCamera(Camera camera) {
+    cameraPos.putInto(camera.position);
+    cameraDir.putInto(camera.direction);
+    cameraUp.putInto(camera.up);
+    camera.near = cameraRange.x();
+    camera.far = cameraRange.y();
+    if (camera instanceof PerspectiveCamera) {
+      ((PerspectiveCamera)camera).fieldOfView = cameraFov.x();
+    }
+
     camera.update(true);
+    setFromBackingCamera(camera);
+    return this;
+  }
+
+  public PRenderContext setFromBackingCamera(Camera camera) {
+    cameraPos.set(camera.position);
+    cameraDir.set(camera.direction);
+    cameraUp.set(camera.up);
+    cameraFov.set((camera instanceof PerspectiveCamera) ? ((PerspectiveCamera)camera).fieldOfView : MathUtils.HALF_PI);
+    cameraRange.set(camera.near, camera.far);
     viewProjTransform.set(camera.combined.val);
     viewProjInvTraTransform.set(camera.invProjectionView.val);
     return this;
@@ -108,6 +151,9 @@ public class PRenderContext {
       shader.set(UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
       shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
       shader.set(UniformConstants.Mat4.u_viewProjInvTraTransform, viewProjInvTraTransform);
+      shader.set(UniformConstants.Vec3.u_cameraPos, cameraPos);
+      shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
+      shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
 
 
       val queue = queueMap.get(shader);

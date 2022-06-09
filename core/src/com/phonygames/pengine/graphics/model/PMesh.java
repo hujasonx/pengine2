@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.gen.PModelGen;
 import com.phonygames.pengine.graphics.shader.PShader;
@@ -82,7 +83,8 @@ public class PMesh {
           attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.uv[va.unit]);
           break;
         case VertexAttributes.Usage.ColorPacked:
-          attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.colPacked[va.unit]);
+          PAssert.warnNotImplemented();
+//          attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.colPacked[va.unit]);
           break;
         case VertexAttributes.Usage.ColorUnpacked:
           attributes[a] = PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.col[va.unit]);

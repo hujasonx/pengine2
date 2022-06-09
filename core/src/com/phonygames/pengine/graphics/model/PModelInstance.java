@@ -20,6 +20,8 @@ public class PModelInstance {
 
   @Getter
   private final PMap<String, Node> nodes = new PMap<>();
+  @Getter
+  private final PMap<String, PGlNode> glNodes = new PMap<>();
   private final PList<Node> rootNodes = new PList<>();
 
   @Getter
@@ -40,6 +42,10 @@ public class PModelInstance {
 
       Node parent = childToParentNodeMap.get(modelNode);
       Node node = new Node(modelNode, parent, defaultShaderProvider);
+      for (val glNode : node.glNodes) {
+        glNodes.put(glNode.getId(), glNode);
+      }
+
       nodes.put(modelNode.id, node);
       if (parent == null) {
         rootNodes.add(node);

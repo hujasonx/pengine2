@@ -69,6 +69,7 @@ public class PGlNode {
     }
 
     node.setMesh(mesh);
+    node.setDefaultShader(defaultShader);
 
     node.worldTransform.set(this.worldTransform);
     node.worldTransformI.set(this.worldTransformI);

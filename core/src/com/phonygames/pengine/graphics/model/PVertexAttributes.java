@@ -1,22 +1,15 @@
 package com.phonygames.pengine.graphics.model;
 
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.PCollectionUtils;
-import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.val;
 
@@ -26,8 +19,8 @@ public class PVertexAttributes {
   private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
   @Getter
   private final int numFloatsPerVertex;
-
-  private final String combinedAttributeAliases;
+  @Getter
+  private final String prefix;
 
   public static final class Attribute {
     private static int maxUsage = 1;
@@ -65,7 +58,7 @@ public class PVertexAttributes {
         Keys.col[a] = "a_col" + a;
         Keys.colPacked[a] = "a_col" + a;
         registerAttribute(Keys.col[a], 4);
-        registerAttribute(Keys.colPacked[a], 4);
+//        registerAttribute(Keys.colPacked[a], 4); // TODO: handle packed.
       }
 
       DEFAULT = new PVertexAttributes(
@@ -89,31 +82,31 @@ public class PVertexAttributes {
 
   public PVertexAttributes(VertexAttribute[] vertexAttributes) {
     int floatsPerVertex = 0;
-    StringBuilder combinedAliases = new StringBuilder();
+    StringBuilder prefix = new StringBuilder();
     for (int a = 0; a < vertexAttributes.length; a++) {
       val va = vertexAttributes[a];
       vertexAttributeFloatIndexInVertex.put(va.alias, floatsPerVertex);
-      combinedAliases.append("|").append(va.alias);
+      prefix.append("#define ").append(va.alias).append("Flag\n");
 
       floatsPerVertex += va.numComponents;
     }
 
     this.vertexAttributes = new VertexAttributes(vertexAttributes);
 
-    this.combinedAttributeAliases = combinedAliases.toString();
+    this.prefix = prefix.toString();
     this.numFloatsPerVertex = floatsPerVertex;
   }
 
   @Override
   public int hashCode() {
-    return combinedAttributeAliases.hashCode();
+    return prefix.hashCode();
   }
 
   @Override
   public boolean equals(Object o) {
     if (o instanceof PVertexAttributes) {
       val other = (PVertexAttributes) o;
-      return combinedAttributeAliases.equals(other.combinedAttributeAliases);
+      return prefix.equals(other.prefix);
     }
 
     return false;
@@ -126,4 +119,6 @@ public class PVertexAttributes {
   public int indexForVertexAttribute(VertexAttribute vertexAttribute) {
     return vertexAttributeFloatIndexInVertex.get(vertexAttribute.alias);
   }
+
+
 }

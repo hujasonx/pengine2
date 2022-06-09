@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
+import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
@@ -32,6 +34,8 @@ public class PGltf {
   private static final PMap<String, PGltf> loadingGltfs = new PMap<>();
   private final PSet<OnloadCallback> onLoadTasks = new PSet<>();
   private final PGltf self = this;
+
+  public static PShaderProvider DEFAULT_SHADER_PROVIDER = new PShaderProvider.PMapShaderProvider();
 
   @Getter
   private boolean isLoaded;
@@ -99,6 +103,16 @@ public class PGltf {
           PGlNode node = new PGlNode(gdxNodePart.meshPart.id);
           node.setMesh(mesh);
           node.setMaterial(genMaterial(gdxNodePart.material));
+
+
+          PShader defaultShader = DEFAULT_SHADER_PROVIDER.provide(node.getVertexAttributes(), node.getMaterial());
+          if (defaultShader == null) {
+            ((PShaderProvider.PMapShaderProvider) DEFAULT_SHADER_PROVIDER)
+                .set(node.getVertexAttributes(), defaultShader = new PShader(node.getVertexAttributes(), Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
+                                                                             Gdx.files.local("engine/shader/gltf/default.frag.glsl"), false));
+          }
+
+          node.setDefaultShader(defaultShader);
           glNodes.add(node);
         }
       }
