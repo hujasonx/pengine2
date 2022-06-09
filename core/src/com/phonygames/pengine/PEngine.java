@@ -22,12 +22,11 @@ import lombok.Getter;
 public class PEngine extends ApplicationAdapter {
   public static final String LIBRARY_NAME = "penginelib";
 
-  public static int frameCount = 0, logicUpdateCount = 1, t = 0, uit = 0, logict = 0;
+  public static int frameCount = 0, logicUpdateCount = 1;
   public static float logicupdateframeratio = .1f; // The ratio between the prev and next logic updates that the current frame is at, temporally.public static float uit = 0;
-  public static float dt = .1f; // dt and t are in frame time.
+  public static float t = 0, dt = .1f, uit = 0, uidt = .1f, logict = 0; // dt and t are in frame time.
   public static float logictimestep = 1f / 60f;
   //  public static float logictimestep = 1f / 240f;
-  public static float uidt = .1f;
   private static WindowedMean uidtWindowedMean = new WindowedMean(8);
   private static float timeScale = 1;
   private static PGame game;
@@ -83,7 +82,12 @@ public class PEngine extends ApplicationAdapter {
 
   private void processLogicUpdateForFrame() {
     currentPhase = Phase.LOGIC;
+    if (logict < t - 1) { // After a large lag spike, don't process the logic update too quickly.
+      logict = t;
+    }
+
     while (logict < t) {
+      System.out.println(t + ", " + logict);
       logict += logictimestep;
 
       game.preLogicUpdate();

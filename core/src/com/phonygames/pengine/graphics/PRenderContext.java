@@ -1,6 +1,9 @@
 package com.phonygames.pengine.graphics;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.MathUtils;
@@ -139,6 +142,7 @@ public class PRenderContext {
   public void start() {
     PAssert.isNull(activeContext);
     activeContext = this;
+    Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
   }
 
   public void setRenderBuffer(PRenderBuffer renderBuffer) {
@@ -173,7 +177,6 @@ public class PRenderContext {
       shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
       shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
 
-
       val queue = queueMap.get(shader);
       Collections.sort(queue);
       for (DrawCall drawCall : queue) {
@@ -194,7 +197,7 @@ public class PRenderContext {
   }
 
   public void enqueue(PShader shader, PGlNode node) {
-    if (shader.isUseAlphaBlend()) {
+    if (node.isUseAlphaBlend()) {
       enqueuedAlphaBlendDrawCalls.getOrMake(shader).add(drawCallPool.obtain().set(node));
     } else {
       enqueuedDrawCalls.getOrMake(shader).add(drawCallPool.obtain().set(node));

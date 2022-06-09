@@ -1,6 +1,8 @@
-#include <engine/shader/bootstrap.shared>
+// HEADER
+#include <engine/shader/header/bootstrap.shared>
 
 in vec3 a_pos;
+in vec3 a_pos1;
 out vec4 v_worldPos;
 out vec3 v_aPos;
 

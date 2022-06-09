@@ -16,7 +16,8 @@ import lombok.Getter;
 import lombok.val;
 
 public class PVertexAttributes {
-  final VertexAttributes vertexAttributes;
+  @Getter
+  private final VertexAttributes backingVertexAttributes;
 
   private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
   @Getter
@@ -87,9 +88,9 @@ public class PVertexAttributes {
   @Getter
   private int bytesPerVertex;
 
-  public PVertexAttributes(Iterable<VertexAttribute> vertexAttributes) {
+  public PVertexAttributes(Iterable<VertexAttribute> backingVertexAttributes) {
     PList<VertexAttribute> vaList = new PList<>();
-    for (VertexAttribute va : vertexAttributes) {
+    for (VertexAttribute va : backingVertexAttributes) {
       vaList.add(va);
     }
 
@@ -97,11 +98,11 @@ public class PVertexAttributes {
     for (int a = 0; a < vaArray.length; a++) {
       vaArray[a] = vaList.get(a);
     }
-    this.vertexAttributes = genVertexAttributes(vaArray);
+    this.backingVertexAttributes = genVertexAttributes(vaArray);
   }
 
-  public PVertexAttributes(VertexAttribute[] vertexAttributes) {
-    this.vertexAttributes = genVertexAttributes(vertexAttributes);
+  public PVertexAttributes(VertexAttribute[] backingVertexAttributes) {
+    this.backingVertexAttributes = genVertexAttributes(backingVertexAttributes);
   }
 
   private VertexAttributes genVertexAttributes(VertexAttribute[] vertexAttributes) {
@@ -123,14 +124,14 @@ public class PVertexAttributes {
 
   @Override
   public int hashCode() {
-    return vertexAttributes.hashCode();
+    return backingVertexAttributes.hashCode();
   }
 
   @Override
   public boolean equals(Object o) {
     if (o instanceof PVertexAttributes) {
       val other = (PVertexAttributes) o;
-      return vertexAttributes.equals(other.vertexAttributes);
+      return backingVertexAttributes.equals(other.backingVertexAttributes);
     }
 
     return false;

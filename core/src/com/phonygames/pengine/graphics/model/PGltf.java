@@ -39,7 +39,7 @@ public class PGltf {
     @Override
     public PShader genShader(PVertexAttributes vertexAttributes) {
       return new PShader(vertexAttributes, Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
-                         Gdx.files.local("engine/shader/gltf/default.frag.glsl"), false);
+                         Gdx.files.local("engine/shader/gltf/default.frag.glsl"));
     }
   };
 

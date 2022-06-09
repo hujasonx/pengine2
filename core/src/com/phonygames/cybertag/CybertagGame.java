@@ -23,7 +23,6 @@ public class CybertagGame implements PGame {
   protected PShader testShader;
   protected final PRenderBuffer[] gBuffers = new PRenderBuffer[4];
 
-  private PMaterial testMaterial;
   private PModel testModel;
   private PModel testBoxModel;
   private PModelInstance testModelInstance;
@@ -35,9 +34,7 @@ public class CybertagGame implements PGame {
       gBuffers[a] = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse", GL30.GL_RGBA16F, GL30.GL_RGBA).build();
     }
 
-    testMaterial = new PMaterial("testMaterial");
-
-    new PGltf("engine/model/four-spheres.glb").loadThenDo(
+    new PGltf("engine/model/blender.glb").loadThenDo(
         new PGltf.OnloadCallback() {
           @Override
           public void onLoad(PGltf gltf) {
@@ -97,8 +94,8 @@ public class CybertagGame implements PGame {
 
   public void frameUpdate() {
     gBuffers[0].begin();
-
-    renderContext.getCameraPos().set(10, 10, 10);
+    renderContext.getCameraRange().y(1000);
+    renderContext.getCameraPos().set(500, 500, 500);
     renderContext.getCameraUp().set(0, 1, 0);
     renderContext.getCameraDir().set(-1, -1, -1);
     renderContext.setRenderBuffer(gBuffers[0]);

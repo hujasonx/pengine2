@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics.model;
 
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Mesh;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -18,6 +19,7 @@ public class PGlNode {
 
     public static class Vec3 {
     }
+
     public static class Vec4 {
     }
 
@@ -50,6 +52,9 @@ public class PGlNode {
   @Getter
   private final PMat4 worldTransformInvTra = new PMat4();
 
+  @Getter
+  @Setter
+  private boolean useAlphaBlend;
   @Getter
   @Setter
   private PShader defaultShader = null;
@@ -94,6 +99,7 @@ public class PGlNode {
 
     node.setMesh(mesh);
     node.setDefaultShader(defaultShader);
+    node.useAlphaBlend = useAlphaBlend;
 
     node.worldTransform.set(this.worldTransform);
     node.worldTransformInvTra.set(this.worldTransformInvTra);

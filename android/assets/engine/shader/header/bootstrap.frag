@@ -1,4 +1,5 @@
-#include <engine/shader/bootstrap.shared>
+// FRAGMENT
+#include <engine/shader/header/bootstrap.shared>
 
 in vec3 v_aPos;
 in vec4 v_worldPos;

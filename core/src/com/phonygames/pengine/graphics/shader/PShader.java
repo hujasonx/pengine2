@@ -22,6 +22,7 @@ import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
 
 public class PShader {
   private final String prefix;
@@ -35,10 +36,7 @@ public class PShader {
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
 
-  @Getter
-  private boolean useAlphaBlend = false;
-
-  public PShader(PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag, boolean useAlphaBlend) {
+  public PShader(PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
     this.prefix = "" + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix);
@@ -48,8 +46,6 @@ public class PShader {
 
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
-
-    this.useAlphaBlend = useAlphaBlend;
 
     shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
     if (!shaderProgram.isCompiled()) {

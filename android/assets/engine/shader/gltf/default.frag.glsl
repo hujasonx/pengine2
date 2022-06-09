@@ -1,7 +1,8 @@
-#include <engine/shader/bootstrap.frag>
+#include <engine/shader/header/bootstrap.frag>
 
 void main() {
-    #include <engine/shader/bootstrap.main.start.frag>
-    o_dif = vec4(v_worldPos.xyz, 1.0);
+    #include <engine/shader/main/start/bootstrap.frag>
+    o_dif = vec4(nor, 1.0);
 
+    #include <engine/shader/main/end/bootstrap.frag>
 }

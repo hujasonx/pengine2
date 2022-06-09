@@ -2,23 +2,23 @@ package com.phonygames.pengine.graphics.model;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.material.PMaterial;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.phonygames.pengine.graphics.model.gen.PModelGen;
-import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.util.PCollectionUtils;
 import com.phonygames.pengine.util.PList;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.val;
 
 public class PMesh {
   @Getter
   private final PVertexAttributes vertexAttributes;
   public static PMesh FULLSCREEN_QUAD_MESH;
+
+  @Getter
+  private boolean autobind = false;
 
   public static void init() {
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
@@ -95,7 +95,7 @@ public class PMesh {
   }
 
   public PMesh(boolean isStatic, int maxVertices, int maxIndices, PVertexAttributes vertexAttributes) {
-    backingMesh = new Mesh(isStatic, maxVertices, maxIndices, vertexAttributes.vertexAttributes);
+    backingMesh = new Mesh(isStatic, maxVertices, maxIndices, vertexAttributes.getBackingVertexAttributes());
     this.vertexAttributes = vertexAttributes;
   }
 
@@ -107,5 +107,10 @@ public class PMesh {
     this(isStatic, vertexData.length, indexData.length, vertexAttributes);
     backingMesh.setVertices(vertexData);
     backingMesh.setIndices(indexData);
+  }
+
+  public void setAutobind(boolean autobind) {
+    backingMesh.setAutoBind(autobind);
+    this.autobind = autobind;
   }
 }
