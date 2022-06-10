@@ -89,6 +89,10 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     createFrameBuffersIfNeeded();
     activeBuffer = this;
 
+    if (PRenderContext.getActiveContext() != null) {
+      PRenderContext.getActiveContext().setForRenderBuffer(this);
+    }
+
     if (swapBuffers) {
       swapBuffers();
     }

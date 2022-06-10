@@ -3,9 +3,11 @@ package com.phonygames.pengine.graphics.model;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 
 import lombok.Getter;
@@ -63,17 +65,18 @@ public class PGlNode {
     this.id = id;
   }
 
-  public boolean tryRenderDefault(PRenderContext renderContext) {
+  public boolean genDefaultShader(String fragmentLayout, PShaderProvider shaderProvider) {
+    if (defaultShader == null) {
+      if (shaderProvider != null && PRenderBuffer.getActiveBuffer() != null) {
+        defaultShader = shaderProvider.provide(fragmentLayout, this);
+      }
+    }
+
     if (defaultShader == null) {
       return false;
     }
 
-    render(defaultShader, renderContext);
     return true;
-  }
-
-  public void render(PShader shader, PRenderContext renderContext) {
-    renderContext.enqueue(shader, this);
   }
 
   public void renderGl(PShader shader) {

@@ -63,10 +63,10 @@ public class PModelInstance {
     }
   }
 
-  public void renderDefault(PRenderContext renderContext) {
+  public void render(PRenderContext renderContext) {
     for (val node : rootNodes) {
       node.recalcNodeWorldTransformsRecursive(worldTransform);
-      node.renderDefault(renderContext);
+      node.render(renderContext);
     }
   }
 
@@ -113,17 +113,13 @@ public class PModelInstance {
       return templateNode.id;
     }
 
-    public void renderDefault(PRenderContext renderContext) {
+    public void render(PRenderContext renderContext) {
       for (val node : glNodes) {
-        if (node.getDefaultShader() == null && defaultShaderProvider != null) {
-          node.setDefaultShader(defaultShaderProvider.provide(renderContext.getCurrentRenderBuffer().getFragmentLayout(), node));
-        }
-
-        node.tryRenderDefault(renderContext);
+        renderContext.enqueue(renderContext.getPhaseHandlers(), defaultShaderProvider, node);
       }
 
       for (Node child : children) {
-        child.renderDefault(renderContext);
+        child.render(renderContext);
       }
     }
 

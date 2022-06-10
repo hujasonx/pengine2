@@ -18,11 +18,16 @@ import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.val;
 
 public class PMaterial {
   @Getter
   private final String id;
+
+  @Getter
+  @Setter
+  private String layer = "";
 
   private final PMap<String, PVec1> vec1s = new PMap<String, PVec1>() {
     @Override
@@ -199,6 +204,7 @@ public class PMaterial {
     ret.vec3s.tryDeepCopyFrom(vec3s);
     ret.vec4s.tryDeepCopyFrom(vec4s);
     ret.textures.tryDeepCopyFrom(textures);
+    ret.layer = layer;
     return ret;
   }
 

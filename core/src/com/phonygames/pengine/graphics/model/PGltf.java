@@ -54,6 +54,7 @@ public class PGltf {
 
   private PMaterial genMaterial(Material material) {
     val ret = new PMaterial(material.id);
+    ret.setLayer("PBR");
 
     for (Attribute attribute : material) {
       ret.set(attribute);

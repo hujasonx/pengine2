@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL30;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
+import com.phonygames.pengine.graphics.PPbrPipeline;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
@@ -32,6 +33,8 @@ public class CybertagGame implements PGame {
   private PModelInstance testBoxModelInstance;
   private PRenderContext renderContext;
 
+  private PPbrPipeline pPbrPipeline;
+
   public void init() {
     for (int a = 0; a < gBuffers.length; a++) {
       gBuffers[a] =
@@ -49,6 +52,7 @@ public class CybertagGame implements PGame {
     );
 
     renderContext = new PRenderContext();
+    pPbrPipeline = new PPbrPipeline(gBuffers[0], null);
 
 
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
@@ -97,15 +101,12 @@ public class CybertagGame implements PGame {
   }
 
   public void frameUpdate() {
-    gBuffers[0].begin();
     renderContext.getCameraRange().y(1000);
     renderContext.getCameraPos().set(5, 5, 5);
     renderContext.getCameraUp().set(0, 1, 0);
     renderContext.getCameraDir().set(-1, -1, -1);
-    renderContext.setRenderBuffer(gBuffers[0]);
-    renderContext.updatePerspectiveCamera();
     renderContext.start();
-    PGLUtils.clearScreen(0, 1, 1, 1);
+    pPbrPipeline.attach(renderContext);
 
     if (PMesh.FULLSCREEN_QUAD_MESH != null) {
 //      PMesh.FULLSCREEN_QUAD_MESH.getBackingMesh().render(testShader.getShaderProgram(), PMesh.ShapeType.Filled.getGlType());
@@ -113,15 +114,15 @@ public class CybertagGame implements PGame {
 
     if (testModelInstance != null) {
       testModelInstance.getWorldTransform().idt().scl(1, 1, 1).rot(0, 1, 0, PEngine.t);
-      testModelInstance.renderDefault(renderContext);
+      testModelInstance.render(renderContext);
     }
 
     if (testBoxModelInstance != null) {
 //      testBoxModelInstance.renderDefault(renderContext);
     }
+
     renderContext.emit();
     renderContext.end();
-    gBuffers[0].end();
 
   }
 

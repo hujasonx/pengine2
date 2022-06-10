@@ -1,20 +1,17 @@
 package com.phonygames.pengine.graphics;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.g3d.utils.TextureBinder;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
@@ -25,6 +22,8 @@ import com.phonygames.pengine.util.PMap;
 import java.util.Collections;
 
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 import lombok.val;
 
 public class PRenderContext {
@@ -61,6 +60,11 @@ public class PRenderContext {
       return new DrawCall();
     }
   };
+  private static DrawCall DEFAULT_DRAWCALL = new DrawCall();
+
+  @Getter
+  @Setter
+  private PhaseHandler[] phaseHandlers;
 
   @Getter
   private static PRenderContext activeContext = null;
@@ -80,8 +84,6 @@ public class PRenderContext {
   private final PMat4 viewProjTransform = new PMat4();
   @Getter
   private final PMat4 viewProjInvTraTransform = new PMat4();
-  @Getter
-  private PRenderBuffer currentRenderBuffer;
 
   private final PerspectiveCamera perspectiveCamera = new PerspectiveCamera();
   private final OrthographicCamera orthographicCamera = new OrthographicCamera();
@@ -89,22 +91,20 @@ public class PRenderContext {
   @Getter
   private int width = 1, height = 1;
 
-  private PMap<PShader, PList<DrawCall>> enqueuedDrawCalls = new PMap() {
+  private PMap<String, PMap<PShader, PList<DrawCall>>> enqueuedDrawCalls = new PMap<String, PMap<PShader, PList<DrawCall>>>() {
     @Override
-    protected Object makeNew(Object o) {
-      return new PList<DrawCall>();
-    }
-  };
-
-  private PMap<PShader, PList<DrawCall>> enqueuedAlphaBlendDrawCalls = new PMap() {
-    @Override
-    protected Object makeNew(Object o) {
-      return new PList<DrawCall>();
+    protected Object makeNew(String o) {
+      return new PMap<PShader, PList<DrawCall>>() {
+        @Override
+        protected Object makeNew(PShader o) {
+          return new PList<DrawCall>();
+        }
+      };
     }
   };
 
   public PRenderContext updatePerspectiveCamera() {
-    PAssert.isNotNull(currentRenderBuffer, "currentRenderBuffer should be set, as the camera viewport needs to be set.");
+    PAssert.isNotNull(PRenderBuffer.getActiveBuffer(), "currentRenderBuffer should be set, as the camera viewport needs to be set.");
     return putIntoBackingCamera(perspectiveCamera).setFromBackingCamera(perspectiveCamera, true);
   }
 
@@ -146,14 +146,11 @@ public class PRenderContext {
   public void start() {
     PAssert.isNull(activeContext);
     activeContext = this;
+    DEFAULT_DRAWCALL.applyToContext(this);
     backingRenderContext.begin();
-    setCullFaceBack();
-    setBlending(true, GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-    setDepthTest(GL20.GL_LESS);
   }
 
-  public void setRenderBuffer(PRenderBuffer renderBuffer) {
-    this.currentRenderBuffer = renderBuffer;
+  public void setForRenderBuffer(PRenderBuffer renderBuffer) {
     width = renderBuffer.width();
     height = renderBuffer.height();
 
@@ -165,32 +162,57 @@ public class PRenderContext {
   public void end() {
     PAssert.isTrue(isActive());
     backingRenderContext.end();
-    currentRenderBuffer = null;
-    clearQueueMap(enqueuedDrawCalls);
-    clearQueueMap(enqueuedAlphaBlendDrawCalls);
+    for (String phase : enqueuedDrawCalls.keySet()) {
+      clearQueueMap(enqueuedDrawCalls.get(phase));
+    }
     activeContext = null;
   }
 
-  public void emit() {
-    emit(enqueuedDrawCalls);
+  public abstract static class PhaseHandler {
+    protected final String phase;
+    @Getter
+    protected final PRenderBuffer renderBuffer;
+
+    public PhaseHandler(String phase, PRenderBuffer renderBuffer) {
+      this.phase = phase;
+      this.renderBuffer = renderBuffer;
+    }
+
+    public abstract void begin();
+
+    public abstract void end();
   }
 
-  private void emit(PMap<PShader, PList<DrawCall>> queueMap) {
-    for (PShader shader : queueMap.keySet()) {
-      shader.start();
-      shader.set(UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
-      shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
-      shader.set(UniformConstants.Mat4.u_viewProjTransformInvTra, viewProjInvTraTransform);
-      shader.set(UniformConstants.Vec3.u_cameraPos, cameraPos);
-      shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
-      shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
+  public void emit() {
+    if (phaseHandlers == null) {
+      return;
+    }
 
-      val queue = queueMap.get(shader);
-      Collections.sort(queue);
-      for (DrawCall drawCall : queue) {
-        drawCall.renderGl(shader);
+    for (PhaseHandler phaseHandler : phaseHandlers) {
+      val queueMap = enqueuedDrawCalls.get(phaseHandler.phase);
+      if (queueMap == null) {
+        continue;
       }
-      shader.end();
+
+      phaseHandler.begin();
+      for (PShader shader : queueMap.keySet()) {
+        shader.start();
+        shader.set(UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
+        shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
+        shader.set(UniformConstants.Mat4.u_viewProjTransformInvTra, viewProjInvTraTransform);
+        shader.set(UniformConstants.Vec3.u_cameraPos, cameraPos);
+        shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
+        shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
+
+        val queue = queueMap.get(shader);
+        Collections.sort(queue);
+        for (DrawCall drawCall : queue) {
+          drawCall.renderGl(this, shader);
+        }
+        shader.end();
+      }
+
+      phaseHandler.end();
     }
   }
 
@@ -204,11 +226,25 @@ public class PRenderContext {
     }
   }
 
-  public void enqueue(PShader shader, PGlNode node) {
-    if (node.isUseAlphaBlend()) {
-      enqueuedAlphaBlendDrawCalls.getOrMake(shader).add(drawCallPool.obtain().set(node));
-    } else {
-      enqueuedDrawCalls.getOrMake(shader).add(drawCallPool.obtain().set(node));
+  public void enqueue(PShader shader, String layer, PGlNode node) {
+    enqueuedDrawCalls.getOrMake(layer).getOrMake(shader).add(drawCallPool.obtain().set(node));
+  }
+
+  public void enqueue(PRenderContext.PhaseHandler[] phaseHandlers, PShaderProvider shaderProvider, PGlNode node) {
+    PAssert.isTrue(PRenderContext.getActiveContext() != null);
+
+    if (node.getDefaultShader() == null) {
+      for (int a = 0; a < phaseHandlers.length; a++) {
+        if (node.getMaterial().getLayer().equals(phaseHandlers[a].phase)) {
+          node.setDefaultShader(shaderProvider.provide(phaseHandlers[a].getRenderBuffer().getFragmentLayout(), node));
+        }
+      }
+    }
+
+    PShader defaultShader = node.getDefaultShader();
+
+    if (defaultShader != null) {
+      enqueue(defaultShader, node.getMaterial().getLayer(), node);
     }
   }
 
@@ -216,12 +252,22 @@ public class PRenderContext {
     return activeContext == this;
   }
 
-  private static class DrawCall implements Pool.Poolable, Comparable<DrawCall> {
+  public static class DrawCall implements Pool.Poolable, Comparable<DrawCall> {
     PGlNode glNode;
     final PVec3 worldLoc = new PVec3();
     float distToCamera;
+    int dstFactor, srcFactor, dptTest, cullFace;
+    boolean enableBlend, depthTest, depthMask;
 
-    private void renderGl(PShader shader) {
+    private void applyToContext(PRenderContext renderContext) {
+      renderContext.setBlending(enableBlend, srcFactor, dstFactor);
+      renderContext.setDepthTest(dptTest);
+      renderContext.setDepthMask(depthMask);
+      renderContext.setCullFace(cullFace);
+    }
+
+    private void renderGl(PRenderContext renderContext, PShader shader) {
+      applyToContext(renderContext);
       glNode.renderGl(shader);
     }
 
@@ -230,10 +276,22 @@ public class PRenderContext {
       return this;
     }
 
+    DrawCall() {
+      reset();
+    }
+
     @Override
     public void reset() {
       glNode = null;
+      worldLoc.reset();
       distToCamera = -1;
+      enableBlend = false;
+      depthTest = true;
+      depthMask = true;
+      srcFactor = GL20.GL_SRC_ALPHA;
+      dstFactor = GL20.GL_ONE_MINUS_SRC_ALPHA;
+      dptTest = GL20.GL_LESS;
+      cullFace = GL20.GL_BACK;
     }
 
     @Override
