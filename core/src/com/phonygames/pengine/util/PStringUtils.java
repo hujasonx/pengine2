@@ -21,25 +21,12 @@ public class PStringUtils {
   }
 
   public static String[] extractStringArray(String s, String delimLeft, String delimRight, String separator, boolean trim) {
-    int indexOfDelimLeft = s.indexOf(delimLeft);
-    if (indexOfDelimLeft == -1) {
-      return new String[]{};
+    String extractedPart = extract(s, delimLeft, delimRight);
+    if (extractedPart == null) {
+      return null;
     }
 
-    int startIndex = indexOfDelimLeft + delimLeft.length();
-
-    int indexOfDelimRight = s.indexOf(delimRight);
-    if (indexOfDelimRight == -1) {
-      return new String[]{};
-    }
-
-    int endIndex = indexOfDelimRight;
-
-    if (separator == null) {
-      return new String[]{s.substring(startIndex, endIndex)};
-    }
-
-    String[] ret = s.substring(startIndex, endIndex).split(separator);
+    String[] ret = extractedPart.split(separator);
     if (trim) {
       for (int a = 0; a < ret.length; a++) {
         ret[a] = ret[a].trim();
@@ -102,5 +89,51 @@ public class PStringUtils {
       s = s.substring(0, Math.min(s.length(), in + 4));
     }
     return s;
+  }
+
+  public static String getLineSpacePrefix(String line) {
+    StringBuilder stringBuilder = new StringBuilder();
+    for (int a = 0; a < line.length(); a++) {
+      char c = line.charAt(a);
+      if (c == ' ') {
+        stringBuilder.append(' ');
+      } else if (c == '\t') {
+        stringBuilder.append('\t');
+      } else {
+        break;
+      }
+    }
+
+    return stringBuilder.toString();
+  }
+
+  /**
+   * Returns the index of the next character after a substring, or -1.
+   *
+   * @param in the larger string to search in
+   * @param of the substring
+   * @return the index, or -1
+   */
+  public static int indexAfter(String in, String of) {
+    int i = in.indexOf(of);
+    if (i == -1) {
+      return -1;
+    }
+    i = i + of.length();
+    return i;
+  }
+
+  public static String extract(String s, String delimL, String delimR) {
+    int indexAfterDelimL = indexAfter(s, delimL);
+    if (indexAfterDelimL == -1) {
+      return null;
+    }
+
+    int indexOfDelimR = s.indexOf(delimR);
+    if (indexOfDelimR == -1) {
+      return null;
+    }
+
+    return s.substring(indexAfterDelimL, indexOfDelimR);
   }
 }

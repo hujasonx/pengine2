@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.exception.PRuntimeException;
+import com.phonygames.pengine.file.PFileHandleUtils;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -45,14 +46,21 @@ public class PShader {
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
 
+  private static final PFileHandleUtils.RecursiveLoadProcessor RECURSIVE_LOAD_PROCESSOR = new PFileHandleUtils.RecursiveLoadProcessor() {
+    @Override
+    public String processLine(int totalLineNo, int rawLineNo, String rawLine, FileHandle rawFile) {
+      return rawLine;
+    }
+  };
 
   public PShader(String prefix, String fragmentLayout, PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
 
-    loadRaw(vert, vertexStringBuilder, "", null);
-    loadRaw(frag, fragmentStringBuilder, "", null);
+
+    vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vert, RECURSIVE_LOAD_PROCESSOR));
+    fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(frag, RECURSIVE_LOAD_PROCESSOR));
 
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
@@ -62,70 +70,6 @@ public class PShader {
       PLog.w(shaderProgram.getVertexShaderSource());
       PLog.w(shaderProgram.getFragmentShaderSource());
       throw new PRuntimeException("Shader was not compiled:\n" + shaderProgram.getLog());
-    }
-  }
-
-  private static void loadRaw(FileHandle fileHandle, StringBuilder out, String linePrefix, String[] replacements) {
-    String shader = fileHandle.readString();
-    String[] split = PStringUtils.splitByLine(shader);
-    String[] params = null;
-
-    int lineToStart = 0;
-    String firstLine = split[0];
-    if (replacements != null && firstLine.startsWith("#params [")) {
-      // Set the params.
-      params = PStringUtils.extractStringArray(firstLine, "[", "]", ",", true);
-
-      lineToStart = 1;
-    }
-
-
-    for (int a = lineToStart; a < split.length; a++) {
-      String line = split[a];
-
-      if (params != null && replacements != null && params.length == replacements.length) {
-        for (int b = 0; b < params.length; b++) {
-          line = line.replaceAll(params[b], replacements[b]);
-        }
-      }
-
-      int fileLineSpaceCount = 0;
-      for (int b = 0; b < line.length(); b++) {
-        if (line.charAt(b) == ' ') {
-          fileLineSpaceCount++;
-        } else {
-          break;
-        }
-      }
-
-      String fileLineTabString = line.substring(0, fileLineSpaceCount);
-      String lineWithoutTab = line.substring(fileLineSpaceCount);
-      if (lineWithoutTab.startsWith("#include ")) {
-        char delim = lineWithoutTab.charAt("#include ".length());
-        String fname = "";
-        switch (delim) {
-          case '"':
-            fname = line.split("\"")[1];
-            if (fileHandle.parent() != null) {
-              fname = fileHandle.parent().path() + "/" + fname;
-            }
-            break;
-          case '<':
-            // Absolute path.
-            fname = line.split("<")[1].split(">")[0];
-            break;
-        }
-
-        String[] newReplacements = PStringUtils.extractStringArray(line, "[", "]", ",", true);
-
-        // Get the params.
-        loadRaw(Gdx.files.local(fname), out, linePrefix + fileLineTabString, newReplacements.length == 0 ? null : newReplacements);
-      } else {
-        out.append(linePrefix);
-
-          out.append(line);
-      }
-      out.append('\n');
     }
   }
 

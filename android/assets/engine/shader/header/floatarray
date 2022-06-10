@@ -1,5 +1,5 @@
 #params [NAME]
-// [BEG] floatArray: NAME
+// Start floatArray: NAME
 uniform sampler2D u_NAMEFloatArrayTex;
 uniform vec4 u_NAMEFloatArraySize;
 vec4 NAMEFloatArrayVec(int index) {

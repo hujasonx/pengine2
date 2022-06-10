@@ -1,6 +1,8 @@
 package com.phonygames.pengine.file;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.phonygames.pengine.util.PStringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,7 @@ public class PFileHandleUtils {
   /**
    * Returns a list of all files, recursively, beginning at the specified file.
    *
-   * @param fileHandle root file/directory.
+   * @param fileHandle     root file/directory.
    * @param extensionRegex the regex to test for extension.
    */
   public static List<FileHandle> allFilesRecursive(FileHandle fileHandle, String extensionRegex) {
@@ -42,5 +44,83 @@ public class PFileHandleUtils {
       }
     }
     return ret;
+  }
+
+  public static String loadRecursive(FileHandle fileHandle, RecursiveLoadProcessor loadProcessor) {
+    StringBuilder stringBuilder = new StringBuilder();
+    loadRecursive(stringBuilder, fileHandle, loadProcessor, "", 0, null);
+    return stringBuilder.toString();
+  }
+
+  // Returns the total line number.
+  private static int loadRecursive(StringBuilder stringBuilder, FileHandle fileHandle, RecursiveLoadProcessor loadProcessor, String prefix, int totalLineNo, String[] inputs) {
+    String rawString = fileHandle.readString();
+    String[] lines = PStringUtils.splitByLine(rawString);
+    if (lines.length == 0) {
+      return totalLineNo;
+    }
+
+    // Get the params.
+    String[] params = null;
+    for (int rawLineNo = 0; rawLineNo < lines.length; rawLineNo++) {
+      String line = lines[rawLineNo];
+
+      // Replace with parameters.
+      if (inputs != null && params != null) {
+        for (int a = 0; a < inputs.length; a++) {
+          line = line.replaceAll(params[a], inputs[a]);
+        }
+      }
+
+      // Check to see if we should be doing a recursive load.
+      String extractedIncludeFilename = PStringUtils.extract(line, "#include <", ">");
+      if (extractedIncludeFilename == null) {
+        extractedIncludeFilename = PStringUtils.extract(line, "#include \"", "\"");
+
+        if (extractedIncludeFilename != null && fileHandle.parent() != null) {
+          extractedIncludeFilename = fileHandle.parent().path() + "/" + extractedIncludeFilename;
+        }
+      }
+
+      if (extractedIncludeFilename != null) {
+        totalLineNo = loadRecursive(stringBuilder, Gdx.files.local(extractedIncludeFilename), loadProcessor, prefix + PStringUtils.getLineSpacePrefix(line), totalLineNo,
+                                    PStringUtils.extractStringArray(line, "[", "]", ",", true));
+        continue;
+      }
+
+      // Check to see if we should be setting params.
+      String[] newParams = PStringUtils.extractStringArray(line, "#params [", "]", ",", true);
+      if (newParams != null) {
+        params = newParams;
+        continue;
+      }
+
+      // Handle the line normally, and possibly output it.
+      String processedLine = loadProcessor.processLine(totalLineNo, rawLineNo, line, fileHandle);
+
+      if (processedLine != null) {
+        stringBuilder.append(prefix).append(processedLine).append('\n');
+        totalLineNo++;
+      }
+    }
+    if (lines[0].startsWith("#params")) {
+      PStringUtils.extractStringArray(lines[0], "[", "]", ",", true);
+    }
+
+    return totalLineNo;
+  }
+
+  private static RecursiveLoadProcessor DEFAULT_RECURSIVE_LOAD_PROCESSOR = new RecursiveLoadProcessor() {
+    @Override
+    public String processLine(int totalLineNo, int rawLineNo, String rawLine, FileHandle rawFile) {
+      return rawLine;
+    }
+  };
+
+  public abstract static class RecursiveLoadProcessor {
+    public abstract String processLine(int totalLineNo, int rawLineNo, String rawLine, FileHandle rawFile);
+
+    private void processLineRecursive(StringBuilder builder) {
+    }
   }
 }
