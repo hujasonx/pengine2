@@ -1,4 +1,5 @@
-uniform vec4 u_tdtuituidt;
+#include <engine/shader/header/base.shared>
+
 uniform mat4 u_viewProjTransform;
 uniform mat4 u_viewProjTransformInvTra;
 uniform mat4 u_worldTransform;

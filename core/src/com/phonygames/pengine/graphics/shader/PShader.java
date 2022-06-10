@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.exception.PRuntimeException;
+import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
@@ -108,6 +109,7 @@ public class PShader {
     activeShader = this;
     shaderProgram.bind();
     set(PRenderContext.UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
+    set(PRenderContext.UniformConstants.Vec2.u_renderBufferSize, PRenderBuffer.getActiveBuffer().width(), PRenderBuffer.getActiveBuffer().height());
   }
 
   public void end() {

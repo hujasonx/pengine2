@@ -1,16 +1,43 @@
 package com.phonygames.pengine.math;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pool;
+import com.phonygames.pengine.util.PList;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
 public class PVec3 extends PVec {
+  public static PVec3 ZERO = new PVec3().set(0, 0, 0);
+  public static PVec3 X = new PVec3().set(1, 0, 0);
+  public static PVec3 Y = new PVec3().set(0, 1, 0);
+  public static PVec3 Z = new PVec3().set(0, 0, 1);
+
   @Getter
   private final Vector3 backingVec3 = new Vector3();
+  private static Pool<TempBuffer<PVec3>> tempBuffers = new Pool<TempBuffer<PVec3>>() {
+    @Override
+    protected TempBuffer<PVec3> newObject() {
+      return new TempBuffer<PVec3>() {
+        @Override
+        public PVec3 genNewObject() {
+          return new PVec3();
+        }
+
+        @Override
+        protected void finishInternal() {
+          tempBuffers.free(this);
+        }
+      };
+    }
+  };
+
+  static TempBuffer<PVec3> staticTempBuffer = tempBuffers.obtain();
 
   public float x() {
     return backingVec3.x;
@@ -85,6 +112,19 @@ public class PVec3 extends PVec {
   }
 
   /**
+   * Multiplies scale with caller into caller.
+   *
+   * @param scale
+   * @return caller for chaining
+   */
+  public PVec3 scl(float scale) {
+    backingVec3.x *= scale;
+    backingVec3.y *= scale;
+    backingVec3.z *= scale;
+    return this;
+  }
+
+  /**
    * Adds scale * other to caller into caller.
    *
    * @param other
@@ -140,12 +180,62 @@ public class PVec3 extends PVec {
     return new PVec3().set(this);
   }
 
+  // New stuff.
+
   public Vector3 putInto(Vector3 in) {
     in.set(backingVec3);
     return in;
   }
 
+  public PVec3 crs(PVec3 other) {
+    backingVec3.crs(other.backingVec3);
+    return this;
+  }
+
+  public PVec3 nor() {
+    backingVec3.nor();
+    return this;
+  }
+
   public float dst(PVec3 other) {
     return backingVec3.dst(other.backingVec3);
+  }
+
+  public float dst2(PVec3 other) {
+    return backingVec3.dst2(other.backingVec3);
+  }
+
+  public static PVec3 temp() {
+    return staticTempBuffer.pool.obtain();
+  }
+
+  public void freeTemp() {
+    staticTempBuffer.pool.free(this);
+  }
+
+  public static TempBuffer<PVec3> tempBuffer() {
+    return tempBuffers.obtain();
+  }
+
+  public boolean isCollinear(PVec3 other) {
+    return backingVec3.isCollinear(other.backingVec3);
+  }
+
+
+  public PVec3 sphericalYUpZForward(float theta, float phi, float radius) {
+    float sinPhi = MathUtils.sin(phi);
+    // Use negative theta because we want the angle to rotate correctly when viewed from +y towards -y.
+    backingVec3.set(radius * sinPhi * MathUtils.sin(-theta), radius * MathUtils.cos(phi), radius * sinPhi * MathUtils.cos(-theta));
+    return this;
+  }
+
+  public static boolean isCollinear(PVec3 v0, PVec3 v1, PVec3 v2) {
+    boolean retVal = false;
+    PVec3 t0 = PVec3.temp().set(v1).sub(v0);
+    PVec3 t1 = PVec3.temp().set(v2).sub(v0);
+    retVal = t0.isCollinear(t1);
+    t0.freeTemp();
+    t1.freeTemp();
+    return retVal;
   }
 }

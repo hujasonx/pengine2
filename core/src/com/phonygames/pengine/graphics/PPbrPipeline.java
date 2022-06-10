@@ -4,8 +4,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.lighting.PEnvironment;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.val;
 
 public class PPbrPipeline {
@@ -15,6 +17,8 @@ public class PPbrPipeline {
   protected final PRenderBuffer lightedBuffer;
   @Getter
   protected final PRenderBuffer finalBuffer;
+  @Getter @Setter
+  protected PEnvironment environment;
 
   private PRenderContext.PhaseHandler[] phases;
 
@@ -55,14 +59,21 @@ public class PPbrPipeline {
         new PRenderContext.PhaseHandler("Lights", lightedBuffer) {
           @Override
           public void begin() {
-            PGLUtils.clearScreen(0, 1, 1, 1);
-
-            lightingShader.start();
-            lightingShader.set("u_diffuseMTex", gBuffer.getTexture("diffuseM"));
-            lightingShader.set("u_emissiveRTex", gBuffer.getTexture("emissiveR"));
-            lightingShader.set("u_normalITex", gBuffer.getTexture("normalI"));
-            lightedBuffer.renderQuad(lightingShader);
-            lightingShader.end();
+            PGLUtils.clearScreen(0, 0, 0, 1);
+            if (environment == null) {
+              return;
+            }
+//
+//            lightingShader.start();
+//            lightingShader.set("u_diffuseMTex", gBuffer.getTexture("diffuseM"));
+//            lightingShader.set("u_emissiveRTex", gBuffer.getTexture("emissiveR"));
+//            lightingShader.set("u_normalITex", gBuffer.getTexture("normalI"));
+//            lightedBuffer.renderQuad(lightingShader);
+//            lightingShader.end();
+            Texture diffuseMTex = gBuffer.getTexture("diffuseM");
+            Texture emissiveRTex = gBuffer.getTexture("emissiveR");
+            Texture normalITex = gBuffer.getTexture("normalI");
+            environment.renderLights(PRenderContext.getActiveContext(), diffuseMTex, emissiveRTex, normalITex);
           }
 
           @Override

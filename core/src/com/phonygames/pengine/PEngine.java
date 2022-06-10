@@ -14,6 +14,7 @@ import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.graphics.texture.PTexture;
+import com.phonygames.pengine.lighting.PLight;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.util.PMap;
@@ -57,10 +58,11 @@ public class PEngine extends ApplicationAdapter {
     } catch (Exception e) {
     }
 
+    PVertexAttributes.init();
     PTexture.init();
+    PLight.initMeshes();
     PLog.init();
     PApplicationWindow.init();
-    PVertexAttributes.init();
     PMesh.init();
     PShaderProvider.init();
     PAssetManager.init();

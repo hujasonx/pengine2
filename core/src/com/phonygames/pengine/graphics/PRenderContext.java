@@ -31,6 +31,7 @@ public class PRenderContext {
   public static class UniformConstants {
 
     public static class Vec2 {
+      public final static String u_renderBufferSize = "u_renderBufferSize";
     }
 
     public static class Vec3 {
@@ -199,11 +200,7 @@ public class PRenderContext {
       if (queueMap != null) {
         for (PShader shader : queueMap.keySet()) {
           shader.start();
-          shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
-          shader.set(UniformConstants.Mat4.u_viewProjTransformInvTra, viewProjInvTraTransform);
-          shader.set(UniformConstants.Vec3.u_cameraPos, cameraPos);
-          shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
-          shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
+          applyUniforms(shader);
 
           val queue = queueMap.get(shader);
           Collections.sort(queue);
@@ -219,6 +216,14 @@ public class PRenderContext {
         phaseHandler.renderBuffer.end();
       }
     }
+  }
+
+  public void applyUniforms(PShader shader) {
+    shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
+    shader.set(UniformConstants.Mat4.u_viewProjTransformInvTra, viewProjInvTraTransform);
+    shader.set(UniformConstants.Vec3.u_cameraPos, cameraPos);
+    shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
+    shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
   }
 
   private void clearQueueMap(PMap<PShader, PList<DrawCall>> queueMap) {
