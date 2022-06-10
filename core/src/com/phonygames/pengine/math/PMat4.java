@@ -115,6 +115,11 @@ public class PMat4 implements Pool.Poolable {
     return this;
   }
 
+  public PVec3 getTranslation(PVec3 out) {
+    backingMatrix4.getTranslation(out.getBackingVec3());
+    return out;
+  }
+
   public PMat4 cpy() {
     return new PMat4().set(this);
   }

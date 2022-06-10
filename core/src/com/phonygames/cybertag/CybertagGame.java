@@ -19,6 +19,8 @@ import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.model.gen.PModelGen;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.lighting.PEnvironment;
+import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 
@@ -34,6 +36,7 @@ public class CybertagGame implements PGame {
   private PRenderContext renderContext;
 
   private PPbrPipeline pPbrPipeline;
+  PEnvironment environment;
 
   public void init() {
     new PGltf("engine/model/blender.glb").loadThenDo(
@@ -48,7 +51,11 @@ public class CybertagGame implements PGame {
 
     renderContext = new PRenderContext();
     pPbrPipeline = new PPbrPipeline();
+    environment = new PEnvironment();
 
+    pPbrPipeline.setEnvironment(environment);
+
+    environment.addLight(new PPointLight());
 
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
       PModelGen.Part basePart;

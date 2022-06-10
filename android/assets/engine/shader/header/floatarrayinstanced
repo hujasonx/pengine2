@@ -1,0 +1,5 @@
+#params [NAME]
+#include <engine/shader/header/floatarray>[NAME]
+uniform int u_NAMEFloatArrayVecsPerInstance;
+vec4 NAMEFloatArrayVecInstance(int index) { return NAMEFloatArrayVec(u_NAMEFloatArrayVecsPerInstance * v_instanceID + index); }
+vec4 NAMEFloatArrayMat4Instance(int index) { return NAMEFloatArrayMat4(u_NAMEFloatArrayVecsPerInstance * v_instanceID + index); }

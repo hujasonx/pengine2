@@ -10,19 +10,29 @@ import com.badlogic.gdx.graphics.glutils.FloatTextureData;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.logging.PLog;
+import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec4;
 
 import java.nio.FloatBuffer;
+
+import lombok.Getter;
 
 public class PFloat4Texture extends Texture {
   private int sideLength = 0;
   private FloatBuffer floatBuffer;
   // Floats are packed into vec4s.
 
+  @Getter
+  private int vec4Capacity;
 
   public static PFloat4Texture get(int vec4Capacity, boolean use32bits) {
-    int sideLength = (int) Math.pow(2, (int) Math.ceil(Math.log(Math.sqrt(vec4Capacity)) / Math.log(2))); //TODO: fix this shit
+    int sideLength = (int) Math.pow(2, (int) Math.ceil(Math.log(Math.sqrt(vec4Capacity)) / Math.log(2)));
     PFloat4TextureTextureData textureData = new PFloat4TextureTextureData(sideLength, sideLength, use32bits);
     PFloat4Texture b = new PFloat4Texture(textureData, sideLength);
+    b.vec4Capacity = vec4Capacity;
     textureData.owner = b;
     return b;
   }
@@ -48,26 +58,30 @@ public class PFloat4Texture extends Texture {
     floatBuffer.limit(floatBuffer.capacity());
   }
 
-  public void addData(float[] floats) {
-    floatBuffer.put(floats);
+  public PFloat4Texture addData(PVec4 vec4) {
+    floatBuffer.put(vec4.x());
+    floatBuffer.put(vec4.y());
+    floatBuffer.put(vec4.z());
+    floatBuffer.put(vec4.w());
+    return this;
   }
 
-  public void addData(float r, float g, float b, float a) {
+  public PFloat4Texture addData(PMat4 mat4) {
+    floatBuffer.put(mat4.getBackingMatrix4().val);
+    return this;
+  }
+
+  public PFloat4Texture addData(float[] floats) {
+    floatBuffer.put(floats);
+    return this;
+  }
+
+  public PFloat4Texture addData(float r, float g, float b, float a) {
     floatBuffer.put(r);
     floatBuffer.put(g);
     floatBuffer.put(b);
     floatBuffer.put(a);
-  }
-
-  public void addData(Color c) {
-    addData(c.r, c.g, c.b, c.a);
-  }
-
-  public void addDataAtColorIndex(Color c, int index) {
-    floatBuffer.put(index * 4 + 0, c.r);
-    floatBuffer.put(index * 4 + 1, c.g);
-    floatBuffer.put(index * 4 + 2, c.b);
-    floatBuffer.put(index * 4 + 3, c.a);
+    return this;
   }
 
   public void dataTransferFinished() {
@@ -138,5 +152,13 @@ public class PFloat4Texture extends Texture {
         }
       }
     }
+  }
+
+  public void setUniforms(PShader shader, String name, int vecsPerInstance) {
+    PAssert.isTrue(shader.isActive());
+    String uniform = "u_" + name;
+    shader.set(uniform + "FloatArrayTex", this);
+    shader.set(uniform + "FloatArraySize", getWidth(), getHeight(), 1f / getWidth(), 1f / getHeight());
+    shader.set(uniform + "FloatArrayVecsPerInstance", vecsPerInstance);
   }
 }

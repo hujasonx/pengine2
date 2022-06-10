@@ -17,7 +17,8 @@ public class PPbrPipeline {
   protected final PRenderBuffer lightedBuffer;
   @Getter
   protected final PRenderBuffer finalBuffer;
-  @Getter @Setter
+  @Getter
+  @Setter
   protected PEnvironment environment;
 
   private PRenderContext.PhaseHandler[] phases;
@@ -73,7 +74,9 @@ public class PPbrPipeline {
             Texture diffuseMTex = gBuffer.getTexture("diffuseM");
             Texture emissiveRTex = gBuffer.getTexture("emissiveR");
             Texture normalITex = gBuffer.getTexture("normalI");
+            // TODO: Lock the camera of the context, to prevent bugs.
             environment.renderLights(PRenderContext.getActiveContext(), diffuseMTex, emissiveRTex, normalITex);
+            // TODO: unlock
           }
 
           @Override

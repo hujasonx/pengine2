@@ -16,13 +16,18 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
+import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PStringUtils;
+
+import java.util.HashMap;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -44,10 +49,10 @@ public class PShader {
   public PShader(String prefix, String fragmentLayout, PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
-    StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout);
+    StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
 
-    loadRaw(vert, vertexStringBuilder, "");
-    loadRaw(frag, fragmentStringBuilder, "");
+    loadRaw(vert, vertexStringBuilder, "", null);
+    loadRaw(frag, fragmentStringBuilder, "", null);
 
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
@@ -60,11 +65,30 @@ public class PShader {
     }
   }
 
-  private static void loadRaw(FileHandle fileHandle, StringBuilder out, String linePrefix) {
+  private static void loadRaw(FileHandle fileHandle, StringBuilder out, String linePrefix, String[] replacements) {
     String shader = fileHandle.readString();
     String[] split = PStringUtils.splitByLine(shader);
-    for (int a = 0; a < split.length; a++) {
+    String[] params = null;
+
+    int lineToStart = 0;
+    String firstLine = split[0];
+    if (replacements != null && firstLine.startsWith("#params [")) {
+      // Set the params.
+      params = PStringUtils.extractStringArray(firstLine, "[", "]", ",", true);
+
+      lineToStart = 1;
+    }
+
+
+    for (int a = lineToStart; a < split.length; a++) {
       String line = split[a];
+
+      if (params != null && replacements != null && params.length == replacements.length) {
+        for (int b = 0; b < params.length; b++) {
+          line = line.replaceAll(params[b], replacements[b]);
+        }
+      }
+
       int fileLineSpaceCount = 0;
       for (int b = 0; b < line.length(); b++) {
         if (line.charAt(b) == ' ') {
@@ -91,10 +115,15 @@ public class PShader {
             fname = line.split("<")[1].split(">")[0];
             break;
         }
-        loadRaw(Gdx.files.local(fname), out, linePrefix + fileLineTabString);
+
+        String[] newReplacements = PStringUtils.extractStringArray(line, "[", "]", ",", true);
+
+        // Get the params.
+        loadRaw(Gdx.files.local(fname), out, linePrefix + fileLineTabString, newReplacements.length == 0 ? null : newReplacements);
       } else {
         out.append(linePrefix);
-        out.append(line);
+
+          out.append(line);
       }
       out.append('\n');
     }

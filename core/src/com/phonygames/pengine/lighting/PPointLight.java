@@ -5,13 +5,19 @@ import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.model.gen.PModelGen;
 import com.phonygames.pengine.graphics.model.gen.PUVSphereGen;
+import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.util.PList;
 
 import lombok.Getter;
 
 public class PPointLight extends PLight {
   @Getter
   private static PMesh MESH;
+
+  public PPointLight() {
+    super();
+  }
 
   public static void initMesh() {
     new PModelGen() {
@@ -37,5 +43,16 @@ public class PPointLight extends PLight {
 
   public static void assertMeshReady() {
     PAssert.isNotNull(MESH);
+  }
+
+  @Override
+  public void addInstanceData(PFloat4Texture buffer) {
+    buffer.addData(transform);
+
+  }
+
+  @Override
+  public int vecsPerInstance() {
+    return 4;
   }
 }

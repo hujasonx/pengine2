@@ -20,6 +20,35 @@ public class PStringUtils {
     return builder.toString();
   }
 
+  public static String[] extractStringArray(String s, String delimLeft, String delimRight, String separator, boolean trim) {
+    int indexOfDelimLeft = s.indexOf(delimLeft);
+    if (indexOfDelimLeft == -1) {
+      return new String[]{};
+    }
+
+    int startIndex = indexOfDelimLeft + delimLeft.length();
+
+    int indexOfDelimRight = s.indexOf(delimRight);
+    if (indexOfDelimRight == -1) {
+      return new String[]{};
+    }
+
+    int endIndex = indexOfDelimRight;
+
+    if (separator == null) {
+      return new String[]{s.substring(startIndex, endIndex)};
+    }
+
+    String[] ret = s.substring(startIndex, endIndex).split(separator);
+    if (trim) {
+      for (int a = 0; a < ret.length; a++) {
+        ret[a] = ret[a].trim();
+      }
+    }
+
+    return ret;
+  }
+
   public static String[] splitByLine(String s) {
     return s.split("\\r?\\n");
   }

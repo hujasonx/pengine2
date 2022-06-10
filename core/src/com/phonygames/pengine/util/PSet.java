@@ -94,6 +94,10 @@ public class PSet<E> implements Set<E> {
         return nextIndex;
       }
 
+      if (set.elements == null) {
+        return nextIndex = AT_END;
+      }
+
       for (int a = currentIndex + 1; a < set.elements.length; a++) {
         if (set.elements[a] != null && !set.invalid[a]) {
           return nextIndex = a;
@@ -104,7 +108,8 @@ public class PSet<E> implements Set<E> {
     }
 
     public void reset() {
-      currentIndex = -1;
+      currentIndex = UNSET;
+      nextIndex = UNSET;
       calcNextIndex();
     }
 
@@ -119,6 +124,7 @@ public class PSet<E> implements Set<E> {
     @Override
     public void remove() {
       set.invalid[currentIndex] = true;
+      set.numElements--;
       set.numInvalid++;
     }
   }
@@ -191,6 +197,7 @@ public class PSet<E> implements Set<E> {
         return false;
       }
 
+      numElements++;
       elements[index] = e;
       return true;
     }
@@ -206,6 +213,7 @@ public class PSet<E> implements Set<E> {
         return false;
       }
 
+      numElements++;
       elements[index] = e;
       return true;
     }
@@ -218,6 +226,7 @@ public class PSet<E> implements Set<E> {
       invalid[index] = true;
       elements[index] = null;
       numInvalid++;
+      numElements--;
       return true;
     }
 

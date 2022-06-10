@@ -89,14 +89,7 @@ public class PGlNode {
     shader.set(UniformConstants.Mat4.u_worldTransformInvTra, worldTransformInvTra);
     material.applyUniforms(shader);
 
-    mesh.getBackingMesh().bind(shader.getShaderProgram());
-    if (numInstances > 1) {
-      Gdx.gl30.glDrawElementsInstanced(GL20.GL_TRIANGLES, mesh.getBackingMesh().getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0, numInstances);
-    } else if (numInstances == 1) {
-      Gdx.gl30.glDrawElements(GL20.GL_TRIANGLES, mesh.getBackingMesh().getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0);
-    }
-
-    mesh.getBackingMesh().unbind(shader.getShaderProgram());
+    mesh.glRenderInstanced(shader, numInstances);
   }
 
   public final PGlNode setWorldTransform(PMat4 worldTransform, PMat4 worldTransformInvTrad) {

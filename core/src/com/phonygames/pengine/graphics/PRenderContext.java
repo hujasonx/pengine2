@@ -145,6 +145,10 @@ public class PRenderContext {
     return this;
   }
 
+  public void resetDefaults() {
+    DEFAULT_DRAWCALL.applyToContext(this);
+  }
+
   public void start() {
     PAssert.isNull(activeContext);
     activeContext = this;
@@ -353,6 +357,18 @@ public class PRenderContext {
   public PRenderContext setDepthTest(final int depthFunction) {
     PAssert.isTrue(isActive());
     backingRenderContext.setDepthTest(depthFunction);
+    return this;
+  }
+
+  public PRenderContext enableDepthTest() {
+    PAssert.isTrue(isActive());
+    backingRenderContext.setDepthTest(GL20.GL_LESS);
+    return this;
+  }
+
+  public PRenderContext disableDepthTest() {
+    PAssert.isTrue(isActive());
+    backingRenderContext.setDepthTest(0);
     return this;
   }
 

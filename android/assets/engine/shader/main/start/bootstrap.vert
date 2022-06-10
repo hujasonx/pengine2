@@ -13,6 +13,3 @@ v_uv0 = a_uv0;
 #ifdef a_col0Flag
 v_col0 = a_col0;
 #endif
-
-gl_Position = u_viewProjTransform * v_worldPos;
-v_worldPos.w = dot(u_cameraDir, v_worldPos.xyz - u_cameraPos);

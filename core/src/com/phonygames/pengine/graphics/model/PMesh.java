@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.gen.PModelGen;
+import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.util.PCollectionUtils;
 import com.phonygames.pengine.util.PList;
 
@@ -115,5 +116,17 @@ public class PMesh {
   public void setAutobind(boolean autobind) {
     backingMesh.setAutoBind(autobind);
     this.autobind = autobind;
+  }
+
+  public void glRenderInstanced(PShader shader, int numInstances) {
+    PAssert.isTrue(shader.isActive());
+    backingMesh.bind(shader.getShaderProgram());
+    if (numInstances > 1) {
+      Gdx.gl30.glDrawElementsInstanced(GL20.GL_TRIANGLES, backingMesh.getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0, numInstances);
+    } else if (numInstances == 1) {
+      Gdx.gl30.glDrawElements(GL20.GL_TRIANGLES, backingMesh.getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0);
+    }
+
+    backingMesh.unbind(shader.getShaderProgram());
   }
 }
