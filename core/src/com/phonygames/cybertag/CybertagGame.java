@@ -36,11 +36,6 @@ public class CybertagGame implements PGame {
   private PPbrPipeline pPbrPipeline;
 
   public void init() {
-    for (int a = 0; a < gBuffers.length; a++) {
-      gBuffers[a] =
-          new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addFloatAttachment("emissiveR").addFloatAttachment("normalI").addDepthAttachment().build();
-    }
-
     new PGltf("engine/model/blender.glb").loadThenDo(
         new PGltf.OnloadCallback() {
           @Override
@@ -52,7 +47,7 @@ public class CybertagGame implements PGame {
     );
 
     renderContext = new PRenderContext();
-    pPbrPipeline = new PPbrPipeline(gBuffers[0], null);
+    pPbrPipeline = new PPbrPipeline();
 
 
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
@@ -128,10 +123,11 @@ public class CybertagGame implements PGame {
 
   public void postFrameUpdate() {
     PGLUtils.clearScreen(1, 1, 1, 1);
-    PApplicationWindow.drawTextureToScreen(gBuffers[0].getTexture());
-    for (int a = 0; a < gBuffers[0].numTextures(); a++) {
+//    PApplicationWindow.drawTextureToScreen(pPbrPipeline.getGBuffer().getTexture());
+    PApplicationWindow.drawTextureToScreen(pPbrPipeline.getLightedBuffer().getTexture());
+    for (int a = 0; a < pPbrPipeline.getGBuffer().numTextures(); a++) {
       if (Gdx.input.isKeyPressed(Input.Keys.NUM_1 + a)) {
-        PApplicationWindow.drawTextureToScreen(gBuffers[0].getTexture(a));
+        PApplicationWindow.drawTextureToScreen(pPbrPipeline.getGBuffer().getTexture(a));
 
       }
     }

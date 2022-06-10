@@ -1,12 +1,18 @@
 package com.phonygames.pengine.graphics;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.utils.Disposable;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.framebuffer.PFrameBuffer;
 import com.phonygames.pengine.graphics.framebuffer.PGLFrameBuffer;
+import com.phonygames.pengine.graphics.model.PMesh;
+import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.util.PBuilder;
 
 import java.util.ArrayList;
@@ -244,5 +250,23 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     if (sizeMode == SizeMode.WindowScale) {
       disposeInternal(); // Dispose the framebuffers to trigger a regen.
     }
+  }
+
+  public PShader getQuadShader(FileHandle frag) {
+    return new PShader("#define quadFlag\n", getFragmentLayout(), PVertexAttributes.getPOSITION(), Gdx.files.local("engine/shader/quad.vert.glsl"), frag);
+  }
+
+  public PRenderBuffer renderQuad(PShader shader) {
+    boolean wasActive = activeBuffer == this;
+    if (!wasActive) {
+      begin();
+    }
+
+    PMesh.FULLSCREEN_QUAD_MESH.getBackingMesh().render(shader.getShaderProgram(), GL20.GL_TRIANGLES);
+
+    if (!wasActive) {
+      end();
+    }
+    return this;
   }
 }

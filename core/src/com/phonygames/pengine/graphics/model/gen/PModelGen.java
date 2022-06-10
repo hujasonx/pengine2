@@ -49,6 +49,12 @@ public class PModelGen implements PPostableTask {
     return addPart(name, PVertexAttributes.getGLTF_UNSKINNED());
   }
 
+  public void buildSynchronous() {
+    intro();
+    middle();
+    end();
+  }
+
   @Override
   public void intro() {
     modelIntro();

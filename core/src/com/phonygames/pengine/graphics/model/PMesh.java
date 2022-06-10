@@ -21,7 +21,7 @@ public class PMesh {
   private boolean autobind = false;
 
   public static void init() {
-    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
+    new PModelGen() {
       PModelGen.Part basePart;
 
       @Override
@@ -42,7 +42,7 @@ public class PMesh {
       protected void modelEnd() {
         FULLSCREEN_QUAD_MESH = basePart.getMesh();
       }
-    });
+    }.buildSynchronous();
   }
 
   public enum ShapeType {

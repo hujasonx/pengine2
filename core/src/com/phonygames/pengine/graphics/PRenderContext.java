@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PGlNode;
+import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
@@ -189,30 +190,34 @@ public class PRenderContext {
     }
 
     for (PhaseHandler phaseHandler : phaseHandlers) {
-      val queueMap = enqueuedDrawCalls.get(phaseHandler.phase);
-      if (queueMap == null) {
-        continue;
+      if (phaseHandler.renderBuffer != null) {
+        phaseHandler.renderBuffer.begin();
       }
-
       phaseHandler.begin();
-      for (PShader shader : queueMap.keySet()) {
-        shader.start();
-        shader.set(UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
-        shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
-        shader.set(UniformConstants.Mat4.u_viewProjTransformInvTra, viewProjInvTraTransform);
-        shader.set(UniformConstants.Vec3.u_cameraPos, cameraPos);
-        shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
-        shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
+      val queueMap = enqueuedDrawCalls.get(phaseHandler.phase);
 
-        val queue = queueMap.get(shader);
-        Collections.sort(queue);
-        for (DrawCall drawCall : queue) {
-          drawCall.renderGl(this, shader);
+      if (queueMap != null) {
+        for (PShader shader : queueMap.keySet()) {
+          shader.start();
+          shader.set(UniformConstants.Mat4.u_viewProjTransform, viewProjTransform);
+          shader.set(UniformConstants.Mat4.u_viewProjTransformInvTra, viewProjInvTraTransform);
+          shader.set(UniformConstants.Vec3.u_cameraPos, cameraPos);
+          shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
+          shader.set(UniformConstants.Vec3.u_cameraUp, cameraUp);
+
+          val queue = queueMap.get(shader);
+          Collections.sort(queue);
+          for (DrawCall drawCall : queue) {
+            drawCall.renderGl(this, shader);
+          }
+          shader.end();
         }
-        shader.end();
       }
 
       phaseHandler.end();
+      if (phaseHandler.renderBuffer != null) {
+        phaseHandler.renderBuffer.end();
+      }
     }
   }
 

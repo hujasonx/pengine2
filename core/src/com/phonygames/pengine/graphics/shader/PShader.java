@@ -3,12 +3,15 @@ package com.phonygames.pengine.graphics.shader;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.shaders.BaseShader;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.exception.PRuntimeException;
+import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
@@ -35,6 +38,7 @@ public class PShader {
 
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
+
 
   public PShader(String prefix, String fragmentLayout, PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
@@ -103,6 +107,7 @@ public class PShader {
     PAssert.isFalse(isActive());
     activeShader = this;
     shaderProgram.bind();
+    set(PRenderContext.UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
   }
 
   public void end() {
@@ -138,6 +143,16 @@ public class PShader {
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformi(uniform, i);
+    } catch (IllegalArgumentException e) {
+      PLog.w("Illegal argument: " + uniform, e);
+    }
+    return this;
+  }
+
+  public PShader set(String uniform, Texture texture) {
+    PAssert.isTrue(isActive());
+    try {
+      shaderProgram.setUniformi(uniform, PRenderContext.getActiveContext().getTextureBinder().bind(texture));
     } catch (IllegalArgumentException e) {
       PLog.w("Illegal argument: " + uniform, e);
     }
