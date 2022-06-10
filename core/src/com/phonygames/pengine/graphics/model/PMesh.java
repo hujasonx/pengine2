@@ -1,9 +1,11 @@
 package com.phonygames.pengine.graphics.model;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.gen.PModelGen;
 import com.phonygames.pengine.util.PCollectionUtils;
 import com.phonygames.pengine.util.PList;
@@ -69,6 +71,7 @@ public class PMesh {
 
   /**
    * Generates a new PMesh, doing any necessary renaming.
+   *
    * @param mesh
    */
   public PMesh(Mesh mesh) {

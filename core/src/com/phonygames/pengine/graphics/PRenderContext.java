@@ -268,6 +268,7 @@ public class PRenderContext {
     float distToCamera;
     int dstFactor, srcFactor, dptTest, cullFace;
     boolean enableBlend, depthTest, depthMask;
+    int numInstances;
 
     private void applyToContext(PRenderContext renderContext) {
       renderContext.setBlending(enableBlend, srcFactor, dstFactor);
@@ -302,6 +303,7 @@ public class PRenderContext {
       dstFactor = GL20.GL_ONE_MINUS_SRC_ALPHA;
       dptTest = GL20.GL_LESS;
       cullFace = GL20.GL_BACK;
+      numInstances = 1;
     }
 
     @Override

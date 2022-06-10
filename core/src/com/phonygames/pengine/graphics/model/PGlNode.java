@@ -1,5 +1,6 @@
 package com.phonygames.pengine.graphics.model;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.phonygames.pengine.exception.PAssert;
@@ -60,6 +61,9 @@ public class PGlNode {
   @Getter
   @Setter
   private PShader defaultShader = null;
+  @Getter
+  @Setter
+  private int numInstances = 1;
 
   public PGlNode(String id) {
     this.id = id;
@@ -84,7 +88,15 @@ public class PGlNode {
     shader.set(UniformConstants.Mat4.u_worldTransform, worldTransform);
     shader.set(UniformConstants.Mat4.u_worldTransformInvTra, worldTransformInvTra);
     material.applyUniforms(shader);
-    mesh.getBackingMesh().render(shader.getShaderProgram(), GL20.GL_TRIANGLES);
+
+    mesh.getBackingMesh().bind(shader.getShaderProgram());
+    if (numInstances > 1) {
+      Gdx.gl30.glDrawElementsInstanced(GL20.GL_TRIANGLES, mesh.getBackingMesh().getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0, numInstances);
+    } else if (numInstances == 1) {
+      Gdx.gl30.glDrawElements(GL20.GL_TRIANGLES, mesh.getBackingMesh().getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0);
+    }
+
+    mesh.getBackingMesh().unbind(shader.getShaderProgram());
   }
 
   public final PGlNode setWorldTransform(PMat4 worldTransform, PMat4 worldTransformInvTrad) {
@@ -103,6 +115,7 @@ public class PGlNode {
     node.setMesh(mesh);
     node.setDefaultShader(defaultShader);
     node.useAlphaBlend = useAlphaBlend;
+    node.numInstances = numInstances;
 
     node.worldTransform.set(this.worldTransform);
     node.worldTransformInvTra.set(this.worldTransformInvTra);
