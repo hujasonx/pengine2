@@ -84,6 +84,7 @@ public class PEnvironment {
     if (useDepthTestBuffer > 0) {
       renderContext.setCullFaceBack();
       renderContext.setDepthTest(GL20.GL_LESS);
+      depthTestLightsFloatArrayBuffer.dataTransferFinished();
       depthTestLightsFloatArrayBuffer.setUniforms(pointLightShader, StringConstants.lightBuffer, vecsPerInstance);
       PPointLight.getMESH().glRenderInstanced(pointLightShader, useDepthTestBuffer);
     }
@@ -91,6 +92,7 @@ public class PEnvironment {
     if (useNoDepthTestBuffer > 0) {
       renderContext.setCullFaceFront();
       renderContext.disableDepthTest();
+      noDepthTestLightsFloatArrayBuffer.dataTransferFinished();
       noDepthTestLightsFloatArrayBuffer.setUniforms(pointLightShader, StringConstants.lightBuffer, vecsPerInstance);
       PPointLight.getMESH().glRenderInstanced(pointLightShader, useNoDepthTestBuffer);
     }

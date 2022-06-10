@@ -1,9 +1,9 @@
-#include <engine/shader/header/light.vert>
 #include <engine/shader/header/instanced.vert>
+#include <engine/shader/header/light.vert>
 
 void main() {
-    #include <engine/shader/main/start/light.vert>
     #include <engine/shader/main/start/instanced.vert>
+    #include <engine/shader/main/start/light.vert>
 
     mat4 lightTransform = lightBufferFloatArrayMat4Instance(0);
 

@@ -18,6 +18,7 @@ import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
+import com.phonygames.pengine.lighting.PLight;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
@@ -46,10 +47,14 @@ public class PShader {
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
 
+  private static final String PSHADER_COMMENT_START = "/** PSHADER ";
+  private static final String PSHADER_COMMENT_END = " */ ";
+
   private static final PFileHandleUtils.RecursiveLoadProcessor RECURSIVE_LOAD_PROCESSOR = new PFileHandleUtils.RecursiveLoadProcessor() {
     @Override
-    public String processLine(int totalLineNo, int rawLineNo, String rawLine, FileHandle rawFile) {
-      return rawLine;
+    public String processLine(int totalLineNo, int rawLineNo, String prefix, String rawLine, FileHandle rawFile) {
+      String shaderPrefix = PSHADER_COMMENT_START + rawFile.path() + ":" + rawLineNo + PSHADER_COMMENT_END;
+      return shaderPrefix + prefix + rawLine;
     }
   };
 
@@ -67,9 +72,81 @@ public class PShader {
 
     shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
     if (!shaderProgram.isCompiled()) {
-      PLog.w(shaderProgram.getVertexShaderSource());
-      PLog.w(shaderProgram.getFragmentShaderSource());
+      PLog.w(getCompileFailureString());
       throw new PRuntimeException("Shader was not compiled:\n" + shaderProgram.getLog());
+    }
+  }
+
+  private String getCompileFailureString() {
+    try {
+      StringBuilder stringBuilder = new StringBuilder();
+      stringBuilder.append("[PShader compile error]\n\n");
+      String[] logLines = PStringUtils.splitByLine(shaderProgram.getLog());
+
+      int phase = 0;
+      String[] rawShaderLines = null;
+      for (int a = 0; a < logLines.length; a++) {
+        String logLine = logLines[a];
+        if (logLine.equals("Vertex shader:")) {
+          phase = 1;
+          rawShaderLines = PStringUtils.splitByLine(vertexShaderSource);
+          stringBuilder.append("Vertex Shader: \n\n");
+        } else if (logLine.equals("Fragment shader:")) {
+          phase = 2;
+          rawShaderLines = PStringUtils.splitByLine(fragmentShaderSource);
+          stringBuilder.append("Fragment Shader: \n\n");
+        } else {
+
+          if (phase == 1 || phase == 2) {
+            int offendingLineNo = Integer.parseInt(PStringUtils.extract(logLine, "(", ")")) - 1;
+            String errorString = logLine.substring(PStringUtils.indexAfter(logLine, " : "));
+            String offendingLine = rawShaderLines[offendingLineNo];
+
+            String[] fileNameAndLine = PStringUtils.extract(offendingLine, PSHADER_COMMENT_START, PSHADER_COMMENT_END).split(":");
+
+
+            // Print the shader source around the error.
+            int linesToShowBeforeAndAfter = 2;
+            stringBuilder.append(phase == 2 ? "F: " : "V: ").append(fileNameAndLine[0]).append("\n");
+            printSource(stringBuilder, rawShaderLines, offendingLineNo - linesToShowBeforeAndAfter, offendingLineNo + linesToShowBeforeAndAfter, offendingLineNo);
+            stringBuilder.append(errorString).append("\n\n");
+          }
+        }
+      }
+
+      stringBuilder.append("[/PShader compile error]\n");
+      return stringBuilder.toString();
+    } catch (Exception e) {
+      PLog.e(e);
+    }
+
+    return shaderProgram.getLog();
+  }
+
+  private static void printSource(StringBuilder stringBuilder, String[] rawLines, int lineStart, int lineEnd, int lineToFlag) {
+    for (int lineNo = lineStart; lineNo <= lineEnd; lineNo++) {
+      if (lineNo < 0 || lineNo >= rawLines.length) {
+        continue;
+      }
+
+      int rawLineNo = -1;
+      String line = rawLines[lineNo];
+      String rawLine = line;
+      if (line.startsWith(PSHADER_COMMENT_START)) {
+        String[] fileNameAndLine = PStringUtils.extract(line, PSHADER_COMMENT_START, PSHADER_COMMENT_END).split(":");
+        rawLineNo = Integer.parseInt(fileNameAndLine[1]);
+        rawLine = PStringUtils.partAfter(line, PSHADER_COMMENT_END);
+        stringBuilder.append(PStringUtils.prependSpacesToLength("" + rawLineNo, 4)).append(": ");
+      } else {
+        // Anything not loaded from a file.
+        stringBuilder.append("  PS: ");
+      }
+
+      stringBuilder.append(rawLine);
+      if (lineNo == lineToFlag) {
+        stringBuilder.append(" <=== HERE");
+      }
+      stringBuilder.append("\n");
     }
   }
 

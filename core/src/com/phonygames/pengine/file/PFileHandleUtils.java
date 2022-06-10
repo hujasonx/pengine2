@@ -75,6 +75,7 @@ public class PFileHandleUtils {
       // Check to see if we should be doing a recursive load.
       String extractedIncludeFilename = PStringUtils.extract(line, "#include <", ">");
       if (extractedIncludeFilename == null) {
+        // Relative directory.
         extractedIncludeFilename = PStringUtils.extract(line, "#include \"", "\"");
 
         if (extractedIncludeFilename != null && fileHandle.parent() != null) {
@@ -96,31 +97,18 @@ public class PFileHandleUtils {
       }
 
       // Handle the line normally, and possibly output it.
-      String processedLine = loadProcessor.processLine(totalLineNo, rawLineNo, line, fileHandle);
+      String processedLine = loadProcessor.processLine(totalLineNo, rawLineNo, prefix, line, fileHandle);
 
       if (processedLine != null) {
-        stringBuilder.append(prefix).append(processedLine).append('\n');
+        stringBuilder.append(processedLine).append('\n');
         totalLineNo++;
       }
-    }
-    if (lines[0].startsWith("#params")) {
-      PStringUtils.extractStringArray(lines[0], "[", "]", ",", true);
     }
 
     return totalLineNo;
   }
 
-  private static RecursiveLoadProcessor DEFAULT_RECURSIVE_LOAD_PROCESSOR = new RecursiveLoadProcessor() {
-    @Override
-    public String processLine(int totalLineNo, int rawLineNo, String rawLine, FileHandle rawFile) {
-      return rawLine;
-    }
-  };
-
   public abstract static class RecursiveLoadProcessor {
-    public abstract String processLine(int totalLineNo, int rawLineNo, String rawLine, FileHandle rawFile);
-
-    private void processLineRecursive(StringBuilder builder) {
-    }
+    public abstract String processLine(int totalLineNo, int rawLineNo, String prefix, String rawLine, FileHandle rawFile);
   }
 }

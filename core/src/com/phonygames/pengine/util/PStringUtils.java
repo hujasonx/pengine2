@@ -19,6 +19,22 @@ public class PStringUtils {
     builder.append(s);
     return builder.toString();
   }
+  public static String appendSpacesToLength(String s, int length) {
+    if (s == null) {
+      return null;
+    }
+
+    if (s.length() >= length) {
+      return s;
+    }
+
+    StringBuilder builder = new StringBuilder();
+    builder.append(s);
+    for (int a = 0; a < length - s.length(); a++) {
+      builder.append(' ');
+    }
+    return builder.toString();
+  }
 
   public static String[] extractStringArray(String s, String delimLeft, String delimRight, String separator, boolean trim) {
     String extractedPart = extract(s, delimLeft, delimRight);
@@ -135,5 +151,14 @@ public class PStringUtils {
     }
 
     return s.substring(indexAfterDelimL, indexOfDelimR);
+  }
+
+  public static String partAfter(String s, String delim) {
+    int indexAfterDelim = indexAfter(s, delim);
+    if (indexAfterDelim == -1) {
+      return null;
+    }
+
+    return s.substring(indexAfterDelim);
   }
 }
