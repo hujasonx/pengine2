@@ -34,11 +34,6 @@ public abstract class PLight {
   @Getter
   protected final PMat4 transform = new PMat4();
 
-  @Getter
-  @Setter
-  // The distance within which depth test will be disabled and frontface culling will be enabled. -1 for always.
-  private float forceDepthTestOffAndFrontFaceCullMaximumDistanceFromCamera = -1;
-
   public PLight setColor(float r, float g, float b, float a) {
     color.set(r, g, b, a);
     return this;
@@ -54,19 +49,7 @@ public abstract class PLight {
     return this;
   }
 
-  public boolean shouldUseDepthTestOffAndFrontFaceCull(PVec3 cameraLoc) {
-    if (forceDepthTestOffAndFrontFaceCullMaximumDistanceFromCamera < 0) {
-      return true;
-    }
-
-    PVec3 loc = transform.getTranslation(PVec3.temp());
-    boolean ret = forceDepthTestOffAndFrontFaceCullMaximumDistanceFromCamera < loc.dst(cameraLoc);
-
-    loc.freeTemp();
-    return ret;
-  }
-
-  public abstract void addInstanceData(PFloat4Texture buffer);
+  public abstract boolean addInstanceData(PFloat4Texture buffer);
 
   public abstract int vecsPerInstance();
 }

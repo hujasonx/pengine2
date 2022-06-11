@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.logging.PLog;
@@ -33,12 +34,10 @@ public class PEnvironment {
 
   private String fragmentLayoutString = "";
 
-  private final PFloat4Texture depthTestLightsFloatArrayBuffer;
-  private final PFloat4Texture noDepthTestLightsFloatArrayBuffer;
+  private final PFloat4Texture lightsFloatBuffer;
 
   public PEnvironment() {
-    depthTestLightsFloatArrayBuffer = PFloat4Texture.get(256 * 256, true);
-    noDepthTestLightsFloatArrayBuffer = PFloat4Texture.get(256 * 256, true);
+    lightsFloatBuffer = PFloat4Texture.get(256 * 256, true);
   }
 
   private final PSet<PPointLight> pointLights = new PSet<>();
@@ -60,6 +59,8 @@ public class PEnvironment {
                                      Gdx.files.local("engine/shader/light/pointlight.frag.glsl"));
     }
 
+    PGLUtils.clearScreen(0, 0, 0, 1);
+
     // Lights should be added to each other, and should not fill the depth buffer.
     renderContext.setBlending(true, GL20.GL_ONE, GL20.GL_ONE);
     renderContext.setDepthMask(false);
@@ -68,50 +69,28 @@ public class PEnvironment {
     ambientAndDirectionalLightShader.start(renderContext);
     setLightUniforms(ambientAndDirectionalLightShader, diffuseMTex, normalRTex, emissiveITex);
     PRenderBuffer.getActiveBuffer().renderQuad(ambientAndDirectionalLightShader);
-
-
     ambientAndDirectionalLightShader.end();
 
     // Point lights.
-    depthTestLightsFloatArrayBuffer.reset();
-    noDepthTestLightsFloatArrayBuffer.reset();
-    int useDepthTestBuffer = 0;
-    int useNoDepthTestBuffer = 0;
+    lightsFloatBuffer.reset();
+    int numLights = 0;
     int vecsPerInstance = 0;
     for (val pointLight : pointLights) {
       vecsPerInstance = pointLight.vecsPerInstance();
-      if (pointLight.shouldUseDepthTestOffAndFrontFaceCull(renderContext.getCameraPos())) {
-        useNoDepthTestBuffer++;
-        pointLight.addInstanceData(noDepthTestLightsFloatArrayBuffer);
-      } else {
-        useDepthTestBuffer++;
-        pointLight.addInstanceData(depthTestLightsFloatArrayBuffer);
-      }
+      numLights += pointLight.addInstanceData(lightsFloatBuffer) ? 1 : 0;
     }
 
     pointLightShader.start(renderContext);
     setLightUniforms(pointLightShader, diffuseMTex, normalRTex, emissiveITex);
 
-    if (useDepthTestBuffer > 0) {
-      renderContext.setCullFaceBack();
-      renderContext.setDepthTest(GL20.GL_LESS);
-      depthTestLightsFloatArrayBuffer.dataTransferFinished();
-      depthTestLightsFloatArrayBuffer.setUniforms(pointLightShader, StringConstants.lightBuffer, vecsPerInstance);
-      PPointLight.getMESH().glRenderInstanced(pointLightShader, useDepthTestBuffer);
-    }
-
-    if (useNoDepthTestBuffer > 0) {
-      renderContext.setCullFaceFront();
-      renderContext.disableDepthTest();
-      noDepthTestLightsFloatArrayBuffer.dataTransferFinished();
-      noDepthTestLightsFloatArrayBuffer.setUniforms(pointLightShader, StringConstants.lightBuffer, vecsPerInstance);
-      PPointLight.getMESH().glRenderInstanced(pointLightShader, useNoDepthTestBuffer);
+    if (numLights > 0) {
+      lightsFloatBuffer.dataTransferFinished();
+      lightsFloatBuffer.setUniforms(pointLightShader, StringConstants.lightBuffer, vecsPerInstance);
+      PPointLight.getMESH().glRenderInstanced(pointLightShader, numLights);
     }
 
     pointLightShader.end();
     renderContext.resetDefaults();
-
-
   }
 
   private void setLightUniforms(PShader shader, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex) {

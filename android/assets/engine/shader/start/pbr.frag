@@ -1,5 +1,3 @@
-// MAIN START
-
 diffuseM = vec4(1.0);
 emissiveI = vec4(0.0, 0.0, 0.0, 1.0);
 
@@ -15,11 +13,9 @@ vec2 uv0 = v_uv0;
 vec2 uv0 = vec2(0.0);
 #endif
 
-#ifdef pbrFlag
 diffuseM = u_diffuseCol * texture(u_diffuseTex, uv0);
 diffuseM.rgb = diffuseM.rgb * diffuseM.a;// Set the diffuse color.
 diffuseM.a = 1.0;// Set the metalicity.
 emissiveI = u_emissiveCol;// * texture(u_emissiveTex, uv0);
 emissiveI.rgb = emissiveI.rgb * emissiveI.a;// Set the emissive color.
 emissiveI.a = 1.0;// Set the roughness.
-#endif

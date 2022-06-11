@@ -86,6 +86,18 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     return null;
   }
 
+  public Texture getTexturePrev(String id) {
+    createFrameBuffersIfNeeded();
+    for (int a = 0; a < attachmentSpecs.size(); a++) {
+      val spec = attachmentSpecs.get(a);
+      if (id.equals(spec.name)) {
+        return frameBufferPrev.getTextureAttachments().get(a);
+      }
+    }
+
+    return null;
+  }
+
   public void begin() {
     begin(true);
   }
@@ -253,7 +265,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   }
 
   public PShader getQuadShader(FileHandle frag) {
-    return new PShader("#define quadFlag\n", getFragmentLayout(), PVertexAttributes.getPOSITION(), Gdx.files.local("engine/shader/quad.vert.glsl"), frag);
+    return new PShader("", getFragmentLayout(), PVertexAttributes.getPOSITION(), Gdx.files.local("engine/shader/quad.vert.glsl"), frag);
   }
 
   public PRenderBuffer renderQuad(PShader shader) {

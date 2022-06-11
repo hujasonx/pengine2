@@ -46,9 +46,12 @@ public class PShader {
 
   @Getter
   private final String vertexShaderSource, fragmentShaderSource;
+  private final FileHandle vsSourceFH, fsSourceFH;
 
   private static final String PSHADER_COMMENT_START = "/** PSHADER ";
   private static final String PSHADER_COMMENT_END = " */ ";
+
+  private String toStringResult;
 
   private static final PFileHandleUtils.RecursiveLoadProcessor RECURSIVE_LOAD_PROCESSOR = new PFileHandleUtils.RecursiveLoadProcessor() {
     @Override
@@ -64,6 +67,8 @@ public class PShader {
     StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
 
 
+    vsSourceFH = vert;
+    fsSourceFH = frag;
     vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vert, RECURSIVE_LOAD_PROCESSOR));
     fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(frag, RECURSIVE_LOAD_PROCESSOR));
 
@@ -71,9 +76,12 @@ public class PShader {
     fragmentShaderSource = fragmentStringBuilder.toString();
 
     shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
+    toStringResult = getCompileFailureString();
     if (!shaderProgram.isCompiled()) {
       PLog.w(getCompileFailureString());
       throw new PRuntimeException("Shader was not compiled:\n" + shaderProgram.getLog());
+    } else {
+      PLog.i(getCompileFailureString());
     }
   }
 
@@ -81,6 +89,16 @@ public class PShader {
     try {
       StringBuilder stringBuilder = new StringBuilder();
       stringBuilder.append("[PShader compile error]\n\n");
+      stringBuilder.append("V: \n");
+      stringBuilder.append(vsSourceFH.path()).append("\n");
+      printSource(stringBuilder, PStringUtils.splitByLine(vertexShaderSource));
+      stringBuilder.append("F: \n");
+      stringBuilder.append(fsSourceFH.path()).append("\n");
+      printSource(stringBuilder, PStringUtils.splitByLine(fragmentShaderSource));
+
+      stringBuilder.append("\nErrors:\n");
+
+
       String[] logLines = PStringUtils.splitByLine(shaderProgram.getLog());
 
       int phase = 0;
@@ -88,14 +106,12 @@ public class PShader {
       int previousOffendingLineNo = -1;
       for (int a = 0; a < logLines.length; a++) {
         String logLine = logLines[a];
-        if (logLine.equals("Vertex shader:")) {
+        if (logLine.startsWith("Vertex shader")) {
           phase = 1;
           rawShaderLines = PStringUtils.splitByLine(vertexShaderSource);
-          stringBuilder.append("Vertex Shader: \n\n");
-        } else if (logLine.equals("Fragment shader:")) {
+        } else if (logLine.startsWith("Fragment shader:")) {
           phase = 2;
           rawShaderLines = PStringUtils.splitByLine(fragmentShaderSource);
-          stringBuilder.append("Fragment Shader: \n\n");
         } else {
 
           if (phase == 1 || phase == 2) {
@@ -111,7 +127,7 @@ public class PShader {
               stringBuilder.append(phase == 2 ? "\nF: " : "\nV: ").append(fileNameAndLine[0]).append("\n");
               printSource(stringBuilder, rawShaderLines, offendingLineNo - linesToShowBeforeAndAfter, offendingLineNo + linesToShowBeforeAndAfter, offendingLineNo);
             }
-            stringBuilder.append(errorString).append("\n");
+            stringBuilder.append("[").append(PStringUtils.prependSpacesToLength(offendingLineNo + "", 4)).append("] ").append(errorString).append("\n");
 
             previousOffendingLineNo = offendingLineNo;
           }
@@ -127,6 +143,17 @@ public class PShader {
     return shaderProgram.getLog();
   }
 
+  private static void printSource(StringBuilder stringBuilder, String[] rawLines) {
+    printSource(stringBuilder, rawLines, 0, rawLines.length, -1);
+  }
+
+  /**
+   * @param stringBuilder
+   * @param rawLines
+   * @param lineStart
+   * @param lineEnd
+   * @param lineToFlag    if -1, then the actual, post-processed line numbers will be used.
+   */
   private static void printSource(StringBuilder stringBuilder, String[] rawLines, int lineStart, int lineEnd, int lineToFlag) {
     for (int lineNo = lineStart; lineNo <= lineEnd; lineNo++) {
       if (lineNo < 0 || lineNo >= rawLines.length) {
@@ -136,14 +163,24 @@ public class PShader {
       int rawLineNo = -1;
       String line = rawLines[lineNo];
       String rawLine = line;
+
       if (line.startsWith(PSHADER_COMMENT_START)) {
         String[] fileNameAndLine = PStringUtils.extract(line, PSHADER_COMMENT_START, PSHADER_COMMENT_END).split(":");
         rawLineNo = Integer.parseInt(fileNameAndLine[1]);
         rawLine = PStringUtils.partAfter(line, PSHADER_COMMENT_END);
-        stringBuilder.append(PStringUtils.prependSpacesToLength("" + rawLineNo, 4)).append(": ");
+        if (lineToFlag != -1) {
+          stringBuilder.append(PStringUtils.prependSpacesToLength("" + rawLineNo, 4)).append(": ");
+        }
       } else {
         // Anything not loaded from a file.
-        stringBuilder.append("  PS: ");
+        if (lineToFlag != -1) {
+          stringBuilder.append("  PS: ");
+        }
+      }
+
+      if (lineToFlag == -1) {
+        // Use the actual, postprocessed value.
+        stringBuilder.append(PStringUtils.prependSpacesToLength("" + lineNo, 4)).append(": ");
       }
 
       stringBuilder.append(rawLine);
@@ -182,7 +219,7 @@ public class PShader {
     try {
       shaderProgram.setUniformMatrix(uniform, mat4.getBackingMatrix4());
     } catch (IllegalArgumentException e) {
-      PLog.w("Illegal argument: " + uniform, e);
+//      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -196,7 +233,7 @@ public class PShader {
     try {
       shaderProgram.setUniformf(uniform, x);
     } catch (IllegalArgumentException e) {
-      PLog.w("Illegal argument: " + uniform, e);
+//      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -206,7 +243,7 @@ public class PShader {
     try {
       shaderProgram.setUniformi(uniform, i);
     } catch (IllegalArgumentException e) {
-      PLog.w("Illegal argument: " + uniform, e);
+//      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -216,10 +253,10 @@ public class PShader {
     try {
       shaderProgram.setUniformi(uniform, PRenderContext.getActiveContext().getTextureBinder().bind(texture));
     } catch (IllegalArgumentException e) {
-      PLog.w("Illegal argument: " + uniform, e);
+//      PLog.w("Illegal argument: " + uniform, e);
     }
 
-    set(uniform + "Size", texture.getWidth(), texture.getHeight(), 1f /  texture.getWidth(), 1f / texture.getHeight());
+    set(uniform + "Size", texture.getWidth(), texture.getHeight(), 1f / texture.getWidth(), 1f / texture.getHeight());
     return this;
   }
 
@@ -232,7 +269,7 @@ public class PShader {
     try {
       shaderProgram.setUniformf(uniform, x, y);
     } catch (IllegalArgumentException e) {
-      PLog.w("Illegal argument: " + uniform, e);
+//      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -246,7 +283,7 @@ public class PShader {
     try {
       shaderProgram.setUniformf(uniform, x, y, z);
     } catch (IllegalArgumentException e) {
-      PLog.w("Illegal argument: " + uniform, e);
+//      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -260,8 +297,16 @@ public class PShader {
     try {
       shaderProgram.setUniformf(uniform, x, y, z, w);
     } catch (IllegalArgumentException e) {
-      PLog.w("Illegal argument: " + uniform, e);
+//      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
+  }
+
+  @Override
+  public String toString() {
+    if (toStringResult != null) {
+      return toStringResult;
+    }
+    return super.toString();
   }
 }

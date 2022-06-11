@@ -1,0 +1,1 @@
+vec2 bufferUV = gl_FragCoord.xy * u_renderBufferSize.zw;

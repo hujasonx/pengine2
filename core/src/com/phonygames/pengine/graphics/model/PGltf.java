@@ -38,7 +38,7 @@ public class PGltf {
   public static PShaderProvider DEFAULT_SHADER_PROVIDER = new PShaderProvider.PMapShaderProvider() {
     @Override
     public PShader genShader(String fragmentLayout, PVertexAttributes vertexAttributes) {
-      return new PShader("#define pbrFlag\n", fragmentLayout, vertexAttributes, Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
+      return new PShader("", fragmentLayout, vertexAttributes, Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
                          Gdx.files.local("engine/shader/gltf/default.frag.glsl"));
     }
   };

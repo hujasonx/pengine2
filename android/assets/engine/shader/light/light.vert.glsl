@@ -1,12 +1,18 @@
 #include <engine/shader/header/instanced.vert>
+#include <engine/shader/header/rendercontext.vert>
 #include <engine/shader/header/light.vert>
 
+#include <engine/shader/header/floatarrayinstanced>[lightBuffer]
+
 void main() {
-    #include <engine/shader/main/start/instanced.vert>
-    #include <engine/shader/main/start/light.vert>
+    #include <engine/shader/start/instanced.vert>
+    #include <engine/shader/start/rendercontext.vert>
+    #include <engine/shader/start/light.vert>
 
     mat4 lightTransform = lightBufferFloatArrayMat4Instance(0);
-    v_worldPos = lightTransform * vec4(a_pos, 1.0);
+    worldPos = (lightTransform * vec4(a_pos, 1.0)).xyz;
 
-    #include <engine/shader/main/end/light.vert>
+    #include <engine/shader/end/rendercontext.vert>
+    #include <engine/shader/end/light.vert>
+    #include <engine/shader/end/instanced.vert>
 }

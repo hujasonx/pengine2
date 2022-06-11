@@ -1,9 +1,12 @@
-#include <engine/shader/header/quad.frag>
+#include <engine/shader/header/shared.frag>
+#include <engine/shader/header/light.frag>
 
-uniform sampler2D u_diffuseMTex;
 void main() {
-    #include <engine/shader/main/start/quad.frag>
+    #include <engine/shader/start/shared.frag>
+    #include <engine/shader/start/light.frag>
 
-    vec4 diffuseM = texture(u_diffuseMTex, uv);
-    lighted = vec4(diffuseM.rgb, 1.0);
+    lighted = diffuseM;
+
+    #include <engine/shader/end/light.frag>
+    #include <engine/shader/end/shared.frag>
 }

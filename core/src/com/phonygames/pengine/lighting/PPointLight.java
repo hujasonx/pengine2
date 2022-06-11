@@ -48,13 +48,15 @@ public class PPointLight extends PLight {
   }
 
   @Override
-  public void addInstanceData(PFloat4Texture buffer) {
+  public boolean addInstanceData(PFloat4Texture buffer) {
     // 0: Transform.
     buffer.addData(transform);
 
     // 4: Position.
     transform.getTranslation(tempVec3);
     buffer.addData(tempVec3, 1);
+
+    return true;
   }
 
   @Override
