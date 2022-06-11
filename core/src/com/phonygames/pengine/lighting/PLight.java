@@ -14,6 +14,10 @@ import lombok.Setter;
 
 public abstract class PLight {
   public static class UniformConstants {
+    public static class Vec3 {
+      public static String u_lightPos = "u_lightPos";
+    }
+
     public static class Vec4 {
       public static String u_lightColor = "u_lightColor";
     }
@@ -34,10 +38,6 @@ public abstract class PLight {
   @Setter
   // The distance within which depth test will be disabled and frontface culling will be enabled. -1 for always.
   private float forceDepthTestOffAndFrontFaceCullMaximumDistanceFromCamera = -1;
-
-  protected void applyUniforms(PShader shader) {
-    shader.set(UniformConstants.Vec4.u_lightColor, color);
-  }
 
   public PLight setColor(float r, float g, float b, float a) {
     color.set(r, g, b, a);

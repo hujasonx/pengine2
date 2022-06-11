@@ -2,8 +2,8 @@
 #include <engine/shader/header/floatarray>[NAME]
 uniform int u_NAMEFloatArrayVecsPerInstance;
 
-vec4 NAMEFloatArrayVecInstance(int index) {
-    return NAMEFloatArrayVec(u_NAMEFloatArrayVecsPerInstance * v_instanceID + index);
+vec4 NAMEFloatArrayVec4Instance(int index) {
+    return NAMEFloatArrayVec4(u_NAMEFloatArrayVecsPerInstance * v_instanceID + index);
 }
 
 mat4 NAMEFloatArrayMat4Instance(int index) {

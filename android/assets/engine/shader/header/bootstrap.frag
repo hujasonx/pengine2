@@ -21,7 +21,7 @@ uniform vec2 u_metallicRoughness;
 uniform vec4 u_diffuseCol;
 uniform vec4 u_emissiveCol;
 
-uniform sampler2D u_diffuseTex;
+#include <engine/shader/header/texture2D>[diffuse]
 uniform sampler2D u_emissiveTex;
 uniform sampler2D u_metallicRoughnessTex;
 #endif

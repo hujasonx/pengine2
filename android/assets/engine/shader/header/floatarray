@@ -1,16 +1,16 @@
 #params [NAME]
 // Start floatArray: NAME
 uniform sampler2D u_NAMEFloatArrayTex;
-uniform vec4 u_NAMEFloatArraySize;
+uniform vec4 u_NAMEFloatArrayTexSize;
 
-vec4 NAMEFloatArrayVec(int index) {
-    ivec2 fetchLocation = ivec2(int(mod(float(index), u_NAMEFloatArraySize.x)), int(float(index) / u_NAMEFloatArraySize.x));
+vec4 NAMEFloatArrayVec4(int index) {
+    ivec2 fetchLocation = ivec2(int(mod(float(index), u_NAMEFloatArrayTexSize.x)), int(float(index) / u_NAMEFloatArrayTexSize.x));
     vec4 texel = texelFetch(u_NAMEFloatArrayTex, fetchLocation, 0);
     return texel;
 }
 mat4 NAMEFloatArrayMat4(int startIndex) {
-    return mat4(NAMEFloatArrayVec(startIndex),
-                NAMEFloatArrayVec(startIndex + 1),
-                NAMEFloatArrayVec(startIndex + 2),
-                NAMEFloatArrayVec(startIndex + 3));
+    return mat4(NAMEFloatArrayVec4(startIndex),
+                NAMEFloatArrayVec4(startIndex + 1),
+                NAMEFloatArrayVec4(startIndex + 2),
+                NAMEFloatArrayVec4(startIndex + 3));
 }

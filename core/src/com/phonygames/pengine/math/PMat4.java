@@ -98,7 +98,19 @@ public class PMat4 implements Pool.Poolable {
     return this;
   }
 
-  public PMat4 tra(float x, float y, float z) {
+  public PMat4 setToTranslation(float x, float y, float z) {
+    return idt().translate(x, y, z);
+  }
+
+  public PMat4 setToRotation(float axisX, float axisY, float axisZ, float rad) {
+    return idt().rot(axisX, axisY, axisZ, rad);
+  }
+
+  public PMat4 setTpScl(float x, float y, float z) {
+    return idt().scl(x, y, z);
+  }
+
+  public PMat4 translate(float x, float y, float z) {
     backingMatrix4.translate(x, y, z);
     return this;
   }

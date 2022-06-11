@@ -1,0 +1,4 @@
+#params [NAME]
+uniform sampler2D u_NAMETex;
+uniform vec4 u_NAMETexSize;
+uniform vec4 u_NAMETexUVOS;

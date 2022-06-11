@@ -14,6 +14,7 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 
 import java.nio.FloatBuffer;
@@ -58,6 +59,15 @@ public class PFloat4Texture extends Texture {
     floatBuffer.limit(floatBuffer.capacity());
   }
 
+
+  public PFloat4Texture addData(PVec3 vec3, float w) {
+    floatBuffer.put(vec3.x());
+    floatBuffer.put(vec3.y());
+    floatBuffer.put(vec3.z());
+    floatBuffer.put(w);
+    return this;
+  }
+
   public PFloat4Texture addData(PVec4 vec4) {
     floatBuffer.put(vec4.x());
     floatBuffer.put(vec4.y());
@@ -75,6 +85,7 @@ public class PFloat4Texture extends Texture {
     floatBuffer.put(floats);
     return this;
   }
+
 
   public PFloat4Texture addData(float r, float g, float b, float a) {
     floatBuffer.put(r);
@@ -156,9 +167,8 @@ public class PFloat4Texture extends Texture {
 
   public void setUniforms(PShader shader, String name, int vecsPerInstance) {
     PAssert.isTrue(shader.isActive());
-    String uniform = "u_" + name;
-    shader.set(uniform + "FloatArrayTex", this);
-    shader.set(uniform + "FloatArraySize", getWidth(), getHeight(), 1f / getWidth(), 1f / getHeight());
+    String uniform = "u_" + name + "FloatArray";
+    shader.set(uniform + "Tex", this);
     shader.set(uniform + "FloatArrayVecsPerInstance", vecsPerInstance);
   }
 }

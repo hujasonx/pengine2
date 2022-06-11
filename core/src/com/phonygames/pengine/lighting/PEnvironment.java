@@ -77,10 +77,9 @@ public class PEnvironment {
       }
     }
 
-    pointLightShader.start();
-    setLightUniforms(pointLightShader, renderContext, diffuseMTex, emissiveRTex, normalITex);
+    pointLightShader.start(renderContext);
+    setLightUniforms(pointLightShader,diffuseMTex, emissiveRTex, normalITex);
 
-    pointLightShader.set(PGlNode.UniformConstants.Mat4.u_worldTransform, PMat4.IDT);
     if (useDepthTestBuffer > 0) {
       renderContext.setCullFaceBack();
       renderContext.setDepthTest(GL20.GL_LESS);
@@ -101,8 +100,7 @@ public class PEnvironment {
     renderContext.resetDefaults();
   }
 
-  private void setLightUniforms(PShader shader, PRenderContext renderContext, Texture diffuseMTex, Texture emissiveRTex, Texture normalITex) {
-    renderContext.applyUniforms(shader);
+  private void setLightUniforms(PShader shader, Texture diffuseMTex, Texture emissiveRTex, Texture normalITex) {
     shader.set(UniformConstants.Sampler2D.u_diffuseMTex, diffuseMTex);
     shader.set(UniformConstants.Sampler2D.u_emissiveRTex, emissiveRTex);
     shader.set(UniformConstants.Sampler2D.u_normalITex, normalITex);

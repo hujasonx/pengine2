@@ -56,7 +56,7 @@ public class PTexture {
 
   public void applyShader(String uniform, PShader shader) {
     shader.setI(uniform, bind());
-    shader.set(uniform + "Size", width(), height());
+    shader.set(uniform + "Size", width(), height(), 1f / width(), 1f / height());
     shader.set(uniform + "UVOS", uvOS);
   }
 

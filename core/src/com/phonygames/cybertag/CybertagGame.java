@@ -2,7 +2,7 @@ package com.phonygames.cybertag;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
@@ -37,6 +37,7 @@ public class CybertagGame implements PGame {
 
   private PPbrPipeline pPbrPipeline;
   PEnvironment environment;
+  PPointLight testLight;
 
   public void init() {
     new PGltf("engine/model/blender.glb").loadThenDo(
@@ -55,7 +56,7 @@ public class CybertagGame implements PGame {
 
     pPbrPipeline.setEnvironment(environment);
 
-    environment.addLight(new PPointLight());
+    environment.addLight(testLight = new PPointLight());
 
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
       PModelGen.Part basePart;
@@ -110,6 +111,8 @@ public class CybertagGame implements PGame {
     renderContext.start();
     pPbrPipeline.attach(renderContext);
 
+    testLight.getTransform().setToTranslation(0, MathUtils.sin(PEngine.t), 0);
+
     if (PMesh.FULLSCREEN_QUAD_MESH != null) {
 //      PMesh.FULLSCREEN_QUAD_MESH.getBackingMesh().render(testShader.getShaderProgram(), PMesh.ShapeType.Filled.getGlType());
     }
@@ -121,6 +124,7 @@ public class CybertagGame implements PGame {
 
     if (testBoxModelInstance != null) {
 //      testBoxModelInstance.renderDefault(renderContext);
+
     }
 
     renderContext.emit();

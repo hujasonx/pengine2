@@ -85,6 +85,7 @@ public class PShader {
 
       int phase = 0;
       String[] rawShaderLines = null;
+      int previousOffendingLineNo = -1;
       for (int a = 0; a < logLines.length; a++) {
         String logLine = logLines[a];
         if (logLine.equals("Vertex shader:")) {
@@ -104,17 +105,20 @@ public class PShader {
 
             String[] fileNameAndLine = PStringUtils.extract(offendingLine, PSHADER_COMMENT_START, PSHADER_COMMENT_END).split(":");
 
+            if (previousOffendingLineNo != offendingLineNo) {
+              // Print the shader source around the error.
+              int linesToShowBeforeAndAfter = 2;
+              stringBuilder.append(phase == 2 ? "\nF: " : "\nV: ").append(fileNameAndLine[0]).append("\n");
+              printSource(stringBuilder, rawShaderLines, offendingLineNo - linesToShowBeforeAndAfter, offendingLineNo + linesToShowBeforeAndAfter, offendingLineNo);
+            }
+            stringBuilder.append(errorString).append("\n");
 
-            // Print the shader source around the error.
-            int linesToShowBeforeAndAfter = 2;
-            stringBuilder.append(phase == 2 ? "F: " : "V: ").append(fileNameAndLine[0]).append("\n");
-            printSource(stringBuilder, rawShaderLines, offendingLineNo - linesToShowBeforeAndAfter, offendingLineNo + linesToShowBeforeAndAfter, offendingLineNo);
-            stringBuilder.append(errorString).append("\n\n");
+            previousOffendingLineNo = offendingLineNo;
           }
         }
       }
 
-      stringBuilder.append("[/PShader compile error]\n");
+      stringBuilder.append("\n[/PShader compile error]\n");
       return stringBuilder.toString();
     } catch (Exception e) {
       PLog.e(e);
@@ -154,12 +158,18 @@ public class PShader {
     return activeShader == this;
   }
 
-  public void start() {
+  public void start(PRenderContext renderContext) {
     PAssert.isFalse(isActive());
     activeShader = this;
     shaderProgram.bind();
     set(PRenderContext.UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
-    set(PRenderContext.UniformConstants.Vec2.u_renderBufferSize, PRenderBuffer.getActiveBuffer().width(), PRenderBuffer.getActiveBuffer().height());
+    set(PRenderContext.UniformConstants.Vec4.u_renderBufferSize, PRenderBuffer.getActiveBuffer().width(), PRenderBuffer.getActiveBuffer().height(),
+        1f / PRenderBuffer.getActiveBuffer().width(), 1f / PRenderBuffer.getActiveBuffer().height());
+    set(PRenderContext.UniformConstants.Mat4.u_viewProjTransform, renderContext.getViewProjTransform());
+    set(PRenderContext.UniformConstants.Mat4.u_viewProjTransformInvTra, renderContext.getViewProjInvTraTransform());
+    set(PRenderContext.UniformConstants.Vec3.u_cameraPos, renderContext.getCameraPos());
+    set(PRenderContext.UniformConstants.Vec3.u_cameraDir, renderContext.getCameraDir());
+    set(PRenderContext.UniformConstants.Vec3.u_cameraUp, renderContext.getCameraUp());
   }
 
   public void end() {
@@ -208,6 +218,8 @@ public class PShader {
     } catch (IllegalArgumentException e) {
       PLog.w("Illegal argument: " + uniform, e);
     }
+
+    set(uniform + "Size", texture.getWidth(), texture.getHeight(), 1f /  texture.getWidth(), 1f / texture.getHeight());
     return this;
   }
 

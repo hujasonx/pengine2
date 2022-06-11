@@ -19,6 +19,8 @@ public class PPointLight extends PLight {
     super();
   }
 
+  private final PVec3 tempVec3 = new PVec3();
+
   public static void initMesh() {
     new PModelGen() {
       PModelGen.Part basePart;
@@ -47,12 +49,16 @@ public class PPointLight extends PLight {
 
   @Override
   public void addInstanceData(PFloat4Texture buffer) {
+    // 0: Transform.
     buffer.addData(transform);
 
+    // 4: Position.
+    transform.getTranslation(tempVec3);
+    buffer.addData(tempVec3, 1);
   }
 
   @Override
   public int vecsPerInstance() {
-    return 4;
+    return 5;
   }
 }

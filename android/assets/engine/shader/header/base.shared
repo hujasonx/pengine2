@@ -1,2 +1,2 @@
 uniform vec4 u_tdtuituidt;
-uniform vec2 u_renderBufferSize;
+uniform vec4 u_renderBufferSize;
