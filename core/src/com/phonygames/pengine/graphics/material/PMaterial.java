@@ -246,29 +246,29 @@ public class PMaterial {
     if (attribute.type == PBRColorAttribute.Diffuse) {
       set(UniformConstants.Vec4.u_diffuseCol, ((ColorAttribute) attribute).color);
     } else if (attribute.type == PBRColorAttribute.Ambient) {
-      PAssert.warnNotImplemented();
+      PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRColorAttribute.AmbientLight) {
-      PAssert.warnNotImplemented();
+      PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRColorAttribute.Emissive) {
       set(UniformConstants.Vec4.u_emissiveCol, ((ColorAttribute) attribute).color);
     } else if (attribute.type == PBRColorAttribute.Fog) {
-      PAssert.warnNotImplemented();
+      PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRColorAttribute.Reflection) {
-      PAssert.warnNotImplemented();
+      PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRColorAttribute.Specular) {
       set(UniformConstants.Vec4.u_specularCol, ((ColorAttribute) attribute).color);
     } else if (attribute.type == PBRTextureAttribute.Ambient) {
-      PAssert.warnNotImplemented();
+      PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRTextureAttribute.BRDFLUTTexture) {
       set(UniformConstants.Sampler2D.u_brdflutTex, ((ColorAttribute) attribute).color);
     } else if (attribute.type == PBRTextureAttribute.Bump) {
-      PAssert.warnNotImplemented();
+      PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRTextureAttribute.BaseColorTexture || attribute.type == PBRTextureAttribute.Diffuse) {
       set(UniformConstants.Sampler2D.u_diffuseTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.Emissive) {
       set(UniformConstants.Sampler2D.u_emissiveTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.EmissiveTexture) {
-      PAssert.warnNotImplemented();
+      PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRTextureAttribute.MetallicRoughnessTexture) {
       set(UniformConstants.Sampler2D.u_metallicRoughnessTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.Normal || attribute.type == PBRTextureAttribute.NormalTexture) {
@@ -294,7 +294,7 @@ public class PMaterial {
     } else if (attribute.type == PBRFloatAttribute.Shininess) {
       set(UniformConstants.Float.u_shininess, ((PBRFloatAttribute) attribute).value);
     } else {
-      PAssert.warnNotImplemented();
+      PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     }
 
     return this;

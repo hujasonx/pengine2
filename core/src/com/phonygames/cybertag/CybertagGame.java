@@ -37,7 +37,7 @@ public class CybertagGame implements PGame {
 
   private PPbrPipeline pPbrPipeline;
   PEnvironment environment;
-  PPointLight testLight;
+  PPointLight[] testLights = new PPointLight[16];
 
   public void init() {
     new PGltf("engine/model/RiggedFigure.glb").loadThenDo(
@@ -56,7 +56,9 @@ public class CybertagGame implements PGame {
 
     pPbrPipeline.setEnvironment(environment);
 
-    environment.addLight(testLight = new PPointLight());
+    for (int a = 0; a < testLights.length; a++) {
+      environment.addLight(testLights[a] = new PPointLight());
+    }
 
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
       PModelGen.Part basePart;
@@ -113,7 +115,12 @@ public class CybertagGame implements PGame {
 
     environment.setAmbientLightCol(.0f, .0f, .0f);
     environment.setDirectionalLightDir(0, -1, -1, 1);
-    testLight.getTransform().setToTranslation(MathUtils.sin(PEngine.t * .5f) * 2, MathUtils.sin(PEngine.t * .6f + 1f) * 2, MathUtils.sin(PEngine.t * .4f + 2f) * 2);
+
+
+    for (int a = 0; a < testLights.length; a++) {
+      testLights[a].getTransform()
+          .setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2 - a, MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2, MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
+    }
 
     if (PMesh.FULLSCREEN_QUAD_MESH != null) {
 //      PMesh.FULLSCREEN_QUAD_MESH.getBackingMesh().render(testShader.getShaderProgram(), PMesh.ShapeType.Filled.getGlType());

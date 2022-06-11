@@ -100,19 +100,19 @@ public class PEnvironment {
     int vecsPerInstance = 0;
     for (val pointLight : pointLights) {
       vecsPerInstance = pointLight.vecsPerInstance();
-      numLights += pointLight.addInstanceData(lightsFloatBuffer) ? 1 : 0;
+      boolean shouldRender = pointLight.addInstanceData(lightsFloatBuffer);
+      numLights += shouldRender ? 1 : 0;
     }
 
-    pointLightShader.start(renderContext);
-    setLightUniforms(pointLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex, renderContext.getViewProjInvTransform());
-
     if (numLights > 0) {
+      pointLightShader.start(renderContext);
+      setLightUniforms(pointLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex, renderContext.getViewProjInvTransform());
       lightsFloatBuffer.dataTransferFinished();
       lightsFloatBuffer.setUniforms(pointLightShader, "u_lightBufferTex", vecsPerInstance);
       PPointLight.getMESH().glRenderInstanced(pointLightShader, numLights);
+      pointLightShader.end();
     }
 
-    pointLightShader.end();
     renderContext.resetDefaults();
   }
 

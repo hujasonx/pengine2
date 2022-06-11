@@ -171,8 +171,8 @@ public class PRenderContext {
   public void end() {
     PAssert.isTrue(isActive());
     backingRenderContext.end();
-    for (String phase : enqueuedDrawCalls.keySet()) {
-      clearQueueMap(enqueuedDrawCalls.get(phase));
+    for (val e : enqueuedDrawCalls) {
+      clearQueueMap(enqueuedDrawCalls.get(e.getKey()));
     }
     activeContext = null;
   }
@@ -205,7 +205,8 @@ public class PRenderContext {
       val queueMap = enqueuedDrawCalls.get(phaseHandler.phase);
 
       if (queueMap != null) {
-        for (PShader shader : queueMap.keySet()) {
+        for (val e : queueMap) {
+          val shader = e.getKey();
           shader.start(this);;
 
           val queue = queueMap.get(shader);
@@ -225,8 +226,8 @@ public class PRenderContext {
   }
 
   private void clearQueueMap(PMap<PShader, PList<DrawCall>> queueMap) {
-    for (PShader shader : queueMap.keySet()) {
-      val queue = queueMap.get(shader);
+    for (val e : queueMap) {
+      val queue = queueMap.get(e.getKey());
       for (DrawCall drawCall : queue) {
         drawCallPool.free(drawCall);
       }

@@ -6,7 +6,9 @@ import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
+import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -17,6 +19,13 @@ public class PVec3 extends PVec {
   public static PVec3 X = new PVec3().set(1, 0, 0);
   public static PVec3 Y = new PVec3().set(0, 1, 0);
   public static PVec3 Z = new PVec3().set(0, 0, 1);
+
+  @Override
+  public String toString() {
+    return "<" + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestHundredth(backingVec3.x), 6) +
+        ", " + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestHundredth(backingVec3.y), 6) +
+        ", " + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestHundredth(backingVec3.z), 6) + ">";
+  }
 
   @Getter
   private final Vector3 backingVec3 = new Vector3();

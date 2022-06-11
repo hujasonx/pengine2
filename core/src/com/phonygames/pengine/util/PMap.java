@@ -1,6 +1,7 @@
 package com.phonygames.pengine.util;
 
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.exception.PRuntimeException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +35,18 @@ public class PMap<K, V> extends HashMap<K, V> implements Iterable<Map.Entry<K, V
     return ret.tryDeepCopyFrom(this);
   }
 
+  @Override
+  public Collection<V> values() {
+    PAssert.warn(new PRuntimeException("Can allocate, try to avoid using this"));
+    return super.values();
+  }
+
+  @Override
+  public Set<K> keySet() {
+    PAssert.warn("Can allocate, try to avoid using this");
+    return super.keySet();
+  }
+
   // Can be overridden to help with deep copies.
   public K tryDeepCopyKey(K k) {
     return k;
@@ -52,7 +65,7 @@ public class PMap<K, V> extends HashMap<K, V> implements Iterable<Map.Entry<K, V
   public V getOrMake(K k) {
     V v = get(k);
     if (v == null) {
-      v = (V)makeNew(k);
+      v = (V) makeNew(k);
       put(k, v);
     }
 

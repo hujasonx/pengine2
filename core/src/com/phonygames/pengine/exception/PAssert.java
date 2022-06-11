@@ -12,13 +12,21 @@ public class PAssert {
     throw new PRuntimeException(message);
   }
 
-  public static void warnNotImplemented() {
-    warn("Not implemented");
+  public static void warnNotImplemented(String info) {
+    warn("Not implemented: " + info);
   }
 
   public static void warn(String message) {
     try {
       throw new PRuntimeException(message);
+    } catch (PRuntimeException e) {
+      System.err.println(e);
+    }
+  }
+
+  public static void warn(PRuntimeException runtimeException) {
+    try {
+      throw runtimeException;
     } catch (PRuntimeException e) {
       System.err.println(e);
     }

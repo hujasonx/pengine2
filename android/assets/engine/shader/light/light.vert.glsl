@@ -12,7 +12,7 @@ void main() {
     mat4 lightTransform = lightBufferMat4I(0);
     worldPos = (lightTransform * vec4(a_pos, 1.0)).xyz;
 
-    #include <engine/shader/end/rendercontext.vert>
     #include <engine/shader/end/light.vert>
+    #include <engine/shader/end/rendercontext.vert>
     #include <engine/shader/end/instanced.vert>
 }
