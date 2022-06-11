@@ -92,8 +92,11 @@ public class PMesh {
         case VertexAttributes.Usage.ColorUnpacked:
           attr.alias = PVertexAttributes.Attribute.Keys.col[attr.unit];
           break;
+        case VertexAttributes.Usage.BoneWeight:
+          attr.alias = PVertexAttributes.Attribute.Keys.bon[attr.unit];
+          break;
         default:
-          PAssert.warn("Not implemented GLTF vertex Attribute:" + attr.alias);
+          PAssert.warnNotImplemented("Vertex attribute" + attr.alias);
           break;
       }
     }

@@ -84,12 +84,13 @@ public class PGlNode {
   }
 
   public void renderGl(PShader shader) {
-    PAssert.isTrue(shader.isActive());
-    shader.set(UniformConstants.Mat4.u_worldTransform, worldTransform);
-    shader.set(UniformConstants.Mat4.u_worldTransformInvTra, worldTransformInvTra);
-    material.applyUniforms(shader);
+    if (shader.checkValid()) {
+      shader.set(UniformConstants.Mat4.u_worldTransform, worldTransform);
+      shader.set(UniformConstants.Mat4.u_worldTransformInvTra, worldTransformInvTra);
+      material.applyUniforms(shader);
 
-    mesh.glRenderInstanced(shader, numInstances);
+      mesh.glRenderInstanced(shader, numInstances);
+    }
   }
 
   public final PGlNode setWorldTransform(PMat4 worldTransform, PMat4 worldTransformInvTrad) {

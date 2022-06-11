@@ -1,23 +1,17 @@
 #params [NAME]
+// texture2D [NAME]
 uniform sampler2D u_NAMETex;
 uniform vec4 u_NAMETexSize;
 uniform vec4 u_NAMETexUVOS;
-vec4 NAMETex(vec2 uv) {
-    return texture(u_NAMETex, uv);
-}
-vec4 NAMEVec4(int index) {
-    ivec2 fetchLocation = ivec2(int(mod(float(index), u_NAMETexSize.x)), int(float(index) * u_NAMETexSize.z));
-    return texelFetch(u_NAMETex, fetchLocation, 0);
-}
-mat4 NAMEMat4(int startIndex) {
-    return mat4(NAMEVec4(startIndex), NAMEVec4(startIndex + 1), NAMEVec4(startIndex + 2), NAMEVec4(startIndex + 3));
-}
+vec4 NAMETex(vec2 uv) { return texture(u_NAMETex, uv); }
+vec4 NAMEVec4(int index) { ivec2 fetchLocation = ivec2(int(mod(float(index), u_NAMETexSize.x)), int(float(index) * u_NAMETexSize.z)); return texelFetch(u_NAMETex, fetchLocation, 0); }
+mat4 NAMEMat4(int startIndex) { return mat4(NAMEVec4(startIndex), NAMEVec4(startIndex + 1), NAMEVec4(startIndex + 2), NAMEVec4(startIndex + 3)); }
 #ifdef instancedFlag
 uniform int u_NAMETexVecsPerI;
-vec4 NAMEVec4I(int index) {
-    return NAMEVec4(u_NAMETexVecsPerI * v_instanceID + index);
-}
-mat4 NAMEMat4I(int index) {
-    return NAMEMat4(u_NAMETexVecsPerI * v_instanceID + index);
-}
+vec4 NAMEVec4I(int index) { return NAMEVec4(u_NAMETexVecsPerI * v_instanceID + index); }
+mat4 NAMEMat4I(int index) { return NAMEMat4(u_NAMETexVecsPerI * v_instanceID + index); }
+#else
+vec4 NAMEVec4I(int index) { return NAMEVec4(index); }
+mat4 NAMEMat4I(int index) { return NAMEMat4(index); }
 #endif
+

@@ -33,6 +33,7 @@ public class PVertexAttributes {
       public static final String nor = "a_nor";
       public static final String uv[] = new String[4];
       public static final String col[] = new String[4];
+      public static final String bon[] = new String[4];
     }
 
     public static final Class[] VectorClasses = new Class[]{null, null, PVec2.class, PVec3.class, PVec4.class};
@@ -59,6 +60,11 @@ public class PVertexAttributes {
       for (int a = 0; a < Keys.col.length; a++) {
         Keys.col[a] = "a_col" + a;
         registerAttribute(Keys.col[a], 4);
+      }
+
+      for (int a = 0; a < Keys.bon.length; a++) {
+        Keys.bon[a] = "a_bon" + a;
+        registerAttribute(Keys.bon[a], 2);
       }
 
       DEFAULT = new PVertexAttributes(
@@ -117,7 +123,6 @@ public class PVertexAttributes {
     }
     this.prefix = prefix.toString();
     this.numFloatsPerVertex = floatsPerVertex;
-//    this.bytesPerVertex = calculateOffsets();
 
     return new VertexAttributes(vertexAttributes);
   }
@@ -145,15 +150,4 @@ public class PVertexAttributes {
   public int indexForVertexAttribute(VertexAttribute vertexAttribute) {
     return indexForVertexAttribute(vertexAttribute.alias);
   }
-
-//  private int calculateOffsets() {
-//    int count = 0;
-//    for (val attr : vertexAttributes) {
-//      attr.offset = count;
-//      count += attr.getSizeInBytes();
-//    }
-//
-//    return count;
-//  }
-
 }

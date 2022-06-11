@@ -9,12 +9,18 @@ in vec3 a_nor;
 out vec3 v_aNor;
 #endif
 
-#ifdef a_uv0Flag
-in vec2 a_uv0;
-out vec2 v_uv0;
-#endif
 
-#ifdef a_col0Flag
-in vec4 v_col0;
-out vec4 v_col0;
+#include <engine/shader/header/sharedvertarray>[0]
+#include <engine/shader/header/sharedvertarray>[1]
+#include <engine/shader/header/sharedvertarray>[2]
+#include <engine/shader/header/sharedvertarray>[3]
+#include <engine/shader/header/sharedvertarray>[4]
+#include <engine/shader/header/sharedvertarray>[5]
+#include <engine/shader/header/sharedvertarray>[6]
+#include <engine/shader/header/sharedvertarray>[7]
+#include <engine/shader/header/sharedvertarray>[8]
+
+// Uniforms for skinning.
+#ifdef a_bon0Flag
+#include <engine/shader/header/texture2D>[boneTransforms]
 #endif

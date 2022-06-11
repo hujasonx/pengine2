@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.FloatTextureData;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.shader.PShader;
@@ -16,12 +17,33 @@ import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
+import com.phonygames.pengine.util.PMap;
 
 import java.nio.FloatBuffer;
 
 import lombok.Getter;
 
-public class PFloat4Texture extends Texture {
+public class PFloat4Texture extends Texture implements Pool.Poolable {
+  private static PMap<Integer, Pool<PFloat4Texture>> staticTexturePools = new PMap<Integer, Pool<PFloat4Texture>>() {
+    @Override
+    protected Object makeNew(final Integer integer) {
+      return new Pool<PFloat4Texture>() {
+        @Override
+        public PFloat4Texture newObject() {
+          return PFloat4Texture.get(integer, true);
+        }
+      };
+    }
+  };
+
+  public static PFloat4Texture getTemp(int vec4Capacity) {
+    return staticTexturePools.getOrMake(vec4Capacity).obtain();
+  }
+
+  public void freeTemp() {
+    staticTexturePools.getOrMake(vec4Capacity).free(this);
+  }
+
   private int sideLength = 0;
   private FloatBuffer floatBuffer;
   // Floats are packed into vec4s.
@@ -54,11 +76,11 @@ public class PFloat4Texture extends Texture {
     load(this.getTextureData());
   }
 
+  @Override
   public void reset() {
     floatBuffer.rewind();
     floatBuffer.limit(floatBuffer.capacity());
   }
-
 
   public PFloat4Texture addData(PVec3 vec3, float w) {
     floatBuffer.put(vec3.x());

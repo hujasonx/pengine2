@@ -1,0 +1,15 @@
+#params [INDEX]
+
+#ifdef a_uvINDEXFlag
+v_uvINDEX = a_uvINDEX;
+#endif
+
+#ifdef a_colINDEXFlag
+v_colINDEX = a_colINDEX;
+#endif
+
+#ifdef a_bonINDEXFlag
+v_bonINDEX = a_bonINDEX;
+skinning += a_bonINDEX.y * boneTransformsMat4I(int(a_bonINDEX.x) * 4);
+#endif
+

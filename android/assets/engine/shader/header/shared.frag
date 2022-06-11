@@ -7,10 +7,13 @@ in vec3 v_aPos;
 in vec3 v_aNor;
 #endif
 
-#ifdef a_uv0Flag
-in vec2 v_uv0;
-#endif
 
-#ifdef a_col0Flag
-in vec4 v_col0;
-#endif
+#include <engine/shader/header/sharedfragarray>[0]
+#include <engine/shader/header/sharedfragarray>[1]
+#include <engine/shader/header/sharedfragarray>[2]
+#include <engine/shader/header/sharedfragarray>[3]
+#include <engine/shader/header/sharedfragarray>[4]
+#include <engine/shader/header/sharedfragarray>[5]
+#include <engine/shader/header/sharedfragarray>[6]
+#include <engine/shader/header/sharedfragarray>[7]
+#include <engine/shader/header/sharedfragarray>[8]
