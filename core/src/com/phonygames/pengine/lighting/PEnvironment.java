@@ -108,8 +108,8 @@ public class PEnvironment {
       pointLightShader.start(renderContext);
       setLightUniforms(pointLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex, renderContext.getViewProjInvTransform());
       lightsFloatBuffer.dataTransferFinished();
-      lightsFloatBuffer.setUniforms(pointLightShader, "u_lightBufferTex", vecsPerInstance);
-      PPointLight.getMESH().glRenderInstanced(pointLightShader, numLights);
+      lightsFloatBuffer.setUniforms(pointLightShader, "u_lightBufferTex", 0, vecsPerInstance);
+      PPointLight.getMESH().glRenderInstanced(pointLightShader, numLights, null, 0, 0);
       pointLightShader.end();
     }
 

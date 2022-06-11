@@ -9,6 +9,7 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
+import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 
 import lombok.Getter;
@@ -83,13 +84,13 @@ public class PGlNode {
     return true;
   }
 
-  public void renderGl(PShader shader) {
+  public void glRenderInstanced(PShader shader, int numInstances, PFloat4Texture boneTransforms, int boneTransformLookupOffset, int bonesPerInstance) {
     if (shader.checkValid()) {
       shader.set(UniformConstants.Mat4.u_worldTransform, worldTransform);
       shader.set(UniformConstants.Mat4.u_worldTransformInvTra, worldTransformInvTra);
       material.applyUniforms(shader);
 
-      mesh.glRenderInstanced(shader, numInstances);
+      mesh.glRenderInstanced(shader, numInstances, boneTransforms, boneTransformLookupOffset, bonesPerInstance);
     }
   }
 
@@ -99,11 +100,11 @@ public class PGlNode {
     return this;
   }
 
-  public PGlNode tryDeepCopy() {
+  public PGlNode tryDeepCopy(PModelInstance owner) {
     PGlNode node = new PGlNode(id);
     node.id = this.id;
     if (material != null) {
-      node.material = material.cpy(material.getId());
+      node.material = material.cpy(material.getId(), owner);
     }
 
     node.setMesh(mesh);

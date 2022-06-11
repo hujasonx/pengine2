@@ -13,12 +13,14 @@ import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
+import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PSet;
 
 import java.util.Collections;
 
@@ -70,7 +72,8 @@ public class PRenderContext {
 
   @Getter
   private static PRenderContext activeContext = null;
-  private final RenderContext backingRenderContext = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
+  private final RenderContext backingRenderContext =
+      new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
 
   @Getter
   private final PVec3 cameraPos = new PVec3();
@@ -95,20 +98,37 @@ public class PRenderContext {
   @Getter
   private int width = 1, height = 1;
 
-  private PMap<String, PMap<PShader, PList<DrawCall>>> enqueuedDrawCalls = new PMap<String, PMap<PShader, PList<DrawCall>>>() {
-    @Override
-    protected Object makeNew(String o) {
-      return new PMap<PShader, PList<DrawCall>>() {
+  private static final PSet<PFloat4Texture> staticFloatTexs = new PSet<>();
+  public static PFloat4Texture getTemp(int capacity) {
+    PFloat4Texture tex = PFloat4Texture.getTemp(capacity);
+    staticFloatTexs.add(tex);
+    return tex;
+  }
+
+  private static void freeTemps() {
+    for (val tex : staticFloatTexs) {
+      tex.freeTemp();
+    }
+
+    staticFloatTexs.clear();
+  }
+
+  private PMap<String, PMap<PShader, PList<DrawCall>>> enqueuedDrawCalls =
+      new PMap<String, PMap<PShader, PList<DrawCall>>>() {
         @Override
-        protected Object makeNew(PShader o) {
-          return new PList<DrawCall>();
+        protected Object makeNew(String o) {
+          return new PMap<PShader, PList<DrawCall>>() {
+            @Override
+            protected Object makeNew(PShader o) {
+              return new PList<DrawCall>();
+            }
+          };
         }
       };
-    }
-  };
 
   public PRenderContext updatePerspectiveCamera() {
-    PAssert.isNotNull(PRenderBuffer.getActiveBuffer(), "currentRenderBuffer should be set, as the camera viewport needs to be set.");
+    PAssert.isNotNull(PRenderBuffer.getActiveBuffer(),
+                      "currentRenderBuffer should be set, as the camera viewport needs to be set.");
     return putIntoBackingCamera(perspectiveCamera).setFromBackingCamera(perspectiveCamera, true);
   }
 
@@ -174,6 +194,7 @@ public class PRenderContext {
     for (val e : enqueuedDrawCalls) {
       clearQueueMap(enqueuedDrawCalls.get(e.getKey()));
     }
+    freeTemps();
     activeContext = null;
   }
 
@@ -207,12 +228,13 @@ public class PRenderContext {
       if (queueMap != null) {
         for (val e : queueMap) {
           val shader = e.getKey();
-          shader.start(this);;
+          shader.start(this);
+          ;
 
           val queue = queueMap.get(shader);
           Collections.sort(queue);
           for (DrawCall drawCall : queue) {
-            drawCall.renderGl(this, shader);
+            drawCall.glRenderInstanced(this, shader);
           }
           shader.end();
         }
@@ -235,11 +257,33 @@ public class PRenderContext {
     }
   }
 
-  public void enqueue(PShader shader, String layer, PGlNode node) {
-    enqueuedDrawCalls.getOrMake(layer).getOrMake(shader).add(drawCallPool.obtain().set(node));
+  public void enqueue(PShader shader,
+                      String layer,
+                      PGlNode node,
+                      int numInstances,
+                      PFloat4Texture boneTransforms,
+                      int boneTransformsLookupOffset,
+                      int bonesPerInstance) {
+    enqueuedDrawCalls.getOrMake(layer).getOrMake(shader).add(drawCallPool.obtain().set(node,
+                                                                                       numInstances,
+                                                                                       boneTransforms,
+                                                                                       boneTransformsLookupOffset,
+                                                                                       bonesPerInstance));
   }
 
-  public void enqueue(PRenderContext.PhaseHandler[] phaseHandlers, PShaderProvider shaderProvider, PGlNode node) {
+  public void enqueueWithoutBones(PRenderContext.PhaseHandler[] phaseHandlers,
+                                  PShaderProvider shaderProvider,
+                                  PGlNode node) {
+    enqueue(phaseHandlers, shaderProvider, node, 0, null, 0, 0);
+  }
+
+  public void enqueue(PRenderContext.PhaseHandler[] phaseHandlers,
+                      PShaderProvider shaderProvider,
+                      PGlNode node,
+                      int numInstances,
+                      PFloat4Texture boneTransforms,
+                      int boneTransformsLookupOffset,
+                      int bonesPerInstance) {
     PAssert.isTrue(PRenderContext.getActiveContext() != null);
 
     if (node.getDefaultShader() == null) {
@@ -253,7 +297,13 @@ public class PRenderContext {
     PShader defaultShader = node.getDefaultShader();
 
     if (defaultShader != null) {
-      enqueue(defaultShader, node.getMaterial().getLayer(), node);
+      enqueue(defaultShader,
+              node.getMaterial().getLayer(),
+              node,
+              numInstances,
+              boneTransforms,
+              boneTransformsLookupOffset,
+              bonesPerInstance);
     }
   }
 
@@ -268,6 +318,9 @@ public class PRenderContext {
     int dstFactor, srcFactor, dptTest, cullFace;
     boolean enableBlend, depthTest, depthMask;
     int numInstances;
+    PFloat4Texture boneTransforms;
+    int boneTransformLookupOffset;
+    int bonesPerInstance;
 
     private void applyToContext(PRenderContext renderContext) {
       renderContext.setBlending(enableBlend, srcFactor, dstFactor);
@@ -276,13 +329,21 @@ public class PRenderContext {
       renderContext.setCullFace(cullFace);
     }
 
-    private void renderGl(PRenderContext renderContext, PShader shader) {
+    private void glRenderInstanced(PRenderContext renderContext, PShader shader) {
       applyToContext(renderContext);
-      glNode.renderGl(shader);
+      glNode.glRenderInstanced(shader, numInstances, boneTransforms, boneTransformLookupOffset, bonesPerInstance);
     }
 
-    DrawCall set(PGlNode node) {
+    DrawCall set(PGlNode node,
+                 int numInstances,
+                 PFloat4Texture boneTransforms,
+                 int boneTransformLookupOffset,
+                 int bonesPerInstance) {
       this.glNode = node;
+      this.numInstances = numInstances;
+      this.boneTransforms = boneTransforms;
+      this.boneTransformLookupOffset = boneTransformLookupOffset;
+      this.bonesPerInstance = bonesPerInstance;
       return this;
     }
 
@@ -302,7 +363,10 @@ public class PRenderContext {
       dstFactor = GL20.GL_ONE_MINUS_SRC_ALPHA;
       dptTest = GL20.GL_LESS;
       cullFace = GL20.GL_BACK;
-      numInstances = 1;
+      numInstances = 0;
+      boneTransformLookupOffset = 0;
+      bonesPerInstance = 0;
+      boneTransforms = null;
     }
 
     @Override

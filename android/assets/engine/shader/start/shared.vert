@@ -20,10 +20,10 @@ mat4 skinning = mat4(0.0);
 #include <engine/shader/start/sharedvertarray>[7]
 #include <engine/shader/start/sharedvertarray>[8]
 
-// Apply skinning.
-#ifdef a_bon0Flag
-skinnedLocalPos4 = skinning * skinnedLocalPos4;
-#ifdef a_norFlag
-skinnedLocalNor = normalize((skinning * vec4(skinnedLocalNor, 0.0)).xyz);
-#endif
-#endif
+//// Apply skinning.
+//#ifdef a_bon0Flag
+//skinnedLocalPos4 = skinning * skinnedLocalPos4;
+//#ifdef a_norFlag
+//skinnedLocalNor = normalize((skinning * vec4(skinnedLocalNor, 0.0)).xyz);
+//#endif
+//#endif

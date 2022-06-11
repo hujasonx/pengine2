@@ -80,7 +80,7 @@ public class CybertagGame implements PGame {
       @Override
       protected void modelEnd() {
         PList<PGlNode> glNodes = new PList<>();
-        chainGlNode(glNodes, basePart, new PMaterial(basePart.getName()));
+        chainGlNode(glNodes, basePart, new PMaterial(basePart.getName(), null));
         PModel.Builder builder = new PModel.Builder();
         builder.addNode("box", null, glNodes, PMat4.IDT);
         testBoxModel = builder.build();
@@ -128,7 +128,8 @@ public class CybertagGame implements PGame {
 
     if (testModelInstance != null) {
       testModelInstance.getWorldTransform().idt().scl(1, 1, 1).rot(0, 1, 0, PEngine.t);
-      testModelInstance.render(renderContext);
+      testModelInstance.recalcTransforms();
+      testModelInstance.renderWithoutBones(renderContext);
     }
 
     if (testBoxModelInstance != null) {

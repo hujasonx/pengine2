@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.logging.PLog;
@@ -24,6 +25,8 @@ import lombok.val;
 public class PMaterial {
   @Getter
   private final String id;
+  @Getter
+  private final PModelInstance owner;
 
   @Getter
   @Setter
@@ -124,8 +127,9 @@ public class PMaterial {
     }
   }
 
-  public PMaterial(String id) {
+  public PMaterial(String id, PModelInstance owner) {
     this.id = id;
+    this.owner = owner;
 
     // PBR defaults.
     set(UniformConstants.Vec4.u_diffuseCol, 1, 1, 1, 1);
@@ -197,8 +201,8 @@ public class PMaterial {
     return this;
   }
 
-  public PMaterial cpy(String newName) {
-    PMaterial ret = new PMaterial(newName);
+  public PMaterial cpy(String newName, PModelInstance newOwner) {
+    PMaterial ret = new PMaterial(newName, newOwner);
     ret.vec1s.tryDeepCopyFrom(vec1s);
     ret.vec2s.tryDeepCopyFrom(vec2s);
     ret.vec3s.tryDeepCopyFrom(vec3s);

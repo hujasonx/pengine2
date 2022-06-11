@@ -1,5 +1,6 @@
 package com.phonygames.pengine.graphics.model;
 
+import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PBuilder;
@@ -8,6 +9,7 @@ import com.phonygames.pengine.util.PMap;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
 
 public class PModel {
   final PMap<String, Node> nodes = new PMap<>();
@@ -66,4 +68,19 @@ public class PModel {
     }
   }
 
+  // Will use the material of the first instance. So make sure all buffers point to the same source!
+  public void render(PList<PModelInstance> instances) {
+    for (val instance : instances) {
+      if (instance.getModel() != this) {
+        continue;
+      }
+
+
+    }
+
+    for (val rootNodeId : rootNodeIds) {
+      val node = nodes.get(rootNodeId);
+
+    }
+  }
 }

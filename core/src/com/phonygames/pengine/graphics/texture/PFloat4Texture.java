@@ -187,8 +187,9 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
     }
   }
 
-  public void setUniforms(PShader shader, String name, int vecsPerInstance) {
+  public void setUniforms(PShader shader, String name, int lookupOffset, int vecsPerInstance) {
     shader.set(name, this);
+    shader.setI(name + "LookupOffset", lookupOffset);
     shader.setI(name + "VecsPerI", vecsPerInstance);
   }
 }

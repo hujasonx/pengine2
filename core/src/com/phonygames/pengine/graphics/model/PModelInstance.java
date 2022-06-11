@@ -4,6 +4,7 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
+import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
@@ -13,6 +14,8 @@ import lombok.Setter;
 import lombok.val;
 
 public class PModelInstance {
+
+
   @Getter
   private final PModel model;
 
@@ -46,7 +49,7 @@ public class PModelInstance {
       PModel.Node modelNode = modelNodesToProcess.removeLast();
 
       Node parent = childToParentNodeMap.get(modelNode);
-      Node node = new Node(modelNode, parent, defaultShaderProvider);
+      Node node = new Node(this, modelNode, parent, defaultShaderProvider);
       for (val glNode : node.glNodes) {
         glNodes.put(glNode.getId(), glNode);
       }
@@ -63,11 +66,24 @@ public class PModelInstance {
     }
   }
 
-  public void render(PRenderContext renderContext) {
+  public void renderWithoutBones(PRenderContext renderContext) {
+    render(renderContext, null, 0, 1);
+  }
+
+  public void render(PRenderContext renderContext,
+                     PFloat4Texture boneTransforms,
+                     int boneTransformsLookupOffset,
+                     int bonesPerInstance) {
+    for (val node : rootNodes) {
+      node.renderRecursiveInstanced(renderContext, 0, boneTransforms, boneTransformsLookupOffset, bonesPerInstance);
+    }
+  }
+
+  public void recalcTransforms() {
     for (val node : rootNodes) {
       node.recalcNodeWorldTransformsRecursive(worldTransform);
-      node.render(renderContext);
     }
+
   }
 
   protected class Node {
@@ -90,15 +106,19 @@ public class PModelInstance {
     final PMat4 worldTransformInvTra = new PMat4();
 
     @Getter
+    final PModelInstance owner;
+
+    @Getter
     @Setter
     PShaderProvider defaultShaderProvider;
 
-    private Node(PModel.Node templateNode, Node parent, PShaderProvider defaultShaderProvider) {
+    private Node(PModelInstance owner, PModel.Node templateNode, Node parent, PShaderProvider defaultShaderProvider) {
+      this.owner = owner;
       this.templateNode = templateNode;
       this.parent = parent;
       this.transform.set(templateNode.transform);
       for (PGlNode node : templateNode.glNodes) {
-        PGlNode newNode = node.tryDeepCopy();
+        PGlNode newNode = node.tryDeepCopy(owner);
         this.defaultShaderProvider = defaultShaderProvider;
         materials.put(newNode.material.getId(), newNode.material);
 
@@ -113,13 +133,28 @@ public class PModelInstance {
       return templateNode.id;
     }
 
-    public void render(PRenderContext renderContext) {
+    // Renders recursively instanced, using the material of the caller.
+    public void renderRecursiveInstanced(PRenderContext renderContext,
+                                         int numInstances,
+                                         PFloat4Texture boneTransforms,
+                                         int boneTransformsLookupOffset,
+                                         int bonesPerInstance) {
       for (val node : glNodes) {
-        renderContext.enqueue(renderContext.getPhaseHandlers(), defaultShaderProvider, node);
+        renderContext.enqueue(renderContext.getPhaseHandlers(),
+                              defaultShaderProvider,
+                              node,
+                              numInstances,
+                              boneTransforms,
+                              boneTransformsLookupOffset,
+                              bonesPerInstance);
       }
 
       for (Node child : children) {
-        child.render(renderContext);
+        child.renderRecursiveInstanced(renderContext,
+                                       numInstances,
+                                       boneTransforms,
+                                       boneTransformsLookupOffset,
+                                       bonesPerInstance);
       }
     }
 
