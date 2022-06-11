@@ -1,12 +1,12 @@
 // MAIN START
 
 diffuseM = vec4(1.0);
-emissiveR = vec4(0.0, 0.0, 0.0, 1.0);
+emissiveI = vec4(0.0, 0.0, 0.0, 1.0);
 
 #ifdef a_norFlag
-normalI = vec4(v_worldNor, 1.0);
+normalR = vec4(v_worldNor, 1.0);
 #else
-normalI = vec4(0.0, 0.0, 0.0, 1.0);
+normalR = vec4(0.0, 0.0, 0.0, 1.0);
 #endif
 
 #ifdef a_uv0Flag
@@ -19,7 +19,7 @@ vec2 uv0 = vec2(0.0);
 diffuseM = u_diffuseCol * texture(u_diffuseTex, uv0);
 diffuseM.rgb = diffuseM.rgb * diffuseM.a;// Set the diffuse color.
 diffuseM.a = 1.0;// Set the metalicity.
-emissiveR = u_emissiveCol;// * texture(u_emissiveTex, uv0);
-emissiveR.rgb = emissiveR.rgb * emissiveR.a;// Set the emissive color.
-emissiveR.a = 1.0;// Set the roughness.
+emissiveI = u_emissiveCol;// * texture(u_emissiveTex, uv0);
+emissiveI.rgb = emissiveI.rgb * emissiveI.a;// Set the emissive color.
+emissiveI.a = 1.0;// Set the roughness.
 #endif

@@ -5,12 +5,9 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
-import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.logging.PLog;
-import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PSet;
 
 import lombok.Getter;
@@ -21,8 +18,8 @@ public class PEnvironment {
   public static class UniformConstants {
     public static class Sampler2D {
       public static final String u_diffuseMTex = "u_diffuseMTex";
-      public static final String u_emissiveRTex = "u_emissiveRTex";
-      public static final String u_normalITex = "u_normalITex";
+      public static final String u_normalRTex = "u_normalRTex";
+      public static final String u_emissiveITex = "u_emissiveITex";
     }
   }
 
@@ -32,7 +29,7 @@ public class PEnvironment {
 
   @Getter
   @Setter
-  private PShader pointLightShader;
+  private PShader ambientAndDirectionalLightShader, pointLightShader;
 
   private String fragmentLayoutString = "";
 
@@ -47,7 +44,7 @@ public class PEnvironment {
   private final PSet<PPointLight> pointLights = new PSet<>();
 
 
-  public void renderLights(PRenderContext renderContext, Texture diffuseMTex, Texture emissiveRTex, Texture normalITex) {
+  public void renderLights(PRenderContext renderContext, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex) {
     if (!fragmentLayoutString.equals(PRenderBuffer.getActiveBuffer().getFragmentLayout())) {
       if (fragmentLayoutString.length() > 0) {
         PLog.w("Making new shader, as fragment layout changed [\n" + fragmentLayoutString + "\n -> \n" + PRenderBuffer.getActiveBuffer().getFragmentLayout() + "]");
@@ -56,11 +53,26 @@ public class PEnvironment {
       fragmentLayoutString = PRenderBuffer.getActiveBuffer().getFragmentLayout();
 
       // Generate new shaders.
-      pointLightShader = new PShader("// POINTLIGHT\n", fragmentLayoutString, PPointLight.getMESH().getVertexAttributes(), Gdx.files.local("engine/shader/light/light.vert.glsl"),
+      ambientAndDirectionalLightShader = PRenderBuffer.getActiveBuffer().getQuadShader(Gdx.files.local("engine/shader/light/ambient_and_directional_light.quad.glsl"));
+      pointLightShader = new PShader("",
+                                     fragmentLayoutString,
+                                     PPointLight.getMESH().getVertexAttributes(), Gdx.files.local("engine/shader/light/light.vert.glsl"),
                                      Gdx.files.local("engine/shader/light/pointlight.frag.glsl"));
     }
-    renderContext.setBlending(true, GL20.GL_ONE, GL20.GL_ONE);
 
+    // Lights should be added to each other, and should not fill the depth buffer.
+    renderContext.setBlending(true, GL20.GL_ONE, GL20.GL_ONE);
+    renderContext.setDepthMask(false);
+
+    // Ambient and directional lights.
+    ambientAndDirectionalLightShader.start(renderContext);
+    setLightUniforms(ambientAndDirectionalLightShader, diffuseMTex, normalRTex, emissiveITex);
+    PRenderBuffer.getActiveBuffer().renderQuad(ambientAndDirectionalLightShader);
+
+
+    ambientAndDirectionalLightShader.end();
+
+    // Point lights.
     depthTestLightsFloatArrayBuffer.reset();
     noDepthTestLightsFloatArrayBuffer.reset();
     int useDepthTestBuffer = 0;
@@ -78,7 +90,7 @@ public class PEnvironment {
     }
 
     pointLightShader.start(renderContext);
-    setLightUniforms(pointLightShader,diffuseMTex, emissiveRTex, normalITex);
+    setLightUniforms(pointLightShader, diffuseMTex, normalRTex, emissiveITex);
 
     if (useDepthTestBuffer > 0) {
       renderContext.setCullFaceBack();
@@ -98,12 +110,14 @@ public class PEnvironment {
 
     pointLightShader.end();
     renderContext.resetDefaults();
+
+
   }
 
-  private void setLightUniforms(PShader shader, Texture diffuseMTex, Texture emissiveRTex, Texture normalITex) {
+  private void setLightUniforms(PShader shader, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex) {
     shader.set(UniformConstants.Sampler2D.u_diffuseMTex, diffuseMTex);
-    shader.set(UniformConstants.Sampler2D.u_emissiveRTex, emissiveRTex);
-    shader.set(UniformConstants.Sampler2D.u_normalITex, normalITex);
+    shader.set(UniformConstants.Sampler2D.u_normalRTex, normalRTex);
+    shader.set(UniformConstants.Sampler2D.u_emissiveITex, emissiveITex);
   }
 
   public void addLight(PLight light) {

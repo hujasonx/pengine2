@@ -23,16 +23,12 @@ public class PPbrPipeline {
 
   private PRenderContext.PhaseHandler[] phases;
 
-  private PShader lightingShader;
-
   public PPbrPipeline() {
     super();
     this.gBuffer =
-        new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addFloatAttachment("emissiveR").addFloatAttachment("normalI").addDepthAttachment().build();
+        new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addFloatAttachment("normalR").addFloatAttachment("emissiveI").addDepthAttachment().build();
     this.lightedBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("lighted").build();
     this.finalBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("final").build();
-
-    lightingShader = lightedBuffer.getQuadShader(Gdx.files.local("engine/postprocessing/lighting.frag.glsl"));
     setPhases();
   }
 
@@ -64,18 +60,12 @@ public class PPbrPipeline {
             if (environment == null) {
               return;
             }
-//
-//            lightingShader.start();
-//            lightingShader.set("u_diffuseMTex", gBuffer.getTexture("diffuseM"));
-//            lightingShader.set("u_emissiveRTex", gBuffer.getTexture("emissiveR"));
-//            lightingShader.set("u_normalITex", gBuffer.getTexture("normalI"));
-//            lightedBuffer.renderQuad(lightingShader);
-//            lightingShader.end();
+
             Texture diffuseMTex = gBuffer.getTexture("diffuseM");
-            Texture emissiveRTex = gBuffer.getTexture("emissiveR");
-            Texture normalITex = gBuffer.getTexture("normalI");
+            Texture normalRTex = gBuffer.getTexture("normalR");
+            Texture emissiveITex = gBuffer.getTexture("emissiveI");
             // TODO: Lock the camera of the context, to prevent bugs.
-            environment.renderLights(PRenderContext.getActiveContext(), diffuseMTex, emissiveRTex, normalITex);
+            environment.renderLights(PRenderContext.getActiveContext(), diffuseMTex, normalRTex, emissiveITex);
             // TODO: unlock
           }
 
