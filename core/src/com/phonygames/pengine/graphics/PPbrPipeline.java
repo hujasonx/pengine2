@@ -61,11 +61,12 @@ public class PPbrPipeline {
               return;
             }
 
+            Texture depthTex = gBuffer.getTexture("depth");
             Texture diffuseMTex = gBuffer.getTexture("diffuseM");
             Texture normalRTex = gBuffer.getTexture("normalR");
             Texture emissiveITex = gBuffer.getTexture("emissiveI");
             // TODO: Lock the camera of the context, to prevent bugs.
-            environment.renderLights(PRenderContext.getActiveContext(), diffuseMTex, normalRTex, emissiveITex);
+            environment.renderLights(PRenderContext.getActiveContext(), depthTex, diffuseMTex, normalRTex, emissiveITex);
             // TODO: unlock
           }
 

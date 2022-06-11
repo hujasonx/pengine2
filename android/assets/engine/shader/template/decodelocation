@@ -1,0 +1,3 @@
+#params [OUTPUT, TEXNAME, UV, U_VIEWPROJINV]
+vec4 tempOUTPUT = U_VIEWPROJINV * vec4(vec2(UV * 2.0f - 1.0f), texture(u_TEXNAMETex, UV).r * 2.0f - 1.0f, 1.0);
+vec3 OUTPUT = tempOUTPUT.xyz / tempOUTPUT.w;

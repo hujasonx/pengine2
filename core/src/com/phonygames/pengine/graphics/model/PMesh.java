@@ -120,13 +120,15 @@ public class PMesh {
 
   public void glRenderInstanced(PShader shader, int numInstances) {
     PAssert.isTrue(shader.isActive());
-    backingMesh.bind(shader.getShaderProgram());
-    if (numInstances > 0) {
-      Gdx.gl30.glDrawElementsInstanced(GL20.GL_TRIANGLES, backingMesh.getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0, numInstances);
-    } else if (numInstances == 1) {
-      Gdx.gl30.glDrawElements(GL20.GL_TRIANGLES, backingMesh.getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0);
-    }
+    if (shader.isValid()) {
+      backingMesh.bind(shader.getShaderProgram());
+      if (numInstances > 0) {
+        Gdx.gl30.glDrawElementsInstanced(GL20.GL_TRIANGLES, backingMesh.getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0, numInstances);
+      } else if (numInstances == 1) {
+        Gdx.gl30.glDrawElements(GL20.GL_TRIANGLES, backingMesh.getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0);
+      }
 
-    backingMesh.unbind(shader.getShaderProgram());
+      backingMesh.unbind(shader.getShaderProgram());
+    }
   }
 }

@@ -2,14 +2,19 @@
 #include <engine/shader/header/rendercontext.frag>
 #include <engine/shader/header/light.frag>
 
+#include <engine/shader/header/texture2D>[depth]
 #include <engine/shader/header/floatarrayinstanced>[lightBuffer]
+uniform mat4 u_cameraViewProInv;
+
 uniform int u_bufferVecsPerLight;
+
 
 void main() {
     #include <engine/shader/start/instanced.frag>
     #include <engine/shader/start/rendercontext.frag>
     #include <engine/shader/start/light.frag>
 
+    #include <engine/shader/template/decodelocation>[worldLoc, depth, bufferUV, u_cameraViewProInv];
 
 
 

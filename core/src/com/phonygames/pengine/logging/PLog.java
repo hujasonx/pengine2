@@ -22,7 +22,11 @@ public class PLog {
     pLogMessage.setMessage(message);
 
     if (printToStdOut) {
-      System.out.println("PLog : " + pLogMessage.getMessage());
+      if (level == PLogMessage.WARNING || level == PLogMessage.ERROR || level == PLogMessage.CRITICAL) {
+        System.err.println("PLog : " + pLogMessage.getMessage());
+      } else {
+        System.out.println("PLog : " + pLogMessage.getMessage());
+      }
     }
 
     nextIndex++;

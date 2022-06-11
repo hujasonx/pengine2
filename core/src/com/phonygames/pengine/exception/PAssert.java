@@ -20,7 +20,7 @@ public class PAssert {
     try {
       throw new PRuntimeException(message);
     } catch (PRuntimeException e) {
-      e.printStackTrace();
+      System.err.println(e);
     }
   }
 

@@ -75,6 +75,10 @@ public class PShader implements Disposable {
     reloadFromSources();
   }
 
+  public boolean isValid() {
+    return shaderProgram.isCompiled();
+  }
+
   public void reloadFromSources() {
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
@@ -92,7 +96,6 @@ public class PShader implements Disposable {
     toStringResult = getCompileFailureString();
     if (!shaderProgram.isCompiled()) {
       PLog.w(getCompileFailureString());
-      throw new PRuntimeException("Shader was not compiled:\n" + shaderProgram.getLog());
     } else {
       PLog.i(getCompileFailureString());
     }
@@ -209,6 +212,9 @@ public class PShader implements Disposable {
   }
 
   public void start(PRenderContext renderContext) {
+    if (!isValid()) {
+      return;
+    }
     PAssert.isFalse(isActive());
     activeShader = this;
     shaderProgram.bind();
@@ -223,11 +229,17 @@ public class PShader implements Disposable {
   }
 
   public void end() {
+    if (!checkValid()) {
+      return;
+    }
     PAssert.isTrue(isActive());
     activeShader = null;
   }
 
   public PShader set(String uniform, PMat4 mat4) {
+    if (!checkValid()) {
+      return this;
+    }
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformMatrix(uniform, mat4.getBackingMatrix4());
@@ -242,6 +254,9 @@ public class PShader implements Disposable {
   }
 
   public PShader set(String uniform, float x) {
+    if (!checkValid()) {
+      return this;
+    }
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x);
@@ -252,6 +267,9 @@ public class PShader implements Disposable {
   }
 
   public PShader setI(String uniform, int i) {
+    if (!checkValid()) {
+      return this;
+    }
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformi(uniform, i);
@@ -262,6 +280,9 @@ public class PShader implements Disposable {
   }
 
   public PShader set(String uniform, Texture texture) {
+    if (!checkValid()) {
+      return this;
+    }
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformi(uniform, PRenderContext.getActiveContext().getTextureBinder().bind(texture));
@@ -278,6 +299,9 @@ public class PShader implements Disposable {
   }
 
   public PShader set(String uniform, float x, float y) {
+    if (!checkValid()) {
+      return this;
+    }
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x, y);
@@ -292,6 +316,9 @@ public class PShader implements Disposable {
   }
 
   public PShader set(String uniform, float x, float y, float z) {
+    if (!checkValid()) {
+      return this;
+    }
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x, y, z);
@@ -306,6 +333,9 @@ public class PShader implements Disposable {
   }
 
   public PShader set(String uniform, float x, float y, float z, float w) {
+    if (!checkValid()) {
+      return this;
+    }
     PAssert.isTrue(isActive());
     try {
       shaderProgram.setUniformf(uniform, x, y, z, w);
@@ -337,5 +367,19 @@ public class PShader implements Disposable {
     for (val shader : staticShaders) {
       shader.reloadFromSources();
     }
+  }
+
+  private float checkValidLoggingThrottleNextCheckTime = 0;
+
+  private boolean checkValid() {
+    if (!isValid()) {
+      if (PEngine.uit > checkValidLoggingThrottleNextCheckTime) {
+        PLog.w("Shader invalid: " + getCompileFailureString());
+        checkValidLoggingThrottleNextCheckTime = PEngine.uit + 5;
+      }
+      return false;
+    }
+    
+    return true;
   }
 }

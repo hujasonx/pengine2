@@ -85,6 +85,8 @@ public class PRenderContext {
   @Getter
   private final PMat4 viewProjTransform = new PMat4();
   @Getter
+  private final PMat4 viewProjInvTransform = new PMat4();
+  @Getter
   private final PMat4 viewProjInvTraTransform = new PMat4();
 
   private final PerspectiveCamera perspectiveCamera = new PerspectiveCamera();
@@ -141,6 +143,7 @@ public class PRenderContext {
     cameraFov.set(camera.fieldOfView);
     cameraRange.set(camera.near, camera.far);
     viewProjTransform.set(camera.combined.val);
+    viewProjInvTransform.set(camera.invProjectionView.val);
     viewProjInvTraTransform.set(camera.invProjectionView.val).tra();
     return this;
   }

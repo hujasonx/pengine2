@@ -9,6 +9,8 @@ import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.logging.PLog;
+import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PSet;
 
 import lombok.Getter;
@@ -18,9 +20,14 @@ import lombok.val;
 public class PEnvironment {
   public static class UniformConstants {
     public static class Sampler2D {
+      public static final String u_depthTex = "u_depthTex";
       public static final String u_diffuseMTex = "u_diffuseMTex";
       public static final String u_normalRTex = "u_normalRTex";
       public static final String u_emissiveITex = "u_emissiveITex";
+    }
+
+    public static class Mat4 {
+      public static final String u_cameraViewProInv = "u_cameraViewProInv";
     }
   }
 
@@ -43,7 +50,7 @@ public class PEnvironment {
   private final PSet<PPointLight> pointLights = new PSet<>();
 
 
-  public void renderLights(PRenderContext renderContext, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex) {
+  public void renderLights(PRenderContext renderContext, Texture depthTex, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex) {
     if (!fragmentLayoutString.equals(PRenderBuffer.getActiveBuffer().getFragmentLayout())) {
       if (fragmentLayoutString.length() > 0) {
         PLog.w("Making new shader, as fragment layout changed [\n" + fragmentLayoutString + "\n -> \n" + PRenderBuffer.getActiveBuffer().getFragmentLayout() + "]");
@@ -64,10 +71,14 @@ public class PEnvironment {
     // Lights should be added to each other, and should not fill the depth buffer.
     renderContext.setBlending(true, GL20.GL_ONE, GL20.GL_ONE);
     renderContext.setDepthMask(false);
+    renderContext.setDepthTest(0);
 
     // Ambient and directional lights.
     ambientAndDirectionalLightShader.start(renderContext);
-    setLightUniforms(ambientAndDirectionalLightShader, diffuseMTex, normalRTex, emissiveITex);
+    ambientAndDirectionalLightShader.set("u_ambientLightCol", 0.2f, 0.2f, 0.2f);
+    ambientAndDirectionalLightShader.set("u_directionalLightCol0", 1.0f, 1.0f, 1.0f);
+    ambientAndDirectionalLightShader.set("u_directionalLightDir0", -1.0f, -1.0f, 1.0f);
+    setLightUniforms(ambientAndDirectionalLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex, renderContext.getViewProjInvTransform());
     PRenderBuffer.getActiveBuffer().renderQuad(ambientAndDirectionalLightShader);
     ambientAndDirectionalLightShader.end();
 
@@ -81,7 +92,7 @@ public class PEnvironment {
     }
 
     pointLightShader.start(renderContext);
-    setLightUniforms(pointLightShader, diffuseMTex, normalRTex, emissiveITex);
+    setLightUniforms(pointLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex, renderContext.getViewProjInvTransform());
 
     if (numLights > 0) {
       lightsFloatBuffer.dataTransferFinished();
@@ -93,10 +104,12 @@ public class PEnvironment {
     renderContext.resetDefaults();
   }
 
-  private void setLightUniforms(PShader shader, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex) {
+  private void setLightUniforms(PShader shader, Texture depthTex, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex, PMat4 viewProjInv) {
+    shader.set(UniformConstants.Sampler2D.u_depthTex, depthTex);
     shader.set(UniformConstants.Sampler2D.u_diffuseMTex, diffuseMTex);
     shader.set(UniformConstants.Sampler2D.u_normalRTex, normalRTex);
     shader.set(UniformConstants.Sampler2D.u_emissiveITex, emissiveITex);
+    shader.set(UniformConstants.Mat4.u_cameraViewProInv, viewProjInv);
   }
 
   public void addLight(PLight light) {
