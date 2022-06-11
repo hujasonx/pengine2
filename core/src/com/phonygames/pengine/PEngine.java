@@ -2,6 +2,7 @@ package com.phonygames.pengine;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.WindowedMean;
@@ -12,6 +13,7 @@ import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.lighting.PLight;
@@ -82,6 +84,11 @@ public class PEngine extends ApplicationAdapter {
 
     processLogicUpdateForFrame();
     frameUpdate();
+
+    // Ctrl + S + R to reload all shaders.
+    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyPressed(Input.Keys.S) && Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+      PShader.reloadAllFromSources();
+    }
   }
 
   private void processLogicUpdateForFrame() {
@@ -91,7 +98,6 @@ public class PEngine extends ApplicationAdapter {
     }
 
     while (logict < t) {
-      System.out.println(t + ", " + logict);
       logict += logictimestep;
 
       game.preLogicUpdate();

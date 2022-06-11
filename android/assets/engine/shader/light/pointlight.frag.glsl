@@ -14,6 +14,7 @@ void main() {
 
 
     vec3 lightPos = lightBufferFloatArrayVec4Instance(4).xyz;
+    lighted = vec4(0.1);
 
     #include <engine/shader/end/light.frag>
     #include <engine/shader/end/rendercontext.frag>

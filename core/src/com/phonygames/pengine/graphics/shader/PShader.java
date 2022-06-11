@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.shaders.BaseShader;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.utils.Disposable;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.exception.PRuntimeException;
@@ -27,6 +28,7 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PSet;
 import com.phonygames.pengine.util.PStringUtils;
 
 import java.util.HashMap;
@@ -35,17 +37,19 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 
-public class PShader {
+public class PShader implements Disposable {
+  private static final PSet<PShader> staticShaders = new PSet<>();
   private final String prefix;
+  private final String fragmentLayout;
 
   @Getter
-  private final ShaderProgram shaderProgram;
+  private ShaderProgram shaderProgram;
 
   @Getter
   private static PShader activeShader;
 
   @Getter
-  private final String vertexShaderSource, fragmentShaderSource;
+  private String vertexShaderSource, fragmentShaderSource;
   private final FileHandle vsSourceFH, fsSourceFH;
 
   private static final String PSHADER_COMMENT_START = "/** PSHADER ";
@@ -62,19 +66,28 @@ public class PShader {
   };
 
   public PShader(String prefix, String fragmentLayout, PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
+    staticShaders.add(this);
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
+    this.fragmentLayout = fragmentLayout;
+    vsSourceFH = vert;
+    fsSourceFH = frag;
+
+    reloadFromSources();
+  }
+
+  public void reloadFromSources() {
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
 
-
-    vsSourceFH = vert;
-    fsSourceFH = frag;
-    vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vert, RECURSIVE_LOAD_PROCESSOR));
-    fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(frag, RECURSIVE_LOAD_PROCESSOR));
+    vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR));
+    fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR));
 
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
 
+    if (shaderProgram != null) {
+      shaderProgram.dispose();
+    }
     shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
     toStringResult = getCompileFailureString();
     if (!shaderProgram.isCompiled()) {
@@ -308,5 +321,21 @@ public class PShader {
       return toStringResult;
     }
     return super.toString();
+  }
+
+  @Override
+  public void dispose() {
+    if (shaderProgram != null) {
+      shaderProgram.dispose();
+      shaderProgram = null;
+    }
+
+    staticShaders.remove(this);
+  }
+
+  public static void reloadAllFromSources() {
+    for (val shader : staticShaders) {
+      shader.reloadFromSources();
+    }
   }
 }
