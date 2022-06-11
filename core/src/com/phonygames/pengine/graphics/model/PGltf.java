@@ -28,7 +28,8 @@ public class PGltf {
 
   @Getter
   private PModel model;
-  private SceneAsset sceneAsset;
+
+  private SceneAsset backingSceneAsset;
 
   private static final PMap<String, PGltf> loadedGltfs = new PMap<>();
   private static final PMap<String, PGltf> loadingGltfs = new PMap<>();
@@ -89,6 +90,8 @@ public class PGltf {
 
   private void loadFromSceneAsset(SceneAsset sceneAsset) {
     PAssert.isNotNull(sceneAsset);
+    backingSceneAsset = sceneAsset;
+
     PModel.Builder modelBuilder = new PModel.Builder();
     PList<NodePlus> nodesToProcess = new PList<>();
     PMap<NodePlus, PModel.Node> childToParentNodeMap = new PMap<>();

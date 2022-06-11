@@ -40,7 +40,7 @@ public class CybertagGame implements PGame {
   PPointLight testLight;
 
   public void init() {
-    new PGltf("engine/model/blender.glb").loadThenDo(
+    new PGltf("engine/model/RiggedFigure.glb").loadThenDo(
         new PGltf.OnloadCallback() {
           @Override
           public void onLoad(PGltf gltf) {
