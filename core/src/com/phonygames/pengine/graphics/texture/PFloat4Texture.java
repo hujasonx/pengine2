@@ -166,9 +166,7 @@ public class PFloat4Texture extends Texture {
   }
 
   public void setUniforms(PShader shader, String name, int vecsPerInstance) {
-    PAssert.isTrue(shader.isActive());
-    String uniform = "u_" + name + "FloatArray";
-    shader.set(uniform + "Tex", this);
-    shader.set(uniform + "FloatArrayVecsPerInstance", vecsPerInstance);
+    shader.set(name, this);
+    shader.set(name + "VecsPerI", vecsPerInstance);
   }
 }

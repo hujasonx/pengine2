@@ -163,4 +163,8 @@ public class PVec4 extends PVec {
     this.w = color.a;
     return this;
   }
+
+  public PVec4 setZero() {
+    return set(0, 0, 0, 0);
+  }
 }

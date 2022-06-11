@@ -30,7 +30,6 @@ public class PEngine extends ApplicationAdapter {
   public static float logicupdateframeratio = .1f; // The ratio between the prev and next logic updates that the current frame is at, temporally.public static float uit = 0;
   public static float t = 0, dt = .1f, uit = 0, uidt = .1f, logict = 0; // dt and t are in frame time.
   public static float logictimestep = 1f / 60f;
-  //  public static float logictimestep = 1f / 240f;
   private static WindowedMean uidtWindowedMean = new WindowedMean(8);
   private static float timeScale = 1;
   private static PGame game;

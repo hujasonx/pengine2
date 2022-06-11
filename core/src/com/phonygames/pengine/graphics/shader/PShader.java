@@ -75,10 +75,6 @@ public class PShader implements Disposable {
     reloadFromSources();
   }
 
-  public boolean isValid() {
-    return shaderProgram.isCompiled();
-  }
-
   public void reloadFromSources() {
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
@@ -212,7 +208,7 @@ public class PShader implements Disposable {
   }
 
   public void start(PRenderContext renderContext) {
-    if (!isValid()) {
+    if (!checkValid()) {
       return;
     }
     PAssert.isFalse(isActive());
@@ -371,15 +367,15 @@ public class PShader implements Disposable {
 
   private float checkValidLoggingThrottleNextCheckTime = 0;
 
-  private boolean checkValid() {
-    if (!isValid()) {
+  public boolean checkValid() {
+    if (!shaderProgram.isCompiled()) {
       if (PEngine.uit > checkValidLoggingThrottleNextCheckTime) {
         PLog.w("Shader invalid: " + getCompileFailureString());
         checkValidLoggingThrottleNextCheckTime = PEngine.uit + 5;
       }
       return false;
     }
-    
+
     return true;
   }
 }

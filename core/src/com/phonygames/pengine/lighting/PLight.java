@@ -6,6 +6,7 @@ import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PMath;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 
@@ -52,4 +53,12 @@ public abstract class PLight {
   public abstract boolean addInstanceData(PFloat4Texture buffer);
 
   public abstract int vecsPerInstance();
+
+  public static float attenuationCutoffDistance(PVec4 attenuation) {
+    // cutoff is attenuation.w
+    // cutoff = 1 / (ax^2 + bx + c)
+    // ax^2 + bx + c = 1 / cutoffC
+    // ax^2 + bx + c - 1 / cutoff = 0
+    return PMath.quadraticFormulaPositive(attenuation.x(), attenuation.y(), attenuation.z() - 1 / attenuation.w());
+  }
 }

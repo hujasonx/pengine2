@@ -20,7 +20,7 @@ void main() {
     #include <engine/shader/start/shared.frag>
     #include <engine/shader/start/light.frag>
 
-    #include <engine/shader/template/decodelocation>[worldLoc, depth, bufferUV, u_cameraViewProInv];
+    #include <engine/shader/template/decodelocation>[worldPos, depth, bufferUV, u_cameraViewProInv];
 
     vec3 light = vec3(0.0);
 

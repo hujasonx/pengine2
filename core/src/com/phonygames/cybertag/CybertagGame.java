@@ -111,7 +111,9 @@ public class CybertagGame implements PGame {
     renderContext.start();
     pPbrPipeline.attach(renderContext);
 
-    testLight.getTransform().setToTranslation(0, MathUtils.sin(PEngine.t), 0);
+    environment.setAmbientLightCol(.0f, .0f, .0f);
+    environment.setDirectionalLightDir(0, -1, -1, 1);
+    testLight.getTransform().setToTranslation(MathUtils.sin(PEngine.t * .5f) * 2, MathUtils.sin(PEngine.t * .6f + 1f) * 2, MathUtils.sin(PEngine.t * .4f + 2f) * 2);
 
     if (PMesh.FULLSCREEN_QUAD_MESH != null) {
 //      PMesh.FULLSCREEN_QUAD_MESH.getBackingMesh().render(testShader.getShaderProgram(), PMesh.ShapeType.Filled.getGlType());

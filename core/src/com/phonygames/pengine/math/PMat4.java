@@ -98,6 +98,11 @@ public class PMat4 implements Pool.Poolable {
     return this;
   }
 
+  public PMat4 setToTranslation(PVec3 vec3) {
+    return idt().translate(vec3);
+  }
+
+
   public PMat4 setToTranslation(float x, float y, float z) {
     return idt().translate(x, y, z);
   }
@@ -108,6 +113,11 @@ public class PMat4 implements Pool.Poolable {
 
   public PMat4 setTpScl(float x, float y, float z) {
     return idt().scl(x, y, z);
+  }
+
+  public PMat4 translate(PVec3 vec3) {
+    backingMatrix4.translate(vec3.getBackingVec3());
+    return this;
   }
 
   public PMat4 translate(float x, float y, float z) {

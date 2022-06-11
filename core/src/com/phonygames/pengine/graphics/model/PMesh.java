@@ -119,8 +119,7 @@ public class PMesh {
   }
 
   public void glRenderInstanced(PShader shader, int numInstances) {
-    PAssert.isTrue(shader.isActive());
-    if (shader.isValid()) {
+    if (shader.checkValid()) {
       backingMesh.bind(shader.getShaderProgram());
       if (numInstances > 0) {
         Gdx.gl30.glDrawElementsInstanced(GL20.GL_TRIANGLES, backingMesh.getNumIndices(), GL20.GL_UNSIGNED_SHORT, 0, numInstances);

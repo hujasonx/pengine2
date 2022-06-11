@@ -19,6 +19,8 @@ import lombok.val;
 
 public class PEnvironment {
   public static class UniformConstants {
+    private static final int NUM_DIRECTIONAL_LIGHTS = 4;
+
     public static class Sampler2D {
       public static final String u_depthTex = "u_depthTex";
       public static final String u_diffuseMTex = "u_diffuseMTex";
@@ -43,8 +45,16 @@ public class PEnvironment {
 
   private final PFloat4Texture lightsFloatBuffer;
 
+  private final PVec3 ambientLightCol = new PVec3();
+  private final PVec3 directionalLightDir[] = new PVec3[UniformConstants.NUM_DIRECTIONAL_LIGHTS];
+  private final PVec3 directionalLightCol[] = new PVec3[UniformConstants.NUM_DIRECTIONAL_LIGHTS];
+
   public PEnvironment() {
     lightsFloatBuffer = PFloat4Texture.get(256 * 256, true);
+    for (int a = 0; a < UniformConstants.NUM_DIRECTIONAL_LIGHTS; a++) {
+      directionalLightDir[a] = new PVec3();
+      directionalLightCol[a] = new PVec3();
+    }
   }
 
   private final PSet<PPointLight> pointLights = new PSet<>();
@@ -75,9 +85,11 @@ public class PEnvironment {
 
     // Ambient and directional lights.
     ambientAndDirectionalLightShader.start(renderContext);
-    ambientAndDirectionalLightShader.set("u_ambientLightCol", 0.2f, 0.2f, 0.2f);
-    ambientAndDirectionalLightShader.set("u_directionalLightCol0", 1.0f, 1.0f, 1.0f);
-    ambientAndDirectionalLightShader.set("u_directionalLightDir0", -1.0f, -1.0f, 1.0f);
+    ambientAndDirectionalLightShader.set("u_ambientLightCol", ambientLightCol);
+    for (int a = 0; a < UniformConstants.NUM_DIRECTIONAL_LIGHTS; a++) {
+      ambientAndDirectionalLightShader.set("u_directionalLightCol" + a, directionalLightCol[a]);
+      ambientAndDirectionalLightShader.set("u_directionalLightDir" + a, directionalLightDir[a]);
+    }
     setLightUniforms(ambientAndDirectionalLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex, renderContext.getViewProjInvTransform());
     PRenderBuffer.getActiveBuffer().renderQuad(ambientAndDirectionalLightShader);
     ambientAndDirectionalLightShader.end();
@@ -96,12 +108,27 @@ public class PEnvironment {
 
     if (numLights > 0) {
       lightsFloatBuffer.dataTransferFinished();
-      lightsFloatBuffer.setUniforms(pointLightShader, StringConstants.lightBuffer, vecsPerInstance);
+      lightsFloatBuffer.setUniforms(pointLightShader, "u_lightBufferTex", vecsPerInstance);
       PPointLight.getMESH().glRenderInstanced(pointLightShader, numLights);
     }
 
     pointLightShader.end();
     renderContext.resetDefaults();
+  }
+
+  public PEnvironment setAmbientLightCol(float r, float g, float b) {
+    this.ambientLightCol.set(r, g, b);
+    return this;
+  }
+
+  public PEnvironment setDirectionalLightDir(int index, float x, float y, float z) {
+    directionalLightDir[index].set(x, y, z).nor();
+    return this;
+  }
+
+  public PEnvironment setDirectionalLightColor(int index, float r, float g, float b) {
+    directionalLightCol[index].set(r, g, b);
+    return this;
   }
 
   private void setLightUniforms(PShader shader, Texture depthTex, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex, PMat4 viewProjInv) {
