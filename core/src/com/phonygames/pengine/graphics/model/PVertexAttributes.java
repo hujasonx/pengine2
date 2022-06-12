@@ -8,6 +8,7 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PStringMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +39,7 @@ public class PVertexAttributes {
 
     public static final Class[] VectorClasses = new Class[]{null, null, PVec2.class, PVec3.class, PVec4.class};
 
-    private static final PMap<String, VertexAttribute> list = new PMap<>();
+    private static final PStringMap<VertexAttribute> list = new PStringMap<>();
 
     private static void registerAttribute(String id, int numComponents) {
       list.put(id, new VertexAttribute(maxUsage *= 2, numComponents, id));
@@ -100,7 +101,7 @@ public class PVertexAttributes {
       vaList.add(va);
     }
 
-    VertexAttribute[] vaArray = new VertexAttribute[vaList.size()];
+    VertexAttribute[] vaArray = new VertexAttribute[vaList.size];
     for (int a = 0; a < vaArray.length; a++) {
       vaArray[a] = vaList.get(a);
     }

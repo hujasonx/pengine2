@@ -152,7 +152,7 @@ public class CybertagGame implements PGame {
       modelI.recalcTransforms();
 
       for (val e : modelI.getMaterials()) {
-        e.getValue().setTex("test", PTexture.getWHITE_PIXEL());
+        e.v().setTex("test", PTexture.getWHITE_PIXEL());
       }
 
       modelI.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, testModelInstances);

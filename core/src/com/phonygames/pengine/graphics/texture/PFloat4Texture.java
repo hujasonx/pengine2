@@ -39,11 +39,12 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
 
   private static PMap<Integer, Pool<PFloat4Texture>> staticTexturePools = new PMap<Integer, Pool<PFloat4Texture>>() {
     @Override
-    protected Object makeNewVal(final Integer integer) {
+    protected Pool<PFloat4Texture> newUnpooled(final Integer integer) {
+      final int vec4capacity = integer.intValue();
       return new Pool<PFloat4Texture>() {
         @Override
         public PFloat4Texture newObject() {
-          PFloat4Texture newO = PFloat4Texture.get(integer, true);
+          PFloat4Texture newO = PFloat4Texture.get(vec4capacity, true);
           return newO;
         }
       };
@@ -51,12 +52,12 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
   };
 
   public static PFloat4Texture getTemp(int vec4Capacity) {
-    return staticTexturePools.gen(vec4Capacity).obtain();
+    return staticTexturePools.genUnpooled(vec4Capacity).obtain();
   }
 
   public void freeTemp() {
     PAssert.isFalse(this == getWHITE_PIXEL());
-    staticTexturePools.gen(vec4Capacity).free(this);
+    staticTexturePools.genUnpooled(vec4Capacity).free(this);
   }
 
   private int sideLength = 0;

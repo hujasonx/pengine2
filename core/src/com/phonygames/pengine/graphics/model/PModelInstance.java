@@ -10,6 +10,7 @@ import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -22,12 +23,12 @@ public class PModelInstance {
   @Getter
   private final PModel model;
 
-  private final PMap<String, Node> nodes = new PMap<>();
-  private final PMap<String, PGlNode> glNodes = new PMap<>();
+  private final PStringMap<Node> nodes = new PStringMap<>();
+  private final PStringMap<PGlNode> glNodes = new PStringMap<>();
   private final PList<Node> rootNodes = new PList<>();
 
   @Getter
-  private final PMap<String, PMaterial> materials = new PMap<>();
+  private final PStringMap<PMaterial> materials = new PStringMap<>();
 
   @Getter
   private final PMat4 worldTransform = new PMat4();
@@ -39,10 +40,9 @@ public class PModelInstance {
     PList<PModel.Node> modelNodesToProcess = new PList<>();
     for (val rootName : model.rootNodeIds) {
       modelNodesToProcess.add(model.nodes.get(rootName));
-
     }
 
-    while (modelNodesToProcess.size() > 0) {
+    while (modelNodesToProcess.size > 0) {
       PModel.Node modelNode = modelNodesToProcess.removeLast();
 
       Node parent = childToParentNodeMap.get(modelNode);
@@ -146,7 +146,7 @@ public class PModelInstance {
         }
 
         renderContext
-            .enqueue(shaderProvider, PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size()));
+            .enqueue(shaderProvider, PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size));
       }
 
       for (Node child : children) {
@@ -179,8 +179,8 @@ public class PModelInstance {
   private int outputBonesToBuffers(PRenderContext renderContext) {
     PFloat4Texture tex = renderContext.genDataBuffer("boneTransforms");
     for (val e : glNodes) {
-      String id = e.getKey();
-      PGlNode glNode = e.getValue();
+      String id = e.k();
+      PGlNode glNode = e.v();
       if (glNode.getInvBoneTransforms() == null || glNode.getInvBoneTransforms().size == 0) {
         continue;
       }

@@ -34,7 +34,7 @@ public class PVec3 extends PVec {
     protected TempBuffer<PVec3> newObject() {
       return new TempBuffer<PVec3>() {
         @Override
-        public PVec3 genNewObject() {
+        public PVec3 newObject() {
           return new PVec3();
         }
 

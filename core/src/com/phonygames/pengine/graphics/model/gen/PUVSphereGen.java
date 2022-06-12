@@ -28,11 +28,11 @@ public abstract class PUVSphereGen implements Pool.Poolable {
 
   public void genSphere(int lat, int lon, PVec3 center, float radius, PModelGen.Part part) {
     val vec3s = PVec3.tempBuffer();
-    PVec3 n00 = vec3s.temp();
-    PVec3 n01 = vec3s.temp();
-    PVec3 n11 = vec3s.temp();
-    PVec3 n10 = vec3s.temp();
-    PVec3 posTemp = vec3s.temp();
+    PVec3 n00 = vec3s.obtain();
+    PVec3 n01 = vec3s.obtain();
+    PVec3 n11 = vec3s.obtain();
+    PVec3 n10 = vec3s.obtain();
+    PVec3 posTemp = vec3s.obtain();
     for (int v = 0; v < lat; v++) {
       for (int h = 0; h < lon; h++) {
         float p0 = (MathUtils.PI * (v + 0) / lat); // Phi.

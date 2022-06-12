@@ -17,12 +17,10 @@ import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
-
-import java.util.Collections;
+import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.val;
 
 public class PRenderContext {
@@ -87,17 +85,17 @@ public class PRenderContext {
   @Getter
   private int width = 1, height = 1;
 
-  private final ArrayMap<String, PFloat4Texture> dataBuffers = new ArrayMap<>();
-  private final ArrayMap<String, Integer> storedVecsPerInstance = new ArrayMap<>();
-  private final ArrayMap<String, Integer> storedBufferOffsets = new ArrayMap<>();
+  private final PStringMap<PFloat4Texture> dataBuffers = new PStringMap<>();
+  private final PStringMap<Integer> storedVecsPerInstance = new PStringMap<>();
+  private final PStringMap<Integer> storedBufferOffsets = new PStringMap<>();
 
-  private PMap<String, PMap<PShader, PList<PGlDrawCall>>> enqueuedDrawCalls =
-      new PMap<String, PMap<PShader, PList<PGlDrawCall>>>() {
+  private PStringMap<PMap<PShader, PList<PGlDrawCall>>> enqueuedDrawCalls =
+      new PStringMap<PMap<PShader, PList<PGlDrawCall>>>() {
         @Override
-        protected Object makeNewVal(String o) {
+        protected PMap<PShader, PList<PGlDrawCall>> newUnpooled(String o) {
           return new PMap<PShader, PList<PGlDrawCall>>() {
             @Override
-            protected Object makeNewVal(PShader o) {
+            protected PList<PGlDrawCall> newUnpooled(PShader o) {
               return new PList<PGlDrawCall>();
             }
           };
@@ -171,7 +169,7 @@ public class PRenderContext {
   }
 
   public PFloat4Texture genDataBuffer(String name) {
-    if (dataBuffers.containsKey(name)) {
+    if (dataBuffers.has(name)) {
       return dataBuffers.get(name);
     }
 
@@ -184,22 +182,18 @@ public class PRenderContext {
 
   private void clear() {
     for (val e : dataBuffers) {
-      e.value.freeTemp();
+      e.v().freeTemp();
     }
     dataBuffers.clear();
     storedVecsPerInstance.clear();
     storedBufferOffsets.clear();
 
-    for (val e : enqueuedDrawCalls) {
-      e.getValue().clear();
-    }
-
-    enqueuedDrawCalls.clear();
+    enqueuedDrawCalls.clearRecursive(false);
   }
 
   private void snapshotBufferOffsets() {
     for (val e : dataBuffers) {
-      storedBufferOffsets.put(e.key, e.value.vecsWritten());
+      storedBufferOffsets.put(e.k(), e.v().vecsWritten());
     }
   }
 
@@ -238,11 +232,11 @@ public class PRenderContext {
 
       if (queueMap != null) {
         for (val e : queueMap) {
-          val shader = e.getKey();
+          val shader = e.k();
           shader.start(this);
 
           val queue = queueMap.get(shader);
-          Collections.sort(queue);
+          queue.sort();
           for (PGlDrawCall drawCall : queue) {
             drawCall.glDraw(this, shader, true);
           }
@@ -273,7 +267,7 @@ public class PRenderContext {
   public void enqueue(@NonNull PShader shader,
                       @NonNull String layer,
                       @NonNull PGlDrawCall drawCall) {
-    enqueuedDrawCalls.gen(layer).gen(shader)
+    enqueuedDrawCalls.genUnpooled(layer).genUnpooled(shader)
         .add(drawCall.setDataBufferInfo(storedVecsPerInstance, storedBufferOffsets));
     snapshotBufferOffsets();
   }

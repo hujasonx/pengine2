@@ -13,6 +13,7 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PSet;
+import com.phonygames.pengine.util.PStringMap;
 
 import net.mgsx.gltf.scene3d.model.NodePlus;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
@@ -28,8 +29,8 @@ public class PGltf {
 
   private SceneAsset backingSceneAsset;
 
-  private static final PMap<String, PGltf> loadedGltfs = new PMap<>();
-  private static final PMap<String, PGltf> loadingGltfs = new PMap<>();
+  private static final PStringMap<PGltf> loadedGltfs = new PStringMap<>();
+  private static final PStringMap<PGltf> loadingGltfs = new PStringMap<>();
   private final PSet<OnloadCallback> onLoadTasks = new PSet<>();
   private final PGltf self = this;
 
@@ -59,7 +60,7 @@ public class PGltf {
     this.fileName = fileName;
   }
 
-  private final PMap<String, PMesh> meshes = new PMap<>();
+  private final PStringMap<PMesh> meshes = new PStringMap<>();
 
   private PMaterial genMaterial(Material material) {
     val ret = new PMaterial(material.id, null);
@@ -71,12 +72,10 @@ public class PGltf {
   }
 
   public static void triggerLoads() {
-    val it = loadingGltfs.iterator();
-    while (it.hasNext()) {
-      val v = it.next();
-
-      String key = v.getKey();
-      final PGltf value = v.getValue();
+    PList<String> keysToRemove = null;
+    for (val e : loadingGltfs) {
+      String key = e.k();
+      final PGltf value = e.v();
       if (PAssetManager.isLoaded(key)) {
         value.loadFromSceneAsset(PAssetManager.sceneAsset(key));
         loadedGltfs.put(key, value);
@@ -90,8 +89,16 @@ public class PGltf {
             value.onLoadTasks.clear();
           }
         });
-        it.remove();
+
+        if (keysToRemove == null) {
+          keysToRemove = new PList<>();
+          keysToRemove.add(key);
+        }
       }
+    }
+
+    if (keysToRemove != null) {
+      loadingGltfs.delAll(keysToRemove);
     }
   }
 
@@ -110,7 +117,7 @@ public class PGltf {
 
     PList<PGlNode> glNodes = new PList<>();
 
-    while (nodesToProcess.size() > 0) {
+    while (nodesToProcess.size > 0) {
       glNodes.clear();
       NodePlus nodePlus = nodesToProcess.removeLast();
       // Generate meshes if needed.

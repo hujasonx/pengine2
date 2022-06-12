@@ -15,6 +15,7 @@ import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PPostableTask;
 import com.phonygames.pengine.util.PPostableTaskQueue;
+import com.phonygames.pengine.util.PStringMap;
 import com.phonygames.pengine.util.PWindowedBuffer;
 
 import java.util.Optional;
@@ -31,8 +32,8 @@ public class PModelGen implements PPostableTask {
   protected static final PList<PGlNode> tempGlNodesBuffer = new PList<>();
 
   private boolean finished = false;
-  private final PMap<String, Part> parts = new PMap<>();
-  private final PMap<String, Part> physicsParts = new PMap<>();
+  private final PStringMap<Part> parts = new PStringMap<>();
+  private final PStringMap<Part> physicsParts = new PStringMap<>();
 
   public Part addPart(String name, PVertexAttributes vertexAttributes) {
     Part p = new Part(name, false, vertexAttributes);

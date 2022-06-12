@@ -17,11 +17,11 @@ public abstract class PVec implements Pool.Poolable {
     protected Pool<T> pool = new Pool<T>() {
       @Override
       protected T newObject() {
-        return genNewObject();
+        return TempBuffer.this.newObject();
       }
     };
 
-    public T temp() {
+    public T obtain() {
       T t = pool.obtain();
       buffer.add(t);
       return t;
@@ -40,6 +40,6 @@ public abstract class PVec implements Pool.Poolable {
 
     protected abstract void finishInternal();
 
-    public abstract T genNewObject();
+    public abstract T newObject();
   }
 }

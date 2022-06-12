@@ -1,10 +1,10 @@
 package com.phonygames.pengine.graphics.shader;
 
 import com.phonygames.pengine.graphics.material.PMaterial;
-import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -21,31 +21,31 @@ public abstract class PShaderProvider {
                                   PMaterial material);
 
   public abstract static class PMapShaderProvider extends PShaderProvider {
-    private PMap<String, PMap<String, PMap<PVertexAttributes, PShader>>>
+    private PStringMap<PStringMap<PMap<PVertexAttributes, PShader>>>
         fragmentLayoutLayerVertexAttributesMap =
-        new PMap<String, PMap<String, PMap<PVertexAttributes, PShader>>>() {
+        new PStringMap<PStringMap<PMap<PVertexAttributes, PShader>>>() {
           @Override
-          protected Object makeNewVal(/* fragmentLayout */ String s) {
-            return new PMap<String, PMap<PVertexAttributes, PShader>>() {
+          protected PStringMap<PMap<PVertexAttributes, PShader>> newUnpooled(/* fragmentLayout */ String s) {
+            return new PStringMap<PMap<PVertexAttributes, PShader>>() {
               @Override
-              protected Object makeNewVal(/* layer */ String o) {
-                return new PMap<PVertexAttributes, PShader>();
+              protected PMap<PVertexAttributes, PShader> newUnpooled(/* layer */ String o) {
+                return new PMap<>();
               }
             };
           }
         };
-    private PMap<String, PMap<String, PMap<PVertexAttributes, PMap<String, PShader>>>>
+    private PStringMap<PStringMap<PMap<PVertexAttributes, PStringMap<PShader>>>>
         fragmentLayoutLayerVertexAttributesMaterialIdMap =
-        new PMap<String, PMap<String, PMap<PVertexAttributes, PMap<String, PShader>>>>() {
+        new PStringMap<PStringMap<PMap<PVertexAttributes, PStringMap<PShader>>>>() {
           @Override
-          protected Object makeNewVal(/* fragmentLayout */ String s) {
-            return new PMap<String, PMap<PVertexAttributes, PMap<String, PShader>>>() {
+          protected PStringMap<PMap<PVertexAttributes, PStringMap<PShader>>> newUnpooled(/* fragmentLayout */ String s) {
+            return new PStringMap<PMap<PVertexAttributes, PStringMap<PShader>>>() {
               @Override
-              protected Object makeNewVal(/* layer */ String o) {
-                return new PMap<PVertexAttributes, PMap<String, PShader>>() {
+              protected PMap<PVertexAttributes, PStringMap<PShader>> newUnpooled(/* layer */ String o) {
+                return new PMap<PVertexAttributes, PStringMap<PShader>>() {
                   @Override
-                  protected Object makeNewVal(PVertexAttributes o) {
-                    return new PMap<String, PShader>();
+                  protected PStringMap<PShader> newUnpooled(PVertexAttributes o) {
+                    return new PStringMap<PShader>(); // Material id
                   }
                 };
               }
@@ -65,15 +65,15 @@ public abstract class PShaderProvider {
                            PMaterial material) {
       String layerId = layer == null ? "" : layer;
       PShader shader =
-          fragmentLayoutLayerVertexAttributesMaterialIdMap.gen(fragmentLayout).gen(layerId)
-              .gen(vertexAttributes)
+          fragmentLayoutLayerVertexAttributesMaterialIdMap.genUnpooled(fragmentLayout).genUnpooled(layerId)
+              .genUnpooled(vertexAttributes)
               .get(material.getId());
 
       if (shader != null) {
         return shader;
       }
 
-      shader = fragmentLayoutLayerVertexAttributesMap.gen(fragmentLayout).gen(layerId).get(vertexAttributes);
+      shader = fragmentLayoutLayerVertexAttributesMap.genUnpooled(fragmentLayout).genUnpooled(layerId).get(vertexAttributes);
 
       if (shader != null) {
         return shader;
@@ -84,12 +84,12 @@ public abstract class PShaderProvider {
         if (markForAnyMaterialId) {
           PLog.i("PShaderProvider generating new shader any material, original: " + material.getId());
           markForAnyMaterialId = false;
-          fragmentLayoutLayerVertexAttributesMap.get(fragmentLayout).gen(layerId)
+          fragmentLayoutLayerVertexAttributesMap.get(fragmentLayout).genUnpooled(layerId)
               .put(vertexAttributes, shader);
         } else {
           PLog.i("PShaderProvider generating new shader for: " + material.getId());
-          fragmentLayoutLayerVertexAttributesMaterialIdMap.gen(fragmentLayout).gen(layer == null ? "" : layer)
-              .gen(vertexAttributes)
+          fragmentLayoutLayerVertexAttributesMaterialIdMap.genUnpooled(fragmentLayout).genUnpooled(layer == null ? "" : layer)
+              .genUnpooled(vertexAttributes)
               .put(material.getId(), shader);
         }
         return shader;
@@ -100,6 +100,9 @@ public abstract class PShaderProvider {
 
     private boolean markForAnyMaterialId;
 
+    /**
+     * Call this to mark the generated shader to be used for any material, not just the one provided.
+     */
     protected void markForAnyMaterialId() {
       this.markForAnyMaterialId = true;
     }

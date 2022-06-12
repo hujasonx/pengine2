@@ -9,6 +9,7 @@ import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PCopyable;
+import com.phonygames.pengine.util.PMap;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -33,8 +34,8 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
     return staticPool.obtain();
   }
 
-  private final ArrayMap<String, Integer> dataBufferLookupVecsPerInstance;
-  private final ArrayMap<String, Integer> dataBufferLookupOffsets;
+  private final PMap<String, Integer> dataBufferLookupVecsPerInstance;
+  private final PMap<String, Integer> dataBufferLookupOffsets;
   @Getter
   private PShader shader;
   @Getter
@@ -62,8 +63,8 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
       dataBufferLookupVecsPerInstance = null;
       dataBufferLookupOffsets = null;
     } else {
-      dataBufferLookupVecsPerInstance = new ArrayMap<>();
-      dataBufferLookupOffsets = new ArrayMap<>();
+      dataBufferLookupVecsPerInstance = new PMap<>();
+      dataBufferLookupOffsets = new PMap<>();
     }
   }
 
@@ -189,8 +190,8 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
     prepRenderContext(renderContext);
     if (shader.checkValid() && mesh != null) {
       for (val e : dataBufferLookupOffsets) {
-        renderContext.genDataBuffer(e.key)
-            .applyShader(shader, e.key, dataBufferLookupOffsets.get(e.key), dataBufferLookupVecsPerInstance.get(e.key));
+        renderContext.genDataBuffer(e.k())
+            .applyShader(shader, e.k(), dataBufferLookupOffsets.get(e.k()), dataBufferLookupVecsPerInstance.get(e.k()));
       }
 
       if (material != null) {
@@ -214,8 +215,8 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
     return 0;
   }
 
-  public PGlDrawCall setDataBufferInfo(ArrayMap<String, Integer> dataBufferLookupVecsPerInstance,
-                                       ArrayMap<String, Integer> dataBufferLookupOffsets) {
+  public PGlDrawCall setDataBufferInfo(PMap<String, Integer> dataBufferLookupVecsPerInstance,
+                                       PMap<String, Integer> dataBufferLookupOffsets) {
     PAssert.isFalse(renderingDisabled, "Cannot setDataBufferInfo() a renderingDisabled PGlDrawCall");
     this.dataBufferLookupVecsPerInstance.clear();
     this.dataBufferLookupVecsPerInstance.putAll(dataBufferLookupVecsPerInstance);

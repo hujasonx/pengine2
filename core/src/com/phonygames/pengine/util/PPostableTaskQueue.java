@@ -20,7 +20,7 @@ public class PPostableTaskQueue {
 
   private void startNextTaskIfNeeded() {
     if (currentTask == null && !tasks.isEmpty()) {
-      currentTask = tasks.remove(0);
+      currentTask = tasks.removeIndex(0);
       Gdx.app.postRunnable(new Runnable() {
         @Override
         public void run() {

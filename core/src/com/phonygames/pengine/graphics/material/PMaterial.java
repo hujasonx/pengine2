@@ -13,7 +13,7 @@ import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PStringMap;
 
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
@@ -30,92 +30,67 @@ public class PMaterial {
   @Getter
   private String shaderPrefix;
 
-  private final PMap<String, PVec1> vec1s = new PMap<String, PVec1>() {
-    @Override
-    public String deepCopyKey(String s) {
-      return s;
-    }
-
+  private final PStringMap<PVec1> vec1s = new PStringMap<PVec1>() {
     @Override
     public PVec1 deepCopyValue(PVec1 o) {
       return o.cpy();
     }
 
     @Override
-    protected Object makeNewVal(String s) {
+    protected PVec1 newUnpooled(String s) {
       return new PVec1();
     }
   };
 
-  private final PMap<String, PVec2> vec2s = new PMap<String, PVec2>() {
-    @Override
-    public String deepCopyKey(String s) {
-      return s;
-    }
-
+  private final PStringMap<PVec2> vec2s = new PStringMap<PVec2>() {
     @Override
     public PVec2 deepCopyValue(PVec2 o) {
       return o.cpy();
     }
 
     @Override
-    protected Object makeNewVal(String s) {
+    protected PVec2 newUnpooled(String s) {
       return new PVec2();
     }
   };
 
-  private final PMap<String, PVec3> vec3s = new PMap<String, PVec3>() {
-    @Override
-    public String deepCopyKey(String s) {
-      return s;
-    }
-
+  private final PStringMap<PVec3> vec3s = new PStringMap<PVec3>() {
     @Override
     public PVec3 deepCopyValue(PVec3 o) {
       return o.cpy();
     }
 
     @Override
-    protected Object makeNewVal(String s) {
+    protected PVec3 newUnpooled(String s) {
       return new PVec3();
     }
   };
 
-  private final PMap<String, PVec4> vec4s = new PMap<String, PVec4>() {
-    @Override
-    public String deepCopyKey(String s) {
-      return s;
-    }
-
+  private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>() {
     @Override
     public PVec4 deepCopyValue(PVec4 o) {
       return o.cpy();
     }
 
     @Override
-    protected Object makeNewVal(String s) {
+    protected PVec4 newUnpooled(String s) {
       return new PVec4();
     }
   };
 
-  private final PMap<String, PTexture> textures = new PMap<String, PTexture>() {
-    @Override
-    public String deepCopyKey(String s) {
-      return s;
-    }
-
+  private final PStringMap<PTexture> textures = new PStringMap<PTexture>() {
     @Override
     public PTexture deepCopyValue(PTexture o) {
       return o.tryDeepCopy();
     }
 
     @Override
-    protected Object makeNewVal(String s) {
+    protected PTexture newUnpooled(String s) {
       return new PTexture();
     }
   };
 
-  private final PMap<String, PFloat4Texture> float4Textures = new PMap<String, PFloat4Texture>();
+  private final PStringMap<PFloat4Texture> float4Textures = new PStringMap<>();
 
   public static class UniformConstants {
 
@@ -170,17 +145,17 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, float f) {
-    vec1s.gen(uniform).x(f);
+    vec1s.genUnpooled(uniform).x(f);
     return this;
   }
 
   public PMaterial setTex(String name, PTexture texture) {
-    textures.gen("u_" + name + "Tex").set(texture);
+    textures.genUnpooled("u_" + name + "Tex").set(texture);
     return this;
   }
 
   public PMaterial setTexWithUniform(String uniform, PTexture texture) {
-    textures.gen(uniform).set(texture);
+    textures.genUnpooled(uniform).set(texture);
     return this;
   }
 
@@ -189,12 +164,12 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec2 vec2) {
-    vec2s.gen(uniform).set(vec2);
+    vec2s.genUnpooled(uniform).set(vec2);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y) {
-    vec2s.gen(uniform).set(x, y);
+    vec2s.genUnpooled(uniform).set(x, y);
     return this;
   }
 
@@ -203,12 +178,12 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec3 vec3) {
-    vec3s.gen(uniform).set(vec3);
+    vec3s.genUnpooled(uniform).set(vec3);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y, float z) {
-    vec3s.gen(uniform).set(x, y, z);
+    vec3s.genUnpooled(uniform).set(x, y, z);
     return this;
   }
 
@@ -217,55 +192,55 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec4 vec4) {
-    vec4s.gen(uniform).set(vec4);
+    vec4s.genUnpooled(uniform).set(vec4);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y, float z, float w) {
-    vec4s.gen(uniform).set(x, y, z, w);
+    vec4s.genUnpooled(uniform).set(x, y, z, w);
     return this;
   }
 
   public PMaterial set(String uniform, Color color) {
-    vec4s.gen(uniform).set(color.r, color.g, color.b, color.a);
+    vec4s.genUnpooled(uniform).set(color.r, color.g, color.b, color.a);
     return this;
   }
 
   public PMaterial cpy(String newName, PModelInstance newOwner) {
     PMaterial ret = new PMaterial(newName, newOwner);
-    ret.vec1s.tryDeepCopyFrom(vec1s);
-    ret.vec2s.tryDeepCopyFrom(vec2s);
-    ret.vec3s.tryDeepCopyFrom(vec3s);
-    ret.vec4s.tryDeepCopyFrom(vec4s);
-    ret.textures.tryDeepCopyFrom(textures);
+    ret.vec1s.copyFrom(vec1s);
+    ret.vec2s.copyFrom(vec2s);
+    ret.vec3s.copyFrom(vec3s);
+    ret.vec4s.copyFrom(vec4s);
+    ret.textures.copyFrom(textures);
     return ret;
   }
 
   public void applyUniforms(PShader shader) {
     for (val e : vec1s) {
-      shader.set(e.getKey(), e.getValue());
+      shader.set(e.k(), e.v());
     }
     for (val e : vec2s) {
-      shader.set(e.getKey(), e.getValue());
+      shader.set(e.k(), e.v());
     }
     for (val e : vec3s) {
-      shader.set(e.getKey(), e.getValue());
+      shader.set(e.k(), e.v());
     }
     for (val e : vec4s) {
-      shader.set(e.getKey(), e.getValue());
+      shader.set(e.k(), e.v());
     }
     for (val e : textures) {
-      e.getValue().applyShaderWithUniform(e.getKey(), shader);
+      e.v().applyShaderWithUniform(e.k(), shader);
     }
   }
 
   public PMaterial setMetallic(float metallic) {
-    vec2s.gen(UniformConstants.Vec2.u_metallicRoughness).x(metallic);
+    vec2s.genUnpooled(UniformConstants.Vec2.u_metallicRoughness).x(metallic);
     return this;
   }
 
   public PMaterial setRoughness(float roughness) {
-    vec2s.gen(UniformConstants.Vec2.u_metallicRoughness).y(roughness);
+    vec2s.genUnpooled(UniformConstants.Vec2.u_metallicRoughness).y(roughness);
     return this;
   }
 

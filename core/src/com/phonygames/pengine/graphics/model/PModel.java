@@ -6,13 +6,14 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 
 public class PModel {
-  final PMap<String, Node> nodes = new PMap<>();
+  final PStringMap<Node> nodes = new PStringMap<>();
   final PList<String> rootNodeIds = new PList<>();
 
   private PModel() {
