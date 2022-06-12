@@ -4,8 +4,8 @@ import com.phonygames.pengine.PEngine;
 
 public class PAssert {
 
-  public static void failNotImplemented() {
-    fail("Not implemented");
+  public static void failNotImplemented(String info) {
+    fail("Not implemented: " + info);
   }
 
   public static void fail(String message) {
@@ -53,6 +53,10 @@ public class PAssert {
 
   public static void isFalse(boolean b) {
     isTrue(!b, "*** PAssert :: isFalse ***");
+  }
+
+  public static void isFalse(boolean b, String message) {
+    isTrue(!b, message);
   }
 
   public static void isNotNull(Object o, String message) {

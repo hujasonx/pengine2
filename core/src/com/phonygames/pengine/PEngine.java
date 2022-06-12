@@ -60,7 +60,6 @@ public class PEngine extends ApplicationAdapter {
     }
 
     PVertexAttributes.init();
-    PTexture.init();
     PLight.initMeshes();
     PLog.init();
     PApplicationWindow.init();

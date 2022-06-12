@@ -224,7 +224,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     private PGLFrameBuffer.PFrameBufferBuilder addAttachment(PGLFrameBuffer.PFrameBufferBuilder builder) {
       switch (attachmentType) {
         case ColorBuffer:
-          builder.addColorTextureAttachment(internalFormat, format, type, isGpuOnly);
+          builder.addColorTextureAttachment(internalFormat, format, type);
           break;
         case Float:
           builder.addFloatAttachment(internalFormat, format);

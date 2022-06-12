@@ -1,11 +1,12 @@
 package com.phonygames.pengine.graphics.model.gen;
 
+import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
-import com.phonygames.pengine.graphics.shader.PShaderProvider;
+import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
@@ -82,17 +83,22 @@ public class PModelGen implements PPostableTask {
 
   }
 
-  protected PModelGen chainGlNode(PList<PGlNode> list, Part part, PMaterial defaultMaterial) {
+  protected PModelGen chainGlNode(PList<PGlNode> list,
+                                  Part part,
+                                  PMaterial defaultMaterial,
+                                  ArrayMap<String, PMat4> boneInvBindTransforms) {
     if (list == null) {
       list = new PList<>();
     }
 
     val glNode = new PGlNode(part.name);
-    glNode.setMesh(part.getMesh());
-    glNode.setMaterial(defaultMaterial);
+    glNode.getDrawCall().setMesh(part.getMesh());
+    glNode.getDrawCall().setMaterial(defaultMaterial);
+    if (boneInvBindTransforms != null) {
+      glNode.getInvBoneTransforms().putAll(boneInvBindTransforms);
+    }
 
     list.add(glNode);
-
     return this;
   }
 

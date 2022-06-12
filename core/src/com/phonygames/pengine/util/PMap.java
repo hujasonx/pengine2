@@ -3,17 +3,11 @@ package com.phonygames.pengine.util;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.exception.PRuntimeException;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import lombok.NonNull;
 import lombok.val;
@@ -24,7 +18,7 @@ import lombok.val;
 public class PMap<K, V> extends HashMap<K, V> implements Iterable<Map.Entry<K, V>> {
   public PMap<K, V> tryDeepCopyFrom(PMap<K, V> target) {
     for (val e : target.entrySet()) {
-      put(tryDeepCopyKey(e.getKey()), tryDeepCopyValue(e.getValue()));
+      put(deepCopyKey(e.getKey()), deepCopyValue(e.getValue()));
     }
 
     return this;
@@ -48,12 +42,14 @@ public class PMap<K, V> extends HashMap<K, V> implements Iterable<Map.Entry<K, V
   }
 
   // Can be overridden to help with deep copies.
-  public K tryDeepCopyKey(K k) {
+  public K deepCopyKey(K k) {
+    PAssert.failNotImplemented("tryDeepCopyKey");
     return k;
   }
 
   // Can be overridden to help with deep copies.
-  public V tryDeepCopyValue(V v) {
+  public V deepCopyValue(V v) {
+    PAssert.failNotImplemented("tryDeepCopyValue");
     return v;
   }
 
@@ -62,17 +58,18 @@ public class PMap<K, V> extends HashMap<K, V> implements Iterable<Map.Entry<K, V
     return entrySet().iterator();
   }
 
-  public V getOrMake(K k) {
+  public V gen(@NonNull K k) {
     V v = get(k);
     if (v == null) {
-      v = (V) makeNew(k);
+      v = (V) makeNewVal(k);
       put(k, v);
     }
 
     return v;
   }
 
-  protected Object makeNew(K k) {
+  protected Object makeNewVal(@NonNull K k) {
+    PAssert.failNotImplemented("makeNew: " + k);
     return null;
   }
 }

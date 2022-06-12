@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PVec1;
@@ -19,7 +20,6 @@ import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.val;
 
 public class PMaterial {
@@ -27,70 +27,95 @@ public class PMaterial {
   private final String id;
   @Getter
   private final PModelInstance owner;
-
   @Getter
-  @Setter
-  private String layer = "";
+  private String shaderPrefix;
 
   private final PMap<String, PVec1> vec1s = new PMap<String, PVec1>() {
     @Override
-    public PVec1 tryDeepCopyValue(PVec1 o) {
+    public String deepCopyKey(String s) {
+      return s;
+    }
+
+    @Override
+    public PVec1 deepCopyValue(PVec1 o) {
       return o.cpy();
     }
 
     @Override
-    protected Object makeNew(String s) {
+    protected Object makeNewVal(String s) {
       return new PVec1();
     }
   };
 
   private final PMap<String, PVec2> vec2s = new PMap<String, PVec2>() {
     @Override
-    public PVec2 tryDeepCopyValue(PVec2 o) {
+    public String deepCopyKey(String s) {
+      return s;
+    }
+
+    @Override
+    public PVec2 deepCopyValue(PVec2 o) {
       return o.cpy();
     }
 
     @Override
-    protected Object makeNew(String s) {
+    protected Object makeNewVal(String s) {
       return new PVec2();
     }
   };
 
   private final PMap<String, PVec3> vec3s = new PMap<String, PVec3>() {
     @Override
-    public PVec3 tryDeepCopyValue(PVec3 o) {
+    public String deepCopyKey(String s) {
+      return s;
+    }
+
+    @Override
+    public PVec3 deepCopyValue(PVec3 o) {
       return o.cpy();
     }
 
     @Override
-    protected Object makeNew(String s) {
+    protected Object makeNewVal(String s) {
       return new PVec3();
     }
   };
 
   private final PMap<String, PVec4> vec4s = new PMap<String, PVec4>() {
     @Override
-    public PVec4 tryDeepCopyValue(PVec4 o) {
+    public String deepCopyKey(String s) {
+      return s;
+    }
+
+    @Override
+    public PVec4 deepCopyValue(PVec4 o) {
       return o.cpy();
     }
 
     @Override
-    protected Object makeNew(String s) {
+    protected Object makeNewVal(String s) {
       return new PVec4();
     }
   };
 
   private final PMap<String, PTexture> textures = new PMap<String, PTexture>() {
     @Override
-    public PTexture tryDeepCopyValue(PTexture o) {
+    public String deepCopyKey(String s) {
+      return s;
+    }
+
+    @Override
+    public PTexture deepCopyValue(PTexture o) {
       return o.tryDeepCopy();
     }
 
     @Override
-    protected Object makeNew(String s) {
+    protected Object makeNewVal(String s) {
       return new PTexture();
     }
   };
+
+  private final PMap<String, PFloat4Texture> float4Textures = new PMap<String, PFloat4Texture>();
 
   public static class UniformConstants {
 
@@ -135,9 +160,9 @@ public class PMaterial {
     set(UniformConstants.Vec4.u_diffuseCol, 1, 1, 1, 1);
     set(UniformConstants.Vec4.u_emissiveCol, 0, 0, 0, 1);
     set(UniformConstants.Vec2.u_metallicRoughness, 0, 0);
-    set(UniformConstants.Sampler2D.u_diffuseTex, new PTexture());
-    set(UniformConstants.Sampler2D.u_emissiveTex, new PTexture());
-    set(UniformConstants.Sampler2D.u_metallicRoughnessTex, new PTexture());
+    setTexWithUniform(UniformConstants.Sampler2D.u_diffuseTex, new PTexture());
+    setTexWithUniform(UniformConstants.Sampler2D.u_emissiveTex, new PTexture());
+    setTexWithUniform(UniformConstants.Sampler2D.u_metallicRoughnessTex, new PTexture());
   }
 
   public float getFloat(String uniform) {
@@ -145,12 +170,17 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, float f) {
-    vec1s.getOrMake(uniform).x(f);
+    vec1s.gen(uniform).x(f);
     return this;
   }
 
-  public PMaterial set(String uniform, PTexture texture) {
-    textures.getOrMake(uniform).set(texture);
+  public PMaterial setTex(String name, PTexture texture) {
+    textures.gen("u_" + name + "Tex").set(texture);
+    return this;
+  }
+
+  public PMaterial setTexWithUniform(String uniform, PTexture texture) {
+    textures.gen(uniform).set(texture);
     return this;
   }
 
@@ -159,12 +189,12 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec2 vec2) {
-    vec2s.getOrMake(uniform).set(vec2);
+    vec2s.gen(uniform).set(vec2);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y) {
-    vec2s.getOrMake(uniform).set(x, y);
+    vec2s.gen(uniform).set(x, y);
     return this;
   }
 
@@ -173,12 +203,12 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec3 vec3) {
-    vec3s.getOrMake(uniform).set(vec3);
+    vec3s.gen(uniform).set(vec3);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y, float z) {
-    vec3s.getOrMake(uniform).set(x, y, z);
+    vec3s.gen(uniform).set(x, y, z);
     return this;
   }
 
@@ -187,17 +217,17 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec4 vec4) {
-    vec4s.getOrMake(uniform).set(vec4);
+    vec4s.gen(uniform).set(vec4);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y, float z, float w) {
-    vec4s.getOrMake(uniform).set(x, y, z, w);
+    vec4s.gen(uniform).set(x, y, z, w);
     return this;
   }
 
   public PMaterial set(String uniform, Color color) {
-    vec4s.getOrMake(uniform).set(color.r, color.g, color.b, color.a);
+    vec4s.gen(uniform).set(color.r, color.g, color.b, color.a);
     return this;
   }
 
@@ -208,7 +238,6 @@ public class PMaterial {
     ret.vec3s.tryDeepCopyFrom(vec3s);
     ret.vec4s.tryDeepCopyFrom(vec4s);
     ret.textures.tryDeepCopyFrom(textures);
-    ret.layer = layer;
     return ret;
   }
 
@@ -226,17 +255,17 @@ public class PMaterial {
       shader.set(e.getKey(), e.getValue());
     }
     for (val e : textures) {
-      e.getValue().applyShader(e.getKey(), shader);
+      e.getValue().applyShaderWithUniform(e.getKey(), shader);
     }
   }
 
   public PMaterial setMetallic(float metallic) {
-    vec2s.getOrMake(UniformConstants.Vec2.u_metallicRoughness).x(metallic);
+    vec2s.gen(UniformConstants.Vec2.u_metallicRoughness).x(metallic);
     return this;
   }
 
   public PMaterial setRoughness(float roughness) {
-    vec2s.getOrMake(UniformConstants.Vec2.u_metallicRoughness).y(roughness);
+    vec2s.gen(UniformConstants.Vec2.u_metallicRoughness).y(roughness);
     return this;
   }
 
@@ -267,22 +296,30 @@ public class PMaterial {
       set(UniformConstants.Sampler2D.u_brdflutTex, ((ColorAttribute) attribute).color);
     } else if (attribute.type == PBRTextureAttribute.Bump) {
       PAssert.warnNotImplemented("Material attribute " + attribute.toString());
-    } else if (attribute.type == PBRTextureAttribute.BaseColorTexture || attribute.type == PBRTextureAttribute.Diffuse) {
-      set(UniformConstants.Sampler2D.u_diffuseTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
+    } else if (attribute.type == PBRTextureAttribute.BaseColorTexture ||
+        attribute.type == PBRTextureAttribute.Diffuse) {
+      setTexWithUniform(UniformConstants.Sampler2D.u_diffuseTex,
+                        new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.Emissive) {
-      set(UniformConstants.Sampler2D.u_emissiveTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
+      setTexWithUniform(UniformConstants.Sampler2D.u_emissiveTex,
+                        new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.EmissiveTexture) {
       PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRTextureAttribute.MetallicRoughnessTexture) {
-      set(UniformConstants.Sampler2D.u_metallicRoughnessTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
+      setTexWithUniform(UniformConstants.Sampler2D.u_metallicRoughnessTex,
+                        new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.Normal || attribute.type == PBRTextureAttribute.NormalTexture) {
-      set(UniformConstants.Sampler2D.u_normalTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
+      setTexWithUniform(UniformConstants.Sampler2D.u_normalTex,
+                        new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.OcclusionTexture) {
-      set(UniformConstants.Sampler2D.u_occlusionTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
+      setTexWithUniform(UniformConstants.Sampler2D.u_occlusionTex,
+                        new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.Reflection) {
-      set(UniformConstants.Sampler2D.u_reflectionTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
+      setTexWithUniform(UniformConstants.Sampler2D.u_reflectionTex,
+                        new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.Specular) {
-      set(UniformConstants.Sampler2D.u_specularTex, new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
+      setTexWithUniform(UniformConstants.Sampler2D.u_specularTex,
+                        new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRFloatAttribute.AlphaTest) {
       set(UniformConstants.Float.u_alphaTest, ((PBRFloatAttribute) attribute).value);
     } else if (attribute.type == PBRFloatAttribute.Metallic) {

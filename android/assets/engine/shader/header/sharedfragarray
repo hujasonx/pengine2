@@ -1,13 +1,10 @@
 #params [INDEX]
-
 #ifdef a_uvINDEXFlag
 in vec2 v_uvINDEX;
 #endif
-
 #ifdef a_colINDEXFlag
 in vec4 v_colINDEX;
 #endif
-
 #ifdef a_bonINDEXFlag
 in vec2 v_bonINDEX;
 #endif

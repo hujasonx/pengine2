@@ -1,9 +1,6 @@
 package com.phonygames.pengine.graphics.texture;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec4;
@@ -13,55 +10,57 @@ import lombok.Setter;
 import lombok.val;
 
 public class PTexture {
-  @Getter
-  private static Texture WHITE_PIXEL;
+  private static PTexture WHITE_PIXEL;
+
+  public static PTexture getWHITE_PIXEL() {
+    if (WHITE_PIXEL == null) {
+      WHITE_PIXEL = new PTexture(PFloat4Texture.getWHITE_PIXEL());
+    }
+
+    return WHITE_PIXEL;
+  }
 
   @Getter
   private final PVec4 uvOS = new PVec4().set(0, 0, 1, 1);
 
-  public static void init() {
-    Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-    pixmap.setColor(Color.WHITE);
-    pixmap.fill();
-    WHITE_PIXEL = new Texture(pixmap);
-  }
-
   public PTexture() {
-    this(WHITE_PIXEL);
   }
 
   public PTexture(Texture texture) {
     set(texture);
   }
 
-  @Getter
   @Setter
   private Texture backingTexture;
 
+  public Texture getBackingTexture() {
+    return WHITE_PIXEL.backingTexture;
+//    return backingTexture == null ? getWHITE_PIXEL() : backingTexture;
+  }
+
   public boolean has() {
-    return backingTexture != WHITE_PIXEL;
+    return backingTexture != null;
   }
 
   public int width() {
-    return backingTexture.getWidth();
+    return getBackingTexture().getWidth();
   }
 
   public int height() {
-    return backingTexture.getHeight();
+    return getBackingTexture().getHeight();
   }
 
   private int bind() {
-    return PRenderContext.getActiveContext().getTextureBinder().bind(backingTexture);
+    return PRenderContext.getActiveContext().getTextureBinder().bind(getBackingTexture());
   }
 
-  public void applyShader(String uniform, PShader shader) {
-    shader.setI(uniform, bind());
-    shader.set(uniform + "Size", width(), height(), 1f / width(), 1f / height());
+  public void applyShaderWithUniform(String uniform, PShader shader) {
+    shader.setWithUniform(uniform, getBackingTexture());
     shader.set(uniform + "UVOS", uvOS);
   }
 
   public PTexture reset() {
-    set(WHITE_PIXEL);
+    this.backingTexture = null;
     return this;
   }
 
@@ -80,7 +79,7 @@ public class PTexture {
   }
 
   public String toString() {
-    if (backingTexture == WHITE_PIXEL) {
+    if (backingTexture == null) {
       return "[PTexture UNSET]";
     }
     return "[PTexture ref:" + (backingTexture.toString().split("@")[1]) + " " + width() + "x" + height() + "]";
@@ -88,16 +87,17 @@ public class PTexture {
 
   @Override
   public int hashCode() {
+    if (backingTexture == null) { return 0; }
     return backingTexture.hashCode();
   }
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof  PTexture)) {
+    if (!(o instanceof PTexture)) {
       return false;
     }
 
-    val other = (PTexture)o;
+    val other = (PTexture) o;
     return other.backingTexture == backingTexture;
   }
 }

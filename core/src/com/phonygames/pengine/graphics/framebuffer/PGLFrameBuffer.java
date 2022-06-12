@@ -458,7 +458,7 @@ public abstract class PGLFrameBuffer<T extends GLTexture> implements Disposable 
 
   public static class FrameBufferTextureAttachmentSpec {
     public int internalFormat, format, type;
-    public boolean isFloat, isGpuOnly = true;
+    public boolean isFloat;
     public boolean isDepth;
     public boolean isStencil;
 
@@ -500,9 +500,8 @@ public abstract class PGLFrameBuffer<T extends GLTexture> implements Disposable 
       this.height = height;
     }
 
-    public PGLFrameBufferBuilder<U> addColorTextureAttachment(int internalFormat, int format, int type, boolean isGpuOnly) {
+    public PGLFrameBufferBuilder<U> addColorTextureAttachment(int internalFormat, int format, int type) {
       FrameBufferTextureAttachmentSpec spec = new FrameBufferTextureAttachmentSpec(internalFormat, format, type);
-      spec.isGpuOnly = isGpuOnly;
       textureAttachmentSpecs.add(spec);
       return this;
     }
@@ -510,14 +509,13 @@ public abstract class PGLFrameBuffer<T extends GLTexture> implements Disposable 
     public PGLFrameBufferBuilder<U> addBasicColorTextureAttachment(Pixmap.Format format) {
       int glFormat = Pixmap.Format.toGlFormat(format);
       int glType = Pixmap.Format.toGlType(format);
-      return addColorTextureAttachment(glFormat, glFormat, glType, true);
+      return addColorTextureAttachment(glFormat, glFormat, glType);
     }
 
     public PGLFrameBufferBuilder<U> addFloatAttachment(int internalFormat, int format) {
       FrameBufferTextureAttachmentSpec
           spec = new FrameBufferTextureAttachmentSpec(internalFormat, format, GL30.GL_FLOAT);
       spec.isFloat = true;
-      spec.isGpuOnly = true;
       textureAttachmentSpecs.add(spec);
       return this;
     }

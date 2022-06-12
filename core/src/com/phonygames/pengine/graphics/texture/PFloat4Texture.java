@@ -2,7 +2,6 @@ package com.phonygames.pengine.graphics.texture;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.Texture;
@@ -11,9 +10,7 @@ import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.shader.PShader;
-import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -24,24 +21,35 @@ import java.nio.FloatBuffer;
 import lombok.Getter;
 
 public class PFloat4Texture extends Texture implements Pool.Poolable {
+  private static PFloat4Texture WHITE_PIXEL;
+
+  public static PFloat4Texture getWHITE_PIXEL() {
+    if (WHITE_PIXEL == null) {
+      WHITE_PIXEL = PFloat4Texture.get(1, true).addData(1, 1, 1, 1).lock();
+    }
+
+    return WHITE_PIXEL;
+  }
+
   private static PMap<Integer, Pool<PFloat4Texture>> staticTexturePools = new PMap<Integer, Pool<PFloat4Texture>>() {
     @Override
-    protected Object makeNew(final Integer integer) {
+    protected Object makeNewVal(final Integer integer) {
       return new Pool<PFloat4Texture>() {
         @Override
         public PFloat4Texture newObject() {
-          return PFloat4Texture.get(integer, true);
+          PFloat4Texture newO = PFloat4Texture.get(integer, true);
+          return newO;
         }
       };
     }
   };
 
   public static PFloat4Texture getTemp(int vec4Capacity) {
-    return staticTexturePools.getOrMake(vec4Capacity).obtain();
+    return staticTexturePools.gen(vec4Capacity).obtain();
   }
 
   public void freeTemp() {
-    staticTexturePools.getOrMake(vec4Capacity).free(this);
+    staticTexturePools.gen(vec4Capacity).free(this);
   }
 
   private int sideLength = 0;
@@ -50,6 +58,9 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
 
   @Getter
   private int vec4Capacity;
+
+  private boolean dataDirty = false;
+  private boolean locked = false;
 
   public static PFloat4Texture get(int vec4Capacity, boolean use32bits) {
     int sideLength = (int) Math.pow(2, (int) Math.ceil(Math.log(Math.sqrt(vec4Capacity)) / Math.log(2)));
@@ -65,24 +76,22 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
     this.sideLength = sideLength;
 
     this.floatBuffer = BufferUtils.newFloatBuffer(sideLength * sideLength * 4);
+    reset();
   }
 
-  public void setData(float[] floats) {
-    floatBuffer.rewind();
-    floatBuffer.limit(floatBuffer.capacity());
-    floatBuffer.put(floats);
-    floatBuffer.flip();
-
-    load(this.getTextureData());
+  private void markDirty() {
+    PAssert.isFalse(locked);
+    dataDirty = true;
   }
 
   @Override
   public void reset() {
-    floatBuffer.rewind();
-    floatBuffer.limit(floatBuffer.capacity());
+    markDirty();
+    floatBuffer.clear();
   }
 
   public PFloat4Texture addData(PVec3 vec3, float w) {
+    markDirty();
     floatBuffer.put(vec3.x());
     floatBuffer.put(vec3.y());
     floatBuffer.put(vec3.z());
@@ -91,6 +100,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
   }
 
   public PFloat4Texture addData(PVec4 vec4) {
+    markDirty();
     floatBuffer.put(vec4.x());
     floatBuffer.put(vec4.y());
     floatBuffer.put(vec4.z());
@@ -99,17 +109,19 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
   }
 
   public PFloat4Texture addData(PMat4 mat4) {
+    markDirty();
     floatBuffer.put(mat4.getBackingMatrix4().val);
     return this;
   }
 
   public PFloat4Texture addData(float[] floats) {
+    markDirty();
     floatBuffer.put(floats);
     return this;
   }
 
-
   public PFloat4Texture addData(float r, float g, float b, float a) {
+    markDirty();
     floatBuffer.put(r);
     floatBuffer.put(g);
     floatBuffer.put(b);
@@ -117,20 +129,38 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
     return this;
   }
 
-  public void dataTransferFinished() {
+  public void load() {
+    if (!dataDirty) {
+      return;
+    }
+    dataDirty = false;
     floatBuffer.flip();
     load(this.getTextureData());
   }
 
-  public int floatCapacity() {
-    return floatBuffer.capacity();
-  }
-
-  public void loadRegion(int x, int y, int w, int h) {
+  public void loadIntoRegion(int x, int y, int w, int h) {
+    if (!dataDirty) {
+      return;
+    }
+    dataDirty = false;
     floatBuffer.flip();
     ((PFloat4TextureTextureData) this.getTextureData()).setSubArea(x, y, w, h);
     load(this.getTextureData());
     ((PFloat4TextureTextureData) this.getTextureData()).clearSubArea();
+  }
+
+  public PFloat4Texture unlock() {
+    locked = false;
+    return this;
+  }
+
+  public PFloat4Texture lock() {
+    locked = true;
+    return this;
+  }
+
+  public int vecsWritten() {
+    return floatBuffer.limit() == floatBuffer.capacity() ? floatBuffer.position() / 4 : floatBuffer.limit() / 4;
   }
 
   private static class PFloat4TextureTextureData extends FloatTextureData {
@@ -166,20 +196,47 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
           if (shouldUseSubArea) {
             Gdx.gl.glTexSubImage2D(target, 0, subX, subY, subW, subH, GL30.GL_RGBA, GL20.GL_FLOAT, owner.floatBuffer);
           } else {
-            Gdx.gl.glTexSubImage2D(target, 0, 0, 0, owner.sideLength, owner.sideLength, GL30.GL_RGBA, GL20.GL_FLOAT, owner.floatBuffer);
+            Gdx.gl.glTexSubImage2D(target,
+                                   0,
+                                   0,
+                                   0,
+                                   owner.sideLength,
+                                   owner.sideLength,
+                                   GL30.GL_RGBA,
+                                   GL20.GL_FLOAT,
+                                   owner.floatBuffer);
           }
         } else {
           PAssert.isTrue(!shouldUseSubArea, "Can't use subArea unless the texture has already been created!");
-          if (Gdx.app.getType() == Application.ApplicationType.Android || Gdx.app.getType() == Application.ApplicationType.iOS
+          if (Gdx.app.getType() == Application.ApplicationType.Android ||
+              Gdx.app.getType() == Application.ApplicationType.iOS
               || Gdx.app.getType() == Application.ApplicationType.WebGL) {
 
-            if (!Gdx.graphics.supportsExtension("OES_texture_float")) { throw new GdxRuntimeException("Extension OES_texture_float not supported!"); }
+            if (!Gdx.graphics.supportsExtension("OES_texture_float")) {
+              throw new GdxRuntimeException("Extension OES_texture_float not supported!");
+            }
 
             // GLES and WebGL defines texture format by 3rd and 8th argument,
             // so to get a float texture one needs to supply GL_RGBA and GL_FLOAT there.
-            Gdx.gl.glTexImage2D(target, 0, GL30.GL_RGBA, owner.sideLength, owner.sideLength, 0, GL30.GL_RGBA, GL20.GL_FLOAT, owner.floatBuffer);
+            Gdx.gl.glTexImage2D(target,
+                                0,
+                                GL30.GL_RGBA,
+                                owner.sideLength,
+                                owner.sideLength,
+                                0,
+                                GL30.GL_RGBA,
+                                GL20.GL_FLOAT,
+                                owner.floatBuffer);
           } else {
-            Gdx.gl.glTexImage2D(target, 0, use32bits ? GL30.GL_RGBA32F : GL30.GL_RGBA16F, owner.sideLength, owner.sideLength, 0, GL30.GL_RGBA, GL20.GL_FLOAT, owner.floatBuffer);
+            Gdx.gl.glTexImage2D(target,
+                                0,
+                                use32bits ? GL30.GL_RGBA32F : GL30.GL_RGBA16F,
+                                owner.sideLength,
+                                owner.sideLength,
+                                0,
+                                GL30.GL_RGBA,
+                                GL20.GL_FLOAT,
+                                owner.floatBuffer);
           }
           genedTexture = true;
         }
@@ -187,9 +244,11 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
     }
   }
 
-  public void setUniforms(PShader shader, String name, int lookupOffset, int vecsPerInstance) {
-    shader.set(name, this);
-    shader.setI(name + "LookupOffset", lookupOffset);
-    shader.setI(name + "VecsPerI", vecsPerInstance);
+  public void applyShader(PShader shader, String name, int lookupOffset, int vecsPerInstance) {
+    load();
+    String uniform = "u_" + name + "Tex";
+    shader.setWithUniform(uniform, this);
+    shader.setI(uniform + "LookupOffset", lookupOffset);
+    shader.setI(uniform + "VecsPerI", vecsPerInstance);
   }
 }

@@ -107,9 +107,8 @@ public class PEnvironment {
     if (numLights > 0) {
       pointLightShader.start(renderContext);
       setLightUniforms(pointLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex, renderContext.getViewProjInvTransform());
-      lightsFloatBuffer.dataTransferFinished();
-      lightsFloatBuffer.setUniforms(pointLightShader, "u_lightBufferTex", 0, vecsPerInstance);
-      PPointLight.getMESH().glRenderInstanced(pointLightShader, numLights, null, 0, 0);
+      lightsFloatBuffer.applyShader(pointLightShader, "lightBuffer", 0, vecsPerInstance);
+      PPointLight.getMESH().glRenderInstanced(pointLightShader, numLights);
       pointLightShader.end();
     }
 
@@ -132,10 +131,10 @@ public class PEnvironment {
   }
 
   private void setLightUniforms(PShader shader, Texture depthTex, Texture diffuseMTex, Texture normalRTex, Texture emissiveITex, PMat4 viewProjInv) {
-    shader.set(UniformConstants.Sampler2D.u_depthTex, depthTex);
-    shader.set(UniformConstants.Sampler2D.u_diffuseMTex, diffuseMTex);
-    shader.set(UniformConstants.Sampler2D.u_normalRTex, normalRTex);
-    shader.set(UniformConstants.Sampler2D.u_emissiveITex, emissiveITex);
+    shader.setWithUniform(UniformConstants.Sampler2D.u_depthTex, depthTex);
+    shader.setWithUniform(UniformConstants.Sampler2D.u_diffuseMTex, diffuseMTex);
+    shader.setWithUniform(UniformConstants.Sampler2D.u_normalRTex, normalRTex);
+    shader.setWithUniform(UniformConstants.Sampler2D.u_emissiveITex, emissiveITex);
     shader.set(UniformConstants.Mat4.u_cameraViewProInv, viewProjInv);
   }
 

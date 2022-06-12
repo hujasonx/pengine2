@@ -4,16 +4,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.gen.PModelGen;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
+import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.util.PCollectionUtils;
 import com.phonygames.pengine.util.PList;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.val;
 
 public class PMesh {
@@ -128,19 +127,9 @@ public class PMesh {
     this.autobind = autobind;
   }
 
-  public void glRenderInstanced(PShader shader,
-                                int numInstances,
-                                PFloat4Texture boneTransforms,
-                                int boneTransformLookupOffset,
-                                int bonesPerInstance) {
+  public void glRenderInstanced(PShader shader, int numInstances) {
     if (shader.checkValid()) {
       backingMesh.bind(shader.getShaderProgram());
-      if (bonesPerInstance > 0 && boneTransforms != null) {
-        boneTransforms.setUniforms(shader, "u_boneTransformsTex", boneTransformLookupOffset, 16 * bonesPerInstance);
-      } else {
-        shader.set("u_boneTransformsTexSize", 1, 1, 1, 1);
-      }
-
       if (numInstances > 0) {
         Gdx.gl30.glDrawElementsInstanced(GL20.GL_TRIANGLES,
                                          backingMesh.getNumIndices(),

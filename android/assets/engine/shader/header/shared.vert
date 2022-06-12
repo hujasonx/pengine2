@@ -9,7 +9,6 @@ in vec3 a_nor;
 out vec3 v_aNor;
 #endif
 
-
 #include <engine/shader/header/sharedvertarray>[0]
 #include <engine/shader/header/sharedvertarray>[1]
 #include <engine/shader/header/sharedvertarray>[2]

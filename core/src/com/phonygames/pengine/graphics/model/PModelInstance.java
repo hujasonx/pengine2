@@ -1,8 +1,10 @@
 package com.phonygames.pengine.graphics.model;
 
+import com.badlogic.gdx.math.Matrix4;
+import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
-import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
@@ -32,10 +34,6 @@ public class PModelInstance {
   private final PMat4 worldTransform = new PMat4();
 
   public PModelInstance(PModel model) {
-    this(model, null);
-  }
-
-  public PModelInstance(PModel model, PShaderProvider defaultShaderProvider) {
     this.model = model;
 
     PMap<PModel.Node, Node> childToParentNodeMap = new PMap<>();
@@ -49,7 +47,7 @@ public class PModelInstance {
       PModel.Node modelNode = modelNodesToProcess.removeLast();
 
       Node parent = childToParentNodeMap.get(modelNode);
-      Node node = new Node(this, modelNode, parent, defaultShaderProvider);
+      Node node = new Node(this, modelNode, parent);
       for (val glNode : node.glNodes) {
         glNodes.put(glNode.getId(), glNode);
       }
@@ -66,16 +64,9 @@ public class PModelInstance {
     }
   }
 
-  public void renderWithoutBones(PRenderContext renderContext) {
-    render(renderContext, null, 0, 1);
-  }
-
-  public void render(PRenderContext renderContext,
-                     PFloat4Texture boneTransforms,
-                     int boneTransformsLookupOffset,
-                     int bonesPerInstance) {
+  public void enqueue(PRenderContext renderContext, PShaderProvider shaderProvider, PList<PModelInstance> instances) {
     for (val node : rootNodes) {
-      node.renderRecursiveInstanced(renderContext, 0, boneTransforms, boneTransformsLookupOffset, bonesPerInstance);
+      node.enqueueRecursiveInstanced(renderContext, shaderProvider, instances);
     }
   }
 
@@ -108,20 +99,14 @@ public class PModelInstance {
     @Getter
     final PModelInstance owner;
 
-    @Getter
-    @Setter
-    PShaderProvider defaultShaderProvider;
-
-    private Node(PModelInstance owner, PModel.Node templateNode, Node parent, PShaderProvider defaultShaderProvider) {
+    private Node(PModelInstance owner, PModel.Node templateNode, Node parent) {
       this.owner = owner;
       this.templateNode = templateNode;
       this.parent = parent;
       this.transform.set(templateNode.transform);
       for (PGlNode node : templateNode.glNodes) {
-        PGlNode newNode = node.tryDeepCopy(owner);
-        this.defaultShaderProvider = defaultShaderProvider;
-        materials.put(newNode.material.getId(), newNode.material);
-
+        PGlNode newNode = new PGlNode(node);
+        materials.put(newNode.getDrawCall().getMaterial().getId(), newNode.getDrawCall().getMaterial());
         this.glNodes.add(newNode);
       }
       if (parent != null) {
@@ -134,27 +119,25 @@ public class PModelInstance {
     }
 
     // Renders recursively instanced, using the material of the caller.
-    public void renderRecursiveInstanced(PRenderContext renderContext,
-                                         int numInstances,
-                                         PFloat4Texture boneTransforms,
-                                         int boneTransformsLookupOffset,
-                                         int bonesPerInstance) {
+    public void enqueueRecursiveInstanced(PRenderContext renderContext,
+                                          PShaderProvider shaderProvider,
+                                          PList<PModelInstance> modelInstances) {
       for (val node : glNodes) {
-        renderContext.enqueue(renderContext.getPhaseHandlers(),
-                              defaultShaderProvider,
-                              node,
-                              numInstances,
-                              boneTransforms,
-                              boneTransformsLookupOffset,
-                              bonesPerInstance);
+        for (PModelInstance modelInstance : modelInstances) {
+          PAssert.isTrue(model == modelInstance.model, "Incompatible model type in instances list");
+          val instanceNode = modelInstance.glNodes.get(node.getId());
+          if (instanceNode.getDataBufferEmitter() != null) {
+            instanceNode.getDataBufferEmitter().emitDataBuffersInto(renderContext);
+          }
+
+          outputBonesToBuffers(renderContext);
+        }
+
+        renderContext.enqueue(shaderProvider, PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size()));
       }
 
       for (Node child : children) {
-        child.renderRecursiveInstanced(renderContext,
-                                       numInstances,
-                                       boneTransforms,
-                                       boneTransformsLookupOffset,
-                                       bonesPerInstance);
+        child.enqueueRecursiveInstanced(renderContext, shaderProvider, modelInstances);
       }
     }
 
@@ -175,5 +158,29 @@ public class PModelInstance {
         child.recalcNodeWorldTransformsRecursive(worldTransform);
       }
     }
+  }
+
+  // Returns the new vec4 count in the bone transform buffer.
+  private static final PMat4 tempMat4 = new PMat4();
+  private int outputBonesToBuffers(PRenderContext renderContext) {
+    PFloat4Texture tex = renderContext.genDataBuffer("boneTransforms");
+    for (val e : glNodes) {
+      String id = e.getKey();
+      PGlNode glNode = e.getValue();
+      if (glNode.getInvBoneTransforms() == null || glNode.getInvBoneTransforms().size == 0) {
+        continue;
+      }
+
+      renderContext.setVecsPerInstanceForDataBuffer("boneTransforms", glNode.getInvBoneTransforms().size);
+      for (val e2 : glNode.getInvBoneTransforms()) {
+        String boneId = e2.key;
+        PMat4 invBindTransform = e2.value;
+        tempMat4.set(getNodes().get(boneId).worldTransform);
+        tempMat4.mul(invBindTransform);
+        tex.addData(tempMat4);
+      }
+    }
+
+    return tex.vecsWritten();
   }
 }

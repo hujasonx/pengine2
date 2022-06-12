@@ -6,11 +6,8 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.g3d.utils.TextureBinder;
-import com.badlogic.gdx.utils.Pool;
-import com.phonygames.pengine.PEngine;
+import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.model.PGlNode;
-import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
@@ -20,7 +17,6 @@ import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
-import com.phonygames.pengine.util.PSet;
 
 import java.util.Collections;
 
@@ -30,6 +26,8 @@ import lombok.Setter;
 import lombok.val;
 
 public class PRenderContext {
+  private static final int DATA_BUFFER_CAPACITY = 512 * 512;
+
   public static class UniformConstants {
 
     public static class Vec2 {
@@ -58,17 +56,8 @@ public class PRenderContext {
     }
   }
 
-  private static Pool<DrawCall> drawCallPool = new Pool<DrawCall>() {
-    @Override
-    protected DrawCall newObject() {
-      return new DrawCall();
-    }
-  };
-  private static DrawCall DEFAULT_DRAWCALL = new DrawCall();
-
   @Getter
-  @Setter
-  private PhaseHandler[] phaseHandlers;
+  private ArrayMap<String, PhaseHandler> phaseHandlers = new ArrayMap<>();
 
   @Getter
   private static PRenderContext activeContext = null;
@@ -98,29 +87,18 @@ public class PRenderContext {
   @Getter
   private int width = 1, height = 1;
 
-  private static final PSet<PFloat4Texture> staticFloatTexs = new PSet<>();
-  public static PFloat4Texture getTemp(int capacity) {
-    PFloat4Texture tex = PFloat4Texture.getTemp(capacity);
-    staticFloatTexs.add(tex);
-    return tex;
-  }
+  private final ArrayMap<String, PFloat4Texture> dataBuffers = new ArrayMap<>();
+  private final ArrayMap<String, Integer> storedVecsPerInstance = new ArrayMap<>();
+  private final ArrayMap<String, Integer> storedBufferOffsets = new ArrayMap<>();
 
-  private static void freeTemps() {
-    for (val tex : staticFloatTexs) {
-      tex.freeTemp();
-    }
-
-    staticFloatTexs.clear();
-  }
-
-  private PMap<String, PMap<PShader, PList<DrawCall>>> enqueuedDrawCalls =
-      new PMap<String, PMap<PShader, PList<DrawCall>>>() {
+  private PMap<String, PMap<PShader, PList<PGlDrawCall>>> enqueuedDrawCalls =
+      new PMap<String, PMap<PShader, PList<PGlDrawCall>>>() {
         @Override
-        protected Object makeNew(String o) {
-          return new PMap<PShader, PList<DrawCall>>() {
+        protected Object makeNewVal(String o) {
+          return new PMap<PShader, PList<PGlDrawCall>>() {
             @Override
-            protected Object makeNew(PShader o) {
-              return new PList<DrawCall>();
+            protected Object makeNewVal(PShader o) {
+              return new PList<PGlDrawCall>();
             }
           };
         }
@@ -169,13 +147,13 @@ public class PRenderContext {
   }
 
   public void resetDefaults() {
-    DEFAULT_DRAWCALL.applyToContext(this);
+    PGlDrawCall.DEFAULT.prepRenderContext(this);
   }
 
   public void start() {
     PAssert.isNull(activeContext);
     activeContext = this;
-    DEFAULT_DRAWCALL.applyToContext(this);
+    resetDefaults();
     backingRenderContext.begin();
   }
 
@@ -188,23 +166,53 @@ public class PRenderContext {
     updatePerspectiveCamera();
   }
 
+  public PFloat4Texture genDataBuffer(String name) {
+    if (dataBuffers.containsKey(name)) {
+      return dataBuffers.get(name);
+    }
+
+    PFloat4Texture dataBuffer = PFloat4Texture.getTemp(DATA_BUFFER_CAPACITY);
+    dataBuffers.put(name, dataBuffer);
+    storedVecsPerInstance.put(name, 0);
+    storedBufferOffsets.put(name, 0);
+    return dataBuffer;
+  }
+
+  private void clear() {
+    for (val e : dataBuffers) {
+      e.value.freeTemp();
+    }
+    dataBuffers.clear();
+    storedVecsPerInstance.clear();
+    storedBufferOffsets.clear();
+
+    for (val e : enqueuedDrawCalls) {
+      e.getValue().clear();
+    }
+
+    enqueuedDrawCalls.clear();
+  }
+
+  private void snapshotBufferOffsets() {
+    for (val e : dataBuffers) {
+      storedBufferOffsets.put(e.key, e.value.vecsWritten());
+    }
+  }
+
   public void end() {
     PAssert.isTrue(isActive());
     backingRenderContext.end();
-    for (val e : enqueuedDrawCalls) {
-      clearQueueMap(enqueuedDrawCalls.get(e.getKey()));
-    }
-    freeTemps();
+    clear();
     activeContext = null;
   }
 
   public abstract static class PhaseHandler {
-    protected final String phase;
+    protected final String layer;
     @Getter
     protected final PRenderBuffer renderBuffer;
 
-    public PhaseHandler(String phase, PRenderBuffer renderBuffer) {
-      this.phase = phase;
+    public PhaseHandler(@NonNull String layer, PRenderBuffer renderBuffer) {
+      this.layer = layer;
       this.renderBuffer = renderBuffer;
     }
 
@@ -213,28 +221,26 @@ public class PRenderContext {
     public abstract void end();
   }
 
-  public void emit() {
-    if (phaseHandlers == null) {
-      return;
-    }
+  public void glRenderQueue() {
+    for (val e1 : phaseHandlers) {
+      String key = e1.key;
+      PhaseHandler phaseHandler = e1.value;
 
-    for (PhaseHandler phaseHandler : phaseHandlers) {
       if (phaseHandler.renderBuffer != null) {
         phaseHandler.renderBuffer.begin();
       }
       phaseHandler.begin();
-      val queueMap = enqueuedDrawCalls.get(phaseHandler.phase);
+      val queueMap = enqueuedDrawCalls.get(phaseHandler.layer);
 
       if (queueMap != null) {
         for (val e : queueMap) {
           val shader = e.getKey();
           shader.start(this);
-          ;
 
           val queue = queueMap.get(shader);
           Collections.sort(queue);
-          for (DrawCall drawCall : queue) {
-            drawCall.glRenderInstanced(this, shader);
+          for (PGlDrawCall drawCall : queue) {
+            drawCall.glDraw(this, shader, true);
           }
           shader.end();
         }
@@ -247,138 +253,70 @@ public class PRenderContext {
     }
   }
 
-  private void clearQueueMap(PMap<PShader, PList<DrawCall>> queueMap) {
-    for (val e : queueMap) {
-      val queue = queueMap.get(e.getKey());
-      for (DrawCall drawCall : queue) {
-        drawCallPool.free(drawCall);
-      }
-      queue.clear();
+  public int vecsWrittenToDataBuffer(String name) {
+    return dataBuffers.get(name).vecsWritten();
+  }
+
+  public int storeDataBufferOffset(String name) {
+    return storedBufferOffsets.get(name);
+  }
+
+  public PRenderContext setVecsPerInstanceForDataBuffer(String name, int vecs) {
+    storedVecsPerInstance.put(name, vecs);
+    return this;
+  }
+
+  public void enqueue(@NonNull PShader shader,
+                      @NonNull String layer,
+                      @NonNull PGlDrawCall drawCall) {
+    enqueuedDrawCalls.gen(layer).gen(shader)
+        .add(drawCall.setDataBufferInfo(storedVecsPerInstance, storedBufferOffsets));
+    snapshotBufferOffsets();
+  }
+
+  public PRenderContext clearPhaseHandlers() {
+    phaseHandlers.clear();
+    return this;
+  }
+
+  public PRenderContext setPhaseHandlers(PhaseHandler[] phaseHandlers) {
+    clearPhaseHandlers();
+    for (val p : phaseHandlers) {
+      this.phaseHandlers.put(p.layer, p);
     }
+    return this;
   }
 
-  public void enqueue(PShader shader,
-                      String layer,
-                      PGlNode node,
-                      int numInstances,
-                      PFloat4Texture boneTransforms,
-                      int boneTransformsLookupOffset,
-                      int bonesPerInstance) {
-    enqueuedDrawCalls.getOrMake(layer).getOrMake(shader).add(drawCallPool.obtain().set(node,
-                                                                                       numInstances,
-                                                                                       boneTransforms,
-                                                                                       boneTransformsLookupOffset,
-                                                                                       bonesPerInstance));
-  }
-
-  public void enqueueWithoutBones(PRenderContext.PhaseHandler[] phaseHandlers,
-                                  PShaderProvider shaderProvider,
-                                  PGlNode node) {
-    enqueue(phaseHandlers, shaderProvider, node, 0, null, 0, 0);
-  }
-
-  public void enqueue(PRenderContext.PhaseHandler[] phaseHandlers,
-                      PShaderProvider shaderProvider,
-                      PGlNode node,
-                      int numInstances,
-                      PFloat4Texture boneTransforms,
-                      int boneTransformsLookupOffset,
-                      int bonesPerInstance) {
-    PAssert.isTrue(PRenderContext.getActiveContext() != null);
-
-    if (node.getDefaultShader() == null) {
-      for (int a = 0; a < phaseHandlers.length; a++) {
-        if (node.getMaterial().getLayer().equals(phaseHandlers[a].phase)) {
-          node.setDefaultShader(shaderProvider.provide(phaseHandlers[a].getRenderBuffer().getFragmentLayout(), node));
+  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall) {
+    // First, try to generate the shader.
+    if (drawCall.getShader() == null && drawCall.getMesh() != null) {
+      if (phaseHandlers.size == 0) {
+        PAssert.fail("No shader was set, yet there were no phases for the MapShaderProvider to create a shader with");
+      } else {
+        for (val e : phaseHandlers) {
+          val layer = e.key;
+          val phaseHandler = e.value;
+          if (drawCall.getLayer().equals(layer) && drawCall.getMesh().getVertexAttributes() != null) {
+            drawCall.setShader(shaderProvider.provide(phaseHandler.getRenderBuffer().getFragmentLayout(),
+                                                      layer,
+                                                      drawCall.getMesh().getVertexAttributes(),
+                                                      drawCall.getMaterial()));
+          }
         }
       }
     }
 
-    PShader defaultShader = node.getDefaultShader();
-
-    if (defaultShader != null) {
-      enqueue(defaultShader,
-              node.getMaterial().getLayer(),
-              node,
-              numInstances,
-              boneTransforms,
-              boneTransformsLookupOffset,
-              bonesPerInstance);
+    // Next, enqueue the draw call if it has a shader.
+    if (drawCall.getShader() != null) {
+      enqueue(drawCall.getShader(), drawCall.getLayer(), drawCall);
+      return true;
     }
+
+    return false;
   }
 
   public boolean isActive() {
     return activeContext == this;
-  }
-
-  public static class DrawCall implements Pool.Poolable, Comparable<DrawCall> {
-    PGlNode glNode;
-    final PVec3 worldLoc = new PVec3();
-    float distToCamera;
-    int dstFactor, srcFactor, dptTest, cullFace;
-    boolean enableBlend, depthTest, depthMask;
-    int numInstances;
-    PFloat4Texture boneTransforms;
-    int boneTransformLookupOffset;
-    int bonesPerInstance;
-
-    private void applyToContext(PRenderContext renderContext) {
-      renderContext.setBlending(enableBlend, srcFactor, dstFactor);
-      renderContext.setDepthTest(dptTest);
-      renderContext.setDepthMask(depthMask);
-      renderContext.setCullFace(cullFace);
-    }
-
-    private void glRenderInstanced(PRenderContext renderContext, PShader shader) {
-      applyToContext(renderContext);
-      glNode.glRenderInstanced(shader, numInstances, boneTransforms, boneTransformLookupOffset, bonesPerInstance);
-    }
-
-    DrawCall set(PGlNode node,
-                 int numInstances,
-                 PFloat4Texture boneTransforms,
-                 int boneTransformLookupOffset,
-                 int bonesPerInstance) {
-      this.glNode = node;
-      this.numInstances = numInstances;
-      this.boneTransforms = boneTransforms;
-      this.boneTransformLookupOffset = boneTransformLookupOffset;
-      this.bonesPerInstance = bonesPerInstance;
-      return this;
-    }
-
-    DrawCall() {
-      reset();
-    }
-
-    @Override
-    public void reset() {
-      glNode = null;
-      worldLoc.reset();
-      distToCamera = -1;
-      enableBlend = false;
-      depthTest = true;
-      depthMask = true;
-      srcFactor = GL20.GL_SRC_ALPHA;
-      dstFactor = GL20.GL_ONE_MINUS_SRC_ALPHA;
-      dptTest = GL20.GL_LESS;
-      cullFace = GL20.GL_BACK;
-      numInstances = 0;
-      boneTransformLookupOffset = 0;
-      bonesPerInstance = 0;
-      boneTransforms = null;
-    }
-
-    @Override
-    public int compareTo(DrawCall other) {
-      if (distToCamera < other.distToCamera) {
-        return 1;
-      }
-      if (distToCamera > other.distToCamera) {
-        return -1;
-      }
-      return 0;
-    }
   }
 
   public PRenderContext setCullFaceFront() {
@@ -441,4 +379,7 @@ public class PRenderContext {
     return backingRenderContext.textureBinder;
   }
 
+  public interface DataBufferEmitter {
+    void emitDataBuffersInto(PRenderContext renderContext);
+  }
 }

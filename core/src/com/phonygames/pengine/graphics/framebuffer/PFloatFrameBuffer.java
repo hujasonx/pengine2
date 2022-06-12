@@ -47,8 +47,7 @@ public class PFloatFrameBuffer extends PFrameBuffer {
   public Texture createTexture(FrameBufferTextureAttachmentSpec attachmentSpec) {
     FloatTextureData data = new FloatTextureData(
         bufferBuilder.width, bufferBuilder.height,
-        attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.type,
-        attachmentSpec.isGpuOnly
+        attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.type, false
     );
     Texture result = new Texture(data);
     if (Gdx.app.getType() == ApplicationType.Desktop || Gdx.app.getType() == ApplicationType.Applet) { result.setFilter(TextureFilter.Linear, TextureFilter.Linear); } else

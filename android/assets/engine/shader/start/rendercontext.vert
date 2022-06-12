@@ -1,6 +1,8 @@
+#ifdef a_bon0Flag
+vec3 worldPos = skinnedLocalPos4.xyz;
+#else
 vec3 worldPos = (u_worldTransform * skinnedLocalPos4).xyz;
-
-
+#endif
 #ifdef a_norFlag
 vec3 worldNor = normalize((u_worldTransformInvTra * vec4(skinnedLocalNor, 0.0)).xyz);
 #else

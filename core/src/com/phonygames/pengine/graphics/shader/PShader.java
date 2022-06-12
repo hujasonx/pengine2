@@ -34,6 +34,7 @@ import com.phonygames.pengine.util.PStringUtils;
 import java.util.HashMap;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
 
@@ -57,15 +58,20 @@ public class PShader implements Disposable {
 
   private String toStringResult;
 
-  private static final PFileHandleUtils.RecursiveLoadProcessor RECURSIVE_LOAD_PROCESSOR = new PFileHandleUtils.RecursiveLoadProcessor() {
-    @Override
-    public String processLine(int totalLineNo, int rawLineNo, String prefix, String rawLine, FileHandle rawFile) {
-      String shaderPrefix = PSHADER_COMMENT_START + rawFile.path() + ":" + rawLineNo + PSHADER_COMMENT_END;
-      return shaderPrefix + prefix + rawLine;
-    }
-  };
+  private static final PFileHandleUtils.RecursiveLoadProcessor RECURSIVE_LOAD_PROCESSOR =
+      new PFileHandleUtils.RecursiveLoadProcessor() {
+        @Override
+        public String processLine(int totalLineNo, int rawLineNo, String prefix, String rawLine, FileHandle rawFile) {
+          String shaderPrefix = PSHADER_COMMENT_START + rawFile.path() + ":" + rawLineNo + PSHADER_COMMENT_END;
+          return shaderPrefix + prefix + rawLine;
+        }
+      };
 
-  public PShader(String prefix, String fragmentLayout, PVertexAttributes vertexAttributes, FileHandle vert, FileHandle frag) {
+  public PShader(@NonNull String prefix,
+                 @NonNull String fragmentLayout,
+                 @NonNull PVertexAttributes vertexAttributes,
+                 FileHandle vert,
+                 FileHandle frag) {
     staticShaders.add(this);
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     this.fragmentLayout = fragmentLayout;
@@ -77,7 +83,8 @@ public class PShader implements Disposable {
 
   public void reloadFromSources() {
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
-    StringBuilder fragmentStringBuilder = new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
+    StringBuilder fragmentStringBuilder =
+        new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
 
     vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR));
     fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR));
@@ -89,59 +96,73 @@ public class PShader implements Disposable {
       shaderProgram.dispose();
     }
     shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
-    toStringResult = getCompileFailureString();
-    if (!shaderProgram.isCompiled()) {
-      PLog.w(getCompileFailureString());
-    } else {
-      PLog.i(getCompileFailureString());
+
+    // Print the shader logs output if the shader was changed.
+    String newStringResult = getCompileFailureString();
+    if (!newStringResult.equals(toStringResult)) {
+      if (!shaderProgram.isCompiled()) {
+        PLog.w(getCompileFailureString());
+      } else {
+        PLog.i(getCompileFailureString());
+      }
     }
+    toStringResult = newStringResult;
   }
 
   private String getCompileFailureString() {
     try {
       StringBuilder stringBuilder = new StringBuilder();
-      stringBuilder.append("[PShader compile error]\n\n");
-      stringBuilder.append("V: \n");
+      stringBuilder.append("[PShader]\n\n");
+      stringBuilder.append("V: ");
       stringBuilder.append(vsSourceFH.path()).append("\n");
       printSource(stringBuilder, PStringUtils.splitByLine(vertexShaderSource));
-      stringBuilder.append("F: \n");
+      stringBuilder.append("F: ");
       stringBuilder.append(fsSourceFH.path()).append("\n");
       printSource(stringBuilder, PStringUtils.splitByLine(fragmentShaderSource));
 
-      stringBuilder.append("\nErrors:\n");
+      if (shaderProgram.isCompiled()) {
+        stringBuilder.append("\nNo errors!\n");
+      } else {
+        stringBuilder.append("\nErrors:\n");
 
+        String[] logLines = PStringUtils.splitByLine(shaderProgram.getLog());
 
-      String[] logLines = PStringUtils.splitByLine(shaderProgram.getLog());
+        int phase = 0;
+        String[] rawShaderLines = null;
+        int previousOffendingLineNo = -1;
+        for (int a = 0; a < logLines.length; a++) {
+          String logLine = logLines[a];
+          if (logLine.startsWith("Vertex shader")) {
+            phase = 1;
+            rawShaderLines = PStringUtils.splitByLine(vertexShaderSource);
+          } else if (logLine.startsWith("Fragment shader:")) {
+            phase = 2;
+            rawShaderLines = PStringUtils.splitByLine(fragmentShaderSource);
+          } else {
 
-      int phase = 0;
-      String[] rawShaderLines = null;
-      int previousOffendingLineNo = -1;
-      for (int a = 0; a < logLines.length; a++) {
-        String logLine = logLines[a];
-        if (logLine.startsWith("Vertex shader")) {
-          phase = 1;
-          rawShaderLines = PStringUtils.splitByLine(vertexShaderSource);
-        } else if (logLine.startsWith("Fragment shader:")) {
-          phase = 2;
-          rawShaderLines = PStringUtils.splitByLine(fragmentShaderSource);
-        } else {
+            if (phase == 1 || phase == 2) {
+              int offendingLineNo = Integer.parseInt(PStringUtils.extract(logLine, "(", ")")) - 1;
+              String errorString = logLine.substring(PStringUtils.indexAfter(logLine, " : "));
+              String offendingLine = rawShaderLines[offendingLineNo];
 
-          if (phase == 1 || phase == 2) {
-            int offendingLineNo = Integer.parseInt(PStringUtils.extract(logLine, "(", ")")) - 1;
-            String errorString = logLine.substring(PStringUtils.indexAfter(logLine, " : "));
-            String offendingLine = rawShaderLines[offendingLineNo];
+              String[] fileNameAndLine =
+                  PStringUtils.extract(offendingLine, PSHADER_COMMENT_START, PSHADER_COMMENT_END).split(":");
 
-            String[] fileNameAndLine = PStringUtils.extract(offendingLine, PSHADER_COMMENT_START, PSHADER_COMMENT_END).split(":");
+              if (previousOffendingLineNo != offendingLineNo) {
+                // Print the shader source around the error.
+                int linesToShowBeforeAndAfter = 2;
+                stringBuilder.append(phase == 2 ? "\nF: " : "\nV: ").append(fileNameAndLine[0]).append("\n");
+                printSource(stringBuilder,
+                            rawShaderLines,
+                            offendingLineNo - linesToShowBeforeAndAfter,
+                            offendingLineNo + linesToShowBeforeAndAfter,
+                            offendingLineNo);
+              }
+              stringBuilder.append("[").append(PStringUtils.prependSpacesToLength(offendingLineNo + "", 4)).append("] ")
+                  .append(errorString).append("\n");
 
-            if (previousOffendingLineNo != offendingLineNo) {
-              // Print the shader source around the error.
-              int linesToShowBeforeAndAfter = 2;
-              stringBuilder.append(phase == 2 ? "\nF: " : "\nV: ").append(fileNameAndLine[0]).append("\n");
-              printSource(stringBuilder, rawShaderLines, offendingLineNo - linesToShowBeforeAndAfter, offendingLineNo + linesToShowBeforeAndAfter, offendingLineNo);
+              previousOffendingLineNo = offendingLineNo;
             }
-            stringBuilder.append("[").append(PStringUtils.prependSpacesToLength(offendingLineNo + "", 4)).append("] ").append(errorString).append("\n");
-
-            previousOffendingLineNo = offendingLineNo;
           }
         }
       }
@@ -166,7 +187,11 @@ public class PShader implements Disposable {
    * @param lineEnd
    * @param lineToFlag    if -1, then the actual, post-processed line numbers will be used.
    */
-  private static void printSource(StringBuilder stringBuilder, String[] rawLines, int lineStart, int lineEnd, int lineToFlag) {
+  private static void printSource(StringBuilder stringBuilder,
+                                  String[] rawLines,
+                                  int lineStart,
+                                  int lineEnd,
+                                  int lineToFlag) {
     for (int lineNo = lineStart; lineNo <= lineEnd; lineNo++) {
       if (lineNo < 0 || lineNo >= rawLines.length) {
         continue;
@@ -215,8 +240,11 @@ public class PShader implements Disposable {
     activeShader = this;
     shaderProgram.bind();
     set(PRenderContext.UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
-    set(PRenderContext.UniformConstants.Vec4.u_renderBufferSize, PRenderBuffer.getActiveBuffer().width(), PRenderBuffer.getActiveBuffer().height(),
-        1f / PRenderBuffer.getActiveBuffer().width(), 1f / PRenderBuffer.getActiveBuffer().height());
+    set(PRenderContext.UniformConstants.Vec4.u_renderBufferSize,
+        PRenderBuffer.getActiveBuffer().width(),
+        PRenderBuffer.getActiveBuffer().height(),
+        1f / PRenderBuffer.getActiveBuffer().width(),
+        1f / PRenderBuffer.getActiveBuffer().height());
     set(PRenderContext.UniformConstants.Mat4.u_viewProjTransform, renderContext.getViewProjTransform());
     set(PRenderContext.UniformConstants.Mat4.u_viewProjTransformInvTra, renderContext.getViewProjInvTraTransform());
     set(PRenderContext.UniformConstants.Vec3.u_cameraPos, renderContext.getCameraPos());
@@ -275,17 +303,17 @@ public class PShader implements Disposable {
     return this;
   }
 
-  public PShader set(String uniform, Texture texture) {
+  public PShader setWithUniform(String uniform, Texture texture) {
     if (!checkValid()) {
       return this;
     }
     PAssert.isTrue(isActive());
     try {
-      shaderProgram.setUniformi(uniform, PRenderContext.getActiveContext().getTextureBinder().bind(texture));
+      int t = PRenderContext.getActiveContext().getTextureBinder().bind(texture);
+      shaderProgram.setUniformi(uniform, t);
     } catch (IllegalArgumentException e) {
 //      PLog.w("Illegal argument: " + uniform, e);
     }
-
     set(uniform + "Size", texture.getWidth(), texture.getHeight(), 1f / texture.getWidth(), 1f / texture.getHeight());
     return this;
   }
