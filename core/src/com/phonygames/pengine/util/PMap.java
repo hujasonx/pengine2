@@ -8,6 +8,7 @@ import com.phonygames.pengine.logging.PLog;
 
 import java.util.Iterator;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 
@@ -75,7 +76,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
     return it;
   }
 
-  private static abstract class MapInterface<K, V> implements Iterable {
+  protected static abstract class MapInterface<K, V> implements Iterable {
 
     abstract V get(K k);
 
@@ -166,12 +167,23 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
   }
 
 
-  private MapInterface<K, V> mapInterface;
-  private PPool<V> genedValuesFree;
-  private PList<V> genedValuesUsed;
+  private final MapInterface<K, V> mapInterface;
+  @Getter(lazy = true)
+  private final PPool<V> genedValuesPool = new PPool<V>() {
+    @Override
+    protected V newObject() {
+      return newPooled();
+    }
+  };
+  @Getter(lazy = true)
+  private final PList<V> genedValuesUsed = new PList<>();
 
   public PMap() {
     mapInterface = new ArrayMapInterface<>();
+  }
+
+  public PMap(MapInterface<K, V> mapInterface) {
+    this.mapInterface = mapInterface;
   }
 
   @Override
@@ -202,7 +214,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
    * @return if the value is pooled by this map
    */
   public final boolean owns(V v) {
-    return genedValuesUsed != null && genedValuesUsed.contains(v, true);
+    return getGenedValuesUsed() != null && getGenedValuesUsed().contains(v, true);
   }
 
   /**
@@ -215,25 +227,10 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
       return v;
     }
 
-    // Generate a free object using the pool.
-    if (genedValuesFree == null) {
-      genedValuesFree = new PPool<V>() {
-        @Override
-        protected V newObject() {
-          return newPooled();
-        }
-      };
-    }
-
-    v = genedValuesFree.obtain();
+    v = getGenedValuesPool().obtain();
+    getGenedValuesUsed().add(v);
     mapInterface.put(k, v);
 
-    // The generated object should be pooled.
-    if (genedValuesUsed == null) {
-      genedValuesUsed = new PList<>();
-    }
-
-    genedValuesUsed.add(v);
     return v;
   }
 
@@ -258,10 +255,10 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
 
   private final void freeIfManaged(@NonNull V v) {
     if (genedValuesUsed != null) {
-      int indexOfV = genedValuesUsed.indexOf(v, true);
+      int indexOfV = getGenedValuesUsed().indexOf(v, true);
       if (indexOfV != -1) {
-        genedValuesFree.free(v);
-        genedValuesUsed.removeIndex(indexOfV);
+        getGenedValuesPool().free(v);
+        getGenedValuesUsed().removeIndex(indexOfV);
       }
     }
   }
@@ -323,11 +320,11 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
   }
 
   public void clear() {
-    if (genedValuesUsed != null) {
-      PAssert.isTrue(genedValuesUsed.size == mapInterface.size(),
+    if (getGenedValuesUsed().size > 0) {
+      PAssert.isTrue(getGenedValuesUsed().size == mapInterface.size(),
                      "Don't call clear() on a map with mixed pooled / unpooled objects!");
-      genedValuesFree.freeAll(genedValuesUsed);
-      genedValuesUsed.clear();
+      getGenedValuesPool().freeAll(getGenedValuesUsed());
+      getGenedValuesUsed().clear();
     }
 
     mapInterface.clear();
@@ -345,8 +342,10 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
     }
   }
 
-  private PList<K> keysToKeep;
-  private PList<V> valuesToKeep;
+  @Getter(lazy = true)
+  private final PList<K> keysToKeep = new PList<>();
+  @Getter(lazy = true)
+  private final PList<V> valuesToKeep = new PList<>();
 
   /**
    * Clears the contents of the map. If removeMaps is set, then maps will be removed too
@@ -356,23 +355,20 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
    */
   public final void clearRecursive(boolean removeMapsIfUnpooled) {
     // Iterate through children, and keep maps if they should be kept.
+    int numKeysToKeep = 0;
     for (val e : this) {
       if (e.v() instanceof PMap) {
         val map = (PMap) e.v();
         map.clearRecursive(removeMapsIfUnpooled);
         if (!removeMapsIfUnpooled) {
 
-          if (genedValuesUsed != null && genedValuesUsed.contains(e.v(), true)) {
+          if (getGenedValuesUsed().contains(e.v(), true)) {
             // Pooled, so clear anyways.
           } else {
             // Unpooled.
-            if (keysToKeep == null) {
-              keysToKeep = new PList<>();
-              valuesToKeep = new PList<>();
-            }
-
-            keysToKeep.add(e.k());
-            valuesToKeep.add(e.v());
+            getKeysToKeep().add(e.k());
+            getValuesToKeep().add(e.v());
+            numKeysToKeep++;
           }
         } else {
           PLog.w("Removing maps may cause allocs");
@@ -382,25 +378,23 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
 
     // Clear the map, and re-add things to keep.
     mapInterface.clear();
-    if (keysToKeep != null) {
-      for (int a = 0; a < keysToKeep.size; a++) {
-        mapInterface.put(keysToKeep.get(a), valuesToKeep.get(a));
+    if (numKeysToKeep > 0) {
+      for (int a = 0; a < getKeysToKeep().size; a++) {
+        mapInterface.put(getKeysToKeep().get(a), getValuesToKeep().get(a));
 
         // Pooled objects should still be tracked as pooled.
-        if (genedValuesUsed != null) {
-          genedValuesUsed.removeValue(valuesToKeep.get(a), true);
+        if (getGenedValuesUsed() != null) {
+          getGenedValuesUsed().removeValue(getValuesToKeep().get(a), true);
         }
       }
 
 
-      keysToKeep.clear();
-      valuesToKeep.clear();
+      getKeysToKeep().clear();
+      getValuesToKeep().clear();
     }
 
-    if (genedValuesFree != null) {
-      genedValuesFree.freeAll(genedValuesUsed);
-      genedValuesUsed.clear();
-    }
+    getGenedValuesPool().freeAll(getGenedValuesUsed());
+    getGenedValuesUsed().clear();
   }
 
   @Override
