@@ -25,10 +25,16 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
 
   public static PFloat4Texture getWHITE_PIXEL() {
     if (WHITE_PIXEL == null) {
-      WHITE_PIXEL = PFloat4Texture.get(1, true).addData(1, 1, 1, 1).lock();
+      WHITE_PIXEL = genWHITE_PIXEL();
     }
 
     return WHITE_PIXEL;
+  }
+
+  public static PFloat4Texture genWHITE_PIXEL() {
+    PFloat4Texture f = PFloat4Texture.get(1, true).addData(1, 1, 1, 1).lock();
+    f.load();
+    return f;
   }
 
   private static PMap<Integer, Pool<PFloat4Texture>> staticTexturePools = new PMap<Integer, Pool<PFloat4Texture>>() {
@@ -49,6 +55,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
   }
 
   public void freeTemp() {
+    PAssert.isFalse(this == getWHITE_PIXEL());
     staticTexturePools.gen(vec4Capacity).free(this);
   }
 

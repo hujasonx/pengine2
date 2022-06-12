@@ -9,7 +9,7 @@ void main() {
     #include <engine/shader/start/rendercontext.frag>
     #include <engine/shader/start/pbr.frag>
 
-    diffuseM = boneTransformsTex(vec2(0.0));
+    //    diffuseM = boneTransformsVec4(2);
 
     #ifdef a_bon0Flag
     //    int indexToLook = int(mod(u_tdtuituidt.x * 12.0, 64.0)) + 2;
@@ -19,6 +19,7 @@ void main() {
 
     //    diffuseM.rgb = diffuseTex(v_uv0);
     #endif
+
 
     #include <engine/shader/end/pbr.frag>
     #include <engine/shader/end/rendercontext.frag>

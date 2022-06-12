@@ -3,10 +3,16 @@ uniform vec4 u_renderBufferSize;
 
 in vec3 a_pos;
 out vec3 v_aPos;
+#ifdef a_bon0Flag
+out vec3 v_skinnedPos;
+#endif
 
 #ifdef a_norFlag
 in vec3 a_nor;
 out vec3 v_aNor;
+#ifdef a_bon0Flag
+out vec3 v_skinnedNor;
+#endif
 #endif
 
 #include <engine/shader/header/sharedvertarray>[0]

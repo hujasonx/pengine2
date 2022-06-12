@@ -126,6 +126,10 @@ public class PRenderContext {
     return this;
   }
 
+  public PRenderBuffer getBuffer() {
+    return PRenderBuffer.getActiveBuffer();
+  }
+
   public PRenderContext setFromBackingCamera(PerspectiveCamera camera) {
     return setFromBackingCamera(camera, false);
   }

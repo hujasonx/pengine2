@@ -7,19 +7,16 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
-import com.phonygames.pengine.graphics.shader.PShaderProvider;
-import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PCopyable;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.val;
 
 public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCopyable<PGlDrawCall> {
   @Getter
-  private final boolean isTemplate;
+  private final boolean renderingDisabled;
   public static final PGlDrawCall DEFAULT = new PGlDrawCall(true);
 
   private static Pool<PGlDrawCall> staticPool = new Pool<PGlDrawCall>() {
@@ -58,10 +55,10 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
     return drawCall;
   }
 
-  private PGlDrawCall(boolean isTemplate) {
+  private PGlDrawCall(boolean renderingDisabled) {
     reset();
-    this.isTemplate = isTemplate;
-    if (isTemplate) {
+    this.renderingDisabled = renderingDisabled;
+    if (renderingDisabled) {
       dataBufferLookupVecsPerInstance = null;
       dataBufferLookupOffsets = null;
     } else {
@@ -155,7 +152,7 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
 
   @Override
   public void reset() {
-    PAssert.isFalse(isTemplate, "Cannot reset() a template PGlDrawCall");
+    PAssert.isFalse(renderingDisabled, "Cannot reset() a renderingDisabled PGlDrawCall");
     if (dataBufferLookupVecsPerInstance != null) {
       dataBufferLookupVecsPerInstance.clear();
     }
@@ -188,7 +185,7 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
   }
 
   public void glDraw(@NonNull PRenderContext renderContext, @NonNull PShader shader, boolean freeAfterwards) {
-    PAssert.isFalse(isTemplate, "Cannot glDraw() a template PGlDrawCall");
+    PAssert.isFalse(renderingDisabled, "Cannot glDraw() a renderingDisabled PGlDrawCall");
     prepRenderContext(renderContext);
     if (shader.checkValid() && mesh != null) {
       for (val e : dataBufferLookupOffsets) {
@@ -208,7 +205,7 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
   }
 
   public void freeTemp() {
-    PAssert.isFalse(isTemplate, "Cannot freeTemp() a template PGlDrawCall");
+    PAssert.isFalse(renderingDisabled, "Cannot freeTemp() a renderingDisabled PGlDrawCall");
     staticPool.free(this);
   }
 
@@ -219,7 +216,7 @@ public class PGlDrawCall implements Pool.Poolable, Comparable<PGlDrawCall>, PCop
 
   public PGlDrawCall setDataBufferInfo(ArrayMap<String, Integer> dataBufferLookupVecsPerInstance,
                                        ArrayMap<String, Integer> dataBufferLookupOffsets) {
-    PAssert.isFalse(isTemplate, "Cannot setDataBufferInfo() a template PGlDrawCall");
+    PAssert.isFalse(renderingDisabled, "Cannot setDataBufferInfo() a renderingDisabled PGlDrawCall");
     this.dataBufferLookupVecsPerInstance.clear();
     this.dataBufferLookupVecsPerInstance.putAll(dataBufferLookupVecsPerInstance);
     this.dataBufferLookupOffsets.clear();

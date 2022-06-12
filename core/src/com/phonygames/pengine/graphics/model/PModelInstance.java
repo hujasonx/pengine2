@@ -12,6 +12,7 @@ import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
 
@@ -21,9 +22,7 @@ public class PModelInstance {
   @Getter
   private final PModel model;
 
-  @Getter
   private final PMap<String, Node> nodes = new PMap<>();
-  @Getter
   private final PMap<String, PGlNode> glNodes = new PMap<>();
   private final PList<Node> rootNodes = new PList<>();
 
@@ -64,6 +63,10 @@ public class PModelInstance {
     }
   }
 
+  public Node getNode(@NonNull String id) {
+    return nodes.get(id);
+  }
+
   public void enqueue(PRenderContext renderContext, PShaderProvider shaderProvider, PList<PModelInstance> instances) {
     for (val node : rootNodes) {
       node.enqueueRecursiveInstanced(renderContext, shaderProvider, instances);
@@ -77,7 +80,7 @@ public class PModelInstance {
 
   }
 
-  protected class Node {
+  public class Node {
     @Getter
     final PModel.Node templateNode;
     @Getter
@@ -88,7 +91,6 @@ public class PModelInstance {
     final PList<Node> children = new PList<>();
     final PList<PGlNode> glNodes = new PList<>();
     @Getter
-    @Setter
     boolean inheritTransform = true, enabled = true;
 
     @Getter
@@ -114,6 +116,16 @@ public class PModelInstance {
       }
     }
 
+    public Node setInheritTransform(boolean inheritTransform) {
+      this.inheritTransform = inheritTransform;
+      return this;
+    }
+
+    public Node setEnabled(boolean enabled) {
+      this.enabled = enabled;
+      return this;
+    }
+
     public String getId() {
       return templateNode.id;
     }
@@ -133,7 +145,8 @@ public class PModelInstance {
           outputBonesToBuffers(renderContext);
         }
 
-        renderContext.enqueue(shaderProvider, PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size()));
+        renderContext
+            .enqueue(shaderProvider, PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size()));
       }
 
       for (Node child : children) {
@@ -162,6 +175,7 @@ public class PModelInstance {
 
   // Returns the new vec4 count in the bone transform buffer.
   private static final PMat4 tempMat4 = new PMat4();
+
   private int outputBonesToBuffers(PRenderContext renderContext) {
     PFloat4Texture tex = renderContext.genDataBuffer("boneTransforms");
     for (val e : glNodes) {
@@ -175,7 +189,7 @@ public class PModelInstance {
       for (val e2 : glNode.getInvBoneTransforms()) {
         String boneId = e2.key;
         PMat4 invBindTransform = e2.value;
-        tempMat4.set(getNodes().get(boneId).worldTransform);
+        tempMat4.set(nodes.get(boneId).worldTransform);
         tempMat4.mul(invBindTransform);
         tex.addData(tempMat4);
       }

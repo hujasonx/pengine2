@@ -34,8 +34,8 @@ public class PTexture {
   private Texture backingTexture;
 
   public Texture getBackingTexture() {
-    return WHITE_PIXEL.backingTexture;
-//    return backingTexture == null ? getWHITE_PIXEL() : backingTexture;
+    return PFloat4Texture.getWHITE_PIXEL();
+//    return backingTexture == null ? PFloat4Texture.getWHITE_PIXEL() : backingTexture;
   }
 
   public boolean has() {
