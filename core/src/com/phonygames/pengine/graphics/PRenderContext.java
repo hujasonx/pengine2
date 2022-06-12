@@ -259,8 +259,8 @@ public class PRenderContext {
     return storedBufferOffsets.get(name);
   }
 
-  public PRenderContext setVecsPerInstanceForDataBuffer(String name, int vecs) {
-    storedVecsPerInstance.put(name, vecs);
+  public PRenderContext setVecsPerInstanceForDataBuffer(String name, int vecsPerInstance) {
+    storedVecsPerInstance.put(name, vecsPerInstance);
     return this;
   }
 

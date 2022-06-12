@@ -38,7 +38,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
 
-public class PShader implements Disposable {
+public class PShader implements Disposable, Comparable<PShader> {
   private static final PSet<PShader> staticShaders = new PSet<>();
   private final String prefix;
   private final String fragmentLayout;
@@ -57,6 +57,36 @@ public class PShader implements Disposable {
   private static final String PSHADER_COMMENT_END = " */ ";
 
   private String toStringResult;
+  private String combinedStaticStringResult;
+
+  private String combinedStaticString() {
+    String newResult = (prefix + fragmentLayout + vsSourceFH.path() + fsSourceFH.path());
+    if (combinedStaticStringResult == null) {
+      combinedStaticStringResult = newResult;
+    }
+
+    PAssert.isTrue(newResult.equals(combinedStaticStringResult),
+                   "OLD:\n" + combinedStaticStringResult + "\nNEW:\n" + newResult);
+    return newResult;
+  }
+
+  @Override
+  public int hashCode() {
+    return combinedStaticString().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof PShader)) {
+      return false;
+    }
+    return combinedStaticString().equals(((PShader) o).combinedStaticString());
+  }
+
+  @Override
+  public int compareTo(PShader shader) {
+    return combinedStaticString().hashCode() - shader.combinedStaticString().hashCode();
+  }
 
   private static final PFileHandleUtils.RecursiveLoadProcessor RECURSIVE_LOAD_PROCESSOR =
       new PFileHandleUtils.RecursiveLoadProcessor() {
@@ -72,11 +102,11 @@ public class PShader implements Disposable {
                  @NonNull PVertexAttributes vertexAttributes,
                  FileHandle vert,
                  FileHandle frag) {
-    staticShaders.add(this);
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     this.fragmentLayout = fragmentLayout;
     vsSourceFH = vert;
     fsSourceFH = frag;
+    staticShaders.add(this);
 
     reloadFromSources();
   }

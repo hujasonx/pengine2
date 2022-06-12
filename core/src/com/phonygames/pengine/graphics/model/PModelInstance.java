@@ -185,7 +185,7 @@ public class PModelInstance {
         continue;
       }
 
-      renderContext.setVecsPerInstanceForDataBuffer("boneTransforms", glNode.getInvBoneTransforms().size);
+      renderContext.setVecsPerInstanceForDataBuffer("boneTransforms", glNode.getInvBoneTransforms().size * 4);
       for (val e2 : glNode.getInvBoneTransforms()) {
         String boneId = e2.key;
         PMat4 invBindTransform = e2.value;

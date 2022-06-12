@@ -1,6 +1,7 @@
 package com.phonygames.pengine.util;
 
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.math.PNumberUtils;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -320,7 +321,7 @@ public class PSet<E> implements Set<E> {
     int hash = e.hashCode();
 
     for (int a = 0; a < elements.length; a++) {
-      int index = (hash + a) % elements.length;
+      int index = PNumberUtils.mod(hash + a,  elements.length);
       if (!invalid[index]) {
         if (elements[index] != null) {
           if (elements[index].equals(e)) {
