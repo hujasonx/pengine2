@@ -13,22 +13,26 @@ import lombok.Setter;
 import lombok.val;
 
 public class PModel {
-  final PStringMap<Node> nodes = new PStringMap<>();
-  final PList<String> rootNodeIds = new PList<>();
+  @Getter(lazy = true)
+  private final PStringMap<Node> nodes = new PStringMap<>();
+  @Getter(lazy = true)
+  private final PList<String> rootNodeIds = new PList<>();
 
   private PModel() {
 
   }
 
   protected static class Node {
-    final String id;
     @Getter
-    final PMat4 transform = new PMat4();
+    private final String id;
+    @Getter(lazy = true)
+    private final PMat4 transform = PMat4.obtain();
     @Getter
-    final Node parent;
-    @Getter
-    final PList<Node> children = new PList<>();
-    final PList<PGlNode> glNodes = new PList<>();
+    private final Node parent;
+    @Getter(lazy = true)
+    private final PList<Node> children = new PList<>();
+    @Getter(lazy = true)
+    private final PList<PGlNode> glNodes = new PList<>();
     @Getter
     @Setter
     boolean inheritTransform;
@@ -36,9 +40,9 @@ public class PModel {
     private Node(String id, Node parent, PList<PGlNode> glNodes) {
       this.id = id;
       this.parent = parent;
-      this.glNodes.addAll(glNodes);
+      this.getGlNodes().addAll(glNodes);
       if (parent != null) {
-        parent.children.add(this);
+        parent.getChildren().add(this);
       }
     }
 
@@ -53,13 +57,13 @@ public class PModel {
     public Node addNode(String id, Node parent, PList<PGlNode> glNodes, PMat4 transform) {
       checkLock();
       Node node = new Node(id, parent, glNodes);
-      node.transform.set(transform);
+      node.getTransform().set(transform);
 
       if (parent == null) {
-        model.rootNodeIds.add(id);
+        model.getRootNodeIds().add(id);
       }
 
-      model.nodes.put(id, node);
+      model.getNodes().put(id, node);
       return node;
     }
 
@@ -71,17 +75,14 @@ public class PModel {
 
   // Will use the material of the first instance. So make sure all buffers point to the same source!
   public void render(PList<PModelInstance> instances) {
-    for (val instance : instances) {
+    for (PModelInstance instance : instances) {
       if (instance.getModel() != this) {
         continue;
       }
-
-
     }
 
-    for (val rootNodeId : rootNodeIds) {
-      val node = nodes.get(rootNodeId);
-
+    for (String rootNodeId : getRootNodeIds()) {
+      PModel.Node node = getNodes().get(rootNodeId);
     }
   }
 }

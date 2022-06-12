@@ -3,6 +3,8 @@ package com.phonygames.pengine.util;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 
+import lombok.NonNull;
+
 abstract public class PPool<T> {
   /**
    * The maximum number of objects that will be PPooled.
@@ -138,10 +140,50 @@ abstract public class PPool<T> {
   /**
    * Objects implementing this interface will have {@link #reset()} called when passed to {@link com.badlogic.gdx.utils.PPool#free(Object)}.
    */
-  static public interface Poolable {
+  public static interface Poolable {
     /**
      * Resets the object for reuse. Object references should be nulled and fields may be set to default values.
      */
     public void reset();
+  }
+
+  /**
+   * @param <V>
+   */
+  public static abstract class BufferListTemplate<V> extends PList<V> {
+    private final PPool<V> backingPool;
+    private final PPool<BufferListTemplate<V>> sourcePool;
+
+    protected BufferListTemplate(PPool<BufferListTemplate<V>> sourcePool, @NonNull PPool<V> backingPool) {
+      this.sourcePool = sourcePool;
+      this.backingPool = backingPool;
+    }
+
+    public final V obtain() {
+      V v = backingPool.obtain();
+      add(v);
+      return v;
+    }
+
+    public final void freeAll() {
+      if (size == 0) {
+        return;
+      }
+
+      backingPool.freeAll(this);
+      clear();
+    }
+
+    public final void free() {
+      freeAll();
+      if (sourcePool != null) {
+        sourcePool.free(this);
+      }
+    }
+
+    @Override
+    public void reset() {
+      clear();
+    }
   }
 }

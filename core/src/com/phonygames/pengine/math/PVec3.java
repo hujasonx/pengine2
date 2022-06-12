@@ -2,19 +2,76 @@ package com.phonygames.pengine.math;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Pool;
-import com.phonygames.pengine.graphics.shader.PShader;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
 
-public class PVec3 extends PVec {
+public class PVec3 extends PVec<PVec3> {
+  public static class BufferList extends PPool.BufferListTemplate<PVec3> {
+    private BufferList() {
+      super(getStaticListPool(), getStaticPool());
+    }
+
+    public PVec3 obtain(PVec3 copyOf) {
+      return PVec3.obtain(copyOf);
+    }
+
+    public PVec3 obtain(float x, float y, float z) {
+      return PVec3.obtain(x, y, z);
+    }
+  }
+
+  @Getter(lazy = true)
+  private static final PPool<PPool.BufferListTemplate<PVec3>> staticListPool =
+      new PPool<PPool.BufferListTemplate<PVec3>>() {
+        @Override
+        public BufferListTemplate<PVec3> newObject() {
+          return new BufferList();
+        }
+      };
+
+  private boolean staticPoolHasFree = false;
+  @Getter(lazy = true)
+  private static final PPool<PVec3> staticPool = new PPool<PVec3>() {
+    @Override
+    public PVec3 newObject() {
+      return new PVec3();
+    }
+  };
+
+  public static BufferList obtainList() {
+    return (BufferList) getStaticListPool().obtain();
+  }
+
+  public static PVec3 obtain() {
+    PVec3 v = getStaticPool().obtain();
+    v.staticPoolHasFree = false;
+    return v;
+  }
+
+  public static PVec3 obtain(PVec3 copyOf) {
+    return obtain().set(copyOf);
+  }
+
+  public static PVec3 obtain(float x, float y, float z) {
+    return obtain().set(x, y, z);
+  }
+
+  public void free() {
+    PAssert.isFalse(staticPoolHasFree, "Free() called but the vec3 was already free");
+    getStaticPool().free(this);
+    staticPoolHasFree = true;
+  }
+
+  private PVec3() { }
+
+  public static final PVec3 IDT = new PVec3();
+
+  // End static.
+
   public static PVec3 ZERO = new PVec3().set(0, 0, 0);
   public static PVec3 X = new PVec3().set(1, 0, 0);
   public static PVec3 Y = new PVec3().set(0, 1, 0);
@@ -29,24 +86,6 @@ public class PVec3 extends PVec {
 
   @Getter
   private final Vector3 backingVec3 = new Vector3();
-  private static Pool<TempBuffer<PVec3>> tempBuffers = new Pool<TempBuffer<PVec3>>() {
-    @Override
-    protected TempBuffer<PVec3> newObject() {
-      return new TempBuffer<PVec3>() {
-        @Override
-        public PVec3 newObject() {
-          return new PVec3();
-        }
-
-        @Override
-        protected void finishInternal() {
-          tempBuffers.free(this);
-        }
-      };
-    }
-  };
-
-  static TempBuffer<PVec3> staticTempBuffer = tempBuffers.obtain();
 
   public float x() {
     return backingVec3.x;
@@ -180,9 +219,11 @@ public class PVec3 extends PVec {
     float x = backingVec3.x;
     float y = backingVec3.y;
     float z = backingVec3.z;
-    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03], x
-        * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13], x * l_mat[Matrix4.M20] + y
-        * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23]);
+    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03],
+                    x
+                        * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13],
+                    x * l_mat[Matrix4.M20] + y
+                        * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23]);
   }
 
   public PVec3 cpy() {
@@ -214,18 +255,6 @@ public class PVec3 extends PVec {
     return backingVec3.dst2(other.backingVec3);
   }
 
-  public static PVec3 temp() {
-    return staticTempBuffer.pool.obtain();
-  }
-
-  public void freeTemp() {
-    staticTempBuffer.pool.free(this);
-  }
-
-  public static TempBuffer<PVec3> tempBuffer() {
-    return tempBuffers.obtain();
-  }
-
   public boolean isCollinear(PVec3 other) {
     return backingVec3.isCollinear(other.backingVec3);
   }
@@ -234,17 +263,19 @@ public class PVec3 extends PVec {
   public PVec3 sphericalYUpZForward(float theta, float phi, float radius) {
     float sinPhi = MathUtils.sin(phi);
     // Use negative theta because we want the angle to rotate correctly when viewed from +y towards -y.
-    backingVec3.set(radius * sinPhi * MathUtils.sin(-theta), radius * MathUtils.cos(phi), radius * sinPhi * MathUtils.cos(-theta));
+    backingVec3.set(radius * sinPhi * MathUtils.sin(-theta),
+                    radius * MathUtils.cos(phi),
+                    radius * sinPhi * MathUtils.cos(-theta));
     return this;
   }
 
   public static boolean isCollinear(PVec3 v0, PVec3 v1, PVec3 v2) {
     boolean retVal = false;
-    PVec3 t0 = PVec3.temp().set(v1).sub(v0);
-    PVec3 t1 = PVec3.temp().set(v2).sub(v0);
+    PVec3 t0 = PVec3.obtain(v1).sub(v0);
+    PVec3 t1 = PVec3.obtain(v2).sub(v0);
     retVal = t0.isCollinear(t1);
-    t0.freeTemp();
-    t1.freeTemp();
+    t0.free();
+    t1.free();
     return retVal;
   }
 }

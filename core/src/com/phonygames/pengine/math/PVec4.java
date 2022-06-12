@@ -2,9 +2,74 @@ package com.phonygames.pengine.math;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
+import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PPool;
+
+import lombok.Getter;
 
 public class PVec4 extends PVec {
+  public static class BufferList extends PPool.BufferListTemplate<PVec4> {
+    private BufferList() {
+      super(getStaticListPool(), getStaticPool());
+    }
+
+    public PVec4 obtain(PVec4 copyOf) {
+      return PVec4.obtain(copyOf);
+    }
+
+    public static PVec4 obtain(float x, float y, float z, float w) {
+      return PVec4.obtain().set(x, y, z, w);
+    }
+  }
+
+  @Getter(lazy = true)
+  private static final PPool<PPool.BufferListTemplate<PVec4>> staticListPool =
+      new PPool<PPool.BufferListTemplate<PVec4>>() {
+        @Override
+        public BufferListTemplate<PVec4> newObject() {
+          return new PVec4.BufferList();
+        }
+      };
+
+  private boolean staticPoolHasFree = false;
+  @Getter(lazy = true)
+  private static final PPool<PVec4> staticPool = new PPool<PVec4>() {
+    @Override
+    public PVec4 newObject() {
+      return new PVec4();
+    }
+  };
+
+  public static BufferList obtainList() {
+    return (PVec4.BufferList) getStaticListPool().obtain();
+  }
+
+  public static PVec4 obtain() {
+    PVec4 v = getStaticPool().obtain();
+    v.staticPoolHasFree = false;
+    return v;
+  }
+
+  public static PVec4 obtain(float x, float y, float z, float w) {
+    return obtain().set(x, y, z, w);
+  }
+
+  public static PVec4 obtain(PVec4 copyOf) {
+    return obtain().set(copyOf);
+  }
+
+  public void free() {
+    PAssert.isFalse(staticPoolHasFree, "Free() called but the vec3 was already free");
+    getStaticPool().free(this);
+    staticPoolHasFree = true;
+  }
+
+  private PVec4() { }
+
+  public static final PVec4 IDT = new PVec4();
+
+  // End static.
+
   private float x, y, z, w;
 
   public float x() {
@@ -122,10 +187,7 @@ public class PVec4 extends PVec {
 
   @Override
   public void reset() {
-    this.x = 0;
-    this.y = 0;
-    this.z = 0;
-    this.w = 0;
+    setZero();
   }
 
   public PVec4 set(float x, float y, float z, float w) {
@@ -146,10 +208,13 @@ public class PVec4 extends PVec {
 
   public PVec4 mul(PMat4 mat4) {
     float[] l_mat = mat4.values();
-    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03], x
-        * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13], x * l_mat[Matrix4.M20] + y
-        * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23], x * l_mat[Matrix4.M30] + y
-        * l_mat[Matrix4.M31] + z * l_mat[Matrix4.M32] + w * l_mat[Matrix4.M33]);
+    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03],
+                    x
+                        * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13],
+                    x * l_mat[Matrix4.M20] + y
+                        * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23],
+                    x * l_mat[Matrix4.M30] + y
+                        * l_mat[Matrix4.M31] + z * l_mat[Matrix4.M32] + w * l_mat[Matrix4.M33]);
   }
 
   public PVec4 cpy() {

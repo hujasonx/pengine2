@@ -17,11 +17,8 @@ public class PPointLight extends PLight implements Pool.Poolable {
   @Getter
   private static PMesh MESH;
 
-  private final PVec3 tempVec3 = new PVec3();
-  private final PVec4 tempVec4 = new PVec4();
-  private final PMat4 tempMat4 = new PMat4();
   @Getter
-  private final PVec4 attenuation = new PVec4();
+  private final PVec4 attenuation = PVec4.obtain();
 
   public PPointLight() {
     reset();
@@ -55,25 +52,30 @@ public class PPointLight extends PLight implements Pool.Poolable {
 
   @Override
   public boolean addInstanceData(PFloat4Texture buffer) {
-    transform.getTranslation(tempVec3);
+    PVec3.BufferList vec3s = PVec3.obtainList();
+    PMat4.BufferList mat4s = PMat4.obtainList();
+    PVec3 translation = vec3s.obtain();
+    getTransform().getTranslation(translation);
 
     // Set the transform for the mesh.
-    tempMat4.setToTranslation(tempVec3);
-    float scale = attenuationCutoffDistance(attenuation) * 1.1f;
-    tempMat4.scl(scale, scale, scale);
+    PMat4 transformOutMat = mat4s.obtain().setToTranslation(translation);
+    float scale = attenuationCutoffDistance(getAttenuation()) * 1.1f;
+    transformOutMat.scl(scale, scale, scale);
 
     // 0: Transform.
-    buffer.addData(tempMat4);
+    buffer.addData(transformOutMat);
 
     // 4: Position.
-    buffer.addData(tempVec3, 1);
+    buffer.addData(translation, 1);
 
     // 5: Color.
-    buffer.addData(color);
+    buffer.addData(getColor());
 
     // 6. Attenuation.
-    buffer.addData(attenuation);
+    buffer.addData(getAttenuation());
 
+    vec3s.free();
+    mat4s.free();
     // Total: 7;
     return true;
   }
@@ -86,8 +88,8 @@ public class PPointLight extends PLight implements Pool.Poolable {
 
   @Override
   public void reset() {
-    transform.reset();
-    color.setZero();
-    attenuation.set(2, 1, 1, 0.05f);
+    getTransform().reset();
+    getColor().setZero();
+    getAttenuation().set(2, 1, 1, 0.05f);
   }
 }

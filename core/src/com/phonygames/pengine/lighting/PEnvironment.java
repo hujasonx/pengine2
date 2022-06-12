@@ -45,15 +45,15 @@ public class PEnvironment {
 
   private final PFloat4Texture lightsFloatBuffer;
 
-  private final PVec3 ambientLightCol = new PVec3();
+  private final PVec3 ambientLightCol = PVec3.obtain();
   private final PVec3 directionalLightDir[] = new PVec3[UniformConstants.NUM_DIRECTIONAL_LIGHTS];
   private final PVec3 directionalLightCol[] = new PVec3[UniformConstants.NUM_DIRECTIONAL_LIGHTS];
 
   public PEnvironment() {
     lightsFloatBuffer = PFloat4Texture.get(256 * 256, true);
     for (int a = 0; a < UniformConstants.NUM_DIRECTIONAL_LIGHTS; a++) {
-      directionalLightDir[a] = new PVec3();
-      directionalLightCol[a] = new PVec3();
+      directionalLightDir[a] = PVec3.obtain();
+      directionalLightCol[a] = PVec3.obtain();
     }
   }
 

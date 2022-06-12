@@ -41,11 +41,11 @@ public class PGlNode implements PCopyable<PGlNode> {
   @Getter
   @Setter
   private String id;
-  @Getter
-  private final PMat4 worldTransform = new PMat4();
-  @Getter
-  private final PMat4 worldTransformInvTra = new PMat4();
-  @Getter
+  @Getter(lazy = true)
+  private final PMat4 worldTransform = PMat4.obtain();
+  @Getter(lazy = true)
+  private final PMat4 worldTransformInvTra = PMat4.obtain();
+  @Getter(lazy = true)
   private final ArrayMap<String, PMat4> invBoneTransforms = new ArrayMap<>();
   @Getter
   @Setter
@@ -63,8 +63,8 @@ public class PGlNode implements PCopyable<PGlNode> {
   }
 
   public final PGlNode setWorldTransform(PMat4 worldTransform, PMat4 worldTransformInvTrad) {
-    this.worldTransform.set(worldTransform);
-    this.worldTransformInvTra.set(worldTransformInvTrad);
+    this.getWorldTransform().set(worldTransform);
+    this.getWorldTransform().set(worldTransformInvTrad);
     return this;
   }
 
@@ -72,9 +72,9 @@ public class PGlNode implements PCopyable<PGlNode> {
   public PGlNode copyFrom(@NonNull PGlNode other) {
     id = other.id;
     drawCall.copyFrom(other.drawCall);
-    worldTransform.set(other.worldTransform);
-    worldTransformInvTra.set(other.worldTransformInvTra);
-    invBoneTransforms.putAll(other.invBoneTransforms);
+    getWorldTransform().set(other.getWorldTransform());
+    getWorldTransformInvTra().set(other.getWorldTransformInvTra());
+    getInvBoneTransforms().putAll(other.getInvBoneTransforms());
     dataBufferEmitter = other.dataBufferEmitter;
     return this;
   }

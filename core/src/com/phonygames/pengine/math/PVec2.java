@@ -1,6 +1,73 @@
 package com.phonygames.pengine.math;
 
+import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PPool;
+
+import lombok.Getter;
+
 public class PVec2 extends PVec {
+  public static class BufferList extends PPool.BufferListTemplate<PVec2> {
+    private BufferList() {
+      super(getStaticListPool(), getStaticPool());
+    }
+
+    public PVec2 obtain(PVec2 copyOf) {
+      return PVec2.obtain(copyOf);
+    }
+
+    public static PVec2 obtain(float x, float y) {
+      return PVec2.obtain().set(x, y);
+    }
+  }
+
+  @Getter(lazy = true)
+  private static final PPool<PPool.BufferListTemplate<PVec2>> staticListPool =
+      new PPool<PPool.BufferListTemplate<PVec2>>() {
+        @Override
+        public BufferListTemplate<PVec2> newObject() {
+          return new BufferList();
+        }
+      };
+
+  private boolean staticPoolHasFree = false;
+  @Getter(lazy = true)
+  private static final PPool<PVec2> staticPool = new PPool<PVec2>() {
+    @Override
+    public PVec2 newObject() {
+      return new PVec2();
+    }
+  };
+
+  public static BufferList obtainList() {
+    return (BufferList) getStaticListPool().obtain();
+  }
+
+  public static PVec2 obtain() {
+    PVec2 v = getStaticPool().obtain();
+    v.staticPoolHasFree = false;
+    return v;
+  }
+
+  public static PVec2 obtain(PVec2 copyOf) {
+    return obtain().set(copyOf);
+  }
+
+  public static PVec2 obtain(float x, float y) {
+    return obtain().set(x, y);
+  }
+
+  public void free() {
+    PAssert.isFalse(staticPoolHasFree, "Free() called but the vec3 was already free");
+    getStaticPool().free(this);
+    staticPoolHasFree = true;
+  }
+
+  private PVec2() { }
+
+  public static final PVec2 IDT = new PVec2();
+
+  // End static.
+
   private float x, y;
 
   public float x() {

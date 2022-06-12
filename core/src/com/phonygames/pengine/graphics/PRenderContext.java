@@ -62,22 +62,22 @@ public class PRenderContext {
   private final RenderContext backingRenderContext =
       new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
 
-  @Getter
-  private final PVec3 cameraPos = new PVec3();
-  @Getter
-  private final PVec3 cameraDir = new PVec3();
-  @Getter
-  private final PVec3 cameraUp = new PVec3();
-  @Getter
-  private final PVec2 cameraRange = new PVec2().set(1, 100);
-  @Getter
-  private final PVec1 cameraFov = new PVec1().set(60);
-  @Getter
-  private final PMat4 viewProjTransform = new PMat4();
-  @Getter
-  private final PMat4 viewProjInvTransform = new PMat4();
-  @Getter
-  private final PMat4 viewProjInvTraTransform = new PMat4();
+  @Getter(lazy = true)
+  private final PVec3 cameraPos = PVec3.obtain();
+  @Getter(lazy = true)
+  private final PVec3 cameraDir = PVec3.obtain();
+  @Getter(lazy = true)
+  private final PVec3 cameraUp = PVec3.obtain();
+  @Getter(lazy = true)
+  private final PVec2 cameraRange = PVec2.obtain(1, 100);
+  @Getter(lazy = true)
+  private final PVec1 cameraFov = PVec1.obtain(60);
+  @Getter(lazy = true)
+  private final PMat4 viewProjTransform = PMat4.obtain();
+  @Getter(lazy = true)
+  private final PMat4 viewProjInvTransform = PMat4.obtain();
+  @Getter(lazy = true)
+  private final PMat4 viewProjInvTraTransform = PMat4.obtain();
 
   private final PerspectiveCamera perspectiveCamera = new PerspectiveCamera();
   private final OrthographicCamera orthographicCamera = new OrthographicCamera();
@@ -111,14 +111,14 @@ public class PRenderContext {
   public PRenderContext putIntoBackingCamera(PerspectiveCamera camera) {
     camera.viewportWidth = width;
     camera.viewportHeight = height;
-    cameraPos.putInto(camera.position);
-    cameraDir.putInto(camera.direction);
+    getCameraPos().putInto(camera.position);
+    getCameraDir().putInto(camera.direction);
     camera.direction.nor();
-    cameraUp.putInto(camera.up);
+    getCameraUp().putInto(camera.up);
     camera.normalizeUp();
-    camera.near = cameraRange.x();
-    camera.far = cameraRange.y();
-    camera.fieldOfView = cameraFov.x();
+    camera.near = getCameraRange().x();
+    camera.far = getCameraRange().y();
+    camera.fieldOfView = getCameraFov().x();
 
     camera.update(true);
     return this;
@@ -137,14 +137,14 @@ public class PRenderContext {
       width = (int) camera.viewportWidth;
       height = (int) camera.viewportHeight;
     }
-    cameraPos.set(camera.position);
-    cameraDir.set(camera.direction);
-    cameraUp.set(camera.up);
-    cameraFov.set(camera.fieldOfView);
-    cameraRange.set(camera.near, camera.far);
-    viewProjTransform.set(camera.combined.val);
-    viewProjInvTransform.set(camera.invProjectionView.val);
-    viewProjInvTraTransform.set(camera.invProjectionView.val).tra();
+    getCameraPos().set(camera.position);
+    getCameraDir().set(camera.direction);
+    getCameraUp().set(camera.up);
+    getCameraFov().set(camera.fieldOfView);
+    getCameraRange().set(camera.near, camera.far);
+    getViewProjTransform().set(camera.combined.val);
+    getViewProjInvTransform().set(camera.invProjectionView.val);
+    getViewProjInvTraTransform().set(camera.invProjectionView.val).tra();
     return this;
   }
 

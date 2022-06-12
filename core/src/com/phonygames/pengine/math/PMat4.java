@@ -4,22 +4,89 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Pool;
+import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PPool;
 
 import lombok.Getter;
 
 public class PMat4 implements Pool.Poolable {
-  public static final PMat4 IDT = new PMat4();
+  public static class BufferList extends PPool.BufferListTemplate<PMat4> {
+    private BufferList() {
+      super(getStaticListPool(), getStaticPool());
+    }
 
-  @Getter
-  private final Matrix4 backingMatrix4;
-
-  public PMat4() {
-    this(new Matrix4());
+    public PMat4 obtain(PMat4 copyOf) {
+      return PMat4.obtain(copyOf);
+    }
   }
 
+  @Getter(lazy = true)
+  private static final PPool<PPool.BufferListTemplate<PMat4>> staticListPool =
+      new PPool<PPool.BufferListTemplate<PMat4>>() {
+        @Override
+        public BufferListTemplate<PMat4> newObject() {
+          return new BufferList();
+        }
+      };
+
+  private boolean staticPoolHasFree = false;
+  @Getter(lazy = true)
+  private static final PPool<PMat4> staticPool = new PPool<PMat4>() {
+    @Override
+    public PMat4 newObject() {
+      return new PMat4();
+    }
+  };
+
+  public static BufferList obtainList() {
+    return (BufferList) getStaticListPool().obtain();
+  }
+
+  public static PMat4 obtain() {
+    PMat4 v = getStaticPool().obtain();
+    v.staticPoolHasFree = false;
+    return v;
+  }
+
+  public static PMat4 obtain(PMat4 copyOf) {
+    return obtain().set(copyOf);
+  }
+
+  public static PMat4 obtain(float[] val) {
+    return obtain().set(val);
+  }
+
+  public void free() {
+    PAssert.isTrue(ownsBackingMatrix, "Free() called on a matrix that doesn't own its backing matrix");
+    PAssert.isFalse(staticPoolHasFree, "Free() called but the vec3 was already free");
+    getStaticPool().free(this);
+    staticPoolHasFree = true;
+  }
+
+  private PMat4() {
+    this.backingMatrix4 = new Matrix4();
+    ownsBackingMatrix = true;
+  }
+
+  /**
+   * Exposed constructor for construction a PMat4 with a given backing matrix (will store the reference)
+   *
+   * @param backingMatrix4
+   */
   public PMat4(Matrix4 backingMatrix4) {
     this.backingMatrix4 = backingMatrix4;
+    ownsBackingMatrix = false;
   }
+
+  public static final PMat4 IDT = new PMat4();
+
+  // End static.
+
+
+  @Getter
+  private boolean ownsBackingMatrix;
+  @Getter
+  private final Matrix4 backingMatrix4;
 
   public PMat4 set(PVec3 t, PVec4 r, PVec3 s) {
     return set(t.x(), t.y(), t.z(), r.x(), r.y(), r.z(), r.w(), s.x(), s.y(), s.z());
@@ -34,9 +101,9 @@ public class PMat4 implements Pool.Poolable {
     return this;
   }
 
-  public PVec3 mul(PVec3 vec3, float a) {
-    vec3.mul(this, a);
-    return vec3;
+  public PMat4 mul(PMat4 mat4, float a) {
+    mat4.mul(this, a);
+    return mat4;
   }
 
   public PVec4 mul(PVec4 vec4) {
@@ -80,7 +147,8 @@ public class PMat4 implements Pool.Poolable {
   }
 
   public PMat4 set(PVec3 xAxis, PVec3 yAxis, PVec3 zAxis, PVec3 pos) {
-    this.backingMatrix4.set(xAxis.getBackingVec3(), yAxis.getBackingVec3(), zAxis.getBackingVec3(), pos.getBackingVec3());
+    this.backingMatrix4
+        .set(xAxis.getBackingVec3(), yAxis.getBackingVec3(), zAxis.getBackingVec3(), pos.getBackingVec3());
     return this;
   }
 

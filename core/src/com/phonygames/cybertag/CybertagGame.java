@@ -134,9 +134,9 @@ public class CybertagGame implements PGame {
 
     // Set environment.
     environment.setAmbientLightCol(.1f, .1f, .1f);
-    val tempV3 = PVec3.temp().set(-1, -1, -1).nor();
+    PVec3 tempV3 = PVec3.obtain(-1, -1, -1).nor();
     environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
-    tempV3.freeTemp();
+    tempV3.free();
 
 
     for (int a = 0; a < testLights.length; a++) {

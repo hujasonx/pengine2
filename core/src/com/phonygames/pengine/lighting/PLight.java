@@ -30,23 +30,23 @@ public abstract class PLight {
     PPointLight.initMesh();
   }
 
-  @Getter
-  protected final PVec4 color = new PVec4();
-  @Getter
-  protected final PMat4 transform = new PMat4();
+  @Getter(lazy = true)
+  private final PVec4 color = PVec4.obtain();
+  @Getter(lazy = true)
+  private final PMat4 transform = PMat4.obtain();
 
   public PLight setColor(float r, float g, float b, float a) {
-    color.set(r, g, b, a);
+    getColor().set(r, g, b, a);
     return this;
   }
 
   public PLight setColor(PVec4 col) {
-    color.set(col);
+    getColor().set(col);
     return this;
   }
 
   public PLight setColor(Color col) {
-    color.set(col.r, col.g, col.b, col.a);
+    getColor().set(col.r, col.g, col.b, col.a);
     return this;
   }
 

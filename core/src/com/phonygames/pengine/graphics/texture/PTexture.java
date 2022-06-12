@@ -20,8 +20,8 @@ public class PTexture {
     return WHITE_PIXEL;
   }
 
-  @Getter
-  private final PVec4 uvOS = new PVec4().set(0, 0, 1, 1);
+  @Getter(lazy = true)
+  private final PVec4 uvOS = PVec4.obtain(0, 0, 1, 1);
 
   public PTexture() {
   }
@@ -56,7 +56,7 @@ public class PTexture {
 
   public void applyShaderWithUniform(String uniform, PShader shader) {
     shader.setWithUniform(uniform, getBackingTexture());
-    shader.set(uniform + "UVOS", uvOS);
+    shader.set(uniform + "UVOS", getUvOS());
   }
 
   public PTexture reset() {

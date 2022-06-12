@@ -38,7 +38,7 @@ public class PMaterial {
 
     @Override
     protected PVec1 newUnpooled(String s) {
-      return new PVec1();
+      return PVec1.obtain();
     }
   };
 
@@ -50,7 +50,7 @@ public class PMaterial {
 
     @Override
     protected PVec2 newUnpooled(String s) {
-      return new PVec2();
+      return PVec2.obtain();
     }
   };
 
@@ -62,7 +62,7 @@ public class PMaterial {
 
     @Override
     protected PVec3 newUnpooled(String s) {
-      return new PVec3();
+      return PVec3.obtain();
     }
   };
 
@@ -74,7 +74,7 @@ public class PMaterial {
 
     @Override
     protected PVec4 newUnpooled(String s) {
-      return new PVec4();
+      return PVec4.obtain();
     }
   };
 
