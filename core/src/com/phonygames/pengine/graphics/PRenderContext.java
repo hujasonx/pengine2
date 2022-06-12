@@ -92,11 +92,11 @@ public class PRenderContext {
   private PStringMap<PMap<PShader, PList<PGlDrawCall>>> enqueuedDrawCalls =
       new PStringMap<PMap<PShader, PList<PGlDrawCall>>>() {
         @Override
-        protected PMap<PShader, PList<PGlDrawCall>> newUnpooled(String o) {
+        protected PMap<PShader, PList<PGlDrawCall>> newPooled() {
           return new PMap<PShader, PList<PGlDrawCall>>() {
             @Override
-            protected PList<PGlDrawCall> newUnpooled(PShader o) {
-              return new PList<PGlDrawCall>();
+            protected PList<PGlDrawCall> newPooled() {
+              return new PList<>();
             }
           };
         }
@@ -184,9 +184,9 @@ public class PRenderContext {
     for (val e : dataBuffers) {
       e.v().freeTemp();
     }
-    dataBuffers.clear();
-    storedVecsPerInstance.clear();
-    storedBufferOffsets.clear();
+    dataBuffers.clearRecursive(false);
+    storedVecsPerInstance.clearRecursive(false);
+    storedBufferOffsets.clearRecursive(false);
 
     enqueuedDrawCalls.clearRecursive(false);
   }
@@ -267,7 +267,7 @@ public class PRenderContext {
   public void enqueue(@NonNull PShader shader,
                       @NonNull String layer,
                       @NonNull PGlDrawCall drawCall) {
-    enqueuedDrawCalls.genUnpooled(layer).genUnpooled(shader)
+    enqueuedDrawCalls.genPooled(layer).genPooled(shader)
         .add(drawCall.setDataBufferInfo(storedVecsPerInstance, storedBufferOffsets));
     snapshotBufferOffsets();
   }

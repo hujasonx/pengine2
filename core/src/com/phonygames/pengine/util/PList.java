@@ -10,7 +10,7 @@ import java.util.ListIterator;
 /**
  * List class whose iterator() does not allocate and will always be in order.
  */
-public class PList<E> extends Array<E> {
+public class PList<E> extends Array<E> implements PPool.Poolable {
   public PList() {
   }
 
@@ -20,5 +20,10 @@ public class PList<E> extends Array<E> {
     }
 
     return removeIndex(size - 1);
+  }
+
+  @Override
+  public void reset() {
+    clear();
   }
 }

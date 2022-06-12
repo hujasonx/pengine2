@@ -62,7 +62,6 @@ public class CybertagGame implements PGame {
           public void onLoad(PGltf gltf) {
             testModel2 = gltf.getModel();
             testModelInstances2.add(new PModelInstance(testModel2));
-//            testModelInstance2 = new PModelInstance(testModel2, PGltf.DEFAULT_SHADER_PROVIDER);
           }
         }
     );
@@ -148,7 +147,7 @@ public class CybertagGame implements PGame {
     val modelI = testModelInstances.isEmpty() ? null : testModelInstances.get(0);
     if (modelI != null) {
       modelI.getWorldTransform().idt().scl(1, 1, 1).rot(0, 1, 0, PEngine.t);
-      modelI.getNode("arm_joint_R_1").setInheritTransform(false).getTransform().set(new PMat4().setToTranslation(1, 0, 0));
+//      modelI.getNode("arm_joint_R_1").setInheritTransform(false).getTransform().set(new PMat4().setToTranslation(1, 0, 0));
       modelI.recalcTransforms();
 
       for (val e : modelI.getMaterials()) {

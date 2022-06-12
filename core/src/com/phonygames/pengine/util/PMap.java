@@ -175,7 +175,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
   }
 
   @Override
-  public PMap<K, V> copyFrom(PMap<K, V> other) {
+  public final PMap<K, V> copyFrom(PMap<K, V> other) {
     for (val e : other) {
       put(deepCopyKey(e.k), deepCopyValue(e.v));
     }
@@ -201,7 +201,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
    * @param v
    * @return if the value is pooled by this map
    */
-  public boolean owns(V v) {
+  public final boolean owns(V v) {
     return genedValuesUsed != null && genedValuesUsed.contains(v, true);
   }
 
@@ -238,6 +238,8 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
   }
 
   /**
+   * Caller is responsible for dealing with the results of the allocation.
+   *
    * @param k
    * @return
    */
@@ -321,16 +323,23 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
   }
 
   public void clear() {
+    if (genedValuesUsed != null) {
+      PAssert.isTrue(genedValuesUsed.size == mapInterface.size(),
+                     "Don't call clear() on a map with mixed pooled / unpooled objects!");
+      genedValuesFree.freeAll(genedValuesUsed);
+      genedValuesUsed.clear();
+    }
+
     mapInterface.clear();
   }
 
-  public void putAll(@NonNull Iterable<Entry<K, V>> other) {
+  public final void putAll(@NonNull Iterable<Entry<K, V>> other) {
     for (val e : other) {
       put(e.k(), e.v());
     }
   }
 
-  public void delAll(@NonNull Iterable<K> keys) {
+  public final void delAll(@NonNull Iterable<K> keys) {
     for (K k : keys) {
       del(k);
     }
@@ -343,22 +352,28 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
    * Clears the contents of the map. If removeMaps is set, then maps will be removed too
    * (they probably were not pooled, so use wisely!)
    *
-   * @param removeMaps
+   * @param removeMapsIfUnpooled
    */
-  public final void clearRecursive(boolean removeMaps) {
+  public final void clearRecursive(boolean removeMapsIfUnpooled) {
     // Iterate through children, and keep maps if they should be kept.
     for (val e : this) {
       if (e.v() instanceof PMap) {
         val map = (PMap) e.v();
-        map.clearRecursive(removeMaps);
-        if (!removeMaps) {
-          if (keysToKeep == null) {
-            keysToKeep = new PList<>();
-            valuesToKeep = new PList<>();
-          }
+        map.clearRecursive(removeMapsIfUnpooled);
+        if (!removeMapsIfUnpooled) {
 
-          keysToKeep.add(e.k());
-          valuesToKeep.add(e.v());
+          if (genedValuesUsed != null && genedValuesUsed.contains(e.v(), true)) {
+            // Pooled, so clear anyways.
+          } else {
+            // Unpooled.
+            if (keysToKeep == null) {
+              keysToKeep = new PList<>();
+              valuesToKeep = new PList<>();
+            }
+
+            keysToKeep.add(e.k());
+            valuesToKeep.add(e.v());
+          }
         } else {
           PLog.w("Removing maps may cause allocs");
         }

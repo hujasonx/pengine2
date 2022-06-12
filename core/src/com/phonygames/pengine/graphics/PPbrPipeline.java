@@ -45,7 +45,7 @@ public class PPbrPipeline {
         new PRenderContext.PhaseHandler("PBR", gBuffer) {
           @Override
           public void begin() {
-            PGLUtils.clearScreen(0, 0, 1, 1);
+            PGLUtils.clearScreen(0, 0, 0, 1);
           }
 
           @Override
