@@ -1,6 +1,12 @@
 package com.phonygames.pengine.graphics.model;
 
+import android.support.annotation.NonNull;
+
+import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PGlDrawCall;
+import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
+import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
@@ -9,6 +15,7 @@ import com.phonygames.pengine.util.PStringMap;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
 
 public class PModel {
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
@@ -30,6 +37,47 @@ public class PModel {
     }
     for (String rootNodeId : getRootNodeIds()) {
       PModel.Node node = getNodes().get(rootNodeId);
+    }
+  }
+
+  public void enqueue(@NonNull PRenderContext renderContext, @NonNull PShaderProvider shaderProvider, @NonNull PList<PModelInstance> instances) {
+    PModelInstance firstInstance = null;
+    // First, fill up the data buffers.
+    for (val e : instances) {
+      if (firstInstance == null) {
+        firstInstance = e;
+      }
+      if (e.getDataBufferEmitter() != null) {
+        e.getDataBufferEmitter().emitDataBuffersInto(renderContext);
+      }
+    }
+
+    // Next, enqueue the model instance nodes.
+    if (firstInstance != null) {
+      for (PModelInstance.Node node : firstInstance.getRootNodes()) {
+        enqueueModelInstanceNodeRecursiveInstanced(node, renderContext, shaderProvider, instances);
+      }
+    }
+  }
+
+  // Renders recursively instanced, using the material of the caller.
+  public void enqueueModelInstanceNodeRecursiveInstanced(@NonNull PModelInstance.Node modelInstanceNode, @NonNull PRenderContext renderContext, @NonNull PShaderProvider shaderProvider,
+                                        @NonNull PList<PModelInstance> modelInstances) {
+    for (PGlNode node : modelInstanceNode.getGlNodes()) {
+      // Emit all the model instance bone transforms for the node.
+      for (PModelInstance modelInstance : modelInstances) {
+        PAssert.isTrue(this == modelInstance.getModel(), "Incompatible model type in instances list");
+        modelInstance.outputBoneTransformsToBuffer(renderContext);
+      }
+
+      // Now that all the bone and data buffers have been set, enqueue a draw call. Since snapshotBufferOffsets was
+      // called, we will need to re-output all buffer data
+      renderContext.enqueue(shaderProvider,
+                            PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size));
+    }
+
+    for (PModelInstance.Node child : modelInstanceNode.getChildren()) {
+      enqueueModelInstanceNodeRecursiveInstanced(child, renderContext, shaderProvider, modelInstances);
     }
   }
 

@@ -39,7 +39,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Getter
   private PMesh mesh;
   @Getter
-  private int numInstances, dstFactor, srcFactor, dptTest, cullFace;
+  private int numInstances, dstFactor, srcFactor, dptTest, cullFace, boneTransformsLookupOffset;
   @Getter
   @Setter
   private PPool ownerPool;
@@ -70,6 +70,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     worldLoc = null;
     shader = null;
     layer = null;
+    boneTransformsLookupOffset = 0;
   }
 
   public static PGlDrawCall genTemplate() {
@@ -106,6 +107,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     worldLoc = other.worldLoc;
     shader = other.shader;
     layer = other.layer;
+    boneTransformsLookupOffset = other.boneTransformsLookupOffset;
     return this;
   }
 

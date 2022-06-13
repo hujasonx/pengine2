@@ -21,10 +21,6 @@ public class PGlNode implements PDeepCopyable<PGlNode> {
   private final PMat4 worldTransformInvTra = PMat4.obtain();
   @Getter
   @Setter
-  // You can hook swap this out whenever you like.
-  private PRenderContext.DataBufferEmitter dataBufferEmitter;
-  @Getter
-  @Setter
   private String id;
 
   public PGlNode(String id) {
@@ -42,7 +38,6 @@ public class PGlNode implements PDeepCopyable<PGlNode> {
     getWorldTransform().set(other.getWorldTransform());
     getWorldTransformInvTra().set(other.getWorldTransformInvTra());
     getInvBoneTransforms().putAll(other.getInvBoneTransforms());
-    dataBufferEmitter = other.dataBufferEmitter;
     return this;
   }
 

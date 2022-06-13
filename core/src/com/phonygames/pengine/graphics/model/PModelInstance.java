@@ -1,10 +1,7 @@
 package com.phonygames.pengine.graphics.model;
 
-import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
-import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
@@ -13,6 +10,7 @@ import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.val;
 
 public class PModelInstance {
@@ -28,6 +26,10 @@ public class PModelInstance {
   private final PList<Node> rootNodes = new PList<>();
   @Getter(lazy = true)
   private final PMat4 worldTransform = PMat4.obtain();
+  @Getter
+  @Setter
+  // You can hook swap this out whenever you like.
+  private PRenderContext.DataBufferEmitter dataBufferEmitter;
 
   public PModelInstance(PModel model) {
     this.model = model;
@@ -54,18 +56,12 @@ public class PModelInstance {
     }
   }
 
-  public void enqueue(PRenderContext renderContext, PShaderProvider shaderProvider, PList<PModelInstance> instances) {
-    for (PModelInstance.Node node : getRootNodes()) {
-      node.enqueueRecursiveInstanced(renderContext, shaderProvider, instances);
-    }
-  }
-
   public Node getNode(@NonNull String id) {
     return getNodes().get(id);
   }
 
   // Returns the new vec4 count in the bone transform buffer.
-  private int outputBoneTransformsToBuffer(PRenderContext renderContext) {
+  protected int outputBoneTransformsToBuffer(PRenderContext renderContext) {
     PMat4 tempMat4 = PMat4.obtain();
     PFloat4Texture tex = renderContext.genDataBuffer("boneTransforms");
     for (val e : getGlNodes()) {
@@ -144,29 +140,6 @@ public class PModelInstance {
       }
       if (parent != null) {
         parent.getChildren().add(this);
-      }
-    }
-
-    // Renders recursively instanced, using the material of the caller.
-    public void enqueueRecursiveInstanced(PRenderContext renderContext, PShaderProvider shaderProvider,
-                                          PList<PModelInstance> modelInstances) {
-      for (PGlNode node : getGlNodes()) {
-        for (PModelInstance modelInstance : modelInstances) {
-          PAssert.isTrue(model == modelInstance.model, "Incompatible model type in instances list");
-          PGlNode instanceNode = modelInstance.getGlNodes().get(node.getId());
-          if (instanceNode.getDataBufferEmitter() != null) {
-            instanceNode.getDataBufferEmitter().emitDataBuffersInto(renderContext, instanceNode.getId());
-          }
-          outputBoneTransformsToBuffer(renderContext);
-        }
-
-        // Now that all the bone and data buffers have been set, enqueue a draw call. Since snapshotBufferOffsets was
-        // called, we will need to re-output all buffer data
-        renderContext.enqueue(shaderProvider,
-                              PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size), true);
-      }
-      for (Node child : getChildren()) {
-        child.enqueueRecursiveInstanced(renderContext, shaderProvider, modelInstances);
       }
     }
 

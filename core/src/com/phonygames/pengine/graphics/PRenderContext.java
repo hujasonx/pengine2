@@ -44,6 +44,8 @@ public class PRenderContext {
   private static PRenderContext activeContext = null;
   private final RenderContext backingRenderContext =
       new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
+  @Getter(value = AccessLevel.MODULE, lazy = true)
+  private final PFloat4Texture boneTransformsBuffer = PFloat4Texture.getTemp(DATA_BUFFER_CAPACITY);
   @Getter
   private final PVec3 cameraDir = PVec3.obtain();
   @Getter
@@ -105,7 +107,7 @@ public class PRenderContext {
     enqueuedDrawCalls.clearRecursive();
   }
 
-  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall, boolean snapshotBufferOffsets) {
+  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall) {
     // First, try to generate the shader.
     if (drawCall.getShader() == null && drawCall.getMesh() != null) {
       if (phaseHandlers.size == 0) {
@@ -124,21 +126,18 @@ public class PRenderContext {
     }
     // Next, enqueue the draw call if it has a shader.
     if (drawCall.getShader() != null) {
-      enqueue(drawCall.getShader(), drawCall.getLayer(), drawCall, snapshotBufferOffsets);
+      enqueue(drawCall.getShader(), drawCall.getLayer(), drawCall);
       return true;
     }
     return false;
   }
 
   /**
-   *
    * @param shader
    * @param layer
    * @param drawCall
-   * @param snapshotBufferOffsets Set this to true to snapshot the buffer offsets, or false to not (allowing you to use
-   *                              the same buffer params for multiple draw calls.
    */
-  public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall, boolean snapshotBufferOffsets) {
+  public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall) {
     // Calculate the stored becs Per instance using the buffer offsets and the buffer fill amounts. This assumes that
     // you enqueue a draw call immediately after writing stuff to buffers.
     for (val e : storedBufferOffsets) {
@@ -149,15 +148,7 @@ public class PRenderContext {
     }
     enqueuedDrawCalls.genPooled(layer).genPooled(shader)
                      .add(drawCall.setDataBufferInfo(storedVecsPerInstance, storedBufferOffsets));
-    if (snapshotBufferOffsets) {
-      snapshotBufferOffsets();
-    }
-  }
-
-  private void snapshotBufferOffsets() {
-    for (val e : dataBuffers) {
-      storedBufferOffsets.put(e.k(), e.v().vecsWritten());
-    }
+    snapshotBufferOffsets();
   }
 
   public PFloat4Texture genDataBuffer(String name) {
@@ -169,6 +160,12 @@ public class PRenderContext {
     storedVecsPerInstance.put(name, 0);
     storedBufferOffsets.put(name, 0);
     return dataBuffer;
+  }
+
+  private void snapshotBufferOffsets() {
+    for (val e : dataBuffers) {
+      storedBufferOffsets.put(e.k(), e.v().vecsWritten());
+    }
   }
 
   public PRenderBuffer getBuffer() {
@@ -332,7 +329,7 @@ public class PRenderContext {
   }
 
   public interface DataBufferEmitter {
-    void emitDataBuffersInto(PRenderContext renderContext, String param);
+    void emitDataBuffersInto(PRenderContext renderContext);
   }
 
   public abstract static class PhaseHandler {

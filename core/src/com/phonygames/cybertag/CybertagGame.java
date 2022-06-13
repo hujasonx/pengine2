@@ -24,8 +24,6 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
 
-import lombok.val;
-
 public class CybertagGame implements PGame {
   protected final PRenderBuffer[] gBuffers = new PRenderBuffer[4];
   protected PShader testShader;
@@ -57,14 +55,13 @@ public class CybertagGame implements PGame {
                                                     MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
     }
     // Process and enqueue the model.
-    val modelI = testModelInstances.isEmpty() ? null : testModelInstances.get(0);
     for (int a = 0; a < testModelInstances.size; a++) {
       PModelInstance modelInstance = testModelInstances.get(a);
       modelInstance.getWorldTransform().idt().setToTranslation(a, 0, 0).scl(1, 1, 1).rot(0, 1, 0, a + PEngine.t);
       modelInstance.recalcTransforms();
     }
-    if (modelI != null) {
-      modelI.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, testModelInstances);
+    if (testModel != null) {
+      testModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, testModelInstances);
     }
     renderContext.glRenderQueue();
     renderContext.end();

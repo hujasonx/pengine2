@@ -33,7 +33,6 @@ allprojects {
         gdxControllersVersion = '2.1.0'
         recastVersion = '1.5.3'
         gltfVersion = '2.0.0-rc.1'
-        lombokVersion = '1.18.24'
     }
 
     repositories {
@@ -121,8 +120,6 @@ project(":core") {
 
 
     dependencies {
-//        compileOnly "org.projectlombok:lombok:$lombokVersion"
-//        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-bullet:$gdxVersion"
@@ -133,6 +130,7 @@ project(":core") {
         api "com.github.czyzby:gdx-lml:1.9.1.9.6"
         implementation fileTree(dir: "../libs", include: "*.jar")
         api "com.github.mgsx-dev.gdx-gltf:gltf:$gltfVersion"
+        implementation 'com.android.support:support-annotations:27.1.0'
 
     }
 }
