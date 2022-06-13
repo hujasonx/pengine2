@@ -16,25 +16,24 @@ import java.util.List;
 import lombok.Getter;
 
 public class PAssetManager {
-  public static class Directories {
-  }
-
   @Getter
   private static final AssetManager assetManager = new AssetManager();
 
   public static void init() {
     assetManager.setLoader(SceneAsset.class, ".glb", new GLBAssetLoader());
     assetManager.setLoader(SceneAsset.class, ".gltf", new GLTFAssetLoader());
-
     List<FileHandle> textureAtlasFiles = PFileHandleUtils.allFilesRecursive(Gdx.files.local(""), "atlas");
     List<FileHandle> gltfFiles = PFileHandleUtils.allFilesRecursive(Gdx.files.local(""), "glb|gltf");
     for (FileHandle f : textureAtlasFiles) {
       assetManager.load(f.path(), TextureAtlas.class);
     }
-
     for (FileHandle f : gltfFiles) {
       assetManager.load(f.path(), SceneAsset.class);
     }
+  }
+
+  public static boolean isLoaded(String id) {
+    return assetManager.isLoaded(id);
   }
 
   public static void preFrameUpdate() {
@@ -42,11 +41,9 @@ public class PAssetManager {
     assetManager.update();
   }
 
-  public static boolean isLoaded(String id) {
-    return assetManager.isLoaded(id);
-  }
-
   public static SceneAsset sceneAsset(String id) {
     return assetManager.get(id, SceneAsset.class);
   }
+
+  public static class Directories {}
 }

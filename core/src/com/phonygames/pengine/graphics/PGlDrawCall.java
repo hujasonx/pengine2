@@ -1,7 +1,6 @@
 package com.phonygames.pengine.graphics;
 
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
@@ -21,8 +20,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   public static final PGlDrawCall DEFAULT = new PGlDrawCall(true);
   @Getter
   private static final PPool<PGlDrawCall> staticPool = new PPool<PGlDrawCall>() {
-    @Override
-    protected PGlDrawCall newObject() {
+    @Override protected PGlDrawCall newObject() {
       return new PGlDrawCall(false);
     }
   };
@@ -49,9 +47,29 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   private PShader shader;
   @Getter
   private PVec3 worldLoc;
+
   private PGlDrawCall(boolean renderingDisabled) {
     reset();
     this.renderingDisabled = renderingDisabled;
+  }
+
+  @Override public void reset() {
+    PAssert.isFalse(renderingDisabled, "Cannot reset() a renderingDisabled PGlDrawCall");
+    getDataBufferLookupOffsets().clear();
+    getDataBufferLookupVecsPerInstance().clear();
+    material = null;
+    mesh = null;
+    enableBlend = false;
+    depthTest = true;
+    depthMask = true;
+    srcFactor = GL20.GL_SRC_ALPHA;
+    dstFactor = GL20.GL_ONE_MINUS_SRC_ALPHA;
+    dptTest = GL20.GL_LESS;
+    cullFace = GL20.GL_BACK;
+    numInstances = 0;
+    worldLoc = null;
+    shader = null;
+    layer = null;
   }
 
   public static PGlDrawCall genTemplate() {
@@ -66,18 +84,15 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     return staticPool.obtain();
   }
 
-  @Override
-  public int compareTo(PGlDrawCall other) {
+  @Override public int compareTo(PGlDrawCall other) {
     return 0;
   }
 
-  @Override
-  public PGlDrawCall deepCopy() {
+  @Override public PGlDrawCall deepCopy() {
     return new PGlDrawCall(renderingDisabled).deepCopyFrom(this);
   }
 
-  @Override
-  public PGlDrawCall deepCopyFrom(PGlDrawCall other) {
+  @Override public PGlDrawCall deepCopyFrom(PGlDrawCall other) {
     material = other.material;
     mesh = other.mesh;
     enableBlend = other.enableBlend;
@@ -94,26 +109,19 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     return this;
   }
 
-  public void freeTemp() {
-    PAssert.isFalse(renderingDisabled, "Cannot freeTemp() a renderingDisabled PGlDrawCall");
-    staticPool.free(this);
-  }
-
   public void glDraw(@NonNull PRenderContext renderContext, @NonNull PShader shader, boolean freeAfterwards) {
     PAssert.isFalse(renderingDisabled, "Cannot glDraw() a renderingDisabled PGlDrawCall");
     prepRenderContext(renderContext);
     if (shader.checkValid() && mesh != null) {
       for (val e : getDataBufferLookupOffsets()) {
-        renderContext.genDataBuffer(e.k())
-            .applyShader(shader, e.k(), getDataBufferLookupOffsets().get(e.k()), getDataBufferLookupVecsPerInstance().get(e.k()));
+        renderContext.genDataBuffer(e.k()).applyShader(shader, e.k(), getDataBufferLookupOffsets().get(e.k()),
+                                                       getDataBufferLookupVecsPerInstance().get(e.k()));
       }
-
       if (material != null) {
         material.applyUniforms(shader);
       }
       mesh.glRenderInstanced(shader, numInstances);
     }
-
     if (freeAfterwards) {
       freeTemp();
     }
@@ -127,25 +135,9 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     renderContext.setCullFace(cullFace);
   }
 
-  @Override
-  public void reset() {
-    PAssert.isFalse(renderingDisabled, "Cannot reset() a renderingDisabled PGlDrawCall");
-    getDataBufferLookupOffsets().clear();
-    getDataBufferLookupVecsPerInstance().clear();
-
-    material = null;
-    mesh = null;
-    enableBlend = false;
-    depthTest = true;
-    depthMask = true;
-    srcFactor = GL20.GL_SRC_ALPHA;
-    dstFactor = GL20.GL_ONE_MINUS_SRC_ALPHA;
-    dptTest = GL20.GL_LESS;
-    cullFace = GL20.GL_BACK;
-    numInstances = 0;
-    worldLoc = null;
-    shader = null;
-    layer = null;
+  public void freeTemp() {
+    PAssert.isFalse(renderingDisabled, "Cannot freeTemp() a renderingDisabled PGlDrawCall");
+    staticPool.free(this);
   }
 
   public PGlDrawCall setCullFace(int cullFace) {

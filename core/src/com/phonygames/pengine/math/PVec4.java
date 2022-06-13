@@ -17,7 +17,31 @@ public class PVec4 extends PVec<PVec4> {
   };
   private float x, y, z, w;
 
-  private PVec4() { }
+  private PVec4() {}
+
+  public static PVec4 obtain() {
+    return getStaticPool().obtain();
+  }
+
+  @Override public PVec4 add(PVec4 other) {
+    x += other.x;
+    y += other.y;
+    z += other.z;
+    w += other.w;
+    return this;
+  }
+
+  @Override public PVec4 add(PVec4 other, float scl) {
+    x += other.x * scl;
+    y += other.y * scl;
+    z += other.z * scl;
+    w += other.w * scl;
+    return this;
+  }
+
+  @Override public float len2() {
+    return x * x + y * y + z * z + w * w;
+  }
 
   @Override public boolean isOnLine(PVec4 other) {
     boolean desiredRatioSet = false;
@@ -62,20 +86,49 @@ public class PVec4 extends PVec<PVec4> {
     return true;
   }
 
-  public static PVec4 obtain() {
-    return getStaticPool().obtain();
+  @Override public float dot(PVec4 other) {
+    return x * other.x + y * other.y + z * other.z + w * other.w;
   }
 
-  @Override public PVec4 add(PVec4 other) {
-    x += other.x;
-    y += other.y;
-    z += other.z;
-    w += other.w;
+  @Override public PVec4 mul(PVec4 other) {
+    x *= other.x;
+    y *= other.y;
+    z *= other.z;
+    w *= other.w;
     return this;
   }
 
-  @Override public float dot(PVec4 other) {
-    return x * other.x + y * other.y + z * other.z + w * other.w;
+  @Override public PVec4 setZero() {
+    return set(0, 0, 0, 0);
+  }
+
+  @Override public PVec4 scl(float scl) {
+    x *= scl;
+    y *= scl;
+    z *= scl;
+    w *= scl;
+    return this;
+  }
+
+  /**
+   * Subtracts other from caller into caller.
+   * @param other
+   * @return caller for chaining
+   */
+  @Override public PVec4 sub(PVec4 other) {
+    x -= other.x;
+    y -= other.y;
+    z -= other.z;
+    w -= other.w;
+    return this;
+  }
+
+  public PVec4 set(float x, float y, float z, float w) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.w = w;
+    return this;
   }
 
   @Override public boolean equalsT(PVec4 vec4) {
@@ -91,48 +144,12 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
-  @Override public float len2() {
-    return x * x + y * y + z * z + w * w;
-  }
-
-  @Override public PVec4 mul(PVec4 other) {
-    x *= other.x;
-    y *= other.y;
-    z *= other.z;
-    w *= other.w;
-    return this;
-  }
-
   public PVec4 mul(PMat4 mat4) {
     float[] l_mat = mat4.values();
     return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03],
                     x * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13],
                     x * l_mat[Matrix4.M20] + y * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23],
                     x * l_mat[Matrix4.M30] + y * l_mat[Matrix4.M31] + z * l_mat[Matrix4.M32] + w * l_mat[Matrix4.M33]);
-  }
-
-  @Override public PVec4 add(PVec4 other, float scl) {
-    x += other.x * scl;
-    y += other.y * scl;
-    z += other.z * scl;
-    w += other.w * scl;
-    return this;
-  }
-
-  @Override public PVec4 scl(float scl) {
-    x *= scl;
-    y *= scl;
-    z *= scl;
-    w *= scl;
-    return this;
-  }
-
-  public PVec4 set(float x, float y, float z, float w) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.w = w;
-    return this;
   }
 
   public PVec4 set(Quaternion quaternion) {
@@ -151,25 +168,8 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
-  @Override public PVec4 setZero() {
-    return set(0, 0, 0, 0);
-  }
-
   @Override public PPool<PVec4> staticPool() {
     return getStaticPool();
-  }
-
-  /**
-   * Subtracts other from caller into caller.
-   * @param other
-   * @return caller for chaining
-   */
-  @Override public PVec4 sub(PVec4 other) {
-    x -= other.x;
-    y -= other.y;
-    z -= other.z;
-    w -= other.w;
-    return this;
   }
 
   public float w() {

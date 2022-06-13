@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
-import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PVec1;
@@ -27,63 +26,21 @@ public class PMaterial {
   private final String id;
   @Getter
   private final PModelInstance owner;
-  @Getter
-  private String shaderPrefix;
-
-  private final PStringMap<PVec1> vec1s = new PStringMap<PVec1>(PVec1.getStaticPool());
-
-  private final PStringMap<PVec2> vec2s = new PStringMap<PVec2>(PVec2.getStaticPool());
-
-  private final PStringMap<PVec3> vec3s = new PStringMap<PVec3>(PVec3.getStaticPool());
-
-  private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>(PVec4.getStaticPool());
-
   private final PStringMap<PTexture> textures = new PStringMap<PTexture>() {
-    @Override
-    protected PTexture newUnpooled(String s) {
+    @Override protected PTexture newUnpooled(String s) {
       return new PTexture();
     }
   };
-
-  public static class UniformConstants {
-
-    public static class Vec2 {
-      public static final String u_metallicRoughness = "u_metallicRoughness";
-    }
-
-    public static class Vec3 {
-    }
-
-    public static class Vec4 {
-      public static final String u_diffuseCol = "u_diffuseCol";
-      public static final String u_emissiveCol = "u_emissiveCol";
-      public static final String u_specularCol = "u_specularCol";
-    }
-
-    public static class Sampler2D {
-      public static final String u_brdflutTex = "u_brdflutTex";
-      public static final String u_diffuseTex = "u_diffuseTex";
-      public static final String u_emissiveTex = "u_emissiveTex";
-      public static final String u_metallicRoughnessTex = "u_metallicRoughnessTex";
-      public static final String u_normalTex = "u_normalTex";
-      public static final String u_occlusionTex = "u_occlusionTex";
-      public static final String u_reflectionTex = "u_reflectionTex";
-      public static final String u_specularTex = "u_specularTex";
-    }
-
-    public static class Float {
-      public static final String u_alphaTest = "u_alphaTest";
-      public static final String u_normalScale = "u_normalScale";
-      public static final String u_occlusionStrength = "u_occlusionStrength";
-      public static final String u_shadowBias = "u_shadowBias";
-      public static final String u_shininess = "u_shininess";
-    }
-  }
+  private final PStringMap<PVec1> vec1s = new PStringMap<PVec1>(PVec1.getStaticPool());
+  private final PStringMap<PVec2> vec2s = new PStringMap<PVec2>(PVec2.getStaticPool());
+  private final PStringMap<PVec3> vec3s = new PStringMap<PVec3>(PVec3.getStaticPool());
+  private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>(PVec4.getStaticPool());
+  @Getter
+  private String shaderPrefix;
 
   public PMaterial(String id, PModelInstance owner) {
     this.id = id;
     this.owner = owner;
-
     // PBR defaults.
     set(UniformConstants.Vec4.u_diffuseCol, 1, 1, 1, 1);
     set(UniformConstants.Vec4.u_emissiveCol, 0, 0, 0, 1);
@@ -93,31 +50,8 @@ public class PMaterial {
     setTexWithUniform(UniformConstants.Sampler2D.u_metallicRoughnessTex, new PTexture());
   }
 
-  public float getFloat(String uniform) {
-    return vec1s.get(uniform).x();
-  }
-
-  public PMaterial set(String uniform, float f) {
-    vec1s.genPooled(uniform).x(f);
-    return this;
-  }
-
-  public PMaterial setTex(String name, PTexture texture) {
-    textures.genPooled("u_" + name + "Tex").set(texture);
-    return this;
-  }
-
-  public PMaterial setTexWithUniform(String uniform, PTexture texture) {
-    textures.genUnpooled(uniform).set(texture);
-    return this;
-  }
-
-  public PVec3 getVec2(PVec3 out, String uniform) {
-    return out.set(vec3s.get(uniform));
-  }
-
-  public PMaterial set(String uniform, PVec2 vec2) {
-    vec2s.genPooled(uniform).set(vec2);
+  public PMaterial set(String uniform, float x, float y, float z, float w) {
+    vec4s.genPooled(uniform).set(x, y, z, w);
     return this;
   }
 
@@ -126,47 +60,9 @@ public class PMaterial {
     return this;
   }
 
-  public PVec3 getVec3(PVec3 out, String uniform) {
-    return out.set(vec3s.get(uniform));
-  }
-
-  public PMaterial set(String uniform, PVec3 vec3) {
-    vec3s.genPooled(uniform).set(vec3);
+  public PMaterial setTexWithUniform(String uniform, PTexture texture) {
+    textures.genUnpooled(uniform).set(texture);
     return this;
-  }
-
-  public PMaterial set(String uniform, float x, float y, float z) {
-    vec3s.genPooled(uniform).set(x, y, z);
-    return this;
-  }
-
-  public PVec4 getVec4(PVec4 out, String uniform) {
-    return out.set(vec4s.get(uniform));
-  }
-
-  public PMaterial set(String uniform, PVec4 vec4) {
-    vec4s.genPooled(uniform).set(vec4);
-    return this;
-  }
-
-  public PMaterial set(String uniform, float x, float y, float z, float w) {
-    vec4s.genPooled(uniform).set(x, y, z, w);
-    return this;
-  }
-
-  public PMaterial set(String uniform, Color color) {
-    vec4s.genPooled(uniform).set(color.r, color.g, color.b, color.a);
-    return this;
-  }
-
-  public PMaterial cpy(String newName, PModelInstance newOwner) {
-    PMaterial ret = new PMaterial(newName, newOwner);
-    ret.vec1s.tryDeepCopyAllFrom(vec1s);
-    ret.vec2s.tryDeepCopyAllFrom(vec2s);
-    ret.vec3s.tryDeepCopyAllFrom(vec3s);
-    ret.vec4s.tryDeepCopyAllFrom(vec4s);
-    ret.textures.tryDeepCopyAllFrom(textures);
-    return ret;
   }
 
   public void applyUniforms(PShader shader) {
@@ -187,18 +83,49 @@ public class PMaterial {
     }
   }
 
-  public PMaterial setMetallic(float metallic) {
-    vec2s.genPooled(UniformConstants.Vec2.u_metallicRoughness).x(metallic);
+  public PMaterial cpy(String newName, PModelInstance newOwner) {
+    PMaterial ret = new PMaterial(newName, newOwner);
+    ret.vec1s.tryDeepCopyAllFrom(vec1s);
+    ret.vec2s.tryDeepCopyAllFrom(vec2s);
+    ret.vec3s.tryDeepCopyAllFrom(vec3s);
+    ret.vec4s.tryDeepCopyAllFrom(vec4s);
+    ret.textures.tryDeepCopyAllFrom(textures);
+    return ret;
+  }
+
+  public float getFloat(String uniform) {
+    return vec1s.get(uniform).x();
+  }
+
+  public PVec3 getVec2(PVec3 out, String uniform) {
+    return out.set(vec3s.get(uniform));
+  }
+
+  public PVec3 getVec3(PVec3 out, String uniform) {
+    return out.set(vec3s.get(uniform));
+  }
+
+  public PVec4 getVec4(PVec4 out, String uniform) {
+    return out.set(vec4s.get(uniform));
+  }
+
+  public PMaterial set(String uniform, PVec2 vec2) {
+    vec2s.genPooled(uniform).set(vec2);
     return this;
   }
 
-  public PMaterial setRoughness(float roughness) {
-    vec2s.genPooled(UniformConstants.Vec2.u_metallicRoughness).y(roughness);
+  public PMaterial set(String uniform, PVec3 vec3) {
+    vec3s.genPooled(uniform).set(vec3);
     return this;
   }
 
-  public PMaterial setMetallicRoughness(float metallic, float roughness) {
-    set(UniformConstants.Vec2.u_metallicRoughness, metallic, roughness);
+  public PMaterial set(String uniform, float x, float y, float z) {
+    vec3s.genPooled(uniform).set(x, y, z);
+    return this;
+  }
+
+  public PMaterial set(String uniform, PVec4 vec4) {
+    vec4s.genPooled(uniform).set(vec4);
     return this;
   }
 
@@ -225,7 +152,7 @@ public class PMaterial {
     } else if (attribute.type == PBRTextureAttribute.Bump) {
       PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     } else if (attribute.type == PBRTextureAttribute.BaseColorTexture ||
-        attribute.type == PBRTextureAttribute.Diffuse) {
+               attribute.type == PBRTextureAttribute.Diffuse) {
       setTexWithUniform(UniformConstants.Sampler2D.u_diffuseTex,
                         new PTexture(((PBRTextureAttribute) attribute).textureDescription.texture));
     } else if (attribute.type == PBRTextureAttribute.Emissive) {
@@ -265,7 +192,69 @@ public class PMaterial {
     } else {
       PAssert.warnNotImplemented("Material attribute " + attribute.toString());
     }
-
     return this;
+  }
+
+  public PMaterial set(String uniform, Color color) {
+    vec4s.genPooled(uniform).set(color.r, color.g, color.b, color.a);
+    return this;
+  }
+
+  public PMaterial set(String uniform, float f) {
+    vec1s.genPooled(uniform).x(f);
+    return this;
+  }
+
+  public PMaterial setMetallic(float metallic) {
+    vec2s.genPooled(UniformConstants.Vec2.u_metallicRoughness).x(metallic);
+    return this;
+  }
+
+  public PMaterial setRoughness(float roughness) {
+    vec2s.genPooled(UniformConstants.Vec2.u_metallicRoughness).y(roughness);
+    return this;
+  }
+
+  public PMaterial setMetallicRoughness(float metallic, float roughness) {
+    set(UniformConstants.Vec2.u_metallicRoughness, metallic, roughness);
+    return this;
+  }
+
+  public PMaterial setTex(String name, PTexture texture) {
+    textures.genPooled("u_" + name + "Tex").set(texture);
+    return this;
+  }
+
+  public static class UniformConstants {
+    public static class Float {
+      public static final String u_alphaTest = "u_alphaTest";
+      public static final String u_normalScale = "u_normalScale";
+      public static final String u_occlusionStrength = "u_occlusionStrength";
+      public static final String u_shadowBias = "u_shadowBias";
+      public static final String u_shininess = "u_shininess";
+    }
+
+    public static class Sampler2D {
+      public static final String u_brdflutTex = "u_brdflutTex";
+      public static final String u_diffuseTex = "u_diffuseTex";
+      public static final String u_emissiveTex = "u_emissiveTex";
+      public static final String u_metallicRoughnessTex = "u_metallicRoughnessTex";
+      public static final String u_normalTex = "u_normalTex";
+      public static final String u_occlusionTex = "u_occlusionTex";
+      public static final String u_reflectionTex = "u_reflectionTex";
+      public static final String u_specularTex = "u_specularTex";
+    }
+
+    public static class Vec2 {
+      public static final String u_metallicRoughness = "u_metallicRoughness";
+    }
+
+    public static class Vec3 {}
+
+    public static class Vec4 {
+      public static final String u_diffuseCol = "u_diffuseCol";
+      public static final String u_emissiveCol = "u_emissiveCol";
+      public static final String u_specularCol = "u_specularCol";
+    }
   }
 }

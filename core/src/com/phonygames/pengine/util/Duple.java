@@ -13,12 +13,12 @@ public class Duple<K, V> {
     return k;
   }
 
-  public V getValue() {
-    return v;
-  }
-
   public void setKey(K k) {
     this.k = k;
+  }
+
+  public V getValue() {
+    return v;
   }
 
   public void setValue(V v) {

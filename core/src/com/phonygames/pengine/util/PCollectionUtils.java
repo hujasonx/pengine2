@@ -5,7 +5,6 @@ import java.util.List;
 public class PCollectionUtils {
   /**
    * Checks equality by calling .equals() on the list elements.
-   *
    * @param a
    * @param b
    * @return If a and b are the same.
@@ -14,14 +13,12 @@ public class PCollectionUtils {
     if (a.size() != b.size()) {
       return false;
     }
-
     for (int i = 0; i < a.size(); i++) {
       Object ao = a.get(i);
       Object bo = b.get(i);
       if (ao == null && bo == null) {
         continue;
       }
-
       if (ao != null && bo != null) {
         if (!ao.equals(bo)) {
           return false;
@@ -39,7 +36,6 @@ public class PCollectionUtils {
     for (int a = 0; a < ret.length; a++) {
       ret[a] = floats.get(a);
     }
-
     return ret;
   }
 
@@ -48,7 +44,6 @@ public class PCollectionUtils {
     for (int a = 0; a < ret.length; a++) {
       ret[a] = shorts.get(a);
     }
-
     return ret;
   }
 }

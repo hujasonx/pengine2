@@ -94,7 +94,7 @@ public class PVec3 extends PVec<PVec3> {
    * @param other
    * @return caller for chaining
    */
-  public PVec3 mul(PVec3 other) {
+  @Override public PVec3 mul(PVec3 other) {
     backingVec3.x *= other.backingVec3.x;
     backingVec3.y *= other.backingVec3.y;
     backingVec3.z *= other.backingVec3.z;
@@ -126,7 +126,7 @@ public class PVec3 extends PVec<PVec3> {
    * @param scale
    * @return caller for chaining
    */
-  public PVec3 scl(float scale) {
+  @Override public PVec3 scl(float scale) {
     backingVec3.x *= scale;
     backingVec3.y *= scale;
     backingVec3.z *= scale;

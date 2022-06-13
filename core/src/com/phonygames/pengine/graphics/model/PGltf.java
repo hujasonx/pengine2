@@ -86,14 +86,6 @@ public class PGltf {
     }
   }
 
-  private PMaterial genMaterial(Material material) {
-    val ret = new PMaterial(material.id, null);
-    for (Attribute attribute : material) {
-      ret.set(attribute);
-    }
-    return ret;
-  }
-
   private void loadFromSceneAsset(SceneAsset sceneAsset) {
     PAssert.isNotNull(sceneAsset);
     backingSceneAsset = sceneAsset;
@@ -139,6 +131,14 @@ public class PGltf {
     loadAnimationsFromAsset(sceneAsset, model);
   }
 
+  private PMaterial genMaterial(Material material) {
+    val ret = new PMaterial(material.id, null);
+    for (Attribute attribute : material) {
+      ret.set(attribute);
+    }
+    return ret;
+  }
+
   private static void loadAnimationsFromAsset(SceneAsset asset, PModel model) {
     for (Animation baseAnim : asset.animations) {
       PAnimation.Builder builder = new PAnimation.Builder(baseAnim.id);
@@ -159,7 +159,6 @@ public class PGltf {
         }
         builder.addNodeAnimation(nodeBuilder.build());
       }
-
       model.getAnimations().put(baseAnim.id, builder.build());
     }
   }

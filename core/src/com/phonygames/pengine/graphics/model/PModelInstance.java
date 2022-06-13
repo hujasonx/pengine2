@@ -16,56 +16,42 @@ import lombok.NonNull;
 import lombok.val;
 
 public class PModelInstance {
-
-
-  @Getter
-  private final PModel model;
-
-  @Getter(lazy = true)
-  private final PStringMap<Node> nodes = new PStringMap<>();
   @Getter(lazy = true)
   private final PStringMap<PGlNode> glNodes = new PStringMap<>();
   @Getter(lazy = true)
-  private final PList<Node> rootNodes = new PList<>();
-
-  @Getter(lazy = true)
   private final PStringMap<PMaterial> materials = new PStringMap<>();
-
+  @Getter
+  private final PModel model;
+  @Getter(lazy = true)
+  private final PStringMap<Node> nodes = new PStringMap<>();
+  @Getter(lazy = true)
+  private final PList<Node> rootNodes = new PList<>();
   @Getter(lazy = true)
   private final PMat4 worldTransform = PMat4.obtain();
 
   public PModelInstance(PModel model) {
     this.model = model;
-
     PMap<PModel.Node, Node> childToParentNodeMap = new PMap<>();
     PList<PModel.Node> modelNodesToProcess = new PList<>();
     for (val rootName : model.getRootNodeIds()) {
       modelNodesToProcess.add(model.getNodes().get(rootName));
     }
-
     while (modelNodesToProcess.size > 0) {
       PModel.Node modelNode = modelNodesToProcess.removeLast();
-
       Node parent = childToParentNodeMap.get(modelNode);
       Node node = new Node(this, modelNode, parent);
       for (PGlNode glNode : node.getGlNodes()) {
         getGlNodes().put(glNode.getId(), glNode);
       }
-
       getNodes().put(modelNode.getId(), node);
       if (parent == null) {
         getRootNodes().add(node);
       }
-
       for (val child : modelNode.getChildren()) {
         modelNodesToProcess.add(child);
         childToParentNodeMap.put(child, node);
       }
     }
-  }
-
-  public Node getNode(@NonNull String id) {
-    return getNodes().get(id);
   }
 
   public void enqueue(PRenderContext renderContext, PShaderProvider shaderProvider, PList<PModelInstance> instances) {
@@ -74,11 +60,8 @@ public class PModelInstance {
     }
   }
 
-  public void recalcTransforms() {
-    for (PModelInstance.Node node : getRootNodes()) {
-      node.recalcNodeWorldTransformsRecursive(getWorldTransform());
-    }
-
+  public Node getNode(@NonNull String id) {
+    return getNodes().get(id);
   }
 
   // Returns the new vec4 count in the bone transform buffer.
@@ -91,7 +74,6 @@ public class PModelInstance {
       if (glNode.getInvBoneTransforms() == null || glNode.getInvBoneTransforms().size == 0) {
         continue;
       }
-
       renderContext.setVecsPerInstanceForDataBuffer("boneTransforms", glNode.getInvBoneTransforms().size * 4);
       for (val e2 : glNode.getInvBoneTransforms()) {
         String boneId = e2.key;
@@ -102,13 +84,11 @@ public class PModelInstance {
       }
     }
     tempMat4.free();
-
     return tex.vecsWritten();
   }
 
   /**
    * Outputs the PMat4 references into the map.
-   *
    * @param map
    * @param useBindPose If set, use the bind pose instead of the actual pose.
    * @param weight
@@ -122,34 +102,36 @@ public class PModelInstance {
       } else {
         mat4.set(e.v().getTransform());
       }
-
       mat4.scl(weight);
     }
-
     return map;
+  }
+
+  public void recalcTransforms() {
+    for (PModelInstance.Node node : getRootNodes()) {
+      node.recalcNodeWorldTransformsRecursive(getWorldTransform());
+    }
   }
 
   public class Node {
     @Getter
-    final PModel.Node templateNode;
-    @Getter(lazy = true)
-    private final PMat4 transform = PMat4.obtain();
+    final PModelInstance owner;
     @Getter
     final Node parent;
+    @Getter
+    final PModel.Node templateNode;
     @Getter(lazy = true)
     private final PList<Node> children = new PList<>();
     @Getter(lazy = true)
     private final PList<PGlNode> glNodes = new PList<>();
-    @Getter
-    boolean inheritTransform = true, enabled = true;
-
+    @Getter(lazy = true)
+    private final PMat4 transform = PMat4.obtain();
     @Getter(lazy = true)
     private final PMat4 worldTransform = PMat4.obtain();
     @Getter(lazy = true)
     private final PMat4 worldTransformInvTra = PMat4.obtain();
-
     @Getter
-    final PModelInstance owner;
+    boolean inheritTransform = true, enabled = true;
 
     private Node(PModelInstance owner, PModel.Node templateNode, Node parent) {
       this.owner = owner;
@@ -166,27 +148,8 @@ public class PModelInstance {
       }
     }
 
-    public Node setInheritTransform(boolean inheritTransform) {
-      this.inheritTransform = inheritTransform;
-      return this;
-    }
-
-    public Node setEnabled(boolean enabled) {
-      this.enabled = enabled;
-      return this;
-    }
-
-    public String getId() {
-      return templateNode.getId();
-    }
-
-    public void resetTransformFromTemplate() {
-      getTransform().set(templateNode.getTransform());
-    }
-
     // Renders recursively instanced, using the material of the caller.
-    public void enqueueRecursiveInstanced(PRenderContext renderContext,
-                                          PShaderProvider shaderProvider,
+    public void enqueueRecursiveInstanced(PRenderContext renderContext, PShaderProvider shaderProvider,
                                           PList<PModelInstance> modelInstances) {
       for (PGlNode node : getGlNodes()) {
         for (PModelInstance modelInstance : modelInstances) {
@@ -195,17 +158,18 @@ public class PModelInstance {
           if (instanceNode.getDataBufferEmitter() != null) {
             instanceNode.getDataBufferEmitter().emitDataBuffersInto(renderContext);
           }
-
           outputBoneTransformsToBuffer(renderContext);
         }
-
-        renderContext
-            .enqueue(shaderProvider, PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size));
+        renderContext.enqueue(shaderProvider,
+                              PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size));
       }
-
       for (Node child : getChildren()) {
         child.enqueueRecursiveInstanced(renderContext, shaderProvider, modelInstances);
       }
+    }
+
+    public String getId() {
+      return templateNode.getId();
     }
 
     public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform) {
@@ -214,16 +178,27 @@ public class PModelInstance {
       } else {
         getWorldTransform().set(getTransform());
       }
-
       getWorldTransformInvTra().set(getWorldTransform()).invTra();
-
       for (PGlNode node : getGlNodes()) {
         node.setWorldTransform(getWorldTransform(), getWorldTransformInvTra());
       }
-
       for (Node child : getChildren()) {
         child.recalcNodeWorldTransformsRecursive(getWorldTransform());
       }
+    }
+
+    public void resetTransformFromTemplate() {
+      getTransform().set(templateNode.getTransform());
+    }
+
+    public Node setEnabled(boolean enabled) {
+      this.enabled = enabled;
+      return this;
+    }
+
+    public Node setInheritTransform(boolean inheritTransform) {
+      this.inheritTransform = inheritTransform;
+      return this;
     }
   }
 }

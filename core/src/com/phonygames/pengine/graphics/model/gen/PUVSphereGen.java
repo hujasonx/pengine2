@@ -12,6 +12,12 @@ import lombok.val;
 
 public abstract class PUVSphereGen implements Pool.Poolable {
   @Getter
+  private static final PUVSphereGen shared = new PUVSphereGen() {
+    @Override public void perVertex(PVec3 pos, PVec3 nor, float theta, float phi, float rho, float u, float v) {
+      // Noop.
+    }
+  };
+  @Getter
   @Setter
   private boolean setNormals;
 
@@ -19,13 +25,9 @@ public abstract class PUVSphereGen implements Pool.Poolable {
     reset();
   }
 
-  @Getter
-  private static final PUVSphereGen shared = new PUVSphereGen() {
-    @Override
-    public void perVertex(PVec3 pos, PVec3 nor, float theta, float phi, float rho, float u, float v) {
-      // Noop.
-    }
-  };
+  @Override public void reset() {
+    setNormals = true;
+  }
 
   public void genSphere(int lat, int lon, PVec3 center, float radius, PModelGen.Part part) {
     val pool = PPool.getBuffer();
@@ -40,12 +42,10 @@ public abstract class PUVSphereGen implements Pool.Poolable {
         float p1 = (MathUtils.PI * (v + 1) / lat); // Phi.
         float t0 = (MathUtils.PI2 * (h + 0) / lon); // Theta.
         float t1 = (MathUtils.PI2 * (h + 1) / lon); // Theta.
-
         float u0 = ((float) h) / lon;
         float u1 = ((float) (h + 1)) / lon;
         float v0 = 1f - ((float) v) / lat;
         float v1 = 1f - ((float) (v + 1)) / lat;
-
         n00.sphericalYUpZForward(t0, p0, radius);
         n01.sphericalYUpZForward(t0, p1, radius);
         n11.sphericalYUpZForward(t1, p1, radius);
@@ -78,13 +78,6 @@ public abstract class PUVSphereGen implements Pool.Poolable {
       }
     }
     pool.finish();
-
-
-  }
-
-  @Override
-  public void reset() {
-    setNormals = true;
   }
 
   public abstract void perVertex(PVec3 pos, PVec3 nor, float theta, float phi, float rho, float u, float v);

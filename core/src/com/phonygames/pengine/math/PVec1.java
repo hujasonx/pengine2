@@ -16,28 +16,9 @@ public class PVec1 extends PVec<PVec1> {
 
   private PVec1() {}
 
-  @Override public boolean equalsT(PVec1 pVec1) {
-    return x == pVec1.x;
-  }
-
-  @Override public boolean isOnLine(PVec1 other) {
-    return true;
-  }
-
-  @Override public PVec1 scl(float scl) {
-    x *= scl;
-    return this;
-  }
-
-  @Override public PVec1 setZero() {
-    x = 0;
-    return this;
-  }
-
   public static PVec1 obtain() {
     return getStaticPool().obtain();
   }
-  // End static.
 
   /**
    * Adds other to caller into caller.
@@ -60,6 +41,15 @@ public class PVec1 extends PVec<PVec1> {
     return this;
   }
 
+  @Override public float len2() {
+    return x * x;
+  }
+
+  @Override public boolean isOnLine(PVec1 other) {
+    return true;
+  }
+  // End static.
+
   /**
    * Performs a dot product.
    * @param other
@@ -73,10 +63,6 @@ public class PVec1 extends PVec<PVec1> {
     return Math.abs(x);
   }
 
-  @Override public float len2() {
-    return x * x;
-  }
-
   /**
    * Multiplies other with caller into caller.
    * @param other
@@ -85,6 +71,30 @@ public class PVec1 extends PVec<PVec1> {
   @Override public PVec1 mul(PVec1 other) {
     x *= other.x;
     return this;
+  }
+
+  @Override public PVec1 setZero() {
+    x = 0;
+    return this;
+  }
+
+  @Override public PVec1 scl(float scl) {
+    x *= scl;
+    return this;
+  }
+
+  /**
+   * Subtracts other from caller into caller.
+   * @param other
+   * @return caller for chaining
+   */
+  @Override public PVec1 sub(PVec1 other) {
+    x -= other.x;
+    return this;
+  }
+
+  @Override public boolean equalsT(PVec1 pVec1) {
+    return x == pVec1.x;
   }
 
   public PVec1 set(float x) {
@@ -99,16 +109,6 @@ public class PVec1 extends PVec<PVec1> {
 
   @Override protected PPool staticPool() {
     return getStaticPool();
-  }
-
-  /**
-   * Subtracts other from caller into caller.
-   * @param other
-   * @return caller for chaining
-   */
-  @Override public PVec1 sub(PVec1 other) {
-    x -= other.x;
-    return this;
   }
 
   public float x() {

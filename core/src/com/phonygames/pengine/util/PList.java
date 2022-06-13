@@ -1,11 +1,6 @@
 package com.phonygames.pengine.util;
 
 import com.badlogic.gdx.utils.Array;
-import com.phonygames.pengine.exception.PAssert;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.ListIterator;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -25,12 +20,10 @@ public class PList<E> extends Array<E> implements PPool.Poolable {
     if (size == 0) {
       return null;
     }
-
     return removeIndex(size - 1);
   }
 
-  @Override
-  public void reset() {
+  @Override public void reset() {
     clear();
   }
 }

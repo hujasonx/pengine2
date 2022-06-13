@@ -1,7 +1,5 @@
 package com.phonygames.pengine.math;
 
-import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.util.PBasic;
 import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
@@ -16,11 +14,7 @@ public class PVec2 extends PVec<PVec2> {
   };
   private float x, y;
 
-  @Override public boolean isOnLine(PVec2 other) {
-    return (y == 0 && other.y == 0) ? true : (x / y == other.x / other.y);
-  }
-
-  private PVec2() { }
+  private PVec2() {}
 
   public static PVec2 obtain() {
     return getStaticPool().obtain();
@@ -49,6 +43,14 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
+  @Override public float len2() {
+    return x * x + y * y;
+  }
+
+  @Override public boolean isOnLine(PVec2 other) {
+    return (y == 0 && other.y == 0) ? true : (x / y == other.x / other.y);
+  }
+
   /**
    * Performs a dot product.
    * @param other
@@ -56,14 +58,6 @@ public class PVec2 extends PVec<PVec2> {
    */
   @Override public float dot(PVec2 other) {
     return x * other.x + y * other.y;
-  }
-
-  @Override public boolean equalsT(PVec2 vec2) {
-    return PNumberUtils.epsilonEquals(x, vec2.x) && PNumberUtils.epsilonEquals(y, vec2.y);
-  }
-
-  @Override public float len2() {
-    return x * x + y * y;
   }
 
   /**
@@ -77,10 +71,26 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
+  @Override public PVec2 setZero() {
+    x = 0;
+    y = 0;
+    return this;
+  }
+
   @Override public PVec2 scl(float scl) {
     x *= scl;
     y *= scl;
     return this;
+  }
+
+  @Override public PVec2 sub(PVec2 other) {
+    x -= other.x;
+    y -= other.y;
+    return this;
+  }
+
+  @Override public boolean equalsT(PVec2 vec2) {
+    return PNumberUtils.epsilonEquals(x, vec2.x) && PNumberUtils.epsilonEquals(y, vec2.y);
   }
 
   public PVec2 set(float x, float y) {
@@ -95,20 +105,8 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
-  @Override public PVec2 setZero() {
-    x = 0;
-    y = 0;
-    return this;
-  }
-
   @Override protected PPool staticPool() {
     return getStaticPool();
-  }
-
-  @Override public PVec2 sub(PVec2 other) {
-    x -= other.x;
-    y -= other.y;
-    return this;
   }
 
   public float u() {

@@ -1,10 +1,7 @@
 package com.phonygames.pengine.graphics.animation;
 
-import com.phonygames.pengine.graphics.model.PGlNode;
-import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PBuilder;
-import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PStringMap;
 
@@ -15,13 +12,29 @@ public class PAnimation {
   private final String name;
   @Getter(lazy = true)
   private final PStringMap<PNodeAnimation> nodeAnimations = new PStringMap<>();
+  @Getter
+  private float length = 0;
 
   private PAnimation(String name) {
     this.name = name;
   }
 
-  @Getter
-  private float length = 0;
+  /**
+   * Additively applys the animation with the given weight.
+   * @param transforms
+   * @param t
+   * @param weight
+   */
+  public void apply(PStringMap<PMat4> transforms, float t, float weight) {
+    for (PMap.Entry<String, PMat4> e : transforms) {
+      PNodeAnimation nodeAnimation = getNodeAnimations().get(e.k());
+      if (nodeAnimation == null) {
+        continue;
+      }
+      nodeAnimation.apply(e.v(), t, weight);
+    }
+    return;
+  }
 
   public static class Builder extends PBuilder {
     private final PAnimation animation;
@@ -40,25 +53,5 @@ public class PAnimation {
       lockBuilder();
       return animation;
     }
-  }
-
-  /**
-   * Additively applys the animation with the given weight.
-   *
-   * @param transforms
-   * @param t
-   * @param weight
-   */
-  public void apply(PStringMap<PMat4> transforms, float t, float weight) {
-    for (PMap.Entry<String, PMat4> e : transforms) {
-      PNodeAnimation nodeAnimation = getNodeAnimations().get(e.k());
-      if (nodeAnimation == null) {
-        continue;
-      }
-
-      nodeAnimation.apply(e.v(), t, weight);
-    }
-
-    return;
   }
 }

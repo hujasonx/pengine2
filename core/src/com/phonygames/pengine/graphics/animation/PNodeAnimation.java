@@ -13,16 +13,16 @@ import lombok.Getter;
 import lombok.NonNull;
 
 public class PNodeAnimation {
-  @Getter
-  private Interpolation interpolationTranslation, interpolationRotation, interpolationScale;
-  @Getter(value = AccessLevel.PRIVATE, lazy = true)
-  private final PList<NodeKeyframe<PVec3>> translationKeyframes = new PList<>();
+  @Getter(value = AccessLevel.MODULE)
+  private final String nodeName;
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   private final PList<NodeKeyframe<PVec4>> rotationKeyframes = new PList<>();
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   private final PList<NodeKeyframe<PVec3>> scaleKeyframes = new PList<>();
-  @Getter(value = AccessLevel.MODULE)
-  private final String nodeName;
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  private final PList<NodeKeyframe<PVec3>> translationKeyframes = new PList<>();
+  @Getter
+  private Interpolation interpolationTranslation, interpolationRotation, interpolationScale;
   @Getter(value = AccessLevel.PUBLIC)
   private float length;
 
@@ -35,6 +35,10 @@ public class PNodeAnimation {
     getTransformAtT(temp, t);
     output.mulAdd(temp, weight);
     temp.free();
+  }
+
+  private final PMat4 getTransformAtT(PMat4 out, float t) {
+    return out;
   }
 
   /**
@@ -52,10 +56,6 @@ public class PNodeAnimation {
     return Keyframes.size - 1;
   }
 
-  private final PMat4 getTransformAtT(PMat4 out, float t) {
-    return out;
-  }
-
   public enum Interpolation {
     LINEAR, CUBIC, STEP
   }
@@ -65,21 +65,6 @@ public class PNodeAnimation {
 
     public Builder(String name) {
       nodeAnimation = new PNodeAnimation(name);
-    }
-
-    public Builder setInterpolationTranslation(Interpolation interpolation) {
-      nodeAnimation.interpolationTranslation = interpolation;
-      return this;
-    }
-
-    public Builder setInterpolationRotation(Interpolation interpolation) {
-      nodeAnimation.interpolationRotation = interpolation;
-      return this;
-    }
-
-    public Builder setInterpolationScale(Interpolation interpolation) {
-      nodeAnimation.interpolationScale = interpolation;
-      return this;
     }
 
     public Builder addNodeKeyframe(float time, @NonNull PVec3 translation, @NonNull PVec4 rotation,
@@ -115,6 +100,21 @@ public class PNodeAnimation {
     public PNodeAnimation build() {
       lockBuilder();
       return nodeAnimation;
+    }
+
+    public Builder setInterpolationRotation(Interpolation interpolation) {
+      nodeAnimation.interpolationRotation = interpolation;
+      return this;
+    }
+
+    public Builder setInterpolationScale(Interpolation interpolation) {
+      nodeAnimation.interpolationScale = interpolation;
+      return this;
+    }
+
+    public Builder setInterpolationTranslation(Interpolation interpolation) {
+      nodeAnimation.interpolationTranslation = interpolation;
+      return this;
     }
   }
 }

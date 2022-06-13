@@ -9,11 +9,9 @@ public class PSort {
     if (f1 < f2) {
       return -1;
     }
-
     if (f1 > f2) {
       return 1;
     }
-
     return 0;
   }
 
@@ -21,11 +19,9 @@ public class PSort {
     if (i1 < i2) {
       return -1;
     }
-
     if (i1 > i2) {
       return 1;
     }
-
     return 0;
   }
 }

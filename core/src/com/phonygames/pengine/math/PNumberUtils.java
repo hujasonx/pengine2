@@ -1,10 +1,24 @@
 package com.phonygames.pengine.math;
 
-import com.phonygames.pengine.logging.PLogMessage;
-
 public class PNumberUtils {
+  public static int clamp(int n, int min, int max) {
+    return Math.max(Math.min(n, max), min);
+  }
+
+  public static float clamp(float n, float min, float max) {
+    return Math.max(Math.min(n, max), min);
+  }
+
   public static int compareTo(float a, float b) {
     return (a == b ? 0 : (a > b ? 1 : -1));
+  }
+
+  public static boolean epsilonEquals(float x, float y) {
+    return Math.abs(x - y) < 0.001f;
+  }
+
+  public static boolean epsilonEquals(float x, float y, float epsilon) {
+    return Math.abs(x - y) < epsilon;
   }
 
   public static boolean isPrimeBruteForce(int number) {
@@ -18,7 +32,6 @@ public class PNumberUtils {
 
   /**
    * Returns the true modulus a mod b.
-   *
    * @param a left side.
    * @param b right side.
    * @return a mod b
@@ -33,7 +46,6 @@ public class PNumberUtils {
 
   /**
    * Returns the true modulus a mod b.
-   *
    * @param a left side.
    * @param b right side.
    * @return a mod b
@@ -45,23 +57,4 @@ public class PNumberUtils {
     }
     return out;
   }
-
-  public static int clamp(int n, int min, int max) {
-    return Math.max(Math.min(n, max), min);
-  }
-
-  public static float clamp(float n, float min, float max) {
-    return Math.max(Math.min(n, max), min);
-  }
-
-
-  public static boolean epsilonEquals(float x, float y) {
-    return Math.abs(x - y) < 0.001f;
-  }
-
-  public static boolean epsilonEquals(float x, float y, float epsilon) {
-    return Math.abs(x - y) < epsilon;
-  }
-
-
 }

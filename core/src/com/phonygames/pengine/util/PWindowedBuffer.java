@@ -23,8 +23,7 @@ public class PWindowedBuffer {
 
   public int get(int indexFromHead) {
     if (indexFromHead > filledSize()) {
-      PLog.w(
-          "WARNING: UIntWindowedBuffer indexFromHead " + indexFromHead + " is greater than size: " + filledSize()).pEngine();
+      PLog.w("PIntWindowedBuffer indexFromHead " + indexFromHead + " is greater than size: " + filledSize()).pEngine();
     }
     return data[PNumberUtils.mod(head - 1 - indexFromHead, capacity)];
   }

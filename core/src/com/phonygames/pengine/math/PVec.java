@@ -20,14 +20,7 @@ public abstract class PVec<V extends PVec> extends PBasic<V> {
     return PNumberUtils.compareTo(len2(), v.len2());
   }
 
-  public abstract float dot(V other);
-
-  public float len() {
-    return (float) Math.sqrt(len2());
-  }
-
   public abstract float len2();
-  public abstract V mul(V other);
 
   /**
    * @return isOnLine(other, epsilon) && hasSameDirection(other)
@@ -42,11 +35,19 @@ public abstract class PVec<V extends PVec> extends PBasic<V> {
     return dot(other) > 0;
   }
 
+  public abstract float dot(V other);
+
+  public float len() {
+    return (float) Math.sqrt(len2());
+  }
+
+  public abstract V mul(V other);
+
   @Override public final void reset() {
     setZero();
   }
 
-  public abstract V scl(float scl);
   public abstract V setZero();
+  public abstract V scl(float scl);
   public abstract V sub(V other);
 }
