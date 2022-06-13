@@ -134,7 +134,7 @@ public class CybertagGame implements PGame {
 
     // Set environment.
     environment.setAmbientLightCol(.1f, .1f, .1f);
-    PVec3 tempV3 = PVec3.obtain(-1, -1, -1).nor();
+    PVec3 tempV3 = PVec3.obtain().set(-1, -1, -1).nor();
     environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
     tempV3.free();
 

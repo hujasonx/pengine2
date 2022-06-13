@@ -17,8 +17,10 @@ import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
@@ -62,21 +64,21 @@ public class PRenderContext {
   private final RenderContext backingRenderContext =
       new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
 
-  @Getter(lazy = true)
+  @Getter
   private final PVec3 cameraPos = PVec3.obtain();
-  @Getter(lazy = true)
+  @Getter
   private final PVec3 cameraDir = PVec3.obtain();
-  @Getter(lazy = true)
+  @Getter
   private final PVec3 cameraUp = PVec3.obtain();
-  @Getter(lazy = true)
-  private final PVec2 cameraRange = PVec2.obtain(1, 100);
-  @Getter(lazy = true)
-  private final PVec1 cameraFov = PVec1.obtain(60);
-  @Getter(lazy = true)
+  @Getter
+  private final PVec2 cameraRange = PVec2.obtain().set(1, 100);
+  @Getter
+  private final PVec1 cameraFov = PVec1.obtain().set(60);
+  @Getter
   private final PMat4 viewProjTransform = PMat4.obtain();
-  @Getter(lazy = true)
+  @Getter
   private final PMat4 viewProjInvTransform = PMat4.obtain();
-  @Getter(lazy = true)
+  @Getter
   private final PMat4 viewProjInvTraTransform = PMat4.obtain();
 
   private final PerspectiveCamera perspectiveCamera = new PerspectiveCamera();
@@ -89,18 +91,25 @@ public class PRenderContext {
   private final PStringMap<Integer> storedVecsPerInstance = new PStringMap<>();
   private final PStringMap<Integer> storedBufferOffsets = new PStringMap<>();
 
-  private PStringMap<PMap<PShader, PList<PGlDrawCall>>> enqueuedDrawCalls =
-      new PStringMap<PMap<PShader, PList<PGlDrawCall>>>() {
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  private static final PPool<PList<PGlDrawCall>> glDrawCallListPool = new PPool<PList<PGlDrawCall>>() {
+    @Override
+    protected PList<PGlDrawCall> newObject() {
+      return new PList<>();
+    }
+  };
+
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  private static final PPool<PMap<PShader, PList<PGlDrawCall>>> glDrawCallListMapPool =
+      new PPool<PMap<PShader, PList<PGlDrawCall>>>() {
         @Override
-        protected PMap<PShader, PList<PGlDrawCall>> newPooled() {
-          return new PMap<PShader, PList<PGlDrawCall>>() {
-            @Override
-            protected PList<PGlDrawCall> newPooled() {
-              return new PList<>();
-            }
-          };
+        protected PMap<PShader, PList<PGlDrawCall>> newObject() {
+          return new PMap<>(getGlDrawCallListPool());
         }
       };
+
+  private PStringMap<PMap<PShader, PList<PGlDrawCall>>> enqueuedDrawCalls =
+      new PStringMap<>(getGlDrawCallListMapPool());
 
   public PRenderContext updatePerspectiveCamera() {
     PAssert.isNotNull(PRenderBuffer.getActiveBuffer(),
@@ -184,11 +193,11 @@ public class PRenderContext {
     for (val e : dataBuffers) {
       e.v().freeTemp();
     }
-    dataBuffers.clearRecursive(false);
-    storedVecsPerInstance.clearRecursive(false);
-    storedBufferOffsets.clearRecursive(false);
+    dataBuffers.clearRecursive();
+    storedVecsPerInstance.clearRecursive();
+    storedBufferOffsets.clearRecursive();
 
-    enqueuedDrawCalls.clearRecursive(false);
+    enqueuedDrawCalls.clearRecursive();
   }
 
   private void snapshotBufferOffsets() {

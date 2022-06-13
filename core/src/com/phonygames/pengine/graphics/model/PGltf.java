@@ -22,18 +22,8 @@ import lombok.Getter;
 import lombok.val;
 
 public class PGltf {
-  private final String fileName;
-
-  @Getter
-  private PModel model;
-
-  private SceneAsset backingSceneAsset;
-
   private static final PStringMap<PGltf> loadedGltfs = new PStringMap<>();
   private static final PStringMap<PGltf> loadingGltfs = new PStringMap<>();
-  private final PSet<OnloadCallback> onLoadTasks = new PSet<>();
-  private final PGltf self = this;
-
   public static PShaderProvider DEFAULT_SHADER_PROVIDER = new PShaderProvider.PMapShaderProvider() {
     @Override
     public PShader genShader(String fragmentLayout,
@@ -52,23 +42,18 @@ public class PGltf {
       }
     }
   };
-
+  private final String fileName;
+  private final PStringMap<PMesh> meshes = new PStringMap<>();
+  private final PSet<OnloadCallback> onLoadTasks = new PSet<>();
+  private final PGltf self = this;
+  private SceneAsset backingSceneAsset;
   @Getter
   private boolean isLoaded;
+  @Getter
+  private PModel model;
 
   public PGltf(String fileName) {
     this.fileName = fileName;
-  }
-
-  private final PStringMap<PMesh> meshes = new PStringMap<>();
-
-  private PMaterial genMaterial(Material material) {
-    val ret = new PMaterial(material.id, null);
-
-    for (Attribute attribute : material) {
-      ret.set(attribute);
-    }
-    return ret;
   }
 
   public static void triggerLoads() {
@@ -102,6 +87,15 @@ public class PGltf {
     }
   }
 
+  private PMaterial genMaterial(Material material) {
+    val ret = new PMaterial(material.id, null);
+
+    for (Attribute attribute : material) {
+      ret.set(attribute);
+    }
+    return ret;
+  }
+
   private void loadFromSceneAsset(SceneAsset sceneAsset) {
     PAssert.isNotNull(sceneAsset);
     backingSceneAsset = sceneAsset;
@@ -130,7 +124,7 @@ public class PGltf {
           node.getDrawCall().setLayer("PBR");
           if (gdxNodePart.invBoneBindTransforms != null) {
             for (val invBoneBT : gdxNodePart.invBoneBindTransforms) {
-              node.getInvBoneTransforms().put(invBoneBT.key.id, new PMat4(invBoneBT.value));
+              node.getInvBoneTransforms().put(invBoneBT.key.id, PMat4.obtain(invBoneBT.value.val));
             }
           }
 

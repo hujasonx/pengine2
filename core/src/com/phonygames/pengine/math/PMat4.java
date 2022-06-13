@@ -3,33 +3,15 @@ package com.phonygames.pengine.math;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PBasic;
+import com.phonygames.pengine.util.PDeepCopyable;
 import com.phonygames.pengine.util.PPool;
+import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
 
-public class PMat4 implements Pool.Poolable {
-  public static class BufferList extends PPool.BufferListTemplate<PMat4> {
-    private BufferList() {
-      super(getStaticListPool(), getStaticPool());
-    }
-
-    public PMat4 obtain(PMat4 copyOf) {
-      return PMat4.obtain(copyOf);
-    }
-  }
-
-  @Getter(lazy = true)
-  private static final PPool<PPool.BufferListTemplate<PMat4>> staticListPool =
-      new PPool<PPool.BufferListTemplate<PMat4>>() {
-        @Override
-        public BufferListTemplate<PMat4> newObject() {
-          return new BufferList();
-        }
-      };
-
-  private boolean staticPoolHasFree = false;
+public class PMat4 extends PBasic<PMat4> {
   @Getter(lazy = true)
   private static final PPool<PMat4> staticPool = new PPool<PMat4>() {
     @Override
@@ -38,14 +20,13 @@ public class PMat4 implements Pool.Poolable {
     }
   };
 
-  public static BufferList obtainList() {
-    return (BufferList) getStaticListPool().obtain();
+  @Override
+  public PPool<PMat4> staticPool() {
+    return getStaticPool();
   }
 
   public static PMat4 obtain() {
-    PMat4 v = getStaticPool().obtain();
-    v.staticPoolHasFree = false;
-    return v;
+    return getStaticPool().obtain();
   }
 
   public static PMat4 obtain(PMat4 copyOf) {
@@ -56,37 +37,24 @@ public class PMat4 implements Pool.Poolable {
     return obtain().set(val);
   }
 
-  public void free() {
-    PAssert.isTrue(ownsBackingMatrix, "Free() called on a matrix that doesn't own its backing matrix");
-    PAssert.isFalse(staticPoolHasFree, "Free() called but the vec3 was already free");
-    getStaticPool().free(this);
-    staticPoolHasFree = true;
-  }
+  @Getter
+  private final Matrix4 backingMatrix4 = new Matrix4();
 
   private PMat4() {
-    this.backingMatrix4 = new Matrix4();
-    ownsBackingMatrix = true;
-  }
-
-  /**
-   * Exposed constructor for construction a PMat4 with a given backing matrix (will store the reference)
-   *
-   * @param backingMatrix4
-   */
-  public PMat4(Matrix4 backingMatrix4) {
-    this.backingMatrix4 = backingMatrix4;
-    ownsBackingMatrix = false;
   }
 
   public static final PMat4 IDT = new PMat4();
+  public static final PMat4 ZERO = new PMat4().set(new float[16]);
 
   // End static.
 
-
   @Getter
-  private boolean ownsBackingMatrix;
-  @Getter
-  private final Matrix4 backingMatrix4;
+  private static final PPool<PStringMap<PMat4>> mat4StringMaps = new PPool<PStringMap<PMat4>>() {
+    @Override
+    protected PStringMap<PMat4> newObject() {
+      return null;
+    }
+  };
 
   public PMat4 set(PVec3 t, PVec4 r, PVec3 s) {
     return set(t.x(), t.y(), t.z(), r.x(), r.y(), r.z(), r.w(), s.x(), s.y(), s.z());
@@ -116,6 +84,7 @@ public class PMat4 implements Pool.Poolable {
     backingMatrix4.idt();
   }
 
+  @Override
   public PMat4 set(PMat4 other) {
     this.backingMatrix4.set(other.backingMatrix4);
     return this;
@@ -210,7 +179,33 @@ public class PMat4 implements Pool.Poolable {
     return out;
   }
 
-  public PMat4 cpy() {
-    return new PMat4().set(this);
+  public PMat4 setZero() {
+    return set(ZERO);
+  }
+
+  public PMat4 mulAdd(PMat4 other, float weight) {
+    for (int a = 0; a < 16; a++) {
+      backingMatrix4.val[a] += other.backingMatrix4.val[a] * weight;
+    }
+
+    return this;
+  }
+
+  public PMat4 scl(float scl) {
+    for (int a = 0; a < 16; a++) {
+      backingMatrix4.val[a] *= scl;
+    }
+
+    return this;
+  }
+
+  @Override
+  public boolean equalsT(PMat4 mat4) {
+    return false;
+  }
+
+  @Override
+  public int compareTo(PMat4 mat4) {
+    return 0;
   }
 }

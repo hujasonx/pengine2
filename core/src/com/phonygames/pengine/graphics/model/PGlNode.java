@@ -4,13 +4,13 @@ import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.util.PCopyable;
+import com.phonygames.pengine.util.PDeepCopyable;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
-public class PGlNode implements PCopyable<PGlNode> {
+public class PGlNode implements PDeepCopyable<PGlNode> {
   @Getter
   public static class UniformConstants {
 
@@ -52,11 +52,6 @@ public class PGlNode implements PCopyable<PGlNode> {
   // You can hook swap this out whenever you like.
   private PRenderContext.DataBufferEmitter dataBufferEmitter;
 
-  public PGlNode(PGlNode other) {
-    drawCall = PGlDrawCall.getTemp(other.getDrawCall());
-    copyFrom(other);
-  }
-
   public PGlNode(String id) {
     this.id = id;
     drawCall = PGlDrawCall.genTemplate();
@@ -69,13 +64,18 @@ public class PGlNode implements PCopyable<PGlNode> {
   }
 
   @Override
-  public PGlNode copyFrom(@NonNull PGlNode other) {
+  public PGlNode deepCopyFrom(@NonNull PGlNode other) {
     id = other.id;
-    drawCall.copyFrom(other.drawCall);
+    drawCall.deepCopyFrom(other.drawCall);
     getWorldTransform().set(other.getWorldTransform());
     getWorldTransformInvTra().set(other.getWorldTransformInvTra());
     getInvBoneTransforms().putAll(other.getInvBoneTransforms());
     dataBufferEmitter = other.dataBufferEmitter;
     return this;
+  }
+
+  @Override
+  public PGlNode deepCopy() {
+    return new PGlNode(this.id).deepCopyFrom(this);
   }
 }

@@ -1,6 +1,5 @@
 package com.phonygames.pengine.graphics.model;
 
-import com.badlogic.gdx.math.Matrix4;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
@@ -14,7 +13,6 @@ import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.val;
 
 public class PModelInstance {
@@ -83,6 +81,54 @@ public class PModelInstance {
 
   }
 
+  // Returns the new vec4 count in the bone transform buffer.
+  private int outputBoneTransformsToBuffer(PRenderContext renderContext) {
+    PMat4 tempMat4 = PMat4.obtain();
+    PFloat4Texture tex = renderContext.genDataBuffer("boneTransforms");
+    for (val e : getGlNodes()) {
+      String id = e.k();
+      PGlNode glNode = e.v();
+      if (glNode.getInvBoneTransforms() == null || glNode.getInvBoneTransforms().size == 0) {
+        continue;
+      }
+
+      renderContext.setVecsPerInstanceForDataBuffer("boneTransforms", glNode.getInvBoneTransforms().size * 4);
+      for (val e2 : glNode.getInvBoneTransforms()) {
+        String boneId = e2.key;
+        PMat4 invBindTransform = e2.value;
+        tempMat4.set(getNodes().get(boneId).getWorldTransform());
+        tempMat4.mul(invBindTransform);
+        tex.addData(tempMat4);
+      }
+    }
+    tempMat4.free();
+
+    return tex.vecsWritten();
+  }
+
+  /**
+   * Outputs the PMat4 references into the map.
+   *
+   * @param map
+   * @param useBindPose If set, use the bind pose instead of the actual pose.
+   * @param weight
+   * @return
+   */
+  public PStringMap<PMat4> outputNodeTransformsToMap(PStringMap<PMat4> map, boolean useBindPose, float weight) {
+    for (val e : getNodes()) {
+      PMat4 mat4 = map.genPooled(e.k());
+      if (useBindPose) {
+        mat4.set(e.v().getTemplateNode().getTransform());
+      } else {
+        mat4.set(e.v().getTransform());
+      }
+
+      mat4.scl(weight);
+    }
+
+    return map;
+  }
+
   public class Node {
     @Getter
     final PModel.Node templateNode;
@@ -111,7 +157,7 @@ public class PModelInstance {
       this.parent = parent;
       this.transform.set(templateNode.getTransform());
       for (PGlNode node : templateNode.getGlNodes()) {
-        PGlNode newNode = new PGlNode(node);
+        PGlNode newNode = node.deepCopy();
         getMaterials().put(newNode.getDrawCall().getMaterial().getId(), newNode.getDrawCall().getMaterial());
         this.getGlNodes().add(newNode);
       }
@@ -134,6 +180,10 @@ public class PModelInstance {
       return templateNode.getId();
     }
 
+    public void resetTransformFromTemplate() {
+      getTransform().set(templateNode.getTransform());
+    }
+
     // Renders recursively instanced, using the material of the caller.
     public void enqueueRecursiveInstanced(PRenderContext renderContext,
                                           PShaderProvider shaderProvider,
@@ -146,7 +196,7 @@ public class PModelInstance {
             instanceNode.getDataBufferEmitter().emitDataBuffersInto(renderContext);
           }
 
-          outputBonesToBuffers(renderContext);
+          outputBoneTransformsToBuffer(renderContext);
         }
 
         renderContext
@@ -175,30 +225,5 @@ public class PModelInstance {
         child.recalcNodeWorldTransformsRecursive(getWorldTransform());
       }
     }
-  }
-
-  // Returns the new vec4 count in the bone transform buffer.
-  private int outputBonesToBuffers(PRenderContext renderContext) {
-    PMat4 tempMat4 = PMat4.obtain();
-    PFloat4Texture tex = renderContext.genDataBuffer("boneTransforms");
-    for (val e : getGlNodes()) {
-      String id = e.k();
-      PGlNode glNode = e.v();
-      if (glNode.getInvBoneTransforms() == null || glNode.getInvBoneTransforms().size == 0) {
-        continue;
-      }
-
-      renderContext.setVecsPerInstanceForDataBuffer("boneTransforms", glNode.getInvBoneTransforms().size * 4);
-      for (val e2 : glNode.getInvBoneTransforms()) {
-        String boneId = e2.key;
-        PMat4 invBindTransform = e2.value;
-        tempMat4.set(getNodes().get(boneId).getWorldTransform());
-        tempMat4.mul(invBindTransform);
-        tex.addData(tempMat4);
-      }
-    }
-    tempMat4.free();
-
-    return tex.vecsWritten();
   }
 }

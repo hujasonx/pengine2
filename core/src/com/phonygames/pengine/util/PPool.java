@@ -1,11 +1,30 @@
 package com.phonygames.pengine.util;
 
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Pool;
+import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec1;
+import com.phonygames.pengine.math.PVec2;
+import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 
-abstract public class PPool<T> {
+abstract public class PPool<T extends PPool.Poolable> {
+  public interface Poolable {
+    void reset();
+
+    public void setOwnerPool(PPool pool);
+
+    public PPool getOwnerPool();
+  }
+
+  @Getter
+  private static final PStringMap<PPool> staticPools = new PStringMap<PPool>() {};
+
+
   /**
    * The maximum number of objects that will be PPooled.
    */
@@ -45,27 +64,12 @@ abstract public class PPool<T> {
 
   /**
    * Returns an object from this PPool. The object may be new (from {@link #newObject()}) or reused (previously
-   * {@link #free(Object) freed}).
+   * {@link #free(T) freed}).
    */
   public T obtain() {
-    return freeObjects.size == 0 ? newObject() : freeObjects.pop();
-  }
-
-  /**
-   * Puts the specified object in the PPool, making it eligible to be returned by {@link #obtain()}. If the PPool already contains
-   * {@link #max} free objects, the specified object is {@link #discard(Object) discarded} and not added to the PPool.
-   * <p>
-   * The PPool does not check if an object is already freed, so the same object must not be freed multiple times.
-   */
-  public void free(T object) {
-    if (object == null) { throw new IllegalArgumentException("object cannot be null."); }
-    if (freeObjects.size < max) {
-      freeObjects.add(object);
-      peak = Math.max(peak, freeObjects.size);
-      reset(object);
-    } else {
-      discard(object);
-    }
+    T t = freeObjects.size == 0 ? newObject() : freeObjects.pop();
+    t.setOwnerPool(this);
+    return t;
   }
 
   /**
@@ -79,111 +83,123 @@ abstract public class PPool<T> {
     peak = Math.max(peak, freeObjects.size);
   }
 
-  /**
-   * Called when an object is freed to clear the state of the object for possible later reuse. The default implementation calls
-   * {@link Pool.Poolable#reset()} if the object is {@link Pool.Poolable}.
-   */
-  protected void reset(T object) {
-    if (object instanceof Pool.Poolable) {
-      ((Pool.Poolable) object).reset();
-    }
-  }
-
-  /**
-   * Called when an object is discarded. This is the case when an object is freed, but the maximum capacity of the PPool is reached,
-   * and when the PPool is {@link #clear() cleared}
-   */
-  protected void discard(T object) {
+  public void free(@NonNull T t) {
+      freeInternal(t);
+      System.out.println(t);
   }
 
   /**
    * Puts the specified objects in the PPool. Null objects within the array are silently ignored.
    * <p>
    * The PPool does not check if an object is already freed, so the same object must not be freed multiple times.
-   *
-   * @see #free(Object)
    */
-  public void freeAll(Array<T> objects) {
-    if (objects == null) { throw new IllegalArgumentException("objects cannot be null."); }
-    Array<T> freeObjects = this.freeObjects;
-    int max = this.max;
-    for (int i = 0, n = objects.size; i < n; i++) {
-      T object = objects.get(i);
-      if (object == null) { continue; }
-      if (freeObjects.size < max) {
-        freeObjects.add(object);
-        reset(object);
-      } else {
-        discard(object);
-      }
+  public void freeAll(@NonNull Array<T> objects) {
+    for (T t : objects) {
+      freeInternal(t);
     }
+
     peak = Math.max(peak, freeObjects.size);
   }
 
-  /**
-   * Removes and discards all free objects from this PPool.
-   */
-  public void clear() {
-    for (int i = 0; i < freeObjects.size; i++) {
-      T obj = freeObjects.pop();
-      discard(obj);
+  private void freeInternal(@NonNull T t) {
+    beforeReset(t);
+    t.reset();
+
+    if (freeObjects.size < max) {
+      freeObjects.add(t);
     }
   }
 
-  /**
-   * The number of objects available to be obtained.
-   */
-  public int getFree() {
+  public int numFree() {
     return freeObjects.size;
   }
 
-  /**
-   * Objects implementing this interface will have {@link #reset()} called when passed to {@link com.badlogic.gdx.utils.PPool#free(Object)}.
-   */
-  public static interface Poolable {
-    /**
-     * Resets the object for reuse. Object references should be nulled and fields may be set to default values.
-     */
-    public void reset();
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  private final static PPool<PoolBuffer> staticPoolBufferPool = new PPool<PPool.PoolBuffer>() {
+    @Override
+    protected PoolBuffer newObject() {
+      return new PPool.PoolBuffer(this);
+    }
+  };
+
+  public static PoolBuffer getBuffer() {
+    PoolBuffer b = getStaticPoolBufferPool().obtain();
+    return b;
   }
 
-  /**
-   * @param <V>
-   */
-  public static abstract class BufferListTemplate<V> extends PList<V> {
-    private final PPool<V> backingPool;
-    private final PPool<BufferListTemplate<V>> sourcePool;
+  protected void beforeReset(T t) {
 
-    protected BufferListTemplate(PPool<BufferListTemplate<V>> sourcePool, @NonNull PPool<V> backingPool) {
-      this.sourcePool = sourcePool;
-      this.backingPool = backingPool;
+  }
+
+  public final static class PoolBuffer implements Poolable {
+    @Getter
+    @Setter
+    private PPool ownerPool;
+
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    private final PList<PVec1> vec1s = new PList<>();
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    private final PList<PVec2> vec2s = new PList<>();
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    private final PList<PVec3> vec3s = new PList<>();
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    private final PList<PVec4> vec4s = new PList<>();
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    private final PList<PMat4> mat4s = new PList<>();
+
+    private PoolBuffer(@NonNull PPool<PoolBuffer> ownerPool) {
+      this.ownerPool = ownerPool;
     }
 
-    public final V obtain() {
-      V v = backingPool.obtain();
-      add(v);
+    public final PVec3 vec3() {
+      PVec3 v = PVec3.obtain();
+      getVec3s().add(v);
       return v;
     }
 
-    public final void freeAll() {
-      if (size == 0) {
-        return;
-      }
-
-      backingPool.freeAll(this);
-      clear();
+    public final PVec4 vec4() {
+      PVec4 v = PVec4.obtain();
+      getVec4s().add(v);
+      return v;
     }
 
-    public final void free() {
-      freeAll();
-      if (sourcePool != null) {
-        sourcePool.free(this);
-      }
+    public final PMat4 mat4() {
+      PMat4 v = PMat4.obtain();
+      getMat4s().add(v);
+      return v;
+    }
+
+    public final void finish() {
+      getStaticPoolBufferPool().free(this);
+    }
+
+    public boolean isValid() {
+      // If the owner pool is unset, that means this is being used somewhere.
+      return ownerPool == null;
     }
 
     @Override
     public void reset() {
-      clear();
+      for (PVec1 vec1 : getVec1s()) {
+        vec1.free();
+      }
+      getVec1s().clear();
+      for (PVec2 vec2 : getVec2s()) {
+        vec2.free();
+      }
+      getVec2s().clear();
+      for (PVec3 vec3 : getVec3s()) {
+        vec3.free();
+      }
+      getVec3s().clear();
+      for (PVec4 vec4 : getVec4s()) {
+        vec4.free();
+      }
+      getVec4s().clear();
+      for (PMat4 mat4 : getMat4s()) {
+        mat4.free();
+      }
+      getMat4s().clear();
     }
   }
 }

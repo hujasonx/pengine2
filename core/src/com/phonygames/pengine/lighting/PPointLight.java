@@ -10,6 +10,7 @@ import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
+import com.phonygames.pengine.util.PPool;
 
 import lombok.Getter;
 
@@ -52,13 +53,12 @@ public class PPointLight extends PLight implements Pool.Poolable {
 
   @Override
   public boolean addInstanceData(PFloat4Texture buffer) {
-    PVec3.BufferList vec3s = PVec3.obtainList();
-    PMat4.BufferList mat4s = PMat4.obtainList();
-    PVec3 translation = vec3s.obtain();
+    PPool.PoolBuffer pool = PPool.getBuffer();
+    PVec3 translation = pool.vec3();
     getTransform().getTranslation(translation);
 
     // Set the transform for the mesh.
-    PMat4 transformOutMat = mat4s.obtain().setToTranslation(translation);
+    PMat4 transformOutMat = pool.mat4().setToTranslation(translation);
     float scale = attenuationCutoffDistance(getAttenuation()) * 1.1f;
     transformOutMat.scl(scale, scale, scale);
 
@@ -74,8 +74,7 @@ public class PPointLight extends PLight implements Pool.Poolable {
     // 6. Attenuation.
     buffer.addData(getAttenuation());
 
-    vec3s.free();
-    mat4s.free();
+    pool.finish();
     // Total: 7;
     return true;
   }

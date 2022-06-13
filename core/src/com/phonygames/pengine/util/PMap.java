@@ -10,211 +10,102 @@ import java.util.Iterator;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.val;
 
 /**
  * List class whose iterator() does not allocate.
  */
-public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K, V>>, Pool.Poolable {
-  private final PPool<PMapIterator<K, V>> iteratorPool = new PPool<PMapIterator<K, V>>() {
-    @Override
-    protected PMapIterator<K, V> newObject() {
-      return new PMapIterator<>(this);
-    }
-  };
-
-  public static class PMapIterator<K, V> implements Iterator<Entry<K, V>>, Pool.Poolable {
-    private final PPool<PMapIterator<K, V>> iteratorPool;
-    private final PMap.Entry<K, V> entry = new PMap.Entry<>();
-    private MapInterface<K, V> mapInterface;
-    private Iterator backingIterator;
-    private int index;
-
-    private PMapIterator(@NonNull PPool<PMapIterator<K, V>> iteratorPool) {
-      this.iteratorPool = iteratorPool;
-    }
-
-    @Override
-    public boolean hasNext() {
-      if (backingIterator == null) {
-        return false;
-      }
-
-      boolean hasNext = backingIterator.hasNext();
-      if (!hasNext) {
-        iteratorPool.free(this);
-      }
-      return hasNext;
-    }
-
-    @Override
-    public Entry<K, V> next() {
-      PAssert.isNotNull(backingIterator);
-      PAssert.isNotNull(mapInterface);
-      Object o = backingIterator.next();
-      entry.index = mapInterface.isStableOrdered() ? index : -1;
-      entry.k = mapInterface.getIteratorKey(o);
-      entry.v = mapInterface.getIteratorVal(o);
-
-      index++;
-      return entry;
-    }
-
-    @Override
-    public void reset() {
-      index = 0;
-      backingIterator = null;
-      mapInterface = null;
-    }
-  }
-
-  @Override
-  public final PMapIterator<K, V> iterator() {
-    val it = iteratorPool.obtain();
-    it.mapInterface = mapInterface;
-    it.backingIterator = mapInterface.iterator();
-    return it;
-  }
-
-  protected static abstract class MapInterface<K, V> implements Iterable {
-
-    abstract V get(K k);
-
-    abstract V put(K k, V v);
-
-    abstract V del(K k);
-
-    abstract void clear();
-
-    abstract int size();
-
-    abstract boolean isStableOrdered();
-
-    abstract K getIteratorKey(Object mapEntry);
-
-    abstract V getIteratorVal(Object mapEntry);
-  }
-
-  private static final class ArrayMapInterface<K, V> extends MapInterface<K, V> {
-    private final ArrayMap<K, V> backingMap = new ArrayMap<>();
-
-    @Override
-    V get(K k) {
-      return backingMap.get(k);
-    }
-
-    @Override
-    V put(K k, V v) {
-      V ret = backingMap.get(k);
-      backingMap.put(k, v);
-      return ret;
-    }
-
-    @Override
-    V del(K k) {
-      V ret = backingMap.removeKey(k);
-      return ret;
-    }
-
-    @Override
-    void clear() {
-      backingMap.clear();
-    }
-
-    @Override
-    int size() {
-      return backingMap.size;
-    }
-
-    @Override
-    boolean isStableOrdered() {
-      return true;
-    }
-
-    @Override
-    public Iterator iterator() {
-      return backingMap.iterator();
-    }
-
-    @Override
-    K getIteratorKey(Object mapEntry) {
-      return ((ObjectMap.Entry<K, V>) mapEntry).key;
-    }
-
-    @Override
-    V getIteratorVal(Object mapEntry) {
-      return ((ObjectMap.Entry<K, V>) mapEntry).value;
-    }
-  }
-
-  public static class Entry<K, V> {
-    private K k;
-    private V v;
-    private int index = -1;
-
-    public K k() {
-      return k;
-    }
-
-    public V v() {
-      return v;
-    }
-
-    public int index() {
-      PAssert.isFalse(index == -1, "PMap.Entry.index() was called but index was not set");
-      return index;
-    }
-  }
-
-
+public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
+  private final PMapIterator<K, V> backingIterator = new PMapIterator<K, V>();
+  @Getter(lazy = true)
+  private final PList<V> genedValues = new PList<>();
+  // If set, then genPooled() will work.
+  private final PPool genedValuesPool;
   private final MapInterface<K, V> mapInterface;
-  @Getter(lazy = true)
-  private final PPool<V> genedValuesPool = new PPool<V>() {
-    @Override
-    protected V newObject() {
-      return newPooled();
-    }
-  };
-  @Getter(lazy = true)
-  private final PList<V> genedValuesUsed = new PList<>();
+  @Setter
+  private PPool ownerPool;
 
   public PMap() {
+    this.genedValuesPool = null;
     mapInterface = new ArrayMapInterface<>();
   }
 
-  public PMap(MapInterface<K, V> mapInterface) {
+  public PMap(@NonNull MapInterface<K, V> mapInterface) {
+    this.genedValuesPool = null;
     this.mapInterface = mapInterface;
   }
 
-  @Override
-  public final PMap<K, V> copyFrom(PMap<K, V> other) {
-    for (val e : other) {
-      put(deepCopyKey(e.k), deepCopyValue(e.v));
-    }
-
-    return this;
+  public PMap(PPool genedValuesPool) {
+    this.genedValuesPool = genedValuesPool;
+    mapInterface = new ArrayMapInterface<>();
   }
 
-  // Can be overridden to help with deep copies.
-  public K deepCopyKey(K k) {
-    PAssert.failNotImplemented("deepCopyKey");
-    return null;
-  }
-
-  // Can be overridden to help with deep copies.
-  public V deepCopyValue(V v) {
-    PAssert.failNotImplemented("deepCopyValue");
-    return null;
+  public PMap(PPool genedValuesPool, @NonNull MapInterface<K, V> mapInterface) {
+    this.genedValuesPool = genedValuesPool;
+    this.mapInterface = mapInterface;
   }
 
   /**
-   * Returns if the value was generated by this map AND should be expected to be pooled when cleared.
+   * Clears the contents of the map.
+   */
+  public void clear() {
+    for (val e : this) {
+      if (e.v() instanceof PMap) {
+        PAssert.warn("Called clear() on a PMap with PMap children, consider using clearRecursive() instead");
+      }
+
+      freeIfManaged(e.v());
+    }
+    mapInterface.clear();
+  }
+
+  /**
+   * Clears the contents of the map.
+   */
+  public final void clearRecursive() {
+    for (val e : this) {
+      if (e.v() instanceof PMap) {
+        val map = (PMap) e.v();
+        map.clearRecursive();
+      }
+
+      freeIfManaged(e.v());
+    }
+    mapInterface.clear();
+  }
+
+  public final V del(@NonNull K k) {
+    V v = mapInterface.del(k);
+    if (v != null) {
+      freeIfManaged(v);
+    }
+
+    return v;
+  }
+
+  public final void delAll(@NonNull Iterable<K> keys) {
+    for (K k : keys) {
+      del(k);
+    }
+  }
+
+  /**
+   * Frees the value back into the pool if it was generated by this map.
    *
    * @param v
-   * @return if the value is pooled by this map
    */
-  public final boolean owns(V v) {
-    return getGenedValuesUsed() != null && getGenedValuesUsed().contains(v, true);
+  private final void freeIfManaged(@NonNull V v) {
+    if (v instanceof PPool.Poolable && genedValues != null) {
+      int indexOfV = getGenedValues().indexOf(v, true);
+      if (indexOfV != -1) {
+        if (genedValuesPool != null) {
+          genedValuesPool.free((PPool.Poolable) v);
+        }
+
+        getGenedValues().removeIndex(indexOfV);
+      }
+    }
   }
 
   /**
@@ -227,8 +118,10 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
       return v;
     }
 
-    v = getGenedValuesPool().obtain();
-    getGenedValuesUsed().add(v);
+    PAssert.isNotNull(genedValuesPool, "PMap cannot use genPooled when no pool was set.");
+
+    v = (V) genedValuesPool.obtain();
+    getGenedValues().add(v);
     mapInterface.put(k, v);
 
     return v;
@@ -253,14 +146,45 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
     return v;
   }
 
-  private final void freeIfManaged(@NonNull V v) {
-    if (genedValuesUsed != null) {
-      int indexOfV = getGenedValuesUsed().indexOf(v, true);
-      if (indexOfV != -1) {
-        getGenedValuesPool().free(v);
-        getGenedValuesUsed().removeIndex(indexOfV);
-      }
-    }
+  public V get(@NonNull K k) {
+    return mapInterface.get(k);
+  }
+
+  public PPool getOwnerPool() {
+    return ownerPool;
+  }
+
+  public final boolean has(@NonNull K k) {
+    return mapInterface.get(k) != null;
+  }
+
+  @Override
+  public final PMapIterator<K, V> iterator() {
+    PAssert.isTrue(backingIterator.isReadyToReuse());
+    backingIterator.backingIterator = mapInterface.iterator();
+    backingIterator.mapInterface = mapInterface;
+    return backingIterator;
+  }
+
+  /**
+   * Override this to generate values with keys.
+   *
+   * @param k key to generate using
+   * @return the new object
+   */
+  protected V newUnpooled(K k) {
+    PAssert.failNotImplemented("newUnpooledObject");
+    return null;
+  }
+
+  /**
+   * Returns if the value was generated by this map AND should be expected to be pooled when cleared.
+   *
+   * @param v
+   * @return if the value is pooled by this map
+   */
+  public final boolean owns(V v) {
+    return getGenedValues().contains(v, true);
   }
 
   /**
@@ -281,124 +205,181 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PCopyable<PMap<K,
     return mapInterface.put(k, v);
   }
 
-  public V get(@NonNull K k) {
-    return mapInterface.get(k);
-  }
-
-  public final boolean has(@NonNull K k) {
-    return mapInterface.get(k) != null;
-  }
-
-  public final V del(@NonNull K k) {
-    V v = mapInterface.del(k);
-    if (v != null) {
-      freeIfManaged(v);
-    }
-
-    return v;
-  }
-
-  /**
-   * Override this to generate values.
-   *
-   * @return the new object
-   */
-  protected V newPooled() {
-    PAssert.failNotImplemented("newPooledObject");
-    return null;
-  }
-
-  /**
-   * Override this to generate values with keys.
-   *
-   * @param k key to generate using
-   * @return the new object
-   */
-  protected V newUnpooled(K k) {
-    PAssert.failNotImplemented("newUnpooledObject");
-    return null;
-  }
-
-  public void clear() {
-    if (getGenedValuesUsed().size > 0) {
-      PAssert.isTrue(getGenedValuesUsed().size == mapInterface.size(),
-                     "Don't call clear() on a map with mixed pooled / unpooled objects!");
-      getGenedValuesPool().freeAll(getGenedValuesUsed());
-      getGenedValuesUsed().clear();
-    }
-
-    mapInterface.clear();
-  }
-
   public final void putAll(@NonNull Iterable<Entry<K, V>> other) {
     for (val e : other) {
       put(e.k(), e.v());
     }
   }
 
-  public final void delAll(@NonNull Iterable<K> keys) {
-    for (K k : keys) {
-      del(k);
-    }
-  }
-
-  @Getter(lazy = true)
-  private final PList<K> keysToKeep = new PList<>();
-  @Getter(lazy = true)
-  private final PList<V> valuesToKeep = new PList<>();
-
-  /**
-   * Clears the contents of the map. If removeMaps is set, then maps will be removed too
-   * (they probably were not pooled, so use wisely!)
-   *
-   * @param removeMapsIfUnpooled
-   */
-  public final void clearRecursive(boolean removeMapsIfUnpooled) {
-    // Iterate through children, and keep maps if they should be kept.
-    int numKeysToKeep = 0;
-    for (val e : this) {
-      if (e.v() instanceof PMap) {
-        val map = (PMap) e.v();
-        map.clearRecursive(removeMapsIfUnpooled);
-        if (!removeMapsIfUnpooled) {
-
-          if (getGenedValuesUsed().contains(e.v(), true)) {
-            // Pooled, so clear anyways.
-          } else {
-            // Unpooled.
-            getKeysToKeep().add(e.k());
-            getValuesToKeep().add(e.v());
-            numKeysToKeep++;
-          }
-        } else {
-          PLog.w("Removing maps may cause allocs");
-        }
-      }
-    }
-
-    // Clear the map, and re-add things to keep.
-    mapInterface.clear();
-    if (numKeysToKeep > 0) {
-      for (int a = 0; a < getKeysToKeep().size; a++) {
-        mapInterface.put(getKeysToKeep().get(a), getValuesToKeep().get(a));
-
-        // Pooled objects should still be tracked as pooled.
-        if (getGenedValuesUsed() != null) {
-          getGenedValuesUsed().removeValue(getValuesToKeep().get(a), true);
-        }
-      }
-
-
-      getKeysToKeep().clear();
-      getValuesToKeep().clear();
-    }
-
-    getGenedValuesPool().freeAll(getGenedValuesUsed());
-    getGenedValuesUsed().clear();
-  }
-
   @Override
   public void reset() {
-    clearRecursive(true);
+    clearRecursive();
+  }
+
+  /**
+   * @param other
+   * @return whether or not we were able to deepcopy everything.
+   */
+  public final boolean tryDeepCopyAllFrom(PMap<K, V> other) {
+    boolean isTrueDeepCopy = true;
+    for (val e : other) {
+      K k = e.k();
+      if (k instanceof PDeepCopyable) {
+        k = ((PDeepCopyable<K>) k).deepCopy();
+      } else if (k instanceof String) {
+
+      } else {
+        isTrueDeepCopy = false;
+      }
+
+      V v = e.v();
+      if (v instanceof PDeepCopyable) {
+        v = ((PDeepCopyable<V>) v).deepCopy();
+      } else if (v instanceof String) {
+
+      } else {
+        isTrueDeepCopy = false;
+      }
+
+      put(k, v);
+    }
+
+    return isTrueDeepCopy;
+  }
+
+  protected static final class ArrayMapInterface<K, V> extends MapInterface<K, V> {
+    private final ArrayMap<K, V> backingMap = new ArrayMap<>();
+
+    @Override
+    void clear() {
+      backingMap.clear();
+    }
+
+    @Override
+    V del(K k) {
+      V ret = backingMap.removeKey(k);
+      return ret;
+    }
+
+    @Override
+    V get(K k) {
+      return backingMap.get(k);
+    }
+
+    @Override
+    K getIteratorKey(Object mapEntry) {
+      return ((ObjectMap.Entry<K, V>) mapEntry).key;
+    }
+
+    @Override
+    V getIteratorVal(Object mapEntry) {
+      return ((ObjectMap.Entry<K, V>) mapEntry).value;
+    }
+
+    @Override
+    boolean isStableOrdered() {
+      return true;
+    }
+
+    @Override
+    public Iterator iterator() {
+      return backingMap.iterator();
+    }
+
+    @Override
+    V put(K k, V v) {
+      V ret = backingMap.get(k);
+      backingMap.put(k, v);
+      return ret;
+    }
+
+    @Override
+    int size() {
+      return backingMap.size;
+    }
+  }
+
+  public static class Entry<K, V> {
+    private int index = -1;
+    private K k;
+    private V v;
+
+    public int index() {
+      PAssert.isFalse(index == -1, "PMap.Entry.index() was called but index was not set");
+      return index;
+    }
+
+    public K k() {
+      return k;
+    }
+
+    public V v() {
+      return v;
+    }
+
+  }
+
+  protected static abstract class MapInterface<K, V> implements Iterable {
+
+    abstract void clear();
+
+    abstract V del(K k);
+
+    abstract V get(K k);
+
+    abstract K getIteratorKey(Object mapEntry);
+
+    abstract V getIteratorVal(Object mapEntry);
+
+    abstract boolean isStableOrdered();
+
+    abstract V put(K k, V v);
+
+    abstract int size();
+  }
+
+  public static class PMapIterator<K, V> implements Iterator<Entry<K, V>> {
+    private final PMap.Entry<K, V> entry = new PMap.Entry<>();
+    private Iterator backingIterator;
+    private int index;
+    private MapInterface<K, V> mapInterface;
+
+    private PMapIterator() {}
+
+    @Override
+    public boolean hasNext() {
+      if (backingIterator == null) {
+        return false;
+      }
+
+      boolean hasNext = backingIterator.hasNext();
+      if (!hasNext) {
+        reset();
+      }
+      return hasNext;
+    }
+
+    private final boolean isReadyToReuse() {
+      return backingIterator == null;
+    }
+
+    @Override
+    public Entry<K, V> next() {
+      PAssert.isNotNull(backingIterator);
+      PAssert.isNotNull(mapInterface);
+      Object o = backingIterator.next();
+      entry.index = mapInterface.isStableOrdered() ? index : -1;
+      entry.k = mapInterface.getIteratorKey(o);
+      entry.v = mapInterface.getIteratorVal(o);
+
+      index++;
+      return entry;
+    }
+
+    public void reset() {
+      index = 0;
+      backingIterator = null;
+      mapInterface = null;
+    }
   }
 }

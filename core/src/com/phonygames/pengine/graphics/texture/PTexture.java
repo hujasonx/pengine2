@@ -4,13 +4,29 @@ import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec4;
+import com.phonygames.pengine.util.PDeepCopyable;
+import com.phonygames.pengine.util.PPool;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 
-public class PTexture {
+public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
   private static PTexture WHITE_PIXEL;
+  @Getter(lazy = true)
+  private final PVec4 uvOS = PVec4.obtain().set(0, 0, 1, 1);
+  @Setter
+  private Texture backingTexture;
+  @Getter
+  @Setter
+  private PPool ownerPool;
+
+  public PTexture() {
+  }
+
+  public PTexture(Texture texture) {
+    set(texture);
+  }
 
   public static PTexture getWHITE_PIXEL() {
     if (WHITE_PIXEL == null) {
@@ -20,18 +36,34 @@ public class PTexture {
     return WHITE_PIXEL;
   }
 
-  @Getter(lazy = true)
-  private final PVec4 uvOS = PVec4.obtain(0, 0, 1, 1);
-
-  public PTexture() {
+  public void applyShaderWithUniform(String uniform, PShader shader) {
+    shader.setWithUniform(uniform, getBackingTexture());
+    shader.set(uniform + "UVOS", getUvOS());
   }
 
-  public PTexture(Texture texture) {
-    set(texture);
+  private int bind() {
+    return PRenderContext.getActiveContext().getTextureBinder().bind(getBackingTexture());
   }
 
-  @Setter
-  private Texture backingTexture;
+  @Override
+  public PTexture deepCopy() {
+    return new PTexture().set(this);
+  }
+
+  @Override
+  public PTexture deepCopyFrom(PTexture other) {
+    return this.set(other);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof PTexture)) {
+      return false;
+    }
+
+    val other = (PTexture) o;
+    return other.backingTexture == backingTexture;
+  }
 
   public Texture getBackingTexture() {
     return PFloat4Texture.getWHITE_PIXEL();
@@ -42,26 +74,19 @@ public class PTexture {
     return backingTexture != null;
   }
 
-  public int width() {
-    return getBackingTexture().getWidth();
+  @Override
+  public int hashCode() {
+    if (backingTexture == null) { return 0; }
+    return backingTexture.hashCode();
   }
 
   public int height() {
     return getBackingTexture().getHeight();
   }
 
-  private int bind() {
-    return PRenderContext.getActiveContext().getTextureBinder().bind(getBackingTexture());
-  }
-
-  public void applyShaderWithUniform(String uniform, PShader shader) {
-    shader.setWithUniform(uniform, getBackingTexture());
-    shader.set(uniform + "UVOS", getUvOS());
-  }
-
-  public PTexture reset() {
+  @Override
+  public void reset() {
     this.backingTexture = null;
-    return this;
   }
 
   public PTexture set(Texture texture) {
@@ -74,10 +99,6 @@ public class PTexture {
     return this;
   }
 
-  public PTexture tryDeepCopy() {
-    return new PTexture(backingTexture);
-  }
-
   public String toString() {
     if (backingTexture == null) {
       return "[PTexture UNSET]";
@@ -85,19 +106,11 @@ public class PTexture {
     return "[PTexture ref:" + (backingTexture.toString().split("@")[1]) + " " + width() + "x" + height() + "]";
   }
 
-  @Override
-  public int hashCode() {
-    if (backingTexture == null) { return 0; }
-    return backingTexture.hashCode();
+  public PTexture tryDeepCopy() {
+    return new PTexture(backingTexture);
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof PTexture)) {
-      return false;
-    }
-
-    val other = (PTexture) o;
-    return other.backingTexture == backingTexture;
+  public int width() {
+    return getBackingTexture().getWidth();
   }
 }

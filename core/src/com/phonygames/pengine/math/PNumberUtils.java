@@ -3,7 +3,9 @@ package com.phonygames.pengine.math;
 import com.phonygames.pengine.logging.PLogMessage;
 
 public class PNumberUtils {
-
+  public static int compareTo(float a, float b) {
+    return (a == b ? 0 : (a > b ? 1 : -1));
+  }
 
   public static boolean isPrimeBruteForce(int number) {
     for (int i = 2; i < number; i++) {

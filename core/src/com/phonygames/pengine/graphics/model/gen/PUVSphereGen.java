@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.util.PPool;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -27,12 +28,12 @@ public abstract class PUVSphereGen implements Pool.Poolable {
   };
 
   public void genSphere(int lat, int lon, PVec3 center, float radius, PModelGen.Part part) {
-    val vec3s = PVec3.obtainList();
-    PVec3 n00 = vec3s.obtain();
-    PVec3 n01 = vec3s.obtain();
-    PVec3 n11 = vec3s.obtain();
-    PVec3 n10 = vec3s.obtain();
-    PVec3 posTemp = vec3s.obtain();
+    val pool = PPool.getBuffer();
+    PVec3 n00 = pool.vec3();
+    PVec3 n01 = pool.vec3();
+    PVec3 n11 = pool.vec3();
+    PVec3 n10 = pool.vec3();
+    PVec3 posTemp = pool.vec3();
     for (int v = 0; v < lat; v++) {
       for (int h = 0; h < lon; h++) {
         float p0 = (MathUtils.PI * (v + 0) / lat); // Phi.
@@ -76,7 +77,7 @@ public abstract class PUVSphereGen implements Pool.Poolable {
         part.quad(true);
       }
     }
-    vec3s.freeAll();
+    pool.finish();
 
 
   }

@@ -7,10 +7,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * List class whose iterator() does not allocate and will always be in order.
  */
 public class PList<E> extends Array<E> implements PPool.Poolable {
+  @Getter
+  @Setter
+  private PPool ownerPool;
+
   public PList() {
   }
 

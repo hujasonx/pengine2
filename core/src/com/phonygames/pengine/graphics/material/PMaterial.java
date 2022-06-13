@@ -30,67 +30,20 @@ public class PMaterial {
   @Getter
   private String shaderPrefix;
 
-  private final PStringMap<PVec1> vec1s = new PStringMap<PVec1>() {
-    @Override
-    public PVec1 deepCopyValue(PVec1 o) {
-      return o.cpy();
-    }
+  private final PStringMap<PVec1> vec1s = new PStringMap<PVec1>();
 
-    @Override
-    protected PVec1 newUnpooled(String s) {
-      return PVec1.obtain();
-    }
-  };
+  private final PStringMap<PVec2> vec2s = new PStringMap<PVec2>();
 
-  private final PStringMap<PVec2> vec2s = new PStringMap<PVec2>() {
-    @Override
-    public PVec2 deepCopyValue(PVec2 o) {
-      return o.cpy();
-    }
+  private final PStringMap<PVec3> vec3s = new PStringMap<PVec3>();
 
-    @Override
-    protected PVec2 newUnpooled(String s) {
-      return PVec2.obtain();
-    }
-  };
-
-  private final PStringMap<PVec3> vec3s = new PStringMap<PVec3>() {
-    @Override
-    public PVec3 deepCopyValue(PVec3 o) {
-      return o.cpy();
-    }
-
-    @Override
-    protected PVec3 newUnpooled(String s) {
-      return PVec3.obtain();
-    }
-  };
-
-  private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>() {
-    @Override
-    public PVec4 deepCopyValue(PVec4 o) {
-      return o.cpy();
-    }
-
-    @Override
-    protected PVec4 newUnpooled(String s) {
-      return PVec4.obtain();
-    }
-  };
+  private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>();
 
   private final PStringMap<PTexture> textures = new PStringMap<PTexture>() {
-    @Override
-    public PTexture deepCopyValue(PTexture o) {
-      return o.tryDeepCopy();
-    }
-
     @Override
     protected PTexture newUnpooled(String s) {
       return new PTexture();
     }
   };
-
-  private final PStringMap<PFloat4Texture> float4Textures = new PStringMap<>();
 
   public static class UniformConstants {
 
@@ -208,11 +161,11 @@ public class PMaterial {
 
   public PMaterial cpy(String newName, PModelInstance newOwner) {
     PMaterial ret = new PMaterial(newName, newOwner);
-    ret.vec1s.copyFrom(vec1s);
-    ret.vec2s.copyFrom(vec2s);
-    ret.vec3s.copyFrom(vec3s);
-    ret.vec4s.copyFrom(vec4s);
-    ret.textures.copyFrom(textures);
+    ret.vec1s.tryDeepCopyAllFrom(vec1s);
+    ret.vec2s.tryDeepCopyAllFrom(vec2s);
+    ret.vec3s.tryDeepCopyAllFrom(vec3s);
+    ret.vec4s.tryDeepCopyAllFrom(vec4s);
+    ret.textures.tryDeepCopyAllFrom(textures);
     return ret;
   }
 
