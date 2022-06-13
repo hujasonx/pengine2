@@ -8,9 +8,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 public class PVec2 extends PVec<PVec2> {
-  public static final PVec2 IDT = new PVec2();
-  // PVec START
-  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PVec2> staticPool = new PPool<PVec2>() {
     @Override protected PVec2 newObject() {
       return new PVec2();

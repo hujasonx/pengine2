@@ -9,19 +9,18 @@ import com.phonygames.pengine.util.PDeepCopyable;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 
 public class PMat4 extends PBasic<PMat4> {
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PMat4> staticPool = new PPool<PMat4>() {
-    @Override
-    public PMat4 newObject() {
+    @Override public PMat4 newObject() {
       return new PMat4();
     }
   };
 
-  @Override
-  public PPool<PMat4> staticPool() {
+  @Override public PPool<PMat4> staticPool() {
     return getStaticPool();
   }
 
@@ -45,14 +44,10 @@ public class PMat4 extends PBasic<PMat4> {
 
   public static final PMat4 IDT = new PMat4();
   public static final PMat4 ZERO = new PMat4().set(new float[16]);
-
-  // End static.
-
-  @Getter
-  private static final PPool<PStringMap<PMat4>> mat4StringMaps = new PPool<PStringMap<PMat4>>() {
-    @Override
-    protected PStringMap<PMat4> newObject() {
-      return null;
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  private static final PPool<PStringMap<PMat4>> mat4StringMapsPool = new PPool<PStringMap<PMat4>>() {
+    @Override protected PStringMap<PMat4> newObject() {
+      return new PStringMap<>(PMat4.getStaticPool());
     }
   };
 
@@ -79,13 +74,11 @@ public class PMat4 extends PBasic<PMat4> {
     return vec4;
   }
 
-  @Override
-  public void reset() {
+  @Override public void reset() {
     backingMatrix4.idt();
   }
 
-  @Override
-  public PMat4 set(PMat4 other) {
+  @Override public PMat4 set(PMat4 other) {
     this.backingMatrix4.set(other.backingMatrix4);
     return this;
   }
@@ -116,8 +109,8 @@ public class PMat4 extends PBasic<PMat4> {
   }
 
   public PMat4 set(PVec3 xAxis, PVec3 yAxis, PVec3 zAxis, PVec3 pos) {
-    this.backingMatrix4
-        .set(xAxis.getBackingVec3(), yAxis.getBackingVec3(), zAxis.getBackingVec3(), pos.getBackingVec3());
+    this.backingMatrix4.set(xAxis.getBackingVec3(), yAxis.getBackingVec3(), zAxis.getBackingVec3(),
+                            pos.getBackingVec3());
     return this;
   }
 
@@ -138,7 +131,6 @@ public class PMat4 extends PBasic<PMat4> {
   public PMat4 setToTranslation(PVec3 vec3) {
     return idt().translate(vec3);
   }
-
 
   public PMat4 setToTranslation(float x, float y, float z) {
     return idt().translate(x, y, z);
@@ -187,7 +179,6 @@ public class PMat4 extends PBasic<PMat4> {
     for (int a = 0; a < 16; a++) {
       backingMatrix4.val[a] += other.backingMatrix4.val[a] * weight;
     }
-
     return this;
   }
 
@@ -195,17 +186,14 @@ public class PMat4 extends PBasic<PMat4> {
     for (int a = 0; a < 16; a++) {
       backingMatrix4.val[a] *= scl;
     }
-
     return this;
   }
 
-  @Override
-  public boolean equalsT(PMat4 mat4) {
+  @Override public boolean equalsT(PMat4 mat4) {
     return false;
   }
 
-  @Override
-  public int compareTo(PMat4 mat4) {
+  @Override public int compareTo(PMat4 mat4) {
     return 0;
   }
 }

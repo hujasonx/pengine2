@@ -30,13 +30,13 @@ public class PMaterial {
   @Getter
   private String shaderPrefix;
 
-  private final PStringMap<PVec1> vec1s = new PStringMap<PVec1>();
+  private final PStringMap<PVec1> vec1s = new PStringMap<PVec1>(PVec1.getStaticPool());
 
-  private final PStringMap<PVec2> vec2s = new PStringMap<PVec2>();
+  private final PStringMap<PVec2> vec2s = new PStringMap<PVec2>(PVec2.getStaticPool());
 
-  private final PStringMap<PVec3> vec3s = new PStringMap<PVec3>();
+  private final PStringMap<PVec3> vec3s = new PStringMap<PVec3>(PVec3.getStaticPool());
 
-  private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>();
+  private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>(PVec4.getStaticPool());
 
   private final PStringMap<PTexture> textures = new PStringMap<PTexture>() {
     @Override
@@ -98,12 +98,12 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, float f) {
-    vec1s.genUnpooled(uniform).x(f);
+    vec1s.genPooled(uniform).x(f);
     return this;
   }
 
   public PMaterial setTex(String name, PTexture texture) {
-    textures.genUnpooled("u_" + name + "Tex").set(texture);
+    textures.genPooled("u_" + name + "Tex").set(texture);
     return this;
   }
 
@@ -117,12 +117,12 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec2 vec2) {
-    vec2s.genUnpooled(uniform).set(vec2);
+    vec2s.genPooled(uniform).set(vec2);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y) {
-    vec2s.genUnpooled(uniform).set(x, y);
+    vec2s.genPooled(uniform).set(x, y);
     return this;
   }
 
@@ -131,12 +131,12 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec3 vec3) {
-    vec3s.genUnpooled(uniform).set(vec3);
+    vec3s.genPooled(uniform).set(vec3);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y, float z) {
-    vec3s.genUnpooled(uniform).set(x, y, z);
+    vec3s.genPooled(uniform).set(x, y, z);
     return this;
   }
 
@@ -145,17 +145,17 @@ public class PMaterial {
   }
 
   public PMaterial set(String uniform, PVec4 vec4) {
-    vec4s.genUnpooled(uniform).set(vec4);
+    vec4s.genPooled(uniform).set(vec4);
     return this;
   }
 
   public PMaterial set(String uniform, float x, float y, float z, float w) {
-    vec4s.genUnpooled(uniform).set(x, y, z, w);
+    vec4s.genPooled(uniform).set(x, y, z, w);
     return this;
   }
 
   public PMaterial set(String uniform, Color color) {
-    vec4s.genUnpooled(uniform).set(color.r, color.g, color.b, color.a);
+    vec4s.genPooled(uniform).set(color.r, color.g, color.b, color.a);
     return this;
   }
 
@@ -188,12 +188,12 @@ public class PMaterial {
   }
 
   public PMaterial setMetallic(float metallic) {
-    vec2s.genUnpooled(UniformConstants.Vec2.u_metallicRoughness).x(metallic);
+    vec2s.genPooled(UniformConstants.Vec2.u_metallicRoughness).x(metallic);
     return this;
   }
 
   public PMaterial setRoughness(float roughness) {
-    vec2s.genUnpooled(UniformConstants.Vec2.u_metallicRoughness).y(roughness);
+    vec2s.genPooled(UniformConstants.Vec2.u_metallicRoughness).y(roughness);
     return this;
   }
 

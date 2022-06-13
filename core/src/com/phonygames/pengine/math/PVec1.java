@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 public class PVec1 extends PVec<PVec1> {
-  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PVec1> staticPool = new PPool<PVec1>() {
     @Override protected PVec1 newObject() {
       return new PVec1();
@@ -14,10 +14,24 @@ public class PVec1 extends PVec<PVec1> {
   };
   private float x;
 
-  private PVec1() { }
+  private PVec1() {}
+
+  @Override public boolean equalsT(PVec1 pVec1) {
+    return x == pVec1.x;
+  }
 
   @Override public boolean isOnLine(PVec1 other) {
     return true;
+  }
+
+  @Override public PVec1 scl(float scl) {
+    x *= scl;
+    return this;
+  }
+
+  @Override public PVec1 setZero() {
+    x = 0;
+    return this;
   }
 
   public static PVec1 obtain() {

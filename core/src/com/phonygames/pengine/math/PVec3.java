@@ -10,7 +10,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 public class PVec3 extends PVec<PVec3> {
-  @Getter(value = AccessLevel.PROTECTED, lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PVec3> staticPool = new PPool<PVec3>() {
     @Override protected PVec3 newObject() {
       return new PVec3();
@@ -21,7 +21,7 @@ public class PVec3 extends PVec<PVec3> {
     return backingVec3.isOnLine(other.backingVec3);
   }
 
-  private PVec3() { }
+  private PVec3() {}
 
   public static PVec3 obtain() {
     return getStaticPool().obtain();

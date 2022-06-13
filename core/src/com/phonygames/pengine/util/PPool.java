@@ -85,7 +85,6 @@ abstract public class PPool<T extends PPool.Poolable> {
 
   public void free(@NonNull T t) {
       freeInternal(t);
-      System.out.println(t);
   }
 
   /**
