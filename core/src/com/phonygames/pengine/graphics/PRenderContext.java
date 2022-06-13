@@ -105,7 +105,7 @@ public class PRenderContext {
     enqueuedDrawCalls.clearRecursive();
   }
 
-  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall) {
+  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall, boolean snapshotBufferOffsets) {
     // First, try to generate the shader.
     if (drawCall.getShader() == null && drawCall.getMesh() != null) {
       if (phaseHandlers.size == 0) {
@@ -124,16 +124,34 @@ public class PRenderContext {
     }
     // Next, enqueue the draw call if it has a shader.
     if (drawCall.getShader() != null) {
-      enqueue(drawCall.getShader(), drawCall.getLayer(), drawCall);
+      enqueue(drawCall.getShader(), drawCall.getLayer(), drawCall, snapshotBufferOffsets);
       return true;
     }
     return false;
   }
 
-  public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall) {
+  /**
+   *
+   * @param shader
+   * @param layer
+   * @param drawCall
+   * @param snapshotBufferOffsets Set this to true to snapshot the buffer offsets, or false to not (allowing you to use
+   *                              the same buffer params for multiple draw calls.
+   */
+  public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall, boolean snapshotBufferOffsets) {
+    // Calculate the stored becs Per instance using the buffer offsets and the buffer fill amounts. This assumes that
+    // you enqueue a draw call immediately after writing stuff to buffers.
+    for (val e : storedBufferOffsets) {
+      val buffer = genDataBuffer(e.k());
+      int vecsWrittenToThisBuffer = buffer.vecsWritten() - storedBufferOffsets.get(e.k());
+      int vecsWrittenPerInstance = vecsWrittenToThisBuffer / Math.max(1, drawCall.getNumInstances());
+      storedVecsPerInstance.put(e.k(), vecsWrittenPerInstance);
+    }
     enqueuedDrawCalls.genPooled(layer).genPooled(shader)
                      .add(drawCall.setDataBufferInfo(storedVecsPerInstance, storedBufferOffsets));
-    snapshotBufferOffsets();
+    if (snapshotBufferOffsets) {
+      snapshotBufferOffsets();
+    }
   }
 
   private void snapshotBufferOffsets() {
@@ -294,11 +312,6 @@ public class PRenderContext {
     return this;
   }
 
-  public PRenderContext setVecsPerInstanceForDataBuffer(String name, int vecsPerInstance) {
-    storedVecsPerInstance.put(name, vecsPerInstance);
-    return this;
-  }
-
   public void start() {
     PAssert.isNull(activeContext);
     activeContext = this;
@@ -319,7 +332,7 @@ public class PRenderContext {
   }
 
   public interface DataBufferEmitter {
-    void emitDataBuffersInto(PRenderContext renderContext);
+    void emitDataBuffersInto(PRenderContext renderContext, String param);
   }
 
   public abstract static class PhaseHandler {

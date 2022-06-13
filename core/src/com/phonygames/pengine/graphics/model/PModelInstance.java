@@ -74,7 +74,6 @@ public class PModelInstance {
       if (glNode.getInvBoneTransforms() == null || glNode.getInvBoneTransforms().size == 0) {
         continue;
       }
-      renderContext.setVecsPerInstanceForDataBuffer("boneTransforms", glNode.getInvBoneTransforms().size * 4);
       for (val e2 : glNode.getInvBoneTransforms()) {
         String boneId = e2.key;
         PMat4 invBindTransform = e2.value;
@@ -156,12 +155,15 @@ public class PModelInstance {
           PAssert.isTrue(model == modelInstance.model, "Incompatible model type in instances list");
           PGlNode instanceNode = modelInstance.getGlNodes().get(node.getId());
           if (instanceNode.getDataBufferEmitter() != null) {
-            instanceNode.getDataBufferEmitter().emitDataBuffersInto(renderContext);
+            instanceNode.getDataBufferEmitter().emitDataBuffersInto(renderContext, instanceNode.getId());
           }
           outputBoneTransformsToBuffer(renderContext);
         }
+
+        // Now that all the bone and data buffers have been set, enqueue a draw call. Since snapshotBufferOffsets was
+        // called, we will need to re-output all buffer data
         renderContext.enqueue(shaderProvider,
-                              PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size));
+                              PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size), true);
       }
       for (Node child : getChildren()) {
         child.enqueueRecursiveInstanced(renderContext, shaderProvider, modelInstances);

@@ -52,7 +52,7 @@ public class PMesh {
           attr.alias = PVertexAttributes.Attribute.Keys.bon[attr.unit];
           break;
         default:
-          PAssert.warnNotImplemented("Vertex attribute" + attr.alias);
+          PAssert.warnNotImplemented("Vertex attribute " + attr.alias);
           break;
       }
     }

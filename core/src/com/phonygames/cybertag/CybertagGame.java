@@ -39,8 +39,39 @@ public class CybertagGame implements PGame {
   private PList<PModelInstance> testModelInstances = new PList<>();
   private PList<PModelInstance> testModelInstances2 = new PList<>();
 
+  @Override public void frameUpdate() {
+    renderContext.getCameraRange().y(1000);
+    renderContext.getCameraPos().set(5, 5, 5);
+    renderContext.getCameraUp().set(0, 1, 0);
+    renderContext.getCameraDir().set(-1, -1, -1);
+    renderContext.start();
+    pPbrPipeline.attach(renderContext);
+    // Set environment.
+    environment.setAmbientLightCol(.1f, .1f, .1f);
+    PVec3 tempV3 = PVec3.obtain().set(-1, -1, -1).nor();
+    environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
+    tempV3.free();
+    for (int a = 0; a < testLights.length; a++) {
+      testLights[a].getTransform().setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2,
+                                                    MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
+                                                    MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
+    }
+    // Process and enqueue the model.
+    val modelI = testModelInstances.isEmpty() ? null : testModelInstances.get(0);
+    for (int a = 0; a < testModelInstances.size; a++) {
+      PModelInstance modelInstance = testModelInstances.get(a);
+      modelInstance.getWorldTransform().idt().setToTranslation(a, 0, 0).scl(1, 1, 1).rot(0, 1, 0, a + PEngine.t);
+      modelInstance.recalcTransforms();
+    }
+    if (modelI != null) {
+      modelI.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, testModelInstances);
+    }
+    renderContext.glRenderQueue();
+    renderContext.end();
+  }
+
   @Override public void init() {
-    new PGltf("engine/model/RiggedFigure.glb").loadThenDo(new PGltf.OnloadCallback() {
+    new PGltf("engine/model/Persian.glb").loadThenDo(new PGltf.OnloadCallback() {
       @Override public void onLoad(PGltf gltf) {
         testModel = gltf.getModel();
         testModelInstances.add(new PModelInstance(testModel));
@@ -88,47 +119,7 @@ public class CybertagGame implements PGame {
     });
   }
 
-  @Override public void preLogicUpdate() {
-  }
-
   @Override public void logicUpdate() {
-  }
-
-  @Override public void postLogicUpdate() {
-  }
-
-  @Override public void preFrameUpdate() {
-  }
-
-  @Override public void frameUpdate() {
-    renderContext.getCameraRange().y(1000);
-    renderContext.getCameraPos().set(5, 5, 5);
-    renderContext.getCameraUp().set(0, 1, 0);
-    renderContext.getCameraDir().set(-1, -1, -1);
-    renderContext.start();
-    pPbrPipeline.attach(renderContext);
-    // Set environment.
-    environment.setAmbientLightCol(.1f, .1f, .1f);
-    PVec3 tempV3 = PVec3.obtain().set(-1, -1, -1).nor();
-    environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
-    tempV3.free();
-    for (int a = 0; a < testLights.length; a++) {
-      testLights[a].getTransform().setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2,
-                                                    MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
-                                                    MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
-    }
-    // Process and enqueue the model.
-    val modelI = testModelInstances.isEmpty() ? null : testModelInstances.get(0);
-    for (int a = 0; a < testModelInstances.size; a++) {
-      PModelInstance modelInstance = testModelInstances.get(a);
-      modelInstance.getWorldTransform().idt().setToTranslation(a, 0, 0).scl(1, 1, 1).rot(0, 1, 0, a + PEngine.t);
-      modelInstance.recalcTransforms();
-    }
-    if (modelI != null) {
-      modelI.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, testModelInstances);
-    }
-    renderContext.glRenderQueue();
-    renderContext.end();
   }
 
   @Override public void postFrameUpdate() {
@@ -140,5 +131,14 @@ public class CybertagGame implements PGame {
         PApplicationWindow.drawTextureToScreen(pPbrPipeline.getGBuffer().getTexture(a));
       }
     }
+  }
+
+  @Override public void postLogicUpdate() {
+  }
+
+  @Override public void preFrameUpdate() {
+  }
+
+  @Override public void preLogicUpdate() {
   }
 }

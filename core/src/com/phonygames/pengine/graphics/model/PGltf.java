@@ -145,17 +145,23 @@ public class PGltf {
       for (val e : baseAnim.nodeAnimations) {
         val nodeAnimHack = (NodeAnimationHack) e;
         PNodeAnimation.Builder nodeBuilder = new PNodeAnimation.Builder(nodeAnimHack.node.id);
-        nodeBuilder.setInterpolationTranslation(convertInterpolation(nodeAnimHack.translationMode));
-        nodeBuilder.setInterpolationScale(convertInterpolation(nodeAnimHack.scalingMode));
-        nodeBuilder.setInterpolationRotation(convertInterpolation(nodeAnimHack.rotationMode));
-        for (val t : e.translation) {
-          nodeBuilder.addTranslationKeyframe(t.keytime, PVec3.obtain().set(t.value));
+        if (e.translation != null) {
+          nodeBuilder.setInterpolationTranslation(convertInterpolation(nodeAnimHack.translationMode));
+          for (val t : e.translation) {
+            nodeBuilder.addTranslationKeyframe(t.keytime, PVec3.obtain().set(t.value));
+          }
         }
-        for (val r : e.rotation) {
-          nodeBuilder.addRotationKeyframe(r.keytime, PVec4.obtain().set(r.value));
+        if (e.rotation != null) {
+          nodeBuilder.setInterpolationRotation(convertInterpolation(nodeAnimHack.rotationMode));
+          for (val t : e.rotation) {
+            nodeBuilder.addRotationKeyframe(t.keytime, PVec4.obtain().set(t.value));
+          }
         }
-        for (val s : e.scaling) {
-          nodeBuilder.addScaleKeyframe(s.keytime, PVec3.obtain().set(s.value));
+        if (e.scaling != null) {
+          nodeBuilder.setInterpolationScale(convertInterpolation(nodeAnimHack.scalingMode));
+          for (val t : e.scaling) {
+            nodeBuilder.addScaleKeyframe(t.keytime, PVec3.obtain().set(t.value));
+          }
         }
         builder.addNodeAnimation(nodeBuilder.build());
       }
@@ -164,6 +170,9 @@ public class PGltf {
   }
 
   private static PNodeAnimation.Interpolation convertInterpolation(Interpolation i) {
+    if (i == null) {
+      return PNodeAnimation.Interpolation.STEP;
+    }
     switch (i) {
       case STEP:
         return PNodeAnimation.Interpolation.STEP;

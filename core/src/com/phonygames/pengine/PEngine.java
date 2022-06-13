@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.WindowedMean;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.exception.PRuntimeException;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.model.PMesh;
@@ -33,9 +34,7 @@ public class PEngine extends ApplicationAdapter {
   private static WindowedMean uidtWindowedMean = new WindowedMean(8);
 
   public PEngine(PGame game) {
-    if (PEngine.pEngine != null) {
-      throw new PRuntimeException("PEngine was already set!");
-    }
+    PAssert.isNull(PEngine.pEngine);
     PEngine.game = game;
     pEngine = this;
   }
