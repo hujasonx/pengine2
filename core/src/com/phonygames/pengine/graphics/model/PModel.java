@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics.model;
 
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PBuilder;
@@ -8,15 +9,18 @@ import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PStringMap;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 
 public class PModel {
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private final PStringMap<Node> nodes = new PStringMap<>();
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private final PList<String> rootNodeIds = new PList<>();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  private final PStringMap<PAnimation> animations = new PStringMap<>();
 
   private PModel() {
 
@@ -25,16 +29,16 @@ public class PModel {
   protected static class Node {
     @Getter
     private final String id;
-    @Getter(lazy = true)
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
     private final PMat4 transform = PMat4.obtain();
-    @Getter
+    @Getter(value = AccessLevel.PUBLIC)
     private final Node parent;
-    @Getter(lazy = true)
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
     private final PList<Node> children = new PList<>();
-    @Getter(lazy = true)
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
     private final PList<PGlNode> glNodes = new PList<>();
-    @Getter
-    @Setter
+    @Getter(value = AccessLevel.PUBLIC)
+    @Setter(value = AccessLevel.PUBLIC)
     boolean inheritTransform;
 
     private Node(String id, Node parent, PList<PGlNode> glNodes) {

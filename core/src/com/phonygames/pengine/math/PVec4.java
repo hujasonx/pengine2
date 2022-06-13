@@ -2,6 +2,7 @@ package com.phonygames.pengine.math;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Quaternion;
 import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
@@ -131,6 +132,14 @@ public class PVec4 extends PVec<PVec4> {
     this.y = y;
     this.z = z;
     this.w = w;
+    return this;
+  }
+
+  public PVec4 set(Quaternion quaternion) {
+    this.x = quaternion.x;
+    this.y = quaternion.y;
+    this.z = quaternion.z;
+    this.w = quaternion.w;
     return this;
   }
 
