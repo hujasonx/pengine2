@@ -91,7 +91,7 @@ public class PModelInstance {
    * @param alpha
    * @return
    */
-  public PStringMap<PMat4> outputNodeTransformsToMap(PStringMap<PMat4> map, boolean useBindPose, float alpha) {
+  public PStringMap<PMat4> outputNodeTransformsToMap(final PStringMap<PMat4> map, boolean useBindPose, float alpha) {
     for (val e : nodes()) {
       if (map.has(e.k())) {
         // There was already a maxtrix in the map for this node.

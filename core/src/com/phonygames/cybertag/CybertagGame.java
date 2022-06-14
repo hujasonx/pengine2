@@ -21,7 +21,6 @@ import com.phonygames.pengine.graphics.model.gen.PModelGen;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
-import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
@@ -32,12 +31,12 @@ public class CybertagGame implements PGame {
   protected PShader testShader;
   PEnvironment environment;
   PPointLight[] testLights = new PPointLight[10];
+  private PModel catModel;
+  private PList<PModelInstance> catModelInstances = new PList<>();
   private PPbrPipeline pPbrPipeline;
   private PRenderContext renderContext;
   private PModel testBoxModel;
-  private PModel catModel;
   private PModel testModel2;
-  private PList<PModelInstance> catModelInstances = new PList<>();
   private PList<PModelInstance> testModelInstances2 = new PList<>();
 
   @Override public void frameUpdate() {
@@ -58,18 +57,21 @@ public class CybertagGame implements PGame {
                                                  MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
                                                  MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
     }
-    // Process and enqueue the model.
-    for (int a = 0; a < catModelInstances.size; a++) {
-      PModelInstance modelInstance = catModelInstances.get(a);
-      modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(4, 4, 4).rot(0, 1, 0, 0);
-      PLog.i("" + catModel.animations());
-      PStringMap<PMat4> transformMap = modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true,1);
-      PAnimation animation = catModel.animations().get("All Animations");
-      animation.apply(transformMap, PEngine.t % animation.getLength(), 1);
-      modelInstance.setNodeTransformsFromMap(transformMap, 0, 1);
-      modelInstance.recalcTransforms();
-    }
     if (catModel != null) {
+      // Process the cat model instances.
+      PAnimation animation = catModel.animations().get("All Animations");
+      for (int a = 0; a < catModelInstances.size; a++) {
+        PModelInstance modelInstance = catModelInstances.get(a);
+        modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(4, 4, 4).rot(0, 1, 0, 0);
+        PStringMap<PMat4> transformMap =
+            modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true, 1);
+        animation.apply(transformMap, (PEngine.t * 1.3f + a) % animation.getLength(), 1);
+        modelInstance.setNodeTransformsFromMap(transformMap, 0, 1);
+        transformMap.clearRecursive();
+        PMat4.getMat4StringMapsPool().free(transformMap);
+        modelInstance.recalcTransforms();
+      }
+      // Enqueue the model instances into the buffer.
       catModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, catModelInstances, false);
     }
     renderContext.glRenderQueue();
@@ -80,10 +82,9 @@ public class CybertagGame implements PGame {
     new PGltf("engine/model/Persian.glb").loadThenDo(new PGltf.OnloadCallback() {
       @Override public void onLoad(PGltf gltf) {
         catModel = gltf.getModel();
-        catModelInstances.add(new PModelInstance(catModel));
-        catModelInstances.add(new PModelInstance(catModel));
-        //        testModelInstances.add(new PModelInstance(testModel));
-        //        testModelInstances.add(new PModelInstance(testModel));
+        for (int a = 0; a < 10; a++) {
+          catModelInstances.add(new PModelInstance(catModel));
+        }
       }
     });
     new PGltf("engine/model/blender.glb").loadThenDo(new PGltf.OnloadCallback() {
