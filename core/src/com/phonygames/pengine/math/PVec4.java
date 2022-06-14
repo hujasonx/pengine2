@@ -152,6 +152,11 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  public PVec4 slerp(PVec4 other, float mix) {
+    backingQuaterion.slerp(other.backingQuaterion, mix);
+    return this;
+  }
+
   public PVec4 mul(@NonNull PMat4 mat4) {
     float[] l_mat = mat4.values();
     return this.set(backingQuaterion.x * l_mat[Matrix4.M00] + backingQuaterion.y * l_mat[Matrix4.M01] +

@@ -1,6 +1,10 @@
 package com.phonygames.pengine.graphics.animation;
 
+import android.support.annotation.NonNull;
+
 import com.badlogic.gdx.graphics.g3d.model.NodeKeyframe;
+import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
@@ -10,11 +14,20 @@ import com.phonygames.pengine.util.PList;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 public class PNodeAnimation {
   @Getter(value = AccessLevel.MODULE)
+  @Accessors(fluent = true)
+  private final PVec4 defaultRotation = PVec4.obtain();
+  @Getter(value = AccessLevel.MODULE)
+  @Accessors(fluent = true)
+  private final PVec3 defaultScale = PVec3.obtain();
+  @Getter(value = AccessLevel.MODULE)
+  @Accessors(fluent = true)
+  private final PVec3 defaultTranslation = PVec3.obtain();
+  @Getter(value = AccessLevel.MODULE)
+  @Accessors(fluent = true)
   private final String nodeName;
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
@@ -37,26 +50,44 @@ public class PNodeAnimation {
   }
 
   public void apply(PMat4 output, float t, float alpha) {
-//    PMat4 temp = PMat4.obtain();
-//    getTransformAtT(temp, t);
-//    output.lerp(temp, alpha);
-//    temp.free();
+    PMat4 temp = PMat4.obtain();
+    getTransformAtT(temp, t);
+    output.lerp(temp, alpha);
+    temp.free();
   }
 
   private final PMat4 getTransformAtT(PMat4 out, float t) {
     PAssert.isTrue(t >= 0);
     out.idt();
-    PVec4 outRot = PVec4.obtain().setIdentityQuaternion();
-    PVec3 outTra = PVec3.obtain().setZero();
-    PVec3 outScl = PVec3.obtain().setOne();
-    if (!rotationKeyframes().isEmpty()) {
-      int keyFrameIndexLower = getLowerNodeKeyframeIndexForTime(rotationKeyframes(), t);
-      outRot.set(rotationKeyframes().get(keyFrameIndexLower).value);
-    }
+    PVec3 outTra = getTranslationAtT(PVec3.obtain(), t);
+    PVec4 outRot = getRotationAtT(PVec4.obtain(), t);
+    PVec3 outScl = getScaleAtT(PVec3.obtain(), t);
     out.set(outTra, outRot, outScl);
     outTra.free();
     outRot.free();
     outScl.free();
+    return out;
+  }
+
+  private final PVec4 getRotationAtT(PVec4 out, float t) {
+    if (rotationKeyframes().isEmpty()) {
+      return out.set(defaultRotation());
+    }
+    int keyFrameIndexLower = getLowerNodeKeyframeIndexForTime(rotationKeyframes(), t);
+    out.set(rotationKeyframes().get(keyFrameIndexLower).value);
+    if (interpolationRotation() == Interpolation.STEP) {
+      return out;
+    }
+    float mixAmountWithUpperKeyframe = getMixAmountWithNextKeyframe(rotationKeyframes(), keyFrameIndexLower, t);
+    if (mixAmountWithUpperKeyframe == 0) {
+      return out;
+    }
+    if (interpolationRotation() == Interpolation.LINEAR) {
+      out.slerp(rotationKeyframes().get(keyFrameIndexLower + 1).value, mixAmountWithUpperKeyframe);
+    } else {
+      // Cubic.
+      PAssert.failNotImplemented("Cubic interpolation");
+    }
     return out;
   }
 
@@ -65,14 +96,68 @@ public class PNodeAnimation {
    * @param time >
    * @return
    */
-  private final int getLowerNodeKeyframeIndexForTime(PList Keyframes, float time) {
-    PAssert.isTrue(!Keyframes.isEmpty());
-    for (int a = 1; a < Keyframes.size; a++) {
-      if (((NodeKeyframe) Keyframes.get(a)).keytime > time) {
+  private final int getLowerNodeKeyframeIndexForTime(PList keyFrames, float time) {
+    PAssert.isTrue(!keyFrames.isEmpty());
+    for (int a = 1; a < keyFrames.size; a++) {
+      if (((NodeKeyframe) keyFrames.get(a)).keytime > time) {
         return a - 1;
       }
     }
-    return Keyframes.size - 1;
+    return keyFrames.size - 1;
+  }
+
+  private final float getMixAmountWithNextKeyframe(PList keyFrames, int lowerKeyframeIndex, float time) {
+    if (lowerKeyframeIndex >= keyFrames.size - 1) {
+      return 0;
+    }
+    PAssert.isFalse(time < 0);
+    float timeOfLower = ((NodeKeyframe) keyFrames.get(lowerKeyframeIndex)).keytime;
+    float timeOfUpper = ((NodeKeyframe) keyFrames.get(lowerKeyframeIndex + 1)).keytime;
+    return (time - timeOfLower) / (timeOfUpper - timeOfLower);
+  }
+
+  private final PVec3 getScaleAtT(PVec3 out, float t) {
+    if (scaleKeyframes().isEmpty()) {
+      return out.set(defaultScale());
+    }
+    int keyFrameIndexLower = getLowerNodeKeyframeIndexForTime(scaleKeyframes(), t);
+    out.set(scaleKeyframes().get(keyFrameIndexLower).value);
+    if (interpolationRotation() == Interpolation.STEP) {
+      return out;
+    }
+    float mixAmountWithUpperKeyframe = getMixAmountWithNextKeyframe(scaleKeyframes(), keyFrameIndexLower, t);
+    if (mixAmountWithUpperKeyframe == 0) {
+      return out;
+    }
+    if (interpolationRotation() == Interpolation.LINEAR) {
+      out.lerp(scaleKeyframes().get(keyFrameIndexLower + 1).value, mixAmountWithUpperKeyframe);
+    } else {
+      // Cubic.
+      PAssert.failNotImplemented("Cubic interpolation");
+    }
+    return out;
+  }
+
+  private final PVec3 getTranslationAtT(PVec3 out, float t) {
+    if (translationKeyframes().isEmpty()) {
+      return out.set(defaultTranslation());
+    }
+    int keyFrameIndexLower = getLowerNodeKeyframeIndexForTime(translationKeyframes(), t);
+    out.set(translationKeyframes().get(keyFrameIndexLower).value);
+    if (interpolationRotation() == Interpolation.STEP) {
+      return out;
+    }
+    float mixAmountWithUpperKeyframe = getMixAmountWithNextKeyframe(translationKeyframes(), keyFrameIndexLower, t);
+    if (mixAmountWithUpperKeyframe == 0) {
+      return out;
+    }
+    if (interpolationRotation() == Interpolation.LINEAR) {
+      out.lerp(translationKeyframes().get(keyFrameIndexLower + 1).value, mixAmountWithUpperKeyframe);
+    } else {
+      // Cubic.
+      PAssert.failNotImplemented("Cubic interpolation");
+    }
+    return out;
   }
 
   public enum Interpolation {
@@ -121,17 +206,24 @@ public class PNodeAnimation {
       return nodeAnimation;
     }
 
-    public Builder setInterpolationRotation(Interpolation interpolation) {
+    public Builder setDefaultTRS(@NonNull Vector3 t, @NonNull Quaternion r, @NonNull Vector3 s) {
+      nodeAnimation.defaultTranslation.set(t);
+      nodeAnimation.defaultRotation.set(r);
+      nodeAnimation.defaultScale().set(s);
+      return this;
+    }
+
+    public Builder setInterpolationRotation(@NonNull Interpolation interpolation) {
       nodeAnimation.interpolationRotation = interpolation;
       return this;
     }
 
-    public Builder setInterpolationScale(Interpolation interpolation) {
+    public Builder setInterpolationScale(@NonNull Interpolation interpolation) {
       nodeAnimation.interpolationScale = interpolation;
       return this;
     }
 
-    public Builder setInterpolationTranslation(Interpolation interpolation) {
+    public Builder setInterpolationTranslation(@NonNull Interpolation interpolation) {
       nodeAnimation.interpolationTranslation = interpolation;
       return this;
     }

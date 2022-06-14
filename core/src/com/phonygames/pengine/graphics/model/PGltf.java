@@ -145,6 +145,7 @@ public class PGltf {
       for (val e : baseAnim.nodeAnimations) {
         val nodeAnimHack = (NodeAnimationHack) e;
         PNodeAnimation.Builder nodeBuilder = new PNodeAnimation.Builder(nodeAnimHack.node.id);
+        nodeBuilder.setDefaultTRS(e.node.translation, e.node.rotation, e.node.scale);
         if (e.translation != null) {
           nodeBuilder.setInterpolationTranslation(convertInterpolation(nodeAnimHack.translationMode));
           for (val t : e.translation) {

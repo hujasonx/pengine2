@@ -61,7 +61,7 @@ public class CybertagGame implements PGame {
     // Process and enqueue the model.
     for (int a = 0; a < catModelInstances.size; a++) {
       PModelInstance modelInstance = catModelInstances.get(a);
-      modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(4, 4, 4).rot(0, 1, 0, a + PEngine.t);
+      modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(4, 4, 4).rot(0, 1, 0, 0);
       PLog.i("" + catModel.animations());
       PStringMap<PMat4> transformMap = modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true,1);
       PAnimation animation = catModel.animations().get("All Animations");

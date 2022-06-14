@@ -44,7 +44,7 @@ public class PAnimation {
     }
 
     public Builder addNodeAnimation(PNodeAnimation nodeAnimation) {
-      animation.getNodeAnimations().put(nodeAnimation.getNodeName(), nodeAnimation);
+      animation.getNodeAnimations().put(nodeAnimation.nodeName(), nodeAnimation);
       animation.length = Math.max(animation.length, nodeAnimation.length());
       return this;
     }
