@@ -6,7 +6,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.WindowedMean;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.exception.PRuntimeException;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
@@ -14,6 +13,8 @@ import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.lighting.PLight;
 import com.phonygames.pengine.logging.PLog;
+import com.phonygames.pengine.util.PApplicationUtils;
+import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.Getter;
 
@@ -90,6 +91,10 @@ public class PEngine extends ApplicationAdapter {
   }
 
   private void frameUpdate() {
+    Gdx.graphics.setTitle(
+        "Cybertag: " + PStringUtils.prependSpacesToLength("" + Gdx.graphics.getFramesPerSecond(), 3) + "FPS, Mem: " +
+        PStringUtils.prependSpacesToLength(
+            PStringUtils.roundNearestHundredth(PApplicationUtils.runtimeUsedMemoryMb() / 1024), 5) + "GB");
     PApplicationWindow.preFrameUpdate();
     PAssetManager.preFrameUpdate();
     game.preFrameUpdate();

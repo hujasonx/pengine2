@@ -118,9 +118,11 @@ public class PShader implements Disposable, Comparable<PShader> {
               if (previousOffendingLineNo != offendingLineNo) {
                 // Print the shader source around the error.
                 int linesToShowBeforeAndAfter = 2;
-                stringBuilder.append(phase == 2 ? "\nFrag shader: " : "\nVert shader: ").append(fileNameAndLine[0]).append("\n");
-                printSource(stringBuilder, phase == 1 ? "V: " : "F: ", rawShaderLines, offendingLineNo - linesToShowBeforeAndAfter,
-                            offendingLineNo + linesToShowBeforeAndAfter, offendingLineNo);
+                stringBuilder.append(phase == 2 ? "\nFrag shader: " : "\nVert shader: ").append(fileNameAndLine[0])
+                             .append("\n");
+                printSource(stringBuilder, phase == 1 ? "V: " : "F: ", rawShaderLines,
+                            offendingLineNo - linesToShowBeforeAndAfter, offendingLineNo + linesToShowBeforeAndAfter,
+                            offendingLineNo);
               }
               stringBuilder.append("[").append(PStringUtils.prependSpacesToLength(offendingLineNo + "", 4)).append("] ")
                            .append(errorString).append("\n");
@@ -148,8 +150,8 @@ public class PShader implements Disposable, Comparable<PShader> {
    * @param lineEnd
    * @param lineToFlag    if -1, then the actual, post-processed line numbers will be used.
    */
-  private static void printSource(StringBuilder stringBuilder, String linePrefix, String[] rawLines, int lineStart, int lineEnd,
-                                  int lineToFlag) {
+  private static void printSource(StringBuilder stringBuilder, String linePrefix, String[] rawLines, int lineStart,
+                                  int lineEnd, int lineToFlag) {
     for (int lineNo = lineStart; lineNo <= lineEnd; lineNo++) {
       if (lineNo < 0 || lineNo >= rawLines.length) {
         continue;
@@ -257,10 +259,8 @@ public class PShader implements Disposable, Comparable<PShader> {
       return this;
     }
     PAssert.isTrue(isActive());
-    try {
+    if (shaderProgram.hasUniform(uniform)) {
       shaderProgram.setUniformMatrix(uniform, mat4.getBackingMatrix4());
-    } catch (IllegalArgumentException e) {
-      //      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -274,10 +274,8 @@ public class PShader implements Disposable, Comparable<PShader> {
       return this;
     }
     PAssert.isTrue(isActive());
-    try {
+    if (shaderProgram.hasUniform(uniform)) {
       shaderProgram.setUniformf(uniform, x);
-    } catch (IllegalArgumentException e) {
-      //      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -291,10 +289,8 @@ public class PShader implements Disposable, Comparable<PShader> {
       return this;
     }
     PAssert.isTrue(isActive());
-    try {
+    if (shaderProgram.hasUniform(uniform)) {
       shaderProgram.setUniformf(uniform, x, y);
-    } catch (IllegalArgumentException e) {
-      //      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -308,10 +304,8 @@ public class PShader implements Disposable, Comparable<PShader> {
       return this;
     }
     PAssert.isTrue(isActive());
-    try {
+    if (shaderProgram.hasUniform(uniform)) {
       shaderProgram.setUniformf(uniform, x, y, z);
-    } catch (IllegalArgumentException e) {
-      //      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -325,10 +319,8 @@ public class PShader implements Disposable, Comparable<PShader> {
       return this;
     }
     PAssert.isTrue(isActive());
-    try {
+    if (shaderProgram.hasUniform(uniform)) {
       shaderProgram.setUniformf(uniform, x, y, z, w);
-    } catch (IllegalArgumentException e) {
-      //      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -338,10 +330,8 @@ public class PShader implements Disposable, Comparable<PShader> {
       return this;
     }
     PAssert.isTrue(isActive());
-    try {
+    if (shaderProgram.hasUniform(uniform)) {
       shaderProgram.setUniformi(uniform, i);
-    } catch (IllegalArgumentException e) {
-      //      PLog.w("Illegal argument: " + uniform, e);
     }
     return this;
   }
@@ -351,13 +341,10 @@ public class PShader implements Disposable, Comparable<PShader> {
       return this;
     }
     PAssert.isTrue(isActive());
-    try {
-      int t = PRenderContext.activeContext().getTextureBinder().bind(texture);
-      shaderProgram.setUniformi(uniform, t);
-    } catch (IllegalArgumentException e) {
-      //      PLog.w("Illegal argument: " + uniform, e);
+    if (shaderProgram.hasUniform(uniform)) {
+      shaderProgram.setUniformi(uniform, PRenderContext.activeContext().getTextureBinder().bind(texture));
+      set(uniform + "Size", texture.getWidth(), texture.getHeight(), 1f / texture.getWidth(), 1f / texture.getHeight());
     }
-    set(uniform + "Size", texture.getWidth(), texture.getHeight(), 1f / texture.getWidth(), 1f / texture.getHeight());
     return this;
   }
 
