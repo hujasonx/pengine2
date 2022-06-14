@@ -178,9 +178,8 @@ public class PRenderContext {
       int vecsWrittenPerInstance = vecsWrittenToThisBuffer / Math.max(1, drawCall.numInstances());
       storedVecsPerInstance().put(e.k(), vecsWrittenPerInstance);
     }
-    enqueuedDrawCalls().genPooled(layer).genPooled(shader).add(
-        drawCall.setDataBufferInfo(storedVecsPerInstance(), storedBufferOffsets(), boneTransformsLookupOffset,
-                                   boneTransformsVecsPerInstance));
+    addRenderContextDataBufferOffsetsToDrawCall(drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance);
+    enqueuedDrawCalls().genPooled(layer).genPooled(shader).add(drawCall);
     snapshotBufferOffsets();
   }
 
@@ -198,6 +197,12 @@ public class PRenderContext {
     storedVecsPerInstance().put(name, 0);
     storedBufferOffsets().put(name, 0);
     return dataBuffer;
+  }
+
+  public void addRenderContextDataBufferOffsetsToDrawCall(PGlDrawCall drawCall, int boneTransformsLookupOffset,
+                                                          int boneTransformsVecsPerInstance) {
+    drawCall.setDataBufferInfo(storedVecsPerInstance(), storedBufferOffsets(), boneTransformsLookupOffset,
+                               boneTransformsVecsPerInstance);
   }
 
   /**
