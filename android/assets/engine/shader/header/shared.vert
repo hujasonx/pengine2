@@ -23,7 +23,6 @@ out vec3 v_skinnedNor;
 #include <engine/shader/header/sharedvertarray>[5]
 #include <engine/shader/header/sharedvertarray>[6]
 #include <engine/shader/header/sharedvertarray>[7]
-#include <engine/shader/header/sharedvertarray>[8]
 
 // Uniforms for skinning.
 #ifdef a_bon0Flag

@@ -149,7 +149,8 @@ public class PVec3 extends PVec<PVec3> {
   }
 
   @Override public PVec3 setZero() {
-    return null;
+    this.backingVec3.setZero();
+    return this;
   }
 
   public PVec3 sphericalYUpZForward(float theta, float phi, float radius) {

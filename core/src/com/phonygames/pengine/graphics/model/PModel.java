@@ -32,6 +32,41 @@ public class PModel {
   private PModel() {
   }
 
+  public void enqueue(@NonNull PRenderContext renderContext, @NonNull PShaderProvider shaderProvider,
+                      @NonNull PList<PModelInstance> instances, boolean useMaterialOfFirstInstance) {
+    if (instances.size == 0) {
+      return;
+    }
+    // First, fill up the data buffers.
+    for (PModelInstance modelInstance : instances) {
+      if (modelInstance.getDataBufferEmitter() != null) {
+        modelInstance.getDataBufferEmitter().emitDataBuffersInto(renderContext);
+      }
+    }
+    // Next, enqueue the model instance glNodes, filling up the boneTransform buffer for each drawCall/glNode.
+    for (val v : nodes()) {
+      Node node = v.v();
+      for (val glNode : v.v().glNodes()) {
+        // Fill the bone transforms buffer.
+        PModelInstance firstInstance = null;
+        int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
+        for (PModelInstance modelInstance : instances) {
+          PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
+          modelInstance.outputBoneTransformsToBuffer(renderContext, glNode.id());
+          if (firstInstance == null) {
+            firstInstance = modelInstance;
+          }
+        }
+        PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).setNumInstances(instances.size);
+        if (useMaterialOfFirstInstance && firstInstance != null) {
+          drawCall.material(firstInstance.glNodes().get(glNode.id()).drawCall().material());
+        }
+        renderContext.enqueue(shaderProvider, drawCall,
+                              currentBoneTransformsOffset, glNode.invBoneTransforms().size * 4);
+      }
+    }
+  }
+
   // Will use the material of the first instance. So make sure all buffers point to the same source!
   public void render(PList<PModelInstance> instances) {
     for (PModelInstance instance : instances) {
@@ -41,48 +76,6 @@ public class PModel {
     }
     for (String rootNodeId : rootNodeIds()) {
       PModel.Node node = nodes().get(rootNodeId);
-    }
-  }
-
-  public void enqueue(@NonNull PRenderContext renderContext, @NonNull PShaderProvider shaderProvider, @NonNull PList<PModelInstance> instances) {
-    PModelInstance firstInstance = null;
-    // First, fill up the data buffers.
-    for (PModelInstance modelInstance : instances) {
-      if (firstInstance == null) {
-        firstInstance = modelInstance;
-      }
-      if (modelInstance.getDataBufferEmitter() != null) {
-        modelInstance.getDataBufferEmitter().emitDataBuffersInto(renderContext);
-      }
-    }
-
-    // Next, enqueue the model instance nodes.
-    if (firstInstance != null) {
-      for (PModelInstance.Node node : firstInstance.rootNodes()) {
-        enqueueModelInstanceNodeRecursiveInstanced(node, renderContext, shaderProvider, instances);
-      }
-    }
-  }
-
-  // Renders recursively instanced, using the material of the caller.
-  public void enqueueModelInstanceNodeRecursiveInstanced(@NonNull PModelInstance.Node modelInstanceNode, @NonNull PRenderContext renderContext, @NonNull PShaderProvider shaderProvider,
-                                        @NonNull PList<PModelInstance> modelInstances) {
-    for (PGlNode node : modelInstanceNode.glNodes()) {
-      // Emit all the model instance bone transforms for the node.
-      int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
-      for (PModelInstance modelInstance : modelInstances) {
-        PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
-        modelInstance.outputBoneTransformsToBuffer(renderContext);
-      }
-
-      // Now that all the bone and data buffers have been set, enqueue a draw call. Since snapshotBufferOffsets was
-      // called, we will need to re-output all buffer data
-      renderContext.enqueue(shaderProvider,
-                            PGlDrawCall.getTemp(node.drawCall()).setNumInstances(modelInstances.size), currentBoneTransformsOffset);
-    }
-
-    for (PModelInstance.Node child : modelInstanceNode.children()) {
-      enqueueModelInstanceNodeRecursiveInstanced(child, renderContext, shaderProvider, modelInstances);
     }
   }
 

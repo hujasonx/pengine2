@@ -13,7 +13,6 @@ mat4 skinning = mat4(0.0);
 #include <engine/shader/start/sharedvertarray>[5]
 #include <engine/shader/start/sharedvertarray>[6]
 #include <engine/shader/start/sharedvertarray>[7]
-#include <engine/shader/start/sharedvertarray>[8]
 // Apply skinning.
 #ifdef a_bon0Flag
 v_skinnedPos = (skinning * vec4(a_pos, 1.0)).xyz;

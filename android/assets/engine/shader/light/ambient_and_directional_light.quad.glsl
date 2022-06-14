@@ -27,7 +27,6 @@ void main() {
     light += diffuse * u_ambientLightCol;
 
     light += diffuse * u_directionalLightCol0 * clamp(-dot(u_directionalLightDir0, normal), 0.0, 1.0);
-
     lighted = vec4(light, 1.0);
 
     #include <engine/shader/end/light.frag>

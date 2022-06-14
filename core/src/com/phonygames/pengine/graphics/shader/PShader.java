@@ -88,10 +88,10 @@ public class PShader implements Disposable, Comparable<PShader> {
       stringBuilder.append("[PShader]\n\n");
       stringBuilder.append("V: ");
       stringBuilder.append(vsSourceFH.path()).append("\n");
-      printSource(stringBuilder, PStringUtils.splitByLine(vertexShaderSource));
+      printSource(stringBuilder, "V: ", PStringUtils.splitByLine(vertexShaderSource));
       stringBuilder.append("F: ");
       stringBuilder.append(fsSourceFH.path()).append("\n");
-      printSource(stringBuilder, PStringUtils.splitByLine(fragmentShaderSource));
+      printSource(stringBuilder, "F: ", PStringUtils.splitByLine(fragmentShaderSource));
       if (shaderProgram.isCompiled()) {
         stringBuilder.append("\nNo errors!\n");
       } else {
@@ -118,8 +118,8 @@ public class PShader implements Disposable, Comparable<PShader> {
               if (previousOffendingLineNo != offendingLineNo) {
                 // Print the shader source around the error.
                 int linesToShowBeforeAndAfter = 2;
-                stringBuilder.append(phase == 2 ? "\nF: " : "\nV: ").append(fileNameAndLine[0]).append("\n");
-                printSource(stringBuilder, rawShaderLines, offendingLineNo - linesToShowBeforeAndAfter,
+                stringBuilder.append(phase == 2 ? "\nFrag shader: " : "\nVert shader: ").append(fileNameAndLine[0]).append("\n");
+                printSource(stringBuilder, phase == 1 ? "V: " : "F: ", rawShaderLines, offendingLineNo - linesToShowBeforeAndAfter,
                             offendingLineNo + linesToShowBeforeAndAfter, offendingLineNo);
               }
               stringBuilder.append("[").append(PStringUtils.prependSpacesToLength(offendingLineNo + "", 4)).append("] ")
@@ -137,8 +137,8 @@ public class PShader implements Disposable, Comparable<PShader> {
     return shaderProgram.getLog();
   }
 
-  private static void printSource(StringBuilder stringBuilder, String[] rawLines) {
-    printSource(stringBuilder, rawLines, 0, rawLines.length, -1);
+  private static void printSource(StringBuilder stringBuilder, String linePrefix, String[] rawLines) {
+    printSource(stringBuilder, linePrefix, rawLines, 0, rawLines.length, -1);
   }
 
   /**
@@ -148,7 +148,7 @@ public class PShader implements Disposable, Comparable<PShader> {
    * @param lineEnd
    * @param lineToFlag    if -1, then the actual, post-processed line numbers will be used.
    */
-  private static void printSource(StringBuilder stringBuilder, String[] rawLines, int lineStart, int lineEnd,
+  private static void printSource(StringBuilder stringBuilder, String linePrefix, String[] rawLines, int lineStart, int lineEnd,
                                   int lineToFlag) {
     for (int lineNo = lineStart; lineNo <= lineEnd; lineNo++) {
       if (lineNo < 0 || lineNo >= rawLines.length) {
@@ -157,22 +157,23 @@ public class PShader implements Disposable, Comparable<PShader> {
       int rawLineNo = -1;
       String line = rawLines[lineNo];
       String rawLine = line;
+      stringBuilder.append(linePrefix);
       if (line.startsWith(PSHADER_COMMENT_START)) {
         String[] fileNameAndLine = PStringUtils.extract(line, PSHADER_COMMENT_START, PSHADER_COMMENT_END).split(":");
         rawLineNo = Integer.parseInt(fileNameAndLine[1]);
         rawLine = PStringUtils.partAfter(line, PSHADER_COMMENT_END);
         if (lineToFlag != -1) {
-          stringBuilder.append(PStringUtils.prependSpacesToLength("" + rawLineNo, 4)).append(": ");
+          stringBuilder.append(PStringUtils.prependSpacesToLength("" + rawLineNo, 4)).append("| ");
         }
       } else {
         // Anything not loaded from a file.
         if (lineToFlag != -1) {
-          stringBuilder.append("  PS: ");
+          stringBuilder.append("  PS| ");
         }
       }
       if (lineToFlag == -1) {
         // Use the actual, postprocessed value.
-        stringBuilder.append(PStringUtils.prependSpacesToLength("" + lineNo, 4)).append(": ");
+        stringBuilder.append(PStringUtils.prependSpacesToLength("" + lineNo, 4)).append("| ");
       }
       stringBuilder.append(rawLine);
       if (lineNo == lineToFlag) {

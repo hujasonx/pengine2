@@ -48,20 +48,21 @@ public class CybertagGame implements PGame {
     environment.setAmbientLightCol(.1f, .1f, .1f);
     PVec3 tempV3 = PVec3.obtain().set(-1, -1, -1).nor();
     environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
+    environment.setDirectionalLightColor(0, 1, 1, 1);
     tempV3.free();
     for (int a = 0; a < testLights.length; a++) {
       testLights[a].transform().setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2,
-                                                    MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
-                                                    MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
+                                                 MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
+                                                 MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
     }
     // Process and enqueue the model.
     for (int a = 0; a < testModelInstances.size; a++) {
       PModelInstance modelInstance = testModelInstances.get(a);
-      modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(1, 1, 1).rot(0, 1, 0, a + PEngine.t);
+      modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(3, 3, 3).rot(0, 1, 0, a + PEngine.t);
       modelInstance.recalcTransforms();
     }
     if (testModel != null) {
-      testModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, testModelInstances);
+      testModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, testModelInstances, false);
     }
     renderContext.glRenderQueue();
     renderContext.end();
@@ -73,8 +74,8 @@ public class CybertagGame implements PGame {
         testModel = gltf.getModel();
         testModelInstances.add(new PModelInstance(testModel));
         testModelInstances.add(new PModelInstance(testModel));
-        testModelInstances.add(new PModelInstance(testModel));
-        testModelInstances.add(new PModelInstance(testModel));
+        //        testModelInstances.add(new PModelInstance(testModel));
+        //        testModelInstances.add(new PModelInstance(testModel));
       }
     });
     new PGltf("engine/model/blender.glb").loadThenDo(new PGltf.OnloadCallback() {
@@ -111,7 +112,7 @@ public class CybertagGame implements PGame {
         PModel.Builder builder = new PModel.Builder();
         builder.addNode("box", null, glNodes, PMat4.IDT);
         testBoxModel = builder.build();
-        //        testBoxModelInstance = new PModelInstance(testBoxModel, PGltf.DEFAULT_SHADER_PROVIDER);
+        //                testBoxModelInstance = new PModelInstance(testBoxModel, PGltf.DEFAULT_SHADER_PROVIDER);
       }
     });
   }

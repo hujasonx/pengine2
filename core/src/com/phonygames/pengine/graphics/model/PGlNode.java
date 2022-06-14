@@ -31,7 +31,7 @@ public class PGlNode implements PDeepCopyable<PGlNode> {
 
   public PGlNode(String id) {
     this.id = id;
-    drawCall = PGlDrawCall.genTemplate();
+    drawCall = PGlDrawCall.genNewTemplate();
   }
 
   @Override public PGlNode deepCopy() {

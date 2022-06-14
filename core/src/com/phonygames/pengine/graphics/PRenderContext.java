@@ -130,13 +130,15 @@ public class PRenderContext {
     for (val e : dataBuffers()) {
       e.v().freeTemp();
     }
+    boneTransformsBuffer().reset();
     dataBuffers().clearRecursive();
     storedVecsPerInstance().clearRecursive();
     storedBufferOffsets().clearRecursive();
     enqueuedDrawCalls().clearRecursive();
   }
 
-  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall, int boneTransformsLookupOffset) {
+  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall, int boneTransformsLookupOffset,
+                         int boneTransformsVecsPerInstance) {
     // First, try to generate the shader.
     if (drawCall.shader() == null && drawCall.mesh() != null) {
       if (phaseHandlers().size == 0) {
@@ -148,13 +150,14 @@ public class PRenderContext {
           if (drawCall.layer().equals(layer) && drawCall.mesh().vertexAttributes() != null) {
             drawCall.setShader(shaderProvider.provide(phaseHandler.renderBuffer().fragmentLayout(), layer,
                                                       drawCall.mesh().vertexAttributes(), drawCall.material()));
+            break;
           }
         }
       }
     }
     // Next, enqueue the draw call if it has a shader.
     if (drawCall.shader() != null) {
-      enqueue(drawCall.shader(), drawCall.layer(), drawCall, boneTransformsLookupOffset);
+      enqueue(drawCall.shader(), drawCall.layer(), drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance);
       return true;
     }
     return false;
@@ -166,8 +169,8 @@ public class PRenderContext {
    * @param drawCall
    */
   public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall,
-                      int boneTransformsLookupOffset) {
-    // Calculate the stored becs Per instance using the buffer offsets and the buffer fill amounts. This assumes that
+                      int boneTransformsLookupOffset, int boneTransformsVecsPerInstance) {
+    // Calculate the stored vecs per instance using the buffer offsets and the buffer fill amounts. This assumes that
     // you enqueue a draw call immediately after writing stuff to buffers.
     for (val e : storedBufferOffsets()) {
       val buffer = genDataBuffer(e.k());
@@ -176,10 +179,16 @@ public class PRenderContext {
       storedVecsPerInstance().put(e.k(), vecsWrittenPerInstance);
     }
     enqueuedDrawCalls().genPooled(layer).genPooled(shader).add(
-        drawCall.setDataBufferInfo(storedVecsPerInstance(), storedBufferOffsets(), boneTransformsLookupOffset));
+        drawCall.setDataBufferInfo(storedVecsPerInstance(), storedBufferOffsets(), boneTransformsLookupOffset,
+                                   boneTransformsVecsPerInstance));
     snapshotBufferOffsets();
   }
 
+  /**
+   * Returns (either an existing or by creating a new) data buffer with the given name.
+   * @param name
+   * @return
+   */
   public PFloat4Texture genDataBuffer(String name) {
     if (dataBuffers().has(name)) {
       return dataBuffers().get(name);
@@ -191,12 +200,19 @@ public class PRenderContext {
     return dataBuffer;
   }
 
+  /**
+   * Stores the buffer sizes. Call this before filling the buffers and rendering with stuff!
+   */
   private void snapshotBufferOffsets() {
     for (val e : dataBuffers()) {
       storedBufferOffsets().put(e.k(), e.v().vecsWritten());
     }
   }
 
+  /**
+   * Returns the active PRenderBuffer.
+   * @return
+   */
   public PRenderBuffer getBuffer() {
     return PRenderBuffer.activeBuffer();
   }
@@ -205,6 +221,9 @@ public class PRenderContext {
     return backingRenderContext().textureBinder;
   }
 
+  /**
+   * Render all drawcalls in the queue by using the phaseHandlers.
+   */
   public void glRenderQueue() {
     for (val e1 : phaseHandlers()) {
       String key = e1.key;

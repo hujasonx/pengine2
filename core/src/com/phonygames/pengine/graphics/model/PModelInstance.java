@@ -68,26 +68,21 @@ public class PModelInstance {
     return nodes().get(id);
   }
 
-  // Returns the new vec4 count in the bone transform buffer.
-  protected int outputBoneTransformsToBuffer(PRenderContext renderContext) {
+  protected boolean outputBoneTransformsToBuffer(PRenderContext renderContext, String glNodeID) {
+    PGlNode glNode = glNodes().get(glNodeID);
+    if (glNode.invBoneTransforms() == null || glNode.invBoneTransforms().size == 0) {
+      return false;
+    }
     PMat4 tempMat4 = PMat4.obtain();
-    PFloat4Texture tex = renderContext.genDataBuffer("boneTransforms");
-    for (val e : glNodes()) {
-      String id = e.k();
-      PGlNode glNode = e.v();
-      if (glNode.invBoneTransforms() == null || glNode.invBoneTransforms().size == 0) {
-        continue;
-      }
-      for (val e2 : glNode.invBoneTransforms()) {
-        String boneId = e2.key;
-        PMat4 invBindTransform = e2.value;
-        tempMat4.set(nodes().get(boneId).worldTransform());
-        tempMat4.mul(invBindTransform);
-        tex.addData(tempMat4);
-      }
+    for (val e2 : glNode.invBoneTransforms()) {
+      String boneId = e2.key;
+      PMat4 invBindTransform = e2.value;
+      tempMat4.set(nodes().get(boneId).worldTransform());
+      tempMat4.mul(invBindTransform);
+      renderContext.boneTransformsBuffer().addData(tempMat4);
     }
     tempMat4.free();
-    return tex.vecsWritten();
+    return true;
   }
 
   /**
@@ -163,7 +158,7 @@ public class PModelInstance {
       return templateNode.id();
     }
 
-    public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform) {
+    private void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform) {
       if (inheritTransform) {
         worldTransform().set(parentWorldTransform).mul(transform());
       } else {

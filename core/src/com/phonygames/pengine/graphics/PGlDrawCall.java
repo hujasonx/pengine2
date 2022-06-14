@@ -1,5 +1,8 @@
 package com.phonygames.pengine.graphics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.badlogic.gdx.graphics.GL20;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -12,7 +15,6 @@ import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
@@ -44,6 +46,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Accessors(fluent = true)
   private String layer = "";
   @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private PMaterial material;
   @Getter(value = AccessLevel.PUBLIC)
@@ -51,7 +54,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   private PMesh mesh;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private int numInstances, dstFactor, srcFactor, dptTest, cullFace, boneTransformsLookupOffset;
+  private int numInstances, dstFactor, srcFactor, dptTest, cullFace, boneTransformsLookupOffset,
+      boneTransformsVecsPerInstance;
   @Getter
   @Setter
   private PPool ownerPool;
@@ -85,14 +89,15 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     shader = null;
     layer = null;
     boneTransformsLookupOffset = 0;
+    boneTransformsVecsPerInstance = 0;
   }
 
-  public static PGlDrawCall genTemplate() {
+  @NonNull public static PGlDrawCall genNewTemplate() {
     PGlDrawCall drawCall = new PGlDrawCall(true);
     return drawCall;
   }
 
-  public static PGlDrawCall getTemp(PGlDrawCall template) {
+  @NonNull public static PGlDrawCall getTemp(@Nullable PGlDrawCall template) {
     if (template != null) {
       return staticPool().obtain().deepCopyFrom(template);
     }
@@ -122,6 +127,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     shader = other.shader;
     layer = other.layer;
     boneTransformsLookupOffset = other.boneTransformsLookupOffset;
+    boneTransformsVecsPerInstance = other.boneTransformsVecsPerInstance;
     return this;
   }
 
@@ -136,6 +142,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
       if (material != null) {
         material.applyUniforms(shader);
       }
+      renderContext.boneTransformsBuffer()
+                   .applyShader(shader, "boneTransforms", boneTransformsLookupOffset, boneTransformsVecsPerInstance);
       mesh.glRenderInstanced(shader, numInstances);
     }
     if (freeAfterwards) {
@@ -143,7 +151,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     }
   }
 
-  public void prepRenderContext(PRenderContext renderContext) {
+  public void prepRenderContext(@NonNull PRenderContext renderContext) {
     PAssert.isTrue(renderContext.isActive());
     renderContext.setBlending(enableBlend, srcFactor, dstFactor);
     renderContext.setDepthTest(dptTest);
@@ -162,13 +170,15 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   }
 
   public PGlDrawCall setDataBufferInfo(PMap<String, Integer> dataBufferLookupVecsPerInstance,
-                                       PMap<String, Integer> dataBufferLookupOffsets, int boneTransformsLookupOffset) {
+                                       PMap<String, Integer> dataBufferLookupOffsets, int boneTransformsLookupOffset,
+                                       int boneTransformsVecsPerInstance) {
     PAssert.isFalse(renderingDisabled, "Cannot setDataBufferInfo() a renderingDisabled PGlDrawCall");
     this.dataBufferLookupVecsPerInstance().clear();
     this.dataBufferLookupVecsPerInstance().putAll(dataBufferLookupVecsPerInstance);
     this.dataBufferLookupOffsets().clear();
     this.dataBufferLookupOffsets().putAll(dataBufferLookupOffsets);
     this.boneTransformsLookupOffset = boneTransformsLookupOffset;
+    this.boneTransformsVecsPerInstance = boneTransformsVecsPerInstance;
     return this;
   }
 
