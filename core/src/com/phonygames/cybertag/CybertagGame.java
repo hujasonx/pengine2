@@ -65,8 +65,8 @@ public class CybertagGame implements PGame {
         modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(4, 4, 4).rot(0, 1, 0, 0);
         PStringMap<PMat4> transformMap =
             modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true, 1);
-        animation.apply(transformMap, (PEngine.t * 1.3f + a) % animation.getLength(), 1);
-        modelInstance.setNodeTransformsFromMap(transformMap, 0, 1);
+        animation.apply(transformMap, (PEngine.t * 1.3f + a) % animation.getLength(), 1f);
+        modelInstance.setNodeTransformsFromMap(transformMap, 1f);
         transformMap.clearRecursive();
         PMat4.getMat4StringMapsPool().free(transformMap);
         modelInstance.recalcTransforms();

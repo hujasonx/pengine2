@@ -115,14 +115,13 @@ public class PModelInstance {
   /**
    * Sets the node transform values from the values in the map.
    * @param map
-   * @param existingWeightScl the scale to multiply the existing transforms by, if they are being modified.
-   * @param weight
+   * @param alpha how much to affect the transforms by.
    * @return
    */
-  public PStringMap<PMat4> setNodeTransformsFromMap(PStringMap<PMat4> map, float existingWeightScl, float weight) {
+  public PStringMap<PMat4> setNodeTransformsFromMap(PStringMap<PMat4> map, float alpha) {
     for (val e : map) {
       if (nodes().has(e.k())) {
-        nodes().get(e.k()).transform().scl(existingWeightScl).mulAdd(e.v(), weight);
+        nodes().get(e.k()).transform().scl(1 - alpha).mulAdd(e.v(), alpha);
       }
     }
     return map;
