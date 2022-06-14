@@ -105,12 +105,12 @@ public class PGltf {
         for (val gdxNodePart : nodePlus.parts) {
           PMesh mesh = new PMesh(gdxNodePart.meshPart.mesh);
           PGlNode node = new PGlNode(gdxNodePart.meshPart.id);
-          node.getDrawCall().setMesh(mesh);
-          node.getDrawCall().setMaterial(genMaterial(gdxNodePart.material));
-          node.getDrawCall().setLayer("PBR");
+          node.drawCall().setMesh(mesh);
+          node.drawCall().setMaterial(genMaterial(gdxNodePart.material));
+          node.drawCall().setLayer("PBR");
           if (gdxNodePart.invBoneBindTransforms != null) {
             for (val invBoneBT : gdxNodePart.invBoneBindTransforms) {
-              node.getInvBoneTransforms().put(invBoneBT.key.id, PMat4.obtain(invBoneBT.value.val));
+              node.invBoneTransforms().put(invBoneBT.key.id, PMat4.obtain(invBoneBT.value.val));
             }
           }
           glNodes.add(node);
@@ -121,7 +121,7 @@ public class PGltf {
                                                                                                                  nodePlus.translation,
                                                                                                                  nodePlus.rotation,
                                                                                                                  nodePlus.scale));
-      node.setInheritTransform(nodePlus.inheritTransform);
+      node.inheritTransform(nodePlus.inheritTransform);
       for (val child : nodePlus.getChildren()) {
         nodesToProcess.add((NodePlus) child);
         childToParentNodeMap.put((NodePlus) child, node);
@@ -165,7 +165,7 @@ public class PGltf {
         }
         builder.addNodeAnimation(nodeBuilder.build());
       }
-      model.getAnimations().put(baseAnim.id, builder.build());
+      model.animations().put(baseAnim.id, builder.build());
     }
   }
 

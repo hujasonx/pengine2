@@ -8,23 +8,31 @@ import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PStringMap;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PModelInstance {
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PStringMap<PGlNode> glNodes = new PStringMap<>();
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PStringMap<PMaterial> materials = new PStringMap<>();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PModel model;
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PStringMap<Node> nodes = new PStringMap<>();
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PList<Node> rootNodes = new PList<>();
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMat4 worldTransform = PMat4.obtain();
   @Getter
   @Setter
@@ -35,21 +43,21 @@ public class PModelInstance {
     this.model = model;
     PMap<PModel.Node, Node> childToParentNodeMap = new PMap<>();
     PList<PModel.Node> modelNodesToProcess = new PList<>();
-    for (val rootName : model.getRootNodeIds()) {
-      modelNodesToProcess.add(model.getNodes().get(rootName));
+    for (val rootName : model.rootNodeIds()) {
+      modelNodesToProcess.add(model.nodes().get(rootName));
     }
     while (modelNodesToProcess.size > 0) {
       PModel.Node modelNode = modelNodesToProcess.removeLast();
       Node parent = childToParentNodeMap.get(modelNode);
       Node node = new Node(this, modelNode, parent);
-      for (PGlNode glNode : node.getGlNodes()) {
-        getGlNodes().put(glNode.getId(), glNode);
+      for (PGlNode glNode : node.glNodes()) {
+        glNodes().put(glNode.id(), glNode);
       }
-      getNodes().put(modelNode.getId(), node);
+      nodes().put(modelNode.id(), node);
       if (parent == null) {
-        getRootNodes().add(node);
+        rootNodes().add(node);
       }
-      for (val child : modelNode.getChildren()) {
+      for (val child : modelNode.children()) {
         modelNodesToProcess.add(child);
         childToParentNodeMap.put(child, node);
       }
@@ -57,23 +65,23 @@ public class PModelInstance {
   }
 
   public Node getNode(@NonNull String id) {
-    return getNodes().get(id);
+    return nodes().get(id);
   }
 
   // Returns the new vec4 count in the bone transform buffer.
   protected int outputBoneTransformsToBuffer(PRenderContext renderContext) {
     PMat4 tempMat4 = PMat4.obtain();
     PFloat4Texture tex = renderContext.genDataBuffer("boneTransforms");
-    for (val e : getGlNodes()) {
+    for (val e : glNodes()) {
       String id = e.k();
       PGlNode glNode = e.v();
-      if (glNode.getInvBoneTransforms() == null || glNode.getInvBoneTransforms().size == 0) {
+      if (glNode.invBoneTransforms() == null || glNode.invBoneTransforms().size == 0) {
         continue;
       }
-      for (val e2 : glNode.getInvBoneTransforms()) {
+      for (val e2 : glNode.invBoneTransforms()) {
         String boneId = e2.key;
         PMat4 invBindTransform = e2.value;
-        tempMat4.set(getNodes().get(boneId).getWorldTransform());
+        tempMat4.set(nodes().get(boneId).worldTransform());
         tempMat4.mul(invBindTransform);
         tex.addData(tempMat4);
       }
@@ -90,12 +98,12 @@ public class PModelInstance {
    * @return
    */
   public PStringMap<PMat4> outputNodeTransformsToMap(PStringMap<PMat4> map, boolean useBindPose, float weight) {
-    for (val e : getNodes()) {
+    for (val e : nodes()) {
       PMat4 mat4 = map.genPooled(e.k());
       if (useBindPose) {
-        mat4.set(e.v().getTemplateNode().getTransform());
+        mat4.set(e.v().templateNode().transform());
       } else {
-        mat4.set(e.v().getTransform());
+        mat4.set(e.v().transform());
       }
       mat4.scl(weight);
     }
@@ -103,27 +111,35 @@ public class PModelInstance {
   }
 
   public void recalcTransforms() {
-    for (PModelInstance.Node node : getRootNodes()) {
-      node.recalcNodeWorldTransformsRecursive(getWorldTransform());
+    for (PModelInstance.Node node : rootNodes()) {
+      node.recalcNodeWorldTransformsRecursive(worldTransform());
     }
   }
 
   public class Node {
-    @Getter
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     final PModelInstance owner;
-    @Getter
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     final Node parent;
-    @Getter
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     final PModel.Node templateNode;
-    @Getter(lazy = true)
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
     private final PList<Node> children = new PList<>();
-    @Getter(lazy = true)
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
     private final PList<PGlNode> glNodes = new PList<>();
-    @Getter(lazy = true)
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
     private final PMat4 transform = PMat4.obtain();
-    @Getter(lazy = true)
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
     private final PMat4 worldTransform = PMat4.obtain();
-    @Getter(lazy = true)
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
     private final PMat4 worldTransformInvTra = PMat4.obtain();
     @Getter
     boolean inheritTransform = true, enabled = true;
@@ -132,38 +148,38 @@ public class PModelInstance {
       this.owner = owner;
       this.templateNode = templateNode;
       this.parent = parent;
-      this.transform.set(templateNode.getTransform());
-      for (PGlNode node : templateNode.getGlNodes()) {
+      this.transform.set(templateNode.transform());
+      for (PGlNode node : templateNode.glNodes()) {
         PGlNode newNode = node.deepCopy();
-        getMaterials().put(newNode.getDrawCall().getMaterial().getId(), newNode.getDrawCall().getMaterial());
-        this.getGlNodes().add(newNode);
+        materials().put(newNode.drawCall().material().id(), newNode.drawCall().material());
+        this.glNodes().add(newNode);
       }
       if (parent != null) {
-        parent.getChildren().add(this);
+        parent.children().add(this);
       }
     }
 
-    public String getId() {
-      return templateNode.getId();
+    public String id() {
+      return templateNode.id();
     }
 
     public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform) {
       if (inheritTransform) {
-        getWorldTransform().set(parentWorldTransform).mul(getTransform());
+        worldTransform().set(parentWorldTransform).mul(transform());
       } else {
-        getWorldTransform().set(getTransform());
+        worldTransform().set(transform());
       }
-      getWorldTransformInvTra().set(getWorldTransform()).invTra();
-      for (PGlNode node : getGlNodes()) {
-        node.setWorldTransform(getWorldTransform(), getWorldTransformInvTra());
+      worldTransformInvTra().set(worldTransform()).invTra();
+      for (PGlNode node : glNodes()) {
+        node.setWorldTransform(worldTransform(), worldTransformInvTra());
       }
-      for (Node child : getChildren()) {
-        child.recalcNodeWorldTransformsRecursive(getWorldTransform());
+      for (Node child : children()) {
+        child.recalcNodeWorldTransformsRecursive(worldTransform());
       }
     }
 
     public void resetTransformFromTemplate() {
-      getTransform().set(templateNode.getTransform());
+      transform().set(templateNode.transform());
     }
 
     public Node setEnabled(boolean enabled) {

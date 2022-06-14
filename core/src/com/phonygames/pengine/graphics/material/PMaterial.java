@@ -18,11 +18,14 @@ import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PMaterial {
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final String id;
   @Getter
   private final PModelInstance owner;

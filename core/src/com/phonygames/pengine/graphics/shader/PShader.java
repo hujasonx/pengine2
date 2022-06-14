@@ -351,7 +351,7 @@ public class PShader implements Disposable, Comparable<PShader> {
     }
     PAssert.isTrue(isActive());
     try {
-      int t = PRenderContext.getActiveContext().getTextureBinder().bind(texture);
+      int t = PRenderContext.activeContext().getTextureBinder().bind(texture);
       shaderProgram.setUniformi(uniform, t);
     } catch (IllegalArgumentException e) {
       //      PLog.w("Illegal argument: " + uniform, e);
@@ -368,13 +368,13 @@ public class PShader implements Disposable, Comparable<PShader> {
     activeShader = this;
     shaderProgram.bind();
     set(PRenderContext.UniformConstants.Vec4.u_tdtuituidt, PEngine.t, PEngine.dt, PEngine.uit, PEngine.uidt);
-    set(PRenderContext.UniformConstants.Vec4.u_renderBufferSize, PRenderBuffer.getActiveBuffer().width(),
-        PRenderBuffer.getActiveBuffer().height(), 1f / PRenderBuffer.getActiveBuffer().width(),
-        1f / PRenderBuffer.getActiveBuffer().height());
-    set(PRenderContext.UniformConstants.Mat4.u_viewProjTransform, renderContext.getViewProjTransform());
-    set(PRenderContext.UniformConstants.Mat4.u_viewProjTransformInvTra, renderContext.getViewProjInvTraTransform());
-    set(PRenderContext.UniformConstants.Vec3.u_cameraPos, renderContext.getCameraPos());
-    set(PRenderContext.UniformConstants.Vec3.u_cameraDir, renderContext.getCameraDir());
-    set(PRenderContext.UniformConstants.Vec3.u_cameraUp, renderContext.getCameraUp());
+    set(PRenderContext.UniformConstants.Vec4.u_renderBufferSize, PRenderBuffer.activeBuffer().width(),
+        PRenderBuffer.activeBuffer().height(), 1f / PRenderBuffer.activeBuffer().width(),
+        1f / PRenderBuffer.activeBuffer().height());
+    set(PRenderContext.UniformConstants.Mat4.u_viewProjTransform, renderContext.viewProjTransform());
+    set(PRenderContext.UniformConstants.Mat4.u_viewProjTransformInvTra, renderContext.viewProjInvTraTransform());
+    set(PRenderContext.UniformConstants.Vec3.u_cameraPos, renderContext.cameraPos());
+    set(PRenderContext.UniformConstants.Vec3.u_cameraDir, renderContext.cameraDir());
+    set(PRenderContext.UniformConstants.Vec3.u_cameraUp, renderContext.cameraUp());
   }
 }

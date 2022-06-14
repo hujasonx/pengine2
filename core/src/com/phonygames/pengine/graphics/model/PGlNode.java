@@ -2,25 +2,31 @@ package com.phonygames.pengine.graphics.model;
 
 import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.graphics.PGlDrawCall;
-import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PDeepCopyable;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 public class PGlNode implements PDeepCopyable<PGlNode> {
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PGlDrawCall drawCall;
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final ArrayMap<String, PMat4> invBoneTransforms = new ArrayMap<>();
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMat4 worldTransform = PMat4.obtain();
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMat4 worldTransformInvTra = PMat4.obtain();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
   @Setter
+  @Accessors(fluent = true)
   private String id;
 
   public PGlNode(String id) {
@@ -35,15 +41,15 @@ public class PGlNode implements PDeepCopyable<PGlNode> {
   @Override public PGlNode deepCopyFrom(@NonNull PGlNode other) {
     id = other.id;
     drawCall.deepCopyFrom(other.drawCall);
-    getWorldTransform().set(other.getWorldTransform());
-    getWorldTransformInvTra().set(other.getWorldTransformInvTra());
-    getInvBoneTransforms().putAll(other.getInvBoneTransforms());
+    worldTransform().set(other.worldTransform());
+    worldTransformInvTra().set(other.worldTransformInvTra());
+    invBoneTransforms().putAll(other.invBoneTransforms());
     return this;
   }
 
   public final PGlNode setWorldTransform(PMat4 worldTransform, PMat4 worldTransformInvTrad) {
-    this.getWorldTransform().set(worldTransform);
-    this.getWorldTransform().set(worldTransformInvTrad);
+    this.worldTransform().set(worldTransform);
+    this.worldTransform().set(worldTransformInvTrad);
     return this;
   }
 

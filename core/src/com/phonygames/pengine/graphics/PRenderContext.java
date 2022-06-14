@@ -23,110 +23,138 @@ import com.phonygames.pengine.util.PStringMap;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PRenderContext {
   private static final int DATA_BUFFER_CAPACITY = 512 * 512;
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private static final PPool<PList<PGlDrawCall>> glDrawCallListPool = new PPool<PList<PGlDrawCall>>() {
     @Override protected PList<PGlDrawCall> newObject() {
       return new PList<>();
     }
   };
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private static final PPool<PMap<PShader, PList<PGlDrawCall>>> glDrawCallListMapPool =
       new PPool<PMap<PShader, PList<PGlDrawCall>>>() {
         @Override protected PMap<PShader, PList<PGlDrawCall>> newObject() {
-          return new PMap<>(getGlDrawCallListPool());
+          return new PMap<>(glDrawCallListPool());
         }
       };
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private static PRenderContext activeContext = null;
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private final RenderContext backingRenderContext =
       new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
-  @Getter(value = AccessLevel.MODULE, lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PFloat4Texture boneTransformsBuffer = PFloat4Texture.getTemp(DATA_BUFFER_CAPACITY);
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PVec3 cameraDir = PVec3.obtain();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PVec1 cameraFov = PVec1.obtain().set(60);
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PVec3 cameraPos = PVec3.obtain();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PVec2 cameraRange = PVec2.obtain().set(1, 100);
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PVec3 cameraUp = PVec3.obtain();
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private final PStringMap<PFloat4Texture> dataBuffers = new PStringMap<>();
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
+  private final PStringMap<PMap<PShader, PList<PGlDrawCall>>> enqueuedDrawCalls =
+      new PStringMap<>(glDrawCallListMapPool());
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private final OrthographicCamera orthographicCamera = new OrthographicCamera();
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private final PerspectiveCamera perspectiveCamera = new PerspectiveCamera();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final ArrayMap<String, PhaseHandler> phaseHandlers = new ArrayMap<>();
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private final PStringMap<Integer> storedBufferOffsets = new PStringMap<>();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PStringMap<Integer> storedVecsPerInstance = new PStringMap<>();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMat4 viewProjInvTraTransform = PMat4.obtain();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMat4 viewProjInvTransform = PMat4.obtain();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMat4 viewProjTransform = PMat4.obtain();
-  private PStringMap<PMap<PShader, PList<PGlDrawCall>>> enqueuedDrawCalls =
-      new PStringMap<>(getGlDrawCallListMapPool());
-  @Getter
-  private ArrayMap<String, PhaseHandler> phaseHandlers = new ArrayMap<>();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private int width = 1, height = 1;
 
   public PRenderContext disableDepthTest() {
     PAssert.isTrue(isActive());
-    backingRenderContext.setDepthTest(0);
+    backingRenderContext().setDepthTest(0);
     return this;
   }
 
   public boolean isActive() {
-    return activeContext == this;
+    return activeContext() == this;
   }
 
   public PRenderContext enableDepthTest() {
     PAssert.isTrue(isActive());
-    backingRenderContext.setDepthTest(GL20.GL_LESS);
+    backingRenderContext().setDepthTest(GL20.GL_LESS);
     return this;
   }
 
   public void end() {
     PAssert.isTrue(isActive());
-    backingRenderContext.end();
+    backingRenderContext().end();
     clear();
     activeContext = null;
   }
 
   private void clear() {
-    for (val e : dataBuffers) {
+    for (val e : dataBuffers()) {
       e.v().freeTemp();
     }
-    dataBuffers.clearRecursive();
-    storedVecsPerInstance.clearRecursive();
-    storedBufferOffsets.clearRecursive();
-    enqueuedDrawCalls.clearRecursive();
+    dataBuffers().clearRecursive();
+    storedVecsPerInstance().clearRecursive();
+    storedBufferOffsets().clearRecursive();
+    enqueuedDrawCalls().clearRecursive();
   }
 
-  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall) {
+  public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall, int boneTransformsLookupOffset) {
     // First, try to generate the shader.
-    if (drawCall.getShader() == null && drawCall.getMesh() != null) {
-      if (phaseHandlers.size == 0) {
+    if (drawCall.shader() == null && drawCall.mesh() != null) {
+      if (phaseHandlers().size == 0) {
         PAssert.fail("No shader was set, yet there were no phases for the MapShaderProvider to create a shader with");
       } else {
-        for (val e : phaseHandlers) {
+        for (val e : phaseHandlers()) {
           val layer = e.key;
           val phaseHandler = e.value;
-          if (drawCall.getLayer().equals(layer) && drawCall.getMesh().getVertexAttributes() != null) {
-            drawCall.setShader(shaderProvider.provide(phaseHandler.getRenderBuffer().getFragmentLayout(), layer,
-                                                      drawCall.getMesh().getVertexAttributes(),
-                                                      drawCall.getMaterial()));
+          if (drawCall.layer().equals(layer) && drawCall.mesh().vertexAttributes() != null) {
+            drawCall.setShader(shaderProvider.provide(phaseHandler.renderBuffer().fragmentLayout(), layer,
+                                                      drawCall.mesh().vertexAttributes(), drawCall.material()));
           }
         }
       }
     }
     // Next, enqueue the draw call if it has a shader.
-    if (drawCall.getShader() != null) {
-      enqueue(drawCall.getShader(), drawCall.getLayer(), drawCall);
+    if (drawCall.shader() != null) {
+      enqueue(drawCall.shader(), drawCall.layer(), drawCall, boneTransformsLookupOffset);
       return true;
     }
     return false;
@@ -137,54 +165,55 @@ public class PRenderContext {
    * @param layer
    * @param drawCall
    */
-  public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall) {
+  public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall,
+                      int boneTransformsLookupOffset) {
     // Calculate the stored becs Per instance using the buffer offsets and the buffer fill amounts. This assumes that
     // you enqueue a draw call immediately after writing stuff to buffers.
-    for (val e : storedBufferOffsets) {
+    for (val e : storedBufferOffsets()) {
       val buffer = genDataBuffer(e.k());
-      int vecsWrittenToThisBuffer = buffer.vecsWritten() - storedBufferOffsets.get(e.k());
-      int vecsWrittenPerInstance = vecsWrittenToThisBuffer / Math.max(1, drawCall.getNumInstances());
-      storedVecsPerInstance.put(e.k(), vecsWrittenPerInstance);
+      int vecsWrittenToThisBuffer = buffer.vecsWritten() - storedBufferOffsets().get(e.k());
+      int vecsWrittenPerInstance = vecsWrittenToThisBuffer / Math.max(1, drawCall.numInstances());
+      storedVecsPerInstance().put(e.k(), vecsWrittenPerInstance);
     }
-    enqueuedDrawCalls.genPooled(layer).genPooled(shader)
-                     .add(drawCall.setDataBufferInfo(storedVecsPerInstance, storedBufferOffsets));
+    enqueuedDrawCalls().genPooled(layer).genPooled(shader).add(
+        drawCall.setDataBufferInfo(storedVecsPerInstance(), storedBufferOffsets(), boneTransformsLookupOffset));
     snapshotBufferOffsets();
   }
 
   public PFloat4Texture genDataBuffer(String name) {
-    if (dataBuffers.has(name)) {
-      return dataBuffers.get(name);
+    if (dataBuffers().has(name)) {
+      return dataBuffers().get(name);
     }
     PFloat4Texture dataBuffer = PFloat4Texture.getTemp(DATA_BUFFER_CAPACITY);
-    dataBuffers.put(name, dataBuffer);
-    storedVecsPerInstance.put(name, 0);
-    storedBufferOffsets.put(name, 0);
+    dataBuffers().put(name, dataBuffer);
+    storedVecsPerInstance().put(name, 0);
+    storedBufferOffsets().put(name, 0);
     return dataBuffer;
   }
 
   private void snapshotBufferOffsets() {
-    for (val e : dataBuffers) {
-      storedBufferOffsets.put(e.k(), e.v().vecsWritten());
+    for (val e : dataBuffers()) {
+      storedBufferOffsets().put(e.k(), e.v().vecsWritten());
     }
   }
 
   public PRenderBuffer getBuffer() {
-    return PRenderBuffer.getActiveBuffer();
+    return PRenderBuffer.activeBuffer();
   }
 
   public TextureBinder getTextureBinder() {
-    return backingRenderContext.textureBinder;
+    return backingRenderContext().textureBinder;
   }
 
   public void glRenderQueue() {
-    for (val e1 : phaseHandlers) {
+    for (val e1 : phaseHandlers()) {
       String key = e1.key;
       PhaseHandler phaseHandler = e1.value;
-      if (phaseHandler.renderBuffer != null) {
-        phaseHandler.renderBuffer.begin();
+      if (phaseHandler.renderBuffer() != null) {
+        phaseHandler.renderBuffer().begin();
       }
       phaseHandler.begin();
-      val queueMap = enqueuedDrawCalls.get(phaseHandler.layer);
+      val queueMap = enqueuedDrawCalls().get(phaseHandler.layer());
       if (queueMap != null) {
         for (val e : queueMap) {
           val shader = e.k();
@@ -198,15 +227,15 @@ public class PRenderContext {
         }
       }
       phaseHandler.end();
-      if (phaseHandler.renderBuffer != null) {
-        phaseHandler.renderBuffer.end();
+      if (phaseHandler.renderBuffer() != null) {
+        phaseHandler.renderBuffer().end();
       }
     }
   }
 
   public PRenderContext setBlending(final boolean enabled, final int sFactor, final int dFactor) {
     PAssert.isTrue(isActive());
-    backingRenderContext.setBlending(enabled, sFactor, dFactor);
+    backingRenderContext().setBlending(enabled, sFactor, dFactor);
     return this;
   }
 
@@ -217,7 +246,7 @@ public class PRenderContext {
 
   public PRenderContext setCullFace(final int face) {
     PAssert.isTrue(isActive());
-    backingRenderContext.setCullFace(face);
+    backingRenderContext().setCullFace(face);
     return this;
   }
 
@@ -238,27 +267,27 @@ public class PRenderContext {
 
   public PRenderContext setDepthMask(final boolean depthMask) {
     PAssert.isTrue(isActive());
-    backingRenderContext.setDepthMask(depthMask);
+    backingRenderContext().setDepthMask(depthMask);
     return this;
   }
 
   public PRenderContext setDepthTest(final int depthFunction) {
     PAssert.isTrue(isActive());
-    backingRenderContext.setDepthTest(depthFunction);
+    backingRenderContext().setDepthTest(depthFunction);
     return this;
   }
 
   public void setForRenderBuffer(PRenderBuffer renderBuffer) {
     width = renderBuffer.width();
     height = renderBuffer.height();
-    orthographicCamera.setToOrtho(true, width, height);
+    orthographicCamera().setToOrtho(true, width, height);
     updatePerspectiveCamera();
   }
 
   public PRenderContext updatePerspectiveCamera() {
-    PAssert.isNotNull(PRenderBuffer.getActiveBuffer(),
+    PAssert.isNotNull(PRenderBuffer.activeBuffer(),
                       "currentRenderBuffer should be set, as the camera viewport needs to be set.");
-    return putIntoBackingCamera(perspectiveCamera).setFromBackingCamera(perspectiveCamera, true);
+    return putIntoBackingCamera(perspectiveCamera()).setFromBackingCamera(perspectiveCamera(), true);
   }
 
   public PRenderContext setFromBackingCamera(PerspectiveCamera camera, boolean stableSize) {
@@ -266,28 +295,28 @@ public class PRenderContext {
       width = (int) camera.viewportWidth;
       height = (int) camera.viewportHeight;
     }
-    getCameraPos().set(camera.position);
-    getCameraDir().set(camera.direction);
-    getCameraUp().set(camera.up);
-    getCameraFov().set(camera.fieldOfView);
-    getCameraRange().set(camera.near, camera.far);
-    getViewProjTransform().set(camera.combined.val);
-    getViewProjInvTransform().set(camera.invProjectionView.val);
-    getViewProjInvTraTransform().set(camera.invProjectionView.val).tra();
+    cameraPos().set(camera.position);
+    cameraDir().set(camera.direction);
+    cameraUp().set(camera.up);
+    cameraFov().set(camera.fieldOfView);
+    cameraRange().set(camera.near, camera.far);
+    viewProjTransform().set(camera.combined.val);
+    viewProjInvTransform().set(camera.invProjectionView.val);
+    viewProjInvTraTransform().set(camera.invProjectionView.val).tra();
     return this;
   }
 
   public PRenderContext putIntoBackingCamera(PerspectiveCamera camera) {
     camera.viewportWidth = width;
     camera.viewportHeight = height;
-    getCameraPos().putInto(camera.position);
-    getCameraDir().putInto(camera.direction);
+    cameraPos().putInto(camera.position);
+    cameraDir().putInto(camera.direction);
     camera.direction.nor();
-    getCameraUp().putInto(camera.up);
+    cameraUp().putInto(camera.up);
     camera.normalizeUp();
-    camera.near = getCameraRange().x();
-    camera.far = getCameraRange().y();
-    camera.fieldOfView = getCameraFov().x();
+    camera.near = cameraRange().x();
+    camera.far = cameraRange().y();
+    camera.fieldOfView = cameraFov().x();
     camera.update(true);
     return this;
   }
@@ -296,16 +325,16 @@ public class PRenderContext {
     return setFromBackingCamera(camera, false);
   }
 
-  public PRenderContext setPhaseHandlers(PhaseHandler[] phaseHandlers) {
+  public PRenderContext setPhaseHandlersTo(PhaseHandler[] phaseHandlers) {
     clearPhaseHandlers();
     for (val p : phaseHandlers) {
-      this.phaseHandlers.put(p.layer, p);
+      this.phaseHandlers().put(p.layer(), p);
     }
     return this;
   }
 
   public PRenderContext clearPhaseHandlers() {
-    phaseHandlers.clear();
+    phaseHandlers().clear();
     return this;
   }
 
@@ -313,19 +342,19 @@ public class PRenderContext {
     PAssert.isNull(activeContext);
     activeContext = this;
     resetDefaults();
-    backingRenderContext.begin();
+    backingRenderContext().begin();
   }
 
   public void resetDefaults() {
-    PGlDrawCall.DEFAULT.prepRenderContext(this);
+    PGlDrawCall.DEFAULT().prepRenderContext(this);
   }
 
   public int storeDataBufferOffset(String name) {
-    return storedBufferOffsets.get(name);
+    return storedBufferOffsets().get(name);
   }
 
   public int vecsWrittenToDataBuffer(String name) {
-    return dataBuffers.get(name).vecsWritten();
+    return dataBuffers().get(name).vecsWritten();
   }
 
   public interface DataBufferEmitter {
@@ -333,8 +362,11 @@ public class PRenderContext {
   }
 
   public abstract static class PhaseHandler {
+    @Getter(value = AccessLevel.PROTECTED)
+    @Accessors(fluent = true)
     protected final String layer;
-    @Getter
+    @Getter(value = AccessLevel.MODULE)
+    @Accessors(fluent = true)
     protected final PRenderBuffer renderBuffer;
 
     public PhaseHandler(@NonNull String layer, PRenderBuffer renderBuffer) {

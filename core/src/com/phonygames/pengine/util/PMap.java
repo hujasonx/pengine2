@@ -6,9 +6,11 @@ import com.phonygames.pengine.exception.PAssert;
 
 import java.util.Iterator;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 /**
@@ -16,11 +18,15 @@ import lombok.val;
  */
 public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
   private final PMapIterator<K, V> backingIterator = new PMapIterator<K, V>();
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private final PList<V> genedValues = new PList<>();
   // If set, then genPooled() will work.
+  @Getter(value = AccessLevel.PRIVATE)
+  @Accessors(fluent = true)
   private final PPool genedValuesPool;
   private final MapInterface<K, V> mapInterface;
+  @Getter
   @Setter
   private PPool ownerPool;
 
@@ -63,12 +69,12 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
    */
   private final void freeIfManaged(@NonNull V v) {
     if (v instanceof PPool.Poolable && genedValues != null) {
-      int indexOfV = getGenedValues().indexOf(v, true);
+      int indexOfV = genedValues().indexOf(v, true);
       if (indexOfV != -1) {
-        if (genedValuesPool != null) {
-          genedValuesPool.free((PPool.Poolable) v);
+        if (genedValuesPool() != null) {
+          genedValuesPool().free((PPool.Poolable) v);
         }
-        getGenedValues().removeIndex(indexOfV);
+        genedValues().removeIndex(indexOfV);
       }
     }
   }
@@ -112,7 +118,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
     }
     PAssert.isNotNull(genedValuesPool, "PMap cannot use genPooled when no pool was set.");
     v = (V) genedValuesPool.obtain();
-    getGenedValues().add(v);
+    genedValues().add(v);
     mapInterface.put(k, v);
     return v;
   }
@@ -164,7 +170,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
    * @return if the value is pooled by this map
    */
   public final boolean owns(V v) {
-    return getGenedValues().contains(v, true);
+    return genedValues().contains(v, true);
   }
 
   public final void putAll(@NonNull Iterable<Entry<K, V>> other) {
@@ -192,10 +198,6 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
 
   @Override public void reset() {
     clearRecursive();
-  }
-
-  public PPool getOwnerPool() {
-    return ownerPool;
   }
 
   /**
@@ -325,6 +327,10 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
       entry.v = mapInterface.getIteratorVal(o);
       index++;
       return entry;
+    }
+
+    @Override public void remove() {
+      PAssert.failNotImplemented("remove"); // TODO: FIXME
     }
 
     public void reset() {

@@ -12,12 +12,16 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PPool;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public class PPointLight extends PLight implements Pool.Poolable {
   @Getter
+  @Accessors(fluent = true)
   private static PMesh MESH;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PVec4 attenuation = PVec4.obtain();
 
   public PPointLight() {
@@ -25,9 +29,9 @@ public class PPointLight extends PLight implements Pool.Poolable {
   }
 
   @Override public void reset() {
-    getTransform().reset();
-    getColor().setZero();
-    getAttenuation().set(2, 1, 1, 0.05f);
+    transform().reset();
+    color().setZero();
+    attenuation().set(2, 1, 1, 0.05f);
   }
 
   public static void assertMeshReady() {
@@ -53,28 +57,24 @@ public class PPointLight extends PLight implements Pool.Poolable {
     }.buildSynchronous();
   }
 
-  @Override public boolean addInstanceData(PFloat4Texture buffer) {
+  @Override public int addInstanceData(PFloat4Texture buffer) {
     PPool.PoolBuffer pool = PPool.getBuffer();
     PVec3 translation = pool.vec3();
-    getTransform().getTranslation(translation);
+    transform().getTranslation(translation);
     // Set the transform for the mesh.
     PMat4 transformOutMat = pool.mat4().setToTranslation(translation);
-    float scale = attenuationCutoffDistance(getAttenuation()) * 1.1f;
+    float scale = attenuationCutoffDistance(attenuation()) * 1.1f;
     transformOutMat.scl(scale, scale, scale);
     // 0: Transform.
     buffer.addData(transformOutMat);
     // 4: Position.
     buffer.addData(translation, 1);
     // 5: Color.
-    buffer.addData(getColor());
+    buffer.addData(color());
     // 6. Attenuation.
-    buffer.addData(getAttenuation());
+    buffer.addData(attenuation());
     pool.finish();
     // Total: 7;
-    return true;
-  }
-
-  @Override public int vecsPerInstance() {
     return 7;
   }
 }

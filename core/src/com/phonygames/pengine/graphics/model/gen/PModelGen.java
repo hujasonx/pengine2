@@ -17,10 +17,11 @@ import com.phonygames.pengine.util.PPostableTaskQueue;
 import com.phonygames.pengine.util.PStringMap;
 import com.phonygames.pengine.util.PWindowedBuffer;
 
-import java.util.Optional;
-
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PModelGen implements PPostableTask {
@@ -80,26 +81,41 @@ public class PModelGen implements PPostableTask {
       list = new PList<>();
     }
     val glNode = new PGlNode(part.name);
-    glNode.getDrawCall().setMesh(part.getMesh());
-    glNode.getDrawCall().setMaterial(defaultMaterial);
+    glNode.drawCall().setMesh(part.getMesh());
+    glNode.drawCall().setMaterial(defaultMaterial);
     if (boneInvBindTransforms != null) {
-      glNode.getInvBoneTransforms().putAll(boneInvBindTransforms);
+      glNode.invBoneTransforms().putAll(boneInvBindTransforms);
     }
     list.add(glNode);
     return this;
   }
 
   public static class Part {
+    @Getter(value = AccessLevel.PRIVATE)
+    @Accessors(fluent = true)
     private final float[] currentVertexValues;
-    @Getter
-    private final Optional<String> footstepSoundStrategy = Optional.empty();
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    @Setter(value = AccessLevel.PRIVATE)
+    @Accessors(fluent = true)
     private final PList<Short> indices = new PList<>();
-    @Getter
+    @Getter(value = AccessLevel.PUBLIC)
+    @Setter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private String footstepSoundStrategy = null;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     private final boolean isPhysicsPart;
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    @Accessors(fluent = true)
     private final PWindowedBuffer latestIndices = new PWindowedBuffer(4);
-    @Getter
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     private final String name;
+    @Getter(value = AccessLevel.PRIVATE)
+    @Accessors(fluent = true)
     private final PVertexAttributes vertexAttributes;
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    @Accessors(fluent = true)
     private final PList<Float> vertices = new PList<>();
     @Getter
     private int numVertices = 0;
@@ -112,8 +128,8 @@ public class PModelGen implements PPostableTask {
     }
 
     public Part clear() {
-      vertices.clear();
-      indices.clear();
+      vertices().clear();
+      indices().clear();
       numVertices = 0;
       return this;
     }
@@ -129,10 +145,10 @@ public class PModelGen implements PPostableTask {
         if (lookbackIndex < 0) {
           break;
         }
-        int verticesIndex = lookbackIndex * vertexAttributes.getNumFloatsPerVertex();
+        int verticesIndex = lookbackIndex * vertexAttributes().getNumFloatsPerVertex();
         boolean isEqual = true;
-        for (int a = 0; a < vertexAttributes.getNumFloatsPerVertex(); a++) {
-          if (!PNumberUtils.epsilonEquals(vertices.get(verticesIndex + a), currentVertexValues[a])) {
+        for (int a = 0; a < vertexAttributes().getNumFloatsPerVertex(); a++) {
+          if (!PNumberUtils.epsilonEquals(vertices().get(verticesIndex + a), currentVertexValues()[a])) {
             isEqual = false;
             break;
           }
@@ -145,112 +161,112 @@ public class PModelGen implements PPostableTask {
       // Need to add a new vertex.
       if (index == numVertices) {
         numVertices++;
-        for (int a = 0; a < vertexAttributes.getNumFloatsPerVertex(); a++) {
-          vertices.add(currentVertexValues[a]);
+        for (int a = 0; a < vertexAttributes().getNumFloatsPerVertex(); a++) {
+          vertices().add(currentVertexValues()[a]);
         }
       }
-      latestIndices.addInt(index);
+      latestIndices().addInt(index);
       return this;
     }
 
     public PVec2 get(PVec2 out, String alias) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
       return out.x(ind + 0).y(ind + 1);
     }
 
     public PVec3 get(PVec3 out, String alias) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
       return out.x(ind + 0).y(ind + 1).z(ind + 2);
     }
 
     public PVec4 get(PVec4 out, String alias) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
       return out.x(ind + 0).y(ind + 1).z(ind + 2).w(ind + 3);
     }
 
     public PMesh getMesh() {
-      PMesh ret = new PMesh(true, vertices, indices, vertexAttributes);
+      PMesh ret = new PMesh(true, vertices(), indices(), vertexAttributes());
       return ret;
     }
 
     public Part quad(boolean flip) {
-      indices.add((short) latestIndices.get(3));
-      indices.add((short) latestIndices.get(flip ? 1 : 2));
-      indices.add((short) latestIndices.get(flip ? 2 : 1));
-      indices.add((short) latestIndices.get(3));
-      indices.add((short) latestIndices.get(flip ? 0 : 1));
-      indices.add((short) latestIndices.get(flip ? 1 : 0));
+      indices().add((short) latestIndices().get(3));
+      indices().add((short) latestIndices().get(flip ? 1 : 2));
+      indices().add((short) latestIndices().get(flip ? 2 : 1));
+      indices().add((short) latestIndices().get(3));
+      indices().add((short) latestIndices().get(flip ? 0 : 1));
+      indices().add((short) latestIndices().get(flip ? 1 : 0));
       return this;
     }
 
     public Part set(String alias, PVec2 out) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues[ind + 0] = out.x();
-      currentVertexValues[ind + 1] = out.y();
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = out.x();
+      currentVertexValues()[ind + 1] = out.y();
       return this;
     }
 
     public Part set(String alias, PVec3 out) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
       int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues[ind + 0] = out.x();
-      currentVertexValues[ind + 1] = out.y();
-      currentVertexValues[ind + 2] = out.z();
+      currentVertexValues()[ind + 0] = out.x();
+      currentVertexValues()[ind + 1] = out.y();
+      currentVertexValues()[ind + 2] = out.z();
       return this;
     }
 
     public Part set(String alias, PVec4 out) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
       int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues[ind + 0] = out.x();
-      currentVertexValues[ind + 1] = out.y();
-      currentVertexValues[ind + 2] = out.z();
-      currentVertexValues[ind + 3] = out.w();
+      currentVertexValues()[ind + 0] = out.x();
+      currentVertexValues()[ind + 1] = out.y();
+      currentVertexValues()[ind + 2] = out.z();
+      currentVertexValues()[ind + 3] = out.w();
       return this;
     }
 
     public Part set(String alias, float x) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues[ind + 0] = x;
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = x;
       return this;
     }
 
     public Part set(String alias, float x, float y) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues[ind + 0] = x;
-      currentVertexValues[ind + 1] = y;
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = x;
+      currentVertexValues()[ind + 1] = y;
       return this;
     }
 
     public Part set(String alias, float x, float y, float z) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues[ind + 0] = x;
-      currentVertexValues[ind + 1] = y;
-      currentVertexValues[ind + 2] = z;
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = x;
+      currentVertexValues()[ind + 1] = y;
+      currentVertexValues()[ind + 2] = z;
       return this;
     }
 
     public Part set(String alias, float x, float y, float z, float w) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues[ind + 0] = x;
-      currentVertexValues[ind + 1] = y;
-      currentVertexValues[ind + 2] = z;
-      currentVertexValues[ind + 3] = w;
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = x;
+      currentVertexValues()[ind + 1] = y;
+      currentVertexValues()[ind + 2] = z;
+      currentVertexValues()[ind + 3] = w;
       return this;
     }
 
     public Part tri(boolean flip) {
-      indices.add((short) latestIndices.get(2));
-      indices.add((short) latestIndices.get(flip ? 0 : 1));
-      indices.add((short) latestIndices.get(flip ? 1 : 0));
+      indices().add((short) latestIndices().get(2));
+      indices().add((short) latestIndices().get(flip ? 0 : 1));
+      indices().add((short) latestIndices().get(flip ? 1 : 0));
       return this;
     }
   }

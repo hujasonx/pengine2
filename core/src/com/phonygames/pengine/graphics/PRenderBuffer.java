@@ -17,24 +17,32 @@ import com.phonygames.pengine.util.PBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListener {
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private static PRenderBuffer activeBuffer = null;
   private static Texture testTexture = null;
   private final List<AttachmentSpec> attachmentSpecs = new ArrayList<>();
   @Getter
+  @Accessors(fluent = true)
   private boolean active;
   @Getter
+  @Accessors(fluent = true)
   private String fragmentLayout = "// LAYOUT\n";
   private PFrameBuffer frameBuffer, frameBufferPrev;
   @Getter
+  @Accessors(fluent = true)
   private SizeMode sizeMode;
   @Getter
+  @Accessors(fluent = true)
   private int staticWidth, staticHeight;
   @Getter
+  @Accessors(fluent = true)
   private float windowScale = 1;
 
   private PRenderBuffer() {
@@ -56,11 +64,11 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   }
 
   public PShader getQuadShader(FileHandle frag) {
-    return new PShader("", getFragmentLayout(), PVertexAttributes.getPOSITION(),
+    return new PShader("", fragmentLayout(), PVertexAttributes.getPOSITION(),
                        Gdx.files.local("engine/shader/quad.vert.glsl"), frag);
   }
 
-  public Texture getTexture() {
+  public Texture texture() {
     createFrameBuffersIfNeeded();
     return frameBuffer.getTextureAttachments().first();
   }
@@ -82,12 +90,12 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     frameBufferPrev = frameBufferBuilderPrev.build();
   }
 
-  public Texture getTexture(int index) {
+  public Texture texture(int index) {
     createFrameBuffersIfNeeded();
     return frameBuffer.getTextureAttachments().get(index);
   }
 
-  public Texture getTexture(String id) {
+  public Texture texture(String id) {
     createFrameBuffersIfNeeded();
     for (int a = 0; a < attachmentSpecs.size(); a++) {
       val spec = attachmentSpecs.get(a);
@@ -150,8 +158,8 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     PAssert.isTrue(activeBuffer == null, "Another renderBuffer was already active!");
     createFrameBuffersIfNeeded();
     activeBuffer = this;
-    if (PRenderContext.getActiveContext() != null) {
-      PRenderContext.getActiveContext().setForRenderBuffer(this);
+    if (PRenderContext.activeContext() != null) {
+      PRenderContext.activeContext().setForRenderBuffer(this);
     }
     if (swapBuffers) {
       swapBuffers();

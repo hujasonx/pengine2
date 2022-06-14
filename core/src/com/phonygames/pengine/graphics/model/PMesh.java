@@ -10,14 +10,17 @@ import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.util.PCollectionUtils;
 import com.phonygames.pengine.util.PList;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PMesh {
   public static PMesh FULLSCREEN_QUAD_MESH;
   @Getter
   private final Mesh backingMesh;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PVertexAttributes vertexAttributes;
   @Getter
   private boolean autobind = false;

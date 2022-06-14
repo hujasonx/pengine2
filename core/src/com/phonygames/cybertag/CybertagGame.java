@@ -38,10 +38,10 @@ public class CybertagGame implements PGame {
   private PList<PModelInstance> testModelInstances2 = new PList<>();
 
   @Override public void frameUpdate() {
-    renderContext.getCameraRange().y(1000);
-    renderContext.getCameraPos().set(5, 5, 5);
-    renderContext.getCameraUp().set(0, 1, 0);
-    renderContext.getCameraDir().set(-1, -1, -1);
+    renderContext.cameraRange().y(1000);
+    renderContext.cameraPos().set(5, 5, 5);
+    renderContext.cameraUp().set(0, 1, 0);
+    renderContext.cameraDir().set(-1, -1, -1);
     renderContext.start();
     pPbrPipeline.attach(renderContext);
     // Set environment.
@@ -50,14 +50,14 @@ public class CybertagGame implements PGame {
     environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
     tempV3.free();
     for (int a = 0; a < testLights.length; a++) {
-      testLights[a].getTransform().setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2,
+      testLights[a].transform().setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2,
                                                     MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
                                                     MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
     }
     // Process and enqueue the model.
     for (int a = 0; a < testModelInstances.size; a++) {
       PModelInstance modelInstance = testModelInstances.get(a);
-      modelInstance.getWorldTransform().idt().setToTranslation(a, 0, 0).scl(1, 1, 1).rot(0, 1, 0, a + PEngine.t);
+      modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(1, 1, 1).rot(0, 1, 0, a + PEngine.t);
       modelInstance.recalcTransforms();
     }
     if (testModel != null) {
@@ -86,7 +86,7 @@ public class CybertagGame implements PGame {
     renderContext = new PRenderContext();
     pPbrPipeline = new PPbrPipeline();
     environment = new PEnvironment();
-    pPbrPipeline.setEnvironment(environment);
+    pPbrPipeline.environment(environment);
     for (int a = 0; a < testLights.length; a++) {
       environment.addLight(testLights[a] = new PPointLight());
     }
@@ -107,7 +107,7 @@ public class CybertagGame implements PGame {
 
       @Override protected void modelEnd() {
         PList<PGlNode> glNodes = new PList<>();
-        chainGlNode(glNodes, basePart, new PMaterial(basePart.getName(), null), null);
+        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null), null);
         PModel.Builder builder = new PModel.Builder();
         builder.addNode("box", null, glNodes, PMat4.IDT);
         testBoxModel = builder.build();
@@ -121,11 +121,11 @@ public class CybertagGame implements PGame {
 
   @Override public void postFrameUpdate() {
     PGLUtils.clearScreen(1, 1, 1, 1);
-    PApplicationWindow.drawTextureToScreen(pPbrPipeline.getLightedBuffer().getTexture());
-    for (int a = 0; a < pPbrPipeline.getGBuffer().numTextures(); a++) {
+    PApplicationWindow.drawTextureToScreen(pPbrPipeline.lightedBuffer().texture());
+    for (int a = 0; a < pPbrPipeline.gBuffer().numTextures(); a++) {
       if (Gdx.input.isKeyPressed(Input.Keys.NUM_1 + a)) {
         PGLUtils.clearScreen(0, 0, 0, 1);
-        PApplicationWindow.drawTextureToScreen(pPbrPipeline.getGBuffer().getTexture(a));
+        PApplicationWindow.drawTextureToScreen(pPbrPipeline.gBuffer().texture(a));
       }
     }
   }

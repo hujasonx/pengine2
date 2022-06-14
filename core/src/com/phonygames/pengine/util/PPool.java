@@ -1,6 +1,9 @@
 package com.phonygames.pengine.util;
 
+import android.support.annotation.Nullable;
+
 import com.badlogic.gdx.utils.Array;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
@@ -11,16 +14,16 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
-abstract public class PPool<T extends PPool.Poolable> {
+public abstract class PPool<T extends PPool.Poolable> {
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
-  private final static PPool<PoolBuffer> staticPoolBufferPool = new PPool<PPool.PoolBuffer>() {
+  @Accessors(fluent = true)
+  private final static PPool<PoolBuffer> staticPoolBufferPool = new PPool<PoolBuffer>() {
     @Override protected PoolBuffer newObject() {
-      return new PPool.PoolBuffer(this);
+      return new PPool.PoolBuffer();
     }
   };
-  @Getter
-  private static final PStringMap<PPool> staticPools = new PStringMap<PPool>() {};
   /**
    * The maximum number of objects that will be PPooled.
    */
@@ -57,7 +60,7 @@ abstract public class PPool<T extends PPool.Poolable> {
   }
 
   public static PoolBuffer getBuffer() {
-    PoolBuffer b = getStaticPoolBufferPool().obtain();
+    PoolBuffer b = staticPoolBufferPool().obtain();
     return b;
   }
 
@@ -67,7 +70,7 @@ abstract public class PPool<T extends PPool.Poolable> {
    */
   public T obtain() {
     T t = freeObjects.size == 0 ? newObject() : freeObjects.pop();
-    t.setOwnerPool(this);
+    t.setOwnerPool(null);
     return t;
   }
 
@@ -91,6 +94,8 @@ abstract public class PPool<T extends PPool.Poolable> {
   private void freeInternal(@NonNull T t) {
     beforeReset(t);
     t.reset();
+    PAssert.isNull(t.getOwnerPool(), "Freeing an object that is already held in a pool!");
+    t.setOwnerPool(this);
     if (freeObjects.size < max) {
       freeObjects.add(t);
     }
@@ -116,8 +121,11 @@ abstract public class PPool<T extends PPool.Poolable> {
   }
 
   public interface Poolable {
-    public PPool getOwnerPool();
-    public void setOwnerPool(PPool pool);
+    /* Usage:
+     @Getter @Setter private PPool ownerPool;
+     */
+    @Nullable PPool getOwnerPool();
+    void setOwnerPool(PPool pool);
     void reset();
   }
 
@@ -136,12 +144,11 @@ abstract public class PPool<T extends PPool.Poolable> {
     @Setter
     private PPool ownerPool;
 
-    private PoolBuffer(@NonNull PPool<PoolBuffer> ownerPool) {
-      this.ownerPool = ownerPool;
+    private PoolBuffer() {
     }
 
-    public final void finish() {
-      getStaticPoolBufferPool().free(this);
+    public void finish() {
+      staticPoolBufferPool().free(this);
     }
 
     public boolean isValid() {

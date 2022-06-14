@@ -6,12 +6,16 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PMath;
 import com.phonygames.pengine.math.PVec4;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public abstract class PLight {
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PVec4 color = PVec4.obtain();
-  @Getter(lazy = true)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMat4 transform = PMat4.obtain();
 
   public static float attenuationCutoffDistance(PVec4 attenuation) {
@@ -26,24 +30,22 @@ public abstract class PLight {
     PPointLight.initMesh();
   }
 
-  public abstract boolean addInstanceData(PFloat4Texture buffer);
+  public abstract int addInstanceData(PFloat4Texture buffer);
 
   public PLight setColor(PVec4 col) {
-    getColor().set(col);
+    color().set(col);
     return this;
   }
 
   public PLight setColor(Color col) {
-    getColor().set(col.r, col.g, col.b, col.a);
+    color().set(col.r, col.g, col.b, col.a);
     return this;
   }
 
   public PLight setColor(float r, float g, float b, float a) {
-    getColor().set(r, g, b, a);
+    color().set(r, g, b, a);
     return this;
   }
-
-  public abstract int vecsPerInstance();
 
   public static class UniformConstants {
     public static class Vec3 {

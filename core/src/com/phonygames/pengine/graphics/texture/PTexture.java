@@ -46,7 +46,7 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
   }
 
   private int bind() {
-    return PRenderContext.getActiveContext().getTextureBinder().bind(getBackingTexture());
+    return PRenderContext.activeContext().getTextureBinder().bind(getBackingTexture());
   }
 
   @Override public PTexture deepCopy() {

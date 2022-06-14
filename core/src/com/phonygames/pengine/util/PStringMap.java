@@ -1,6 +1,13 @@
 package com.phonygames.pengine.util;
 
-public class PStringMap<V> extends PMap<String, V> {
+import lombok.Getter;
+import lombok.Setter;
+
+public class PStringMap<V> extends PMap<String, V> implements PPool.Poolable {
+  @Getter
+  @Setter
+  private PPool ownerPool;
+
   public PStringMap(PPool pool) {
     super(pool);
   }

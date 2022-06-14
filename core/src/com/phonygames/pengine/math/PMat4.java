@@ -9,8 +9,9 @@ import com.phonygames.pengine.util.PStringMap;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 
-public class PMat4 extends PBasic<PMat4> {
+public class PMat4 extends PBasic<PMat4> implements PPool.Poolable {
   public static final PMat4 IDT = new PMat4();
   public static final PMat4 ZERO = new PMat4().set(new float[16]);
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
@@ -27,21 +28,15 @@ public class PMat4 extends PBasic<PMat4> {
   };
   @Getter
   private final Matrix4 backingMatrix4 = new Matrix4();
+  @Getter
+  @Setter
+  private PPool ownerPool;
 
   private PMat4() {
   }
 
   public static PMat4 obtain(PMat4 copyOf) {
     return obtain().set(copyOf);
-  }
-
-  @Override public PMat4 set(PMat4 other) {
-    this.backingMatrix4.set(other.backingMatrix4);
-    return this;
-  }
-
-  @Override public PPool<PMat4> staticPool() {
-    return getStaticPool();
   }
 
   public static PMat4 obtain() {
@@ -182,6 +177,15 @@ public class PMat4 extends PBasic<PMat4> {
 
   public PMat4 setZero() {
     return set(ZERO);
+  }
+
+  @Override public PPool<PMat4> staticPool() {
+    return getStaticPool();
+  }
+
+  @Override public PMat4 set(PMat4 other) {
+    this.backingMatrix4.set(other.backingMatrix4);
+    return this;
   }
 
   public PMat4 tra() {

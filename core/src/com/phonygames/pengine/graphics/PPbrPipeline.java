@@ -4,18 +4,24 @@ import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.lighting.PEnvironment;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 public class PPbrPipeline {
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   protected final PRenderBuffer finalBuffer;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   protected final PRenderBuffer gBuffer;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   protected final PRenderBuffer lightedBuffer;
-  @Getter
-  @Setter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   protected PEnvironment environment;
   private PRenderContext.PhaseHandler[] phases;
 
@@ -43,12 +49,12 @@ public class PPbrPipeline {
         if (environment == null) {
           return;
         }
-        Texture depthTex = gBuffer.getTexture("depth");
-        Texture diffuseMTex = gBuffer.getTexture("diffuseM");
-        Texture normalRTex = gBuffer.getTexture("normalR");
-        Texture emissiveITex = gBuffer.getTexture("emissiveI");
+        Texture depthTex = gBuffer.texture("depth");
+        Texture diffuseMTex = gBuffer.texture("diffuseM");
+        Texture normalRTex = gBuffer.texture("normalR");
+        Texture emissiveITex = gBuffer.texture("emissiveI");
         // TODO: Lock the camera of the context, to prevent bugs.
-        environment.renderLights(PRenderContext.getActiveContext(), depthTex, diffuseMTex, normalRTex, emissiveITex);
+        environment.renderLights(PRenderContext.activeContext(), depthTex, diffuseMTex, normalRTex, emissiveITex);
         // TODO: unlock
       }
 
@@ -58,10 +64,10 @@ public class PPbrPipeline {
   }
 
   public void attach(PRenderContext renderContext) {
-    renderContext.setPhaseHandlers(phases);
+    renderContext.setPhaseHandlersTo(phases);
   }
 
   public Texture getTexture() {
-    return finalBuffer.getTexture();
+    return finalBuffer.texture();
   }
 }

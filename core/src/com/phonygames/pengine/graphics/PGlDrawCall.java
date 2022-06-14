@@ -14,38 +14,52 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDeepCopyable<PGlDrawCall> {
-  public static final PGlDrawCall DEFAULT = new PGlDrawCall(true);
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private static final PGlDrawCall DEFAULT = new PGlDrawCall(true);
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private static final PPool<PGlDrawCall> staticPool = new PPool<PGlDrawCall>() {
     @Override protected PGlDrawCall newObject() {
       return new PGlDrawCall(false);
     }
   };
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMap<String, Integer> dataBufferLookupOffsets = new PMap<String, Integer>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PMap<String, Integer> dataBufferLookupVecsPerInstance = new PMap<String, Integer>();
   @Getter
+  @Accessors(fluent = true)
   private final boolean renderingDisabled;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private boolean enableBlend, depthTest, depthMask;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private String layer = "";
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private PMaterial material;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private PMesh mesh;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private int numInstances, dstFactor, srcFactor, dptTest, cullFace, boneTransformsLookupOffset;
   @Getter
   @Setter
   private PPool ownerPool;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private PShader shader;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private PVec3 worldLoc;
 
   private PGlDrawCall(boolean renderingDisabled) {
@@ -55,8 +69,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
 
   @Override public void reset() {
     PAssert.isFalse(renderingDisabled, "Cannot reset() a renderingDisabled PGlDrawCall");
-    getDataBufferLookupOffsets().clear();
-    getDataBufferLookupVecsPerInstance().clear();
+    dataBufferLookupOffsets().clear();
+    dataBufferLookupVecsPerInstance().clear();
     material = null;
     mesh = null;
     enableBlend = false;
@@ -80,9 +94,9 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
 
   public static PGlDrawCall getTemp(PGlDrawCall template) {
     if (template != null) {
-      return staticPool.obtain().deepCopyFrom(template);
+      return staticPool().obtain().deepCopyFrom(template);
     }
-    return staticPool.obtain();
+    return staticPool().obtain();
   }
 
   @Override public int compareTo(PGlDrawCall other) {
@@ -115,9 +129,9 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     PAssert.isFalse(renderingDisabled, "Cannot glDraw() a renderingDisabled PGlDrawCall");
     prepRenderContext(renderContext);
     if (shader.checkValid() && mesh != null) {
-      for (val e : getDataBufferLookupOffsets()) {
-        renderContext.genDataBuffer(e.k()).applyShader(shader, e.k(), getDataBufferLookupOffsets().get(e.k()),
-                                                       getDataBufferLookupVecsPerInstance().get(e.k()));
+      for (val e : dataBufferLookupOffsets()) {
+        renderContext.genDataBuffer(e.k()).applyShader(shader, e.k(), dataBufferLookupOffsets().get(e.k()),
+                                                       dataBufferLookupVecsPerInstance().get(e.k()));
       }
       if (material != null) {
         material.applyUniforms(shader);
@@ -139,7 +153,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
 
   public void freeTemp() {
     PAssert.isFalse(renderingDisabled, "Cannot freeTemp() a renderingDisabled PGlDrawCall");
-    staticPool.free(this);
+    staticPool().free(this);
   }
 
   public PGlDrawCall setCullFace(int cullFace) {
@@ -148,12 +162,13 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   }
 
   public PGlDrawCall setDataBufferInfo(PMap<String, Integer> dataBufferLookupVecsPerInstance,
-                                       PMap<String, Integer> dataBufferLookupOffsets) {
+                                       PMap<String, Integer> dataBufferLookupOffsets, int boneTransformsLookupOffset) {
     PAssert.isFalse(renderingDisabled, "Cannot setDataBufferInfo() a renderingDisabled PGlDrawCall");
-    this.getDataBufferLookupVecsPerInstance().clear();
-    this.getDataBufferLookupVecsPerInstance().putAll(dataBufferLookupVecsPerInstance);
-    this.getDataBufferLookupOffsets().clear();
-    this.getDataBufferLookupOffsets().putAll(dataBufferLookupOffsets);
+    this.dataBufferLookupVecsPerInstance().clear();
+    this.dataBufferLookupVecsPerInstance().putAll(dataBufferLookupVecsPerInstance);
+    this.dataBufferLookupOffsets().clear();
+    this.dataBufferLookupOffsets().putAll(dataBufferLookupOffsets);
+    this.boneTransformsLookupOffset = boneTransformsLookupOffset;
     return this;
   }
 

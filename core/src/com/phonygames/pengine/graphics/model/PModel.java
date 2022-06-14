@@ -15,14 +15,18 @@ import com.phonygames.pengine.util.PStringMap;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PModel {
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PStringMap<PAnimation> animations = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PStringMap<Node> nodes = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PList<String> rootNodeIds = new PList<>();
 
   private PModel() {
@@ -31,30 +35,30 @@ public class PModel {
   // Will use the material of the first instance. So make sure all buffers point to the same source!
   public void render(PList<PModelInstance> instances) {
     for (PModelInstance instance : instances) {
-      if (instance.getModel() != this) {
+      if (instance.model() != this) {
         continue;
       }
     }
-    for (String rootNodeId : getRootNodeIds()) {
-      PModel.Node node = getNodes().get(rootNodeId);
+    for (String rootNodeId : rootNodeIds()) {
+      PModel.Node node = nodes().get(rootNodeId);
     }
   }
 
   public void enqueue(@NonNull PRenderContext renderContext, @NonNull PShaderProvider shaderProvider, @NonNull PList<PModelInstance> instances) {
     PModelInstance firstInstance = null;
     // First, fill up the data buffers.
-    for (val e : instances) {
+    for (PModelInstance modelInstance : instances) {
       if (firstInstance == null) {
-        firstInstance = e;
+        firstInstance = modelInstance;
       }
-      if (e.getDataBufferEmitter() != null) {
-        e.getDataBufferEmitter().emitDataBuffersInto(renderContext);
+      if (modelInstance.getDataBufferEmitter() != null) {
+        modelInstance.getDataBufferEmitter().emitDataBuffersInto(renderContext);
       }
     }
 
     // Next, enqueue the model instance nodes.
     if (firstInstance != null) {
-      for (PModelInstance.Node node : firstInstance.getRootNodes()) {
+      for (PModelInstance.Node node : firstInstance.rootNodes()) {
         enqueueModelInstanceNodeRecursiveInstanced(node, renderContext, shaderProvider, instances);
       }
     }
@@ -63,20 +67,21 @@ public class PModel {
   // Renders recursively instanced, using the material of the caller.
   public void enqueueModelInstanceNodeRecursiveInstanced(@NonNull PModelInstance.Node modelInstanceNode, @NonNull PRenderContext renderContext, @NonNull PShaderProvider shaderProvider,
                                         @NonNull PList<PModelInstance> modelInstances) {
-    for (PGlNode node : modelInstanceNode.getGlNodes()) {
+    for (PGlNode node : modelInstanceNode.glNodes()) {
       // Emit all the model instance bone transforms for the node.
+      int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
       for (PModelInstance modelInstance : modelInstances) {
-        PAssert.isTrue(this == modelInstance.getModel(), "Incompatible model type in instances list");
+        PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
         modelInstance.outputBoneTransformsToBuffer(renderContext);
       }
 
       // Now that all the bone and data buffers have been set, enqueue a draw call. Since snapshotBufferOffsets was
       // called, we will need to re-output all buffer data
       renderContext.enqueue(shaderProvider,
-                            PGlDrawCall.getTemp(node.getDrawCall()).setNumInstances(modelInstances.size));
+                            PGlDrawCall.getTemp(node.drawCall()).setNumInstances(modelInstances.size), currentBoneTransformsOffset);
     }
 
-    for (PModelInstance.Node child : modelInstanceNode.getChildren()) {
+    for (PModelInstance.Node child : modelInstanceNode.children()) {
       enqueueModelInstanceNodeRecursiveInstanced(child, renderContext, shaderProvider, modelInstances);
     }
   }
@@ -87,11 +92,11 @@ public class PModel {
     public Node addNode(String id, Node parent, PList<PGlNode> glNodes, PMat4 transform) {
       checkLock();
       Node node = new Node(id, parent, glNodes);
-      node.getTransform().set(transform);
+      node.transform().set(transform);
       if (parent == null) {
-        model.getRootNodeIds().add(id);
+        model.rootNodeIds().add(id);
       }
-      model.getNodes().put(id, node);
+      model.nodes().put(id, node);
       return node;
     }
 
@@ -103,30 +108,36 @@ public class PModel {
 
   protected static class Node {
     @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
     private final PList<Node> children = new PList<>();
     @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
     private final PList<PGlNode> glNodes = new PList<>();
-    @Getter
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     private final String id;
     @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     private final Node parent;
     @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
     private final PMat4 transform = PMat4.obtain();
     @Getter(value = AccessLevel.PUBLIC)
     @Setter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     boolean inheritTransform;
 
     private Node(String id, Node parent, PList<PGlNode> glNodes) {
       this.id = id;
       this.parent = parent;
-      this.getGlNodes().addAll(glNodes);
+      this.glNodes().addAll(glNodes);
       if (parent != null) {
-        parent.getChildren().add(this);
+        parent.children().add(this);
       }
     }
 
     private boolean hasParent() {
-      return parent != null;
+      return parent() != null;
     }
   }
 }

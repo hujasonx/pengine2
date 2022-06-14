@@ -18,21 +18,26 @@ import com.phonygames.pengine.util.PMap;
 
 import java.nio.FloatBuffer;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public class PFloat4Texture extends Texture implements Pool.Poolable {
-  private static PFloat4Texture WHITE_PIXEL;
-  private static PMap<Integer, Pool<PFloat4Texture>> staticTexturePools = new PMap<Integer, Pool<PFloat4Texture>>() {
-    @Override protected Pool<PFloat4Texture> newUnpooled(final Integer integer) {
-      final int vec4capacity = integer.intValue();
-      return new Pool<PFloat4Texture>() {
-        @Override public PFloat4Texture newObject() {
-          PFloat4Texture newO = PFloat4Texture.get(vec4capacity, true);
-          return newO;
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
+  private static final PMap<Integer, Pool<PFloat4Texture>> staticTexturePools =
+      new PMap<Integer, Pool<PFloat4Texture>>() {
+        @Override protected Pool<PFloat4Texture> newUnpooled(final Integer integer) {
+          final int vec4capacity = integer.intValue();
+          return new Pool<PFloat4Texture>() {
+            @Override public PFloat4Texture newObject() {
+              PFloat4Texture newO = PFloat4Texture.get(vec4capacity, true);
+              return newO;
+            }
+          };
         }
       };
-    }
-  };
+  private static PFloat4Texture WHITE_PIXEL;
   private boolean dataDirty = false;
   private FloatBuffer floatBuffer;
   private boolean locked = false;
@@ -59,7 +64,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
   }
 
   public static PFloat4Texture getTemp(int vec4Capacity) {
-    return staticTexturePools.genUnpooled(vec4Capacity).obtain();
+    return staticTexturePools().genUnpooled(vec4Capacity).obtain();
   }
 
   public PFloat4Texture addData(PVec3 vec3, float w) {
@@ -111,7 +116,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
 
   public void freeTemp() {
     PAssert.isFalse(this == getWHITE_PIXEL());
-    staticTexturePools.genUnpooled(vec4Capacity).free(this);
+    staticTexturePools().genUnpooled(vec4Capacity).free(this);
   }
 
   public static PFloat4Texture getWHITE_PIXEL() {

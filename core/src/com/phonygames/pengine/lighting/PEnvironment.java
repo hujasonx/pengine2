@@ -42,16 +42,16 @@ public class PEnvironment {
 
   public void renderLights(PRenderContext renderContext, Texture depthTex, Texture diffuseMTex, Texture normalRTex,
                            Texture emissiveITex) {
-    if (!fragmentLayoutString.equals(PRenderBuffer.getActiveBuffer().getFragmentLayout())) {
+    if (!fragmentLayoutString.equals(PRenderBuffer.activeBuffer().fragmentLayout())) {
       if (fragmentLayoutString.length() > 0) {
         PLog.w("Making new shader, as fragment layout changed [\n" + fragmentLayoutString + "\n -> \n" +
-               PRenderBuffer.getActiveBuffer().getFragmentLayout() + "]");
+               PRenderBuffer.activeBuffer().fragmentLayout() + "]");
       }
-      fragmentLayoutString = PRenderBuffer.getActiveBuffer().getFragmentLayout();
+      fragmentLayoutString = PRenderBuffer.activeBuffer().fragmentLayout();
       // Generate new shaders.
-      ambientAndDirectionalLightShader = PRenderBuffer.getActiveBuffer().getQuadShader(
+      ambientAndDirectionalLightShader = PRenderBuffer.activeBuffer().getQuadShader(
           Gdx.files.local("engine/shader/light/ambient_and_directional_light.quad.glsl"));
-      pointLightShader = new PShader("", fragmentLayoutString, PPointLight.getMESH().getVertexAttributes(),
+      pointLightShader = new PShader("", fragmentLayoutString, PPointLight.MESH().vertexAttributes(),
                                      Gdx.files.local("engine/shader/light/light.vert.glsl"),
                                      Gdx.files.local("engine/shader/light/pointlight.frag.glsl"));
     }
@@ -68,24 +68,26 @@ public class PEnvironment {
       ambientAndDirectionalLightShader.set("u_directionalLightDir" + a, directionalLightDir[a]);
     }
     setLightUniforms(ambientAndDirectionalLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex,
-                     renderContext.getViewProjInvTransform());
-    PRenderBuffer.getActiveBuffer().renderQuad(ambientAndDirectionalLightShader);
+                     renderContext.viewProjInvTransform());
+    PRenderBuffer.activeBuffer().renderQuad(ambientAndDirectionalLightShader);
     ambientAndDirectionalLightShader.end();
     // Point lights.
     lightsFloatBuffer.reset();
     int numLights = 0;
     int vecsPerInstance = 0;
     for (val pointLight : pointLights) {
-      vecsPerInstance = pointLight.vecsPerInstance();
-      boolean shouldRender = pointLight.addInstanceData(lightsFloatBuffer);
-      numLights += shouldRender ? 1 : 0;
+      int vecsPut = pointLight.addInstanceData(lightsFloatBuffer);
+      if (vecsPut > 0) {
+        numLights ++;
+        vecsPerInstance = vecsPut;
+      }
     }
     if (numLights > 0) {
       pointLightShader.start(renderContext);
       setLightUniforms(pointLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex,
-                       renderContext.getViewProjInvTransform());
+                       renderContext.viewProjInvTransform());
       lightsFloatBuffer.applyShader(pointLightShader, "lightBuffer", 0, vecsPerInstance);
-      PPointLight.getMESH().glRenderInstanced(pointLightShader, numLights);
+      PPointLight.MESH().glRenderInstanced(pointLightShader, numLights);
       pointLightShader.end();
     }
     renderContext.resetDefaults();

@@ -62,7 +62,7 @@ public abstract class PShaderProvider {
       String layerId = layer == null ? "" : layer;
       PShader shader = fragmentLayoutLayerVertexAttributesMaterialIdMap.genUnpooled(fragmentLayout).genUnpooled(layerId)
                                                                        .genUnpooled(vertexAttributes)
-                                                                       .get(material.getId());
+                                                                       .get(material.id());
       if (shader != null) {
         return shader;
       }
@@ -74,14 +74,14 @@ public abstract class PShaderProvider {
       shader = genShader(fragmentLayout, layer, vertexAttributes, material);
       if (shader != null) {
         if (markForAnyMaterialId) {
-          PLog.i("PShaderProvider generating new shader any material, original: " + material.getId());
+          PLog.i("PShaderProvider generating new shader any material, original: " + material.id());
           markForAnyMaterialId = false;
           fragmentLayoutLayerVertexAttributesMap.get(fragmentLayout).genUnpooled(layerId).put(vertexAttributes, shader);
         } else {
-          PLog.i("PShaderProvider generating new shader for: " + material.getId());
+          PLog.i("PShaderProvider generating new shader for: " + material.id());
           fragmentLayoutLayerVertexAttributesMaterialIdMap.genUnpooled(fragmentLayout)
                                                           .genUnpooled(layer == null ? "" : layer)
-                                                          .genUnpooled(vertexAttributes).put(material.getId(), shader);
+                                                          .genUnpooled(vertexAttributes).put(material.id(), shader);
         }
         return shader;
       }
