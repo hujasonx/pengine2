@@ -2,6 +2,7 @@ package com.phonygames.pengine.util;
 
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.StringBuilder;
 import com.phonygames.pengine.exception.PAssert;
 
 import java.util.Iterator;
@@ -198,6 +199,14 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
 
   @Override public void reset() {
     clearRecursive();
+  }
+
+  @Override public String toString() {
+    StringBuilder ret = new StringBuilder("[PMap size=").append(mapInterface.size()).append("]\n");
+    for (val e : this) {
+      ret.append("\t").append(e.k().toString()).append(": ").appendLine(e.v().toString());
+    }
+    return ret.toString();
   }
 
   /**

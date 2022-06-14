@@ -8,6 +8,7 @@ import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public class PVec3 extends PVec<PVec3> {
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
@@ -16,23 +17,19 @@ public class PVec3 extends PVec<PVec3> {
       return new PVec3();
     }
   };
-
-  @Override public boolean isOnLine(PVec3 other) {
-    return backingVec3.isOnLine(other.backingVec3);
-  }
+  public static PVec3 X = new PVec3().set(1, 0, 0);
+  public static PVec3 Y = new PVec3().set(0, 1, 0);
+  public static PVec3 Z = new PVec3().set(0, 0, 1);
+  public static PVec3 ZERO = new PVec3().set(0, 0, 0);
+  @Getter(value = AccessLevel.PROTECTED)
+  @Accessors(fluent = true)
+  private final Vector3 backingVec3 = new Vector3();
 
   private PVec3() {}
 
   public static PVec3 obtain() {
     return getStaticPool().obtain();
   }
-
-  public static PVec3 X = new PVec3().set(1, 0, 0);
-  public static PVec3 Y = new PVec3().set(0, 1, 0);
-  public static PVec3 Z = new PVec3().set(0, 0, 1);
-  public static PVec3 ZERO = new PVec3().set(0, 0, 0);
-  @Getter
-  private final Vector3 backingVec3 = new Vector3();
 
   /**
    * Adds other to caller into caller.
@@ -55,13 +52,12 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
-  public PVec3 cpy() {
-    return new PVec3().set(this);
+  @Override public float len2() {
+    return backingVec3.len2();
   }
 
-  public PVec3 crs(PVec3 other) {
-    backingVec3.crs(other.backingVec3);
-    return this;
+  @Override public boolean isOnLine(PVec3 other) {
+    return backingVec3.isOnLine(other.backingVec3);
   }
 
   /**
@@ -71,22 +67,6 @@ public class PVec3 extends PVec<PVec3> {
    */
   @Override public float dot(PVec3 other) {
     return backingVec3.dot(other.backingVec3);
-  }
-
-  public float dst(PVec3 other) {
-    return backingVec3.dst(other.backingVec3);
-  }
-
-  public float dst2(PVec3 other) {
-    return backingVec3.dst2(other.backingVec3);
-  }
-
-  @Override public boolean equalsT(PVec3 vec3) {
-    return this.backingVec3.equals(vec3);
-  }
-
-  @Override public float len2() {
-    return backingVec3.len2();
   }
 
   /**
@@ -101,24 +81,9 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
-  public PVec3 mul(PMat4 mat4, float w) {
-    float[] l_mat = mat4.values();
-    float x = backingVec3.x;
-    float y = backingVec3.y;
-    float z = backingVec3.z;
-    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03],
-                    x * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13],
-                    x * l_mat[Matrix4.M20] + y * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23]);
-  }
-
-  public PVec3 nor() {
-    backingVec3.nor();
+  @Override public PVec3 setZero() {
+    this.backingVec3.setZero();
     return this;
-  }
-
-  public Vector3 putInto(Vector3 in) {
-    in.set(backingVec3);
-    return in;
   }
 
   /**
@@ -133,9 +98,67 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  /**
+   * Subtracts other from caller into caller.
+   * @param other
+   * @return caller for chaining
+   */
+  @Override public PVec3 sub(PVec3 other) {
+    backingVec3.sub(other.backingVec3);
+    return this;
+  }
+
+  public PVec3 cpy() {
+    return new PVec3().set(this);
+  }
+
+  public PVec3 crs(PVec3 other) {
+    backingVec3.crs(other.backingVec3);
+    return this;
+  }
+
+  public float dst(PVec3 other) {
+    return backingVec3.dst(other.backingVec3);
+  }
+
+  public float dst2(PVec3 other) {
+    return backingVec3.dst2(other.backingVec3);
+  }
+
+  @Override public boolean equalsT(PVec3 vec3) {
+    return this.backingVec3.equals(vec3);
+  }
+
+  @Override public PVec3 lerp(PVec3 other, float mix) {
+    backingVec3.x += (other.backingVec3.x - backingVec3.x) * mix;
+    backingVec3.y += (other.backingVec3.y - backingVec3.y) * mix;
+    backingVec3.z += (other.backingVec3.z - backingVec3.z) * mix;
+    return this;
+  }
+
+  public PVec3 mul(PMat4 mat4, float w) {
+    float[] l_mat = mat4.values();
+    float x = backingVec3.x;
+    float y = backingVec3.y;
+    float z = backingVec3.z;
+    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03],
+                    x * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13],
+                    x * l_mat[Matrix4.M20] + y * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23]);
+  }
+
   public PVec3 set(float x, float y, float z) {
     backingVec3.set(x, y, z);
     return this;
+  }
+
+  public PVec3 nor() {
+    backingVec3.nor();
+    return this;
+  }
+
+  public Vector3 putInto(Vector3 in) {
+    in.set(backingVec3);
+    return in;
   }
 
   public PVec3 set(Vector3 other) {
@@ -143,13 +166,12 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
-  @Override public PVec3 set(PVec3 other) {
-    backingVec3.set(other.backingVec3);
-    return this;
-  }
-
-  @Override public PVec3 setZero() {
-    this.backingVec3.setZero();
+  /**
+   * Sets this vector to (1, 1, 1).
+   * @return self for chaining.
+   */
+  public PVec3 setOne() {
+    backingVec3.set(1, 1, 1);
     return this;
   }
 
@@ -165,13 +187,8 @@ public class PVec3 extends PVec<PVec3> {
     return getStaticPool();
   }
 
-  /**
-   * Subtracts other from caller into caller.
-   * @param other
-   * @return caller for chaining
-   */
-  @Override public PVec3 sub(PVec3 other) {
-    backingVec3.sub(other.backingVec3);
+  @Override public PVec3 set(PVec3 other) {
+    backingVec3.set(other.backingVec3);
     return this;
   }
 

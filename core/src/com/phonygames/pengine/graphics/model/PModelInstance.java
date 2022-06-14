@@ -2,7 +2,6 @@ package com.phonygames.pengine.graphics.model;
 
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
-import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
@@ -86,21 +85,23 @@ public class PModelInstance {
   }
 
   /**
-   * Outputs the PMat4 references into the map.
+   * Outputs the node transform values into the map.
    * @param map
    * @param useBindPose If set, use the bind pose instead of the actual pose.
-   * @param weight
+   * @param alpha
    * @return
    */
-  public PStringMap<PMat4> outputNodeTransformsToMap(PStringMap<PMat4> map, boolean useBindPose, float weight) {
+  public PStringMap<PMat4> outputNodeTransformsToMap(PStringMap<PMat4> map, boolean useBindPose, float alpha) {
     for (val e : nodes()) {
-      PMat4 mat4 = map.genPooled(e.k());
-      if (useBindPose) {
-        mat4.set(e.v().templateNode().transform());
+      if (map.has(e.k())) {
+        // There was already a maxtrix in the map for this node.
+        PMat4 mat4 = map.get(e.k());
+        mat4.lerp(useBindPose ? e.v().templateNode().transform() : e.v().transform(), alpha);
       } else {
-        mat4.set(e.v().transform());
+        // Put in a new matrix into the map for this node, ignoring alpha.
+        PMat4 mat4 = map.genPooled(e.k());
+        mat4.set(useBindPose ? e.v().templateNode().transform() : e.v().transform());
       }
-      mat4.scl(weight);
     }
     return map;
   }
@@ -109,6 +110,22 @@ public class PModelInstance {
     for (PModelInstance.Node node : rootNodes()) {
       node.recalcNodeWorldTransformsRecursive(worldTransform());
     }
+  }
+
+  /**
+   * Sets the node transform values from the values in the map.
+   * @param map
+   * @param existingWeightScl the scale to multiply the existing transforms by, if they are being modified.
+   * @param weight
+   * @return
+   */
+  public PStringMap<PMat4> setNodeTransformsFromMap(PStringMap<PMat4> map, float existingWeightScl, float weight) {
+    for (val e : map) {
+      if (nodes().has(e.k())) {
+        nodes().get(e.k()).transform().scl(existingWeightScl).mulAdd(e.v(), weight);
+      }
+    }
+    return map;
   }
 
   public class Node {

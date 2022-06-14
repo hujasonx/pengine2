@@ -23,15 +23,15 @@ public class PAnimation {
    * Additively applys the animation with the given weight.
    * @param transforms
    * @param t
-   * @param weight
+   * @param alpha
    */
-  public void apply(PStringMap<PMat4> transforms, float t, float weight) {
+  public void apply(PStringMap<PMat4> transforms, float t, float alpha) {
     for (PMap.Entry<String, PMat4> e : transforms) {
       PNodeAnimation nodeAnimation = getNodeAnimations().get(e.k());
       if (nodeAnimation == null) {
         continue;
       }
-      nodeAnimation.apply(e.v(), t, weight);
+      nodeAnimation.apply(e.v(), t, alpha);
     }
     return;
   }
@@ -45,7 +45,7 @@ public class PAnimation {
 
     public Builder addNodeAnimation(PNodeAnimation nodeAnimation) {
       animation.getNodeAnimations().put(nodeAnimation.getNodeName(), nodeAnimation);
-      animation.length = Math.max(animation.length, nodeAnimation.getLength());
+      animation.length = Math.max(animation.length, nodeAnimation.length());
       return this;
     }
 

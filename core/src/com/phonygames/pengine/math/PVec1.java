@@ -48,7 +48,6 @@ public class PVec1 extends PVec<PVec1> {
   @Override public boolean isOnLine(PVec1 other) {
     return true;
   }
-  // End static.
 
   /**
    * Performs a dot product.
@@ -58,6 +57,7 @@ public class PVec1 extends PVec<PVec1> {
   @Override public float dot(PVec1 other) {
     return x * other.x;
   }
+  // End static.
 
   @Override public float len() {
     return Math.abs(x);
@@ -97,18 +97,23 @@ public class PVec1 extends PVec<PVec1> {
     return x == pVec1.x;
   }
 
+  @Override public PVec1 lerp(PVec1 other, float mix) {
+    x += (other.x - x) * mix;
+    return this;
+  }
+
   public PVec1 set(float x) {
     this.x = x;
     return this;
   }
 
+  @Override protected PPool staticPool() {
+    return getStaticPool();
+  }
+
   @Override public PVec1 set(PVec1 other) {
     this.x = other.x;
     return this;
-  }
-
-  @Override protected PPool staticPool() {
-    return getStaticPool();
   }
 
   public float x() {

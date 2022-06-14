@@ -6,7 +6,7 @@ import com.phonygames.pengine.util.PPool;
 import lombok.Getter;
 import lombok.Setter;
 
-public abstract class PVec<V extends PVec> extends PBasic<V> {
+public abstract class PVec<V extends PVec> extends PBasic<V> implements PLerpable<V> {
   @Getter
   @Setter
   private PPool ownerPool;

@@ -1,5 +1,7 @@
 package com.phonygames.pengine.math;
 
+import android.support.annotation.NonNull;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
@@ -7,6 +9,7 @@ import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public class PVec4 extends PVec<PVec4> {
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
@@ -15,7 +18,14 @@ public class PVec4 extends PVec<PVec4> {
       return new PVec4();
     }
   };
-  private float x, y, z, w;
+  public static PVec4 W = new PVec4().set(0, 0, 0, 1);
+  @Getter(value = AccessLevel.PRIVATE)
+  @Accessors(fluent = true)
+  public static PVec4 X = new PVec4().set(1, 0, 0, 0);
+  public static PVec4 Y = new PVec4().set(0, 1, 0, 0);
+  public static PVec4 Z = new PVec4().set(0, 0, 1, 0);
+  public static PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
+  private final Quaternion backingQuaterion = new Quaternion().set(0, 0, 0, 0);
 
   private PVec4() {}
 
@@ -23,62 +33,59 @@ public class PVec4 extends PVec<PVec4> {
     return getStaticPool().obtain();
   }
 
-  @Override public PVec4 add(PVec4 other) {
-    x += other.x;
-    y += other.y;
-    z += other.z;
-    w += other.w;
+  @Override public PVec4 add(@NonNull PVec4 other) {
+    backingQuaterion.add(other.backingQuaterion);
     return this;
   }
 
-  @Override public PVec4 add(PVec4 other, float scl) {
-    x += other.x * scl;
-    y += other.y * scl;
-    z += other.z * scl;
-    w += other.w * scl;
+  @Override public PVec4 add(@NonNull PVec4 other, float scl) {
+    backingQuaterion.x += other.backingQuaterion.x * scl;
+    backingQuaterion.y += other.backingQuaterion.y * scl;
+    backingQuaterion.z += other.backingQuaterion.z * scl;
+    backingQuaterion.w += other.backingQuaterion.w * scl;
     return this;
   }
 
   @Override public float len2() {
-    return x * x + y * y + z * z + w * w;
+    return backingQuaterion.len2();
   }
 
-  @Override public boolean isOnLine(PVec4 other) {
+  @Override public boolean isOnLine(@NonNull PVec4 other) {
     boolean desiredRatioSet = false;
     float desiredRatioThisOverOther = 0;
-    if (x == 0 && other.x == 0) {
-    } else if (x == 0 && other.x != 0) {
+    if (backingQuaterion.x == 0 && other.backingQuaterion.x == 0) {
+    } else if (backingQuaterion.x == 0 && other.backingQuaterion.x != 0) {
       return false;
     } else {
       desiredRatioSet = true;
-      desiredRatioThisOverOther = x / other.x;
+      desiredRatioThisOverOther = backingQuaterion.x / other.backingQuaterion.x;
     }
-    if (y == 0 && other.y == 0) {
-    } else if (y == 0 && other.y != 0) {
+    if (backingQuaterion.y == 0 && other.backingQuaterion.y == 0) {
+    } else if (backingQuaterion.y == 0 && other.backingQuaterion.y != 0) {
       return false;
     } else {
       if (desiredRatioSet) {
-        if (!PNumberUtils.epsilonEquals(y / other.y, desiredRatioThisOverOther)) {
+        if (!PNumberUtils.epsilonEquals(backingQuaterion.y / other.backingQuaterion.y, desiredRatioThisOverOther)) {
           return false;
         }
       }
     }
-    if (z == 0 && other.z == 0) {
-    } else if (z == 0 && other.z != 0) {
+    if (backingQuaterion.z == 0 && other.backingQuaterion.z == 0) {
+    } else if (backingQuaterion.z == 0 && other.backingQuaterion.z != 0) {
       return false;
     } else {
       if (desiredRatioSet) {
-        if (!PNumberUtils.epsilonEquals(z / other.z, desiredRatioThisOverOther)) {
+        if (!PNumberUtils.epsilonEquals(backingQuaterion.z / other.backingQuaterion.z, desiredRatioThisOverOther)) {
           return false;
         }
       }
     }
-    if (w == 0 && other.w == 0) {
-    } else if (w == 0 && other.w != 0) {
+    if (backingQuaterion.w == 0 && other.backingQuaterion.w == 0) {
+    } else if (backingQuaterion.w == 0 && other.backingQuaterion.w != 0) {
       return false;
     } else {
       if (desiredRatioSet) {
-        if (!PNumberUtils.epsilonEquals(w / other.w, desiredRatioThisOverOther)) {
+        if (!PNumberUtils.epsilonEquals(backingQuaterion.w / other.backingQuaterion.w, desiredRatioThisOverOther)) {
           return false;
         }
       }
@@ -86,15 +93,15 @@ public class PVec4 extends PVec<PVec4> {
     return true;
   }
 
-  @Override public float dot(PVec4 other) {
-    return x * other.x + y * other.y + z * other.z + w * other.w;
+  @Override public float dot(@NonNull PVec4 other) {
+    return backingQuaterion.dot(other.backingQuaterion);
   }
 
-  @Override public PVec4 mul(PVec4 other) {
-    x *= other.x;
-    y *= other.y;
-    z *= other.z;
-    w *= other.w;
+  @Override public PVec4 mul(@NonNull PVec4 other) {
+    backingQuaterion.x *= other.backingQuaterion.x;
+    backingQuaterion.y *= other.backingQuaterion.y;
+    backingQuaterion.z *= other.backingQuaterion.z;
+    backingQuaterion.w *= other.backingQuaterion.w;
     return this;
   }
 
@@ -103,10 +110,10 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   @Override public PVec4 scl(float scl) {
-    x *= scl;
-    y *= scl;
-    z *= scl;
-    w *= scl;
+    backingQuaterion.x *= scl;
+    backingQuaterion.y *= scl;
+    backingQuaterion.z *= scl;
+    backingQuaterion.w *= scl;
     return this;
   }
 
@@ -115,56 +122,60 @@ public class PVec4 extends PVec<PVec4> {
    * @param other
    * @return caller for chaining
    */
-  @Override public PVec4 sub(PVec4 other) {
-    x -= other.x;
-    y -= other.y;
-    z -= other.z;
-    w -= other.w;
+  @Override public PVec4 sub(@NonNull PVec4 other) {
+    backingQuaterion.x -= other.backingQuaterion.x;
+    backingQuaterion.y -= other.backingQuaterion.y;
+    backingQuaterion.z -= other.backingQuaterion.z;
+    backingQuaterion.w -= other.backingQuaterion.w;
     return this;
   }
 
   public PVec4 set(float x, float y, float z, float w) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.w = w;
+    backingQuaterion.set(x, y, z, w);
     return this;
   }
 
-  @Override public boolean equalsT(PVec4 vec4) {
-    return PNumberUtils.epsilonEquals(x, vec4.x) && PNumberUtils.epsilonEquals(y, vec4.y) &&
-           PNumberUtils.epsilonEquals(z, vec4.z) && PNumberUtils.epsilonEquals(w, vec4.w);
+  @Override public boolean equalsT(@NonNull PVec4 vec4) {
+    return backingQuaterion.equals(vec4.backingQuaterion);
   }
 
-  public PVec4 fromColor(Color color) {
-    this.x = color.r;
-    this.y = color.g;
-    this.z = color.b;
-    this.w = color.a;
+  public PVec4 fromColor(@NonNull Color color) {
+    this.backingQuaterion.set(color.r, color.g, color.b, color.a);
     return this;
   }
 
-  public PVec4 mul(PMat4 mat4) {
+  @Override public PVec4 lerp(PVec4 other, float mix) {
+    backingQuaterion.x += (other.backingQuaterion.x - backingQuaterion.x) * mix;
+    backingQuaterion.y += (other.backingQuaterion.y - backingQuaterion.y) * mix;
+    backingQuaterion.z += (other.backingQuaterion.z - backingQuaterion.z) * mix;
+    backingQuaterion.w += (other.backingQuaterion.w - backingQuaterion.w) * mix;
+    return this;
+  }
+
+  public PVec4 mul(@NonNull PMat4 mat4) {
     float[] l_mat = mat4.values();
-    return this.set(x * l_mat[Matrix4.M00] + y * l_mat[Matrix4.M01] + z * l_mat[Matrix4.M02] + w * l_mat[Matrix4.M03],
-                    x * l_mat[Matrix4.M10] + y * l_mat[Matrix4.M11] + z * l_mat[Matrix4.M12] + w * l_mat[Matrix4.M13],
-                    x * l_mat[Matrix4.M20] + y * l_mat[Matrix4.M21] + z * l_mat[Matrix4.M22] + w * l_mat[Matrix4.M23],
-                    x * l_mat[Matrix4.M30] + y * l_mat[Matrix4.M31] + z * l_mat[Matrix4.M32] + w * l_mat[Matrix4.M33]);
+    return this.set(backingQuaterion.x * l_mat[Matrix4.M00] + backingQuaterion.y * l_mat[Matrix4.M01] +
+                    backingQuaterion.z * l_mat[Matrix4.M02] + backingQuaterion.w * l_mat[Matrix4.M03],
+                    backingQuaterion.x * l_mat[Matrix4.M10] + backingQuaterion.y * l_mat[Matrix4.M11] +
+                    backingQuaterion.z * l_mat[Matrix4.M12] + backingQuaterion.w * l_mat[Matrix4.M13],
+                    backingQuaterion.x * l_mat[Matrix4.M20] + backingQuaterion.y * l_mat[Matrix4.M21] +
+                    backingQuaterion.z * l_mat[Matrix4.M22] + backingQuaterion.w * l_mat[Matrix4.M23],
+                    backingQuaterion.x * l_mat[Matrix4.M30] + backingQuaterion.y * l_mat[Matrix4.M31] +
+                    backingQuaterion.z * l_mat[Matrix4.M32] + backingQuaterion.w * l_mat[Matrix4.M33]);
   }
 
-  public PVec4 set(Quaternion quaternion) {
-    this.x = quaternion.x;
-    this.y = quaternion.y;
-    this.z = quaternion.z;
-    this.w = quaternion.w;
+  public PVec4 mulQuaternion(@NonNull PVec4 other) {
+    backingQuaterion.mul(other.backingQuaterion);
     return this;
   }
 
-  @Override public PVec4 set(PVec4 other) {
-    this.x = other.x;
-    this.y = other.y;
-    this.z = other.z;
-    this.w = other.w;
+  public PVec4 set(@NonNull Quaternion quaternion) {
+    backingQuaterion.set(quaternion);
+    return this;
+  }
+
+  public PVec4 setIdentityQuaternion() {
+    backingQuaterion.idt();
     return this;
   }
 
@@ -172,39 +183,44 @@ public class PVec4 extends PVec<PVec4> {
     return getStaticPool();
   }
 
+  @Override public PVec4 set(@NonNull PVec4 other) {
+    this.backingQuaterion.set(other.backingQuaterion);
+    return this;
+  }
+
   public float w() {
-    return w;
+    return backingQuaterion.w;
   }
 
   public PVec4 w(float w) {
-    this.w = w;
+    this.backingQuaterion.w = w;
     return this;
   }
 
   public float x() {
-    return x;
+    return backingQuaterion.x;
   }
 
   public PVec4 x(float x) {
-    this.x = x;
+    this.backingQuaterion.x = x;
     return this;
   }
 
   public float y() {
-    return y;
+    return backingQuaterion.y;
   }
 
   public PVec4 y(float y) {
-    this.y = y;
+    this.backingQuaterion.y = y;
     return this;
   }
 
   public float z() {
-    return z;
+    return backingQuaterion.z;
   }
 
   public PVec4 z(float z) {
-    this.z = z;
+    this.backingQuaterion.z = z;
     return this;
   }
 }

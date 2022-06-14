@@ -31,6 +31,12 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
+  @Override public PVec2 lerp(PVec2 other, float mix) {
+    x += (other.x - x) * mix;
+    y += (other.y - y) * mix;
+    return this;
+  }
+
   /**
    * Adds scale * other to caller into caller.
    * @param other

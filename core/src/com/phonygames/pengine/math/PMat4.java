@@ -11,7 +11,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-public class PMat4 extends PBasic<PMat4> implements PPool.Poolable {
+public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PMat4> {
   public static final PMat4 IDT = new PMat4();
   public static final PMat4 ZERO = new PMat4().set(new float[16]);
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
@@ -61,7 +61,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable {
   }
 
   public PVec3 getTranslation(PVec3 out) {
-    backingMatrix4.getTranslation(out.getBackingVec3());
+    backingMatrix4.getTranslation(out.backingVec3());
     return out;
   }
 
@@ -72,6 +72,11 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable {
 
   public PMat4 invTra() {
     this.backingMatrix4.inv().tra();
+    return this;
+  }
+
+  @Override public PMat4 lerp(PMat4 other, float mix) {
+    this.backingMatrix4.lerp(other.backingMatrix4, mix);
     return this;
   }
 
@@ -127,8 +132,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable {
   }
 
   public PMat4 set(PVec3 xAxis, PVec3 yAxis, PVec3 zAxis, PVec3 pos) {
-    this.backingMatrix4.set(xAxis.getBackingVec3(), yAxis.getBackingVec3(), zAxis.getBackingVec3(),
-                            pos.getBackingVec3());
+    this.backingMatrix4.set(xAxis.backingVec3(), yAxis.backingVec3(), zAxis.backingVec3(), pos.backingVec3());
     return this;
   }
 
@@ -153,7 +157,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable {
   }
 
   public PMat4 translate(PVec3 vec3) {
-    backingMatrix4.translate(vec3.getBackingVec3());
+    backingMatrix4.translate(vec3.backingVec3());
     return this;
   }
 
