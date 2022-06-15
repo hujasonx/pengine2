@@ -36,6 +36,7 @@ public class PGltf {
     @Override public PShader genShader(String fragmentLayout, String layer, PVertexAttributes vertexAttributes,
                                        PMaterial material) {
       if ("PBR".equals(layer)) {
+        markForAnyMaterialId();
         return new PShader("", fragmentLayout, vertexAttributes,
                            Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
                            Gdx.files.local("engine/shader/gltf/default.frag.glsl"));

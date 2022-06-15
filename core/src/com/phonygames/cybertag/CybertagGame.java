@@ -40,31 +40,31 @@ public class CybertagGame implements PGame {
 
   @Override public void frameUpdate() {
     renderContext.cameraRange().y(1000);
-    renderContext.cameraPos().set(5, 5, 5);
+    renderContext.cameraPos().set(2, 2, 2);
     renderContext.cameraUp().set(0, 1, 0);
     renderContext.cameraDir().set(-1, -1, -1);
     renderContext.start();
     pPbrPipeline.attach(renderContext);
     // Set environment.
-    environment.setAmbientLightCol(.1f, .1f, .1f);
+    environment.setAmbientLightCol(0, 0, 0);
     PVec3 tempV3 = PVec3.obtain().set(-1, -1, -1).nor();
     environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
-    environment.setDirectionalLightColor(0, 1, 1, 1);
+    environment.setDirectionalLightColor(0, 0, 0, 0);
     tempV3.free();
     for (int a = 0; a < testLights.length; a++) {
       testLights[a].transform().setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2,
                                                  MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
                                                  MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
     }
-    if (catModel != null && false) {
+    if (catModel != null && true) {
       // Process the cat model instances.
       PAnimation animation = catModel.animations().get("All Animations");
       for (int a = 0; a < catModelInstances.size; a++) {
         PModelInstance modelInstance = catModelInstances.get(a);
-        modelInstance.worldTransform().idt().setToTranslation(a, 0, 0).scl(4, 4, 4).rot(0, 1, 0, 0);
+        modelInstance.worldTransform().idt().setToTranslation(a * .3f, 0, 0).rot(0, 1, 0, 0);
         PStringMap<PMat4> transformMap =
             modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true, 1);
-        animation.apply(transformMap, (PEngine.t * 1.3f + a) % animation.getLength(), 1f);
+        animation.apply(transformMap, (PEngine.t + a) % animation.getLength(), 1f);
         modelInstance.setNodeTransformsFromMap(transformMap, 1f);
         transformMap.clearRecursive();
         PMat4.getMat4StringMapsPool().free(transformMap);
@@ -76,7 +76,7 @@ public class CybertagGame implements PGame {
     if (duckModel != null) {
       for (int a = 0; a < duckModelInstances.size; a++) {
         PModelInstance modelInstance = duckModelInstances.get(a);
-        modelInstance.worldTransform().idt().setToTranslation(a, 0, 1).scl(4, 4, 4).rot(0, 1, 0, 0);
+        modelInstance.worldTransform().idt().setToTranslation(a * .2f, 0, 1).scl(.1f).rot(0, 1, 0, a);
         modelInstance.recalcTransforms();
       }
       // Enqueue the model instances into the buffer.
@@ -95,7 +95,7 @@ public class CybertagGame implements PGame {
         }
       }
     });
-    new PGltf("engine/model/RiggedFigure.glb").loadThenDo(new PGltf.OnloadCallback() {
+    new PGltf("engine/model/duck.glb").loadThenDo(new PGltf.OnloadCallback() {
       @Override public void onLoad(PGltf gltf) {
         duckModel = gltf.getModel();
         for (int a = 0; a < 10; a++) {

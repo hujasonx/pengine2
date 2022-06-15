@@ -1,5 +1,6 @@
 package com.phonygames.pengine.graphics.model;
 
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.math.PMat4;
@@ -72,7 +73,8 @@ public class PModelInstance {
     PGlNode glNode = glNodes().get(glNodeID);
     if (glNode.invBoneTransforms() == null || glNode.invBoneTransforms().size == 0) {
       // If there are no inverse bone transforms, simply output the raw transform.
-      tempMat4.set(worldTransform());
+      PAssert.isNotNull(glNode.ownerModelInstanceNode(), "glNode had no PModelInstance.Node associated with it");
+      tempMat4.set(glNode.ownerModelInstanceNode().worldTransform());
       renderContext.boneTransformsBuffer().addData(tempMat4);
       tempMat4.free();
       return false;
@@ -166,6 +168,7 @@ public class PModelInstance {
       this.transform.set(templateNode.transform());
       for (PGlNode node : templateNode.glNodes()) {
         PGlNode newNode = node.deepCopy();
+        newNode.ownerModelInstanceNode(this);
         materials().put(newNode.drawCall().material().id(), newNode.drawCall().material());
         this.glNodes().add(newNode);
       }

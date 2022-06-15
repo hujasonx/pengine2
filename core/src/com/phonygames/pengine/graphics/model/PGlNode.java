@@ -28,6 +28,10 @@ public class PGlNode implements PDeepCopyable<PGlNode> {
   @Setter
   @Accessors(fluent = true)
   private String id;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter
+  @Accessors(fluent = true)
+  private PModelInstance.Node ownerModelInstanceNode;
 
   public PGlNode(String id) {
     this.id = id;
@@ -44,12 +48,13 @@ public class PGlNode implements PDeepCopyable<PGlNode> {
     worldTransform().set(other.worldTransform());
     worldTransformInvTra().set(other.worldTransformInvTra());
     invBoneTransforms().putAll(other.invBoneTransforms());
+    ownerModelInstanceNode = other.ownerModelInstanceNode;
     return this;
   }
 
-  public final PGlNode setWorldTransform(PMat4 worldTransform, PMat4 worldTransformInvTrad) {
+  public final PGlNode setWorldTransform(PMat4 worldTransform, PMat4 worldTransformInvTra) {
     this.worldTransform().set(worldTransform);
-    this.worldTransform().set(worldTransformInvTrad);
+    this.worldTransformInvTra().set(worldTransformInvTra);
     return this;
   }
 

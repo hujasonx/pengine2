@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
@@ -111,6 +112,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
     }
     dataDirty = false;
     floatBuffer.flip();
+    Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0); // Bind the zero texture, as we have to bind the texture.
     load(this.getTextureData());
   }
 
@@ -162,6 +164,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
     dataDirty = false;
     floatBuffer.flip();
     ((PFloat4TextureTextureData) this.getTextureData()).setSubArea(x, y, w, h);
+    Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
     load(this.getTextureData());
     ((PFloat4TextureTextureData) this.getTextureData()).clearSubArea();
   }

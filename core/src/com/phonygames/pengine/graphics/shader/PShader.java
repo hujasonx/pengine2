@@ -342,7 +342,8 @@ public class PShader implements Disposable, Comparable<PShader> {
     }
     PAssert.isTrue(isActive());
     if (shaderProgram.hasUniform(uniform)) {
-      shaderProgram.setUniformi(uniform, PRenderContext.activeContext().getTextureBinder().bind(texture));
+      int bindTarget = PRenderContext.activeContext().getTextureBinder().bind(texture);
+      shaderProgram.setUniformi(uniform, bindTarget);
       set(uniform + "Size", texture.getWidth(), texture.getHeight(), 1f / texture.getWidth(), 1f / texture.getHeight());
     }
     return this;

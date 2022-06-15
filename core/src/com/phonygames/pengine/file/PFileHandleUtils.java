@@ -61,6 +61,7 @@ public class PFileHandleUtils {
     String[] params = null;
     for (int rawLineNo = 0; rawLineNo < lines.length; rawLineNo++) {
       String line = lines[rawLineNo];
+      String strippedLine = line.strip();
       // Replace with parameters.
       if (inputs != null && params != null) {
         for (int a = 0; a < inputs.length; a++) {
@@ -76,7 +77,7 @@ public class PFileHandleUtils {
           extractedIncludeFilename = fileHandle.parent().path() + "/" + extractedIncludeFilename;
         }
       }
-      if (extractedIncludeFilename != null) {
+      if (extractedIncludeFilename != null && !strippedLine.startsWith("//")) {
         totalLineNo = loadRecursive(stringBuilder, Gdx.files.local(extractedIncludeFilename), loadProcessor,
                                     prefix + PStringUtils.getLineSpacePrefix(line), totalLineNo,
                                     PStringUtils.extractStringArray(line, "[", "]", ",", true));

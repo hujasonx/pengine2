@@ -3,7 +3,6 @@ package com.phonygames.pengine.graphics;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.g3d.utils.TextureBinder;
 import com.badlogic.gdx.utils.ArrayMap;
@@ -11,6 +10,7 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
+import com.phonygames.pengine.graphics.texture.PTextureBinder;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
@@ -48,8 +48,7 @@ public class PRenderContext {
   private static PRenderContext activeContext = null;
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
-  private final RenderContext backingRenderContext =
-      new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
+  private final RenderContext backingRenderContext = new RenderContext(new PTextureBinder(PTextureBinder.LRU, 4));
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PFloat4Texture boneTransformsBuffer = PFloat4Texture.getTemp(DATA_BUFFER_CAPACITY);
@@ -157,7 +156,8 @@ public class PRenderContext {
     }
     // Next, enqueue the draw call if it has a shader.
     if (drawCall.shader() != null) {
-      enqueue(drawCall.shader(), drawCall.layer(), drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance, snapshotBufferOffsets);
+      enqueue(drawCall.shader(), drawCall.layer(), drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance,
+              snapshotBufferOffsets);
       return true;
     }
     return false;
@@ -169,7 +169,8 @@ public class PRenderContext {
    * @param drawCall
    */
   public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall,
-                      int boneTransformsLookupOffset, int boneTransformsVecsPerInstance, boolean snapshotBufferOffsets) {
+                      int boneTransformsLookupOffset, int boneTransformsVecsPerInstance,
+                      boolean snapshotBufferOffsets) {
     // Calculate the stored vecs per instance using the buffer offsets and the buffer fill amounts. This assumes that
     // you enqueue a draw call immediately after writing stuff to buffers.
     for (val e : storedBufferOffsets()) {
@@ -321,6 +322,7 @@ public class PRenderContext {
       width = (int) camera.viewportWidth;
       height = (int) camera.viewportHeight;
     }
+    camera.update(false);
     cameraPos().set(camera.position);
     cameraDir().set(camera.direction);
     cameraUp().set(camera.up);

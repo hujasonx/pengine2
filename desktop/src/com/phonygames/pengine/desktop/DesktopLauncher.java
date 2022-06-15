@@ -2,6 +2,7 @@ package com.phonygames.pengine.desktop;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Window;
 import com.phonygames.cybertag.CybertagGame;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;

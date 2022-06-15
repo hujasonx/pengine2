@@ -3,6 +3,8 @@ package com.phonygames.pengine;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.profiling.GLErrorListener;
+import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.math.WindowedMean;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.phonygames.pengine.exception.PAssert;
@@ -30,6 +32,7 @@ public class PEngine extends ApplicationAdapter {
   @Getter
   private static Phase currentPhase = Phase.INIT;
   private static PGame game;
+  private static GLProfiler glProfiler;
   @Getter
   private static PEngine pEngine;
   private static float timeScale = 1;
@@ -59,6 +62,10 @@ public class PEngine extends ApplicationAdapter {
     PShaderProvider.init();
     PAssetManager.init();
     PPhysicsEngine.init();
+    glProfiler = new GLProfiler(Gdx.graphics);
+    glProfiler.enable();
+    glProfiler.setListener(GLErrorListener.LOGGING_LISTENER);
+    PLog.i("Local directory: " + Gdx.files.getLocalStoragePath());
   }
 
   @Override public void resize(int width, int height) {
@@ -87,10 +94,6 @@ public class PEngine extends ApplicationAdapter {
     }
   }
 
-  private static void postFrameUpdateStatic() {
-    PPhysicsEngine.postFrameUpdate();
-  }
-
   private void processLogicUpdateForFrame() {
     currentPhase = Phase.LOGIC;
     if (logict < t - 1) { // After a large lag spike, don't process the logic update too quickly.
@@ -105,10 +108,6 @@ public class PEngine extends ApplicationAdapter {
     }
   }
 
-  private static void postLogicUpdateStatic() {
-    PPhysicsEngine.postLogicUpdate();
-  }
-
   private void frameUpdate() {
     Gdx.graphics.setTitle(
         "Cybertag: " + PStringUtils.prependSpacesToLength("" + Gdx.graphics.getFramesPerSecond(), 3) + "FPS, Mem: " +
@@ -120,6 +119,15 @@ public class PEngine extends ApplicationAdapter {
     game.frameUpdate();
     game.postFrameUpdate();
     postFrameUpdateStatic();
+  }
+
+  private static void postLogicUpdateStatic() {
+    PPhysicsEngine.postLogicUpdate();
+  }
+
+  private static void postFrameUpdateStatic() {
+    PPhysicsEngine.postFrameUpdate();
+    glProfiler.reset();
   }
 
   @Override public void dispose() {
