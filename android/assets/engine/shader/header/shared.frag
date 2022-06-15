@@ -1,15 +1,13 @@
 uniform vec4 u_tdtuituidt;
 uniform vec4 u_renderBufferSize;
+
 in vec3 v_aPos;
-#ifdef a_bon0Flag
 in vec3 v_skinnedPos;
-#endif
 #ifdef a_norFlag
 in vec3 v_aNor;
-#ifdef a_bon0Flag
 in vec3 v_skinnedNor;
 #endif
-#endif
+
 #include <engine/shader/header/sharedfragarray>[0]
 #include <engine/shader/header/sharedfragarray>[1]
 #include <engine/shader/header/sharedfragarray>[2]
@@ -20,7 +18,5 @@ in vec3 v_skinnedNor;
 #include <engine/shader/header/sharedfragarray>[7]
 #include <engine/shader/header/sharedfragarray>[8]
 
-// Uniforms for skinning.
-#ifdef a_bon0Flag
+// Uniforms for skinning or instancing.
 #include <engine/shader/header/texture2D>[boneTransforms]
-#endif

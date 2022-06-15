@@ -9,7 +9,6 @@ void main() {
     #include <engine/shader/start/rendercontext.frag>
     #include <engine/shader/start/pbr.frag>
 
-
     #include <engine/shader/end/pbr.frag>
     #include <engine/shader/end/rendercontext.frag>
     #include <engine/shader/end/instanced.frag>

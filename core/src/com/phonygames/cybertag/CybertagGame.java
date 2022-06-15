@@ -31,13 +31,12 @@ public class CybertagGame implements PGame {
   protected PShader testShader;
   PEnvironment environment;
   PPointLight[] testLights = new PPointLight[10];
-  private PModel catModel;
-  private PList<PModelInstance> catModelInstances = new PList<>();
+  private PModel catModel, duckModel;
+  private PList<PModelInstance> catModelInstances = new PList<>(), duckModelInstances = new PList<>();
   private PPbrPipeline pPbrPipeline;
   private PRenderContext renderContext;
   private PModel testBoxModel;
   private PModel testModel2;
-  private PList<PModelInstance> testModelInstances2 = new PList<>();
 
   @Override public void frameUpdate() {
     renderContext.cameraRange().y(1000);
@@ -57,7 +56,7 @@ public class CybertagGame implements PGame {
                                                  MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
                                                  MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
     }
-    if (catModel != null) {
+    if (catModel != null && false) {
       // Process the cat model instances.
       PAnimation animation = catModel.animations().get("All Animations");
       for (int a = 0; a < catModelInstances.size; a++) {
@@ -74,6 +73,15 @@ public class CybertagGame implements PGame {
       // Enqueue the model instances into the buffer.
       catModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, catModelInstances, false);
     }
+    if (duckModel != null) {
+      for (int a = 0; a < duckModelInstances.size; a++) {
+        PModelInstance modelInstance = duckModelInstances.get(a);
+        modelInstance.worldTransform().idt().setToTranslation(a, 0, 1).scl(4, 4, 4).rot(0, 1, 0, 0);
+        modelInstance.recalcTransforms();
+      }
+      // Enqueue the model instances into the buffer.
+      duckModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, duckModelInstances, false);
+    }
     renderContext.glRenderQueue();
     renderContext.end();
   }
@@ -87,10 +95,12 @@ public class CybertagGame implements PGame {
         }
       }
     });
-    new PGltf("engine/model/blender.glb").loadThenDo(new PGltf.OnloadCallback() {
+    new PGltf("engine/model/RiggedFigure.glb").loadThenDo(new PGltf.OnloadCallback() {
       @Override public void onLoad(PGltf gltf) {
-        testModel2 = gltf.getModel();
-        testModelInstances2.add(new PModelInstance(testModel2));
+        duckModel = gltf.getModel();
+        for (int a = 0; a < 10; a++) {
+          duckModelInstances.add(new PModelInstance(duckModel));
+        }
       }
     });
     renderContext = new PRenderContext();

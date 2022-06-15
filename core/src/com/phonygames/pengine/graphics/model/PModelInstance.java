@@ -68,11 +68,15 @@ public class PModelInstance {
   }
 
   protected boolean outputBoneTransformsToBuffer(PRenderContext renderContext, String glNodeID) {
+    PMat4 tempMat4 = PMat4.obtain();
     PGlNode glNode = glNodes().get(glNodeID);
     if (glNode.invBoneTransforms() == null || glNode.invBoneTransforms().size == 0) {
+      // If there are no inverse bone transforms, simply output the raw transform.
+      tempMat4.set(worldTransform());
+      renderContext.boneTransformsBuffer().addData(tempMat4);
+      tempMat4.free();
       return false;
     }
-    PMat4 tempMat4 = PMat4.obtain();
     for (val e2 : glNode.invBoneTransforms()) {
       String boneId = e2.key;
       PMat4 invBindTransform = e2.value;

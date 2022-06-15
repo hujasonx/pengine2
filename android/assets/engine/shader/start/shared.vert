@@ -1,6 +1,10 @@
+// Use skinning if the transform should use the boneTransforms buffer ; either because the model
+// is skinned or because the model is instanced.
 v_aPos = a_pos;
+v_skinnedPos = a_pos;
 #ifdef a_norFlag
 v_aNor = a_nor;
+v_skinnedNor = a_nor;
 #endif
 #ifdef a_bon0Flag
 mat4 skinning = mat4(0.0);

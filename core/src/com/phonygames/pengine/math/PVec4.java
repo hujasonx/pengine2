@@ -19,12 +19,10 @@ public class PVec4 extends PVec<PVec4> {
     }
   };
   public static PVec4 W = new PVec4().set(0, 0, 0, 1);
-  @Getter(value = AccessLevel.PRIVATE)
-  @Accessors(fluent = true)
-  public static PVec4 X = new PVec4().set(1, 0, 0, 0);
-  public static PVec4 Y = new PVec4().set(0, 1, 0, 0);
-  public static PVec4 Z = new PVec4().set(0, 0, 1, 0);
-  public static PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
+  public static final PVec4 X = new PVec4().set(1, 0, 0, 0);
+  public static final PVec4 Y = new PVec4().set(0, 1, 0, 0);
+  public static final PVec4 Z = new PVec4().set(0, 0, 1, 0);
+  public static final PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
   private final Quaternion backingQuaterion = new Quaternion().set(0, 0, 0, 0);
 
   private PVec4() {}

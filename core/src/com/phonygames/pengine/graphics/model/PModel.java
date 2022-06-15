@@ -2,7 +2,6 @@ package com.phonygames.pengine.graphics.model;
 
 import android.support.annotation.NonNull;
 
-import com.badlogic.gdx.utils.StringBuilder;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
@@ -62,10 +61,13 @@ public class PModel {
         if (useMaterialOfFirstInstance && firstInstance != null) {
           drawCall.material(firstInstance.glNodes().get(glNode.id()).drawCall().material());
         }
-        renderContext.enqueue(shaderProvider, drawCall,
-                              currentBoneTransformsOffset, glNode.invBoneTransforms().size * 4);
+        renderContext.enqueue(shaderProvider, drawCall, currentBoneTransformsOffset,
+                              Math.max(1 /* If no bones, we still output the world transform. */,
+                                       glNode.invBoneTransforms().size) * 4, false);
       }
     }
+    // Finally, snapshot the data buffers so that new drawcalls arent reusing the data here.
+    renderContext.snapshotBufferOffsets();
   }
 
   // Will use the material of the first instance. So make sure all buffers point to the same source!

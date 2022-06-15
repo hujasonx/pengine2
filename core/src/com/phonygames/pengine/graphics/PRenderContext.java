@@ -138,7 +138,7 @@ public class PRenderContext {
   }
 
   public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall, int boneTransformsLookupOffset,
-                         int boneTransformsVecsPerInstance) {
+                         int boneTransformsVecsPerInstance, boolean snapshotBufferOffsets) {
     // First, try to generate the shader.
     if (drawCall.shader() == null && drawCall.mesh() != null) {
       if (phaseHandlers().size == 0) {
@@ -157,7 +157,7 @@ public class PRenderContext {
     }
     // Next, enqueue the draw call if it has a shader.
     if (drawCall.shader() != null) {
-      enqueue(drawCall.shader(), drawCall.layer(), drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance);
+      enqueue(drawCall.shader(), drawCall.layer(), drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance, snapshotBufferOffsets);
       return true;
     }
     return false;
@@ -169,7 +169,7 @@ public class PRenderContext {
    * @param drawCall
    */
   public void enqueue(@NonNull PShader shader, @NonNull String layer, @NonNull PGlDrawCall drawCall,
-                      int boneTransformsLookupOffset, int boneTransformsVecsPerInstance) {
+                      int boneTransformsLookupOffset, int boneTransformsVecsPerInstance, boolean snapshotBufferOffsets) {
     // Calculate the stored vecs per instance using the buffer offsets and the buffer fill amounts. This assumes that
     // you enqueue a draw call immediately after writing stuff to buffers.
     for (val e : storedBufferOffsets()) {
@@ -180,7 +180,9 @@ public class PRenderContext {
     }
     addRenderContextDataBufferOffsetsToDrawCall(drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance);
     enqueuedDrawCalls().genPooled(layer).genPooled(shader).add(drawCall);
-    snapshotBufferOffsets();
+    if (snapshotBufferOffsets) {
+      snapshotBufferOffsets();
+    }
   }
 
   /**
@@ -208,7 +210,7 @@ public class PRenderContext {
   /**
    * Stores the buffer sizes. Call this before filling the buffers and rendering with stuff!
    */
-  private void snapshotBufferOffsets() {
+  public void snapshotBufferOffsets() {
     for (val e : dataBuffers()) {
       storedBufferOffsets().put(e.k(), e.v().vecsWritten());
     }

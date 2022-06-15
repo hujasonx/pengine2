@@ -95,7 +95,6 @@ public class PModelGen implements PPostableTask {
     @Accessors(fluent = true)
     private final float[] currentVertexValues;
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
-    @Setter(value = AccessLevel.PRIVATE)
     @Accessors(fluent = true)
     private final PList<Short> indices = new PList<>();
     @Getter(value = AccessLevel.PUBLIC)

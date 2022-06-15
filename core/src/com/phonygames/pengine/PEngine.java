@@ -63,6 +63,10 @@ public class PEngine extends ApplicationAdapter {
 
   @Override public void resize(int width, int height) {
     super.resize(width, height);
+    if (width == 0 || height == 0) {
+      PLog.i("Resize window: 0x0").pEngine();
+      return;
+    }
     PApplicationWindow.triggerResize(width, height);
   }
 

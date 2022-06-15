@@ -41,7 +41,6 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
   }
 
   public Texture getBackingTexture() {
-    //    return PFloat4Texture.getWHITE_PIXEL();
     return backingTexture == null ? PFloat4Texture.getWHITE_PIXEL() : backingTexture;
   }
 
