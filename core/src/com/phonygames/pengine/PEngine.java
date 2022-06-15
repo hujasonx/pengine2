@@ -13,6 +13,7 @@ import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.lighting.PLight;
 import com.phonygames.pengine.logging.PLog;
+import com.phonygames.pengine.physics.PPhysicsEngine;
 import com.phonygames.pengine.util.PApplicationUtils;
 import com.phonygames.pengine.util.PStringUtils;
 
@@ -45,6 +46,11 @@ public class PEngine extends ApplicationAdapter {
       new SharedLibraryLoader().load(LIBRARY_NAME);
     } catch (Exception e) {
     }
+    initStatic();
+    game.init();
+  }
+
+  private static void initStatic() {
     PVertexAttributes.init();
     PLight.initMeshes();
     PLog.init();
@@ -52,7 +58,7 @@ public class PEngine extends ApplicationAdapter {
     PMesh.init();
     PShaderProvider.init();
     PAssetManager.init();
-    game.init();
+    PPhysicsEngine.init();
   }
 
   @Override public void resize(int width, int height) {
@@ -77,6 +83,10 @@ public class PEngine extends ApplicationAdapter {
     }
   }
 
+  private static void postFrameUpdateStatic() {
+    PPhysicsEngine.postFrameUpdate();
+  }
+
   private void processLogicUpdateForFrame() {
     currentPhase = Phase.LOGIC;
     if (logict < t - 1) { // After a large lag spike, don't process the logic update too quickly.
@@ -87,7 +97,12 @@ public class PEngine extends ApplicationAdapter {
       game.preLogicUpdate();
       game.logicUpdate();
       game.postLogicUpdate();
+      postLogicUpdateStatic();
     }
+  }
+
+  private static void postLogicUpdateStatic() {
+    PPhysicsEngine.postLogicUpdate();
   }
 
   private void frameUpdate() {
@@ -100,9 +115,15 @@ public class PEngine extends ApplicationAdapter {
     game.preFrameUpdate();
     game.frameUpdate();
     game.postFrameUpdate();
+    postFrameUpdateStatic();
   }
 
   @Override public void dispose() {
+    disposeStatic();
+  }
+
+  private static void disposeStatic() {
+    PPhysicsEngine.dispose();
   }
 
   public enum Phase {
