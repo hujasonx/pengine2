@@ -93,7 +93,6 @@ public class PVertexAttributes {
   public static final class Attribute {
     public static final Class[] VectorClasses = new Class[]{null, null, PVec2.class, PVec3.class, PVec4.class};
     private static final PStringMap<VertexAttribute> list = new PStringMap<>();
-    private static int maxUsage = 1;
 
     private static void init() {
       registerAttribute(Keys.pos, 3);
@@ -120,7 +119,7 @@ public class PVertexAttributes {
     }
 
     private static void registerAttribute(String id, int numComponents) {
-      list.put(id, new VertexAttribute(maxUsage *= 2, numComponents, id));
+      list.put(id, new VertexAttribute(0 /* unused */, numComponents, id));
     }
 
     public static VertexAttribute get(String key) {
