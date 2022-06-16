@@ -1,5 +1,7 @@
 package com.phonygames.pengine.graphics.model.gen;
 
+import android.support.annotation.NonNull;
+
 import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -19,8 +21,6 @@ import com.phonygames.pengine.util.PWindowedBuffer;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
 
@@ -29,7 +29,7 @@ public class PModelGen implements PPostableTask {
   @Getter
   private static final PPostableTaskQueue postableTaskQueue = new PPostableTaskQueue();
   private final PStringMap<Part> parts = new PStringMap<>();
-  private final PStringMap<Part> physicsParts = new PStringMap<>();
+  private final PStringMap<StaticPhysicsPart> staticPhysicsParts = new PStringMap<>();
   private boolean finished = false;
 
   public Part addPbrPart(String name) {
@@ -37,14 +37,14 @@ public class PModelGen implements PPostableTask {
   }
 
   public Part addPart(String name, PVertexAttributes vertexAttributes) {
-    Part p = new Part(name, false, vertexAttributes);
+    Part p = new Part(name, vertexAttributes);
     parts.put(name, p);
     return p;
   }
 
-  public Part addPhysicsPart(String name) {
-    Part p = new Part(name, false, PVertexAttributes.getPHYSICS());
-    physicsParts.put(name, p);
+  public StaticPhysicsPart addStaticPhysicsPart(String name) {
+    StaticPhysicsPart p = new StaticPhysicsPart(name);
+    staticPhysicsParts.put(name, p);
     return p;
   }
 
@@ -54,8 +54,16 @@ public class PModelGen implements PPostableTask {
     end();
   }
 
+  @Override public void end() {
+    modelEnd();
+  }
+
   @Override public void intro() {
     modelIntro();
+  }
+
+  @Override public void middle() {
+    modelMiddle();
   }
 
   protected void modelIntro() {
@@ -65,14 +73,6 @@ public class PModelGen implements PPostableTask {
   }
 
   protected void modelEnd() {
-  }
-
-  @Override public void middle() {
-    modelMiddle();
-  }
-
-  @Override public void end() {
-    modelEnd();
   }
 
   protected PModelGen chainGlNode(PList<PGlNode> list, Part part, PMaterial defaultMaterial,
@@ -97,13 +97,6 @@ public class PModelGen implements PPostableTask {
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     @Accessors(fluent = true)
     private final PList<Short> indices = new PList<>();
-    @Getter(value = AccessLevel.PUBLIC)
-    @Setter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private String footstepSoundStrategy = null;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private final boolean isPhysicsPart;
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     @Accessors(fluent = true)
     private final PWindowedBuffer latestIndices = new PWindowedBuffer(4);
@@ -119,9 +112,8 @@ public class PModelGen implements PPostableTask {
     @Getter
     private int numVertices = 0;
 
-    private Part(@NonNull String name, boolean isPhysicsPart, PVertexAttributes vertexAttributes) {
+    private Part(@NonNull String name, @NonNull PVertexAttributes vertexAttributes) {
       this.name = name;
-      this.isPhysicsPart = isPhysicsPart;
       this.vertexAttributes = vertexAttributes;
       currentVertexValues = new float[vertexAttributes.getNumFloatsPerVertex()];
     }
@@ -267,6 +259,67 @@ public class PModelGen implements PPostableTask {
       indices().add((short) latestIndices().get(flip ? 0 : 1));
       indices().add((short) latestIndices().get(flip ? 1 : 0));
       return this;
+    }
+  }
+
+  public static class StaticPhysicsPart {
+    private static final int MAX_SEARCH_DEPTH = 100;
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    @Accessors(fluent = true)
+    private final PList<Short> indices = new PList<>();
+    @Getter(value = AccessLevel.PRIVATE)
+    @Accessors(fluent = true)
+    private final String name;
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    @Accessors(fluent = true)
+    private final PList<Float> vertices = new PList<>();
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    private static final PVertexAttributes vertexAttributes = PVertexAttributes.getPOSITION();
+
+    private StaticPhysicsPart(@NonNull String name) {
+      this.name = name;
+    }
+
+    private StaticPhysicsPart copyLastTri(Part part) {
+      int indexOfPosAttrInPartVertexFloatArray =
+          part.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+      int partFloatsPerVertex = part.vertexAttributes().getNumFloatsPerVertex();
+      float x, y, z;
+      x = part.vertices().get(partFloatsPerVertex * part.indices().get(-3) + indexOfPosAttrInPartVertexFloatArray + 0);
+      y = part.vertices().get(partFloatsPerVertex * part.indices().get(-3) + indexOfPosAttrInPartVertexFloatArray + 1);
+      z = part.vertices().get(partFloatsPerVertex * part.indices().get(-3) + indexOfPosAttrInPartVertexFloatArray + 2);
+      indices().add(getIndexOrAdd(x, y, z, MAX_SEARCH_DEPTH));
+      x = part.vertices().get(partFloatsPerVertex * part.indices().get(-2) + indexOfPosAttrInPartVertexFloatArray + 0);
+      y = part.vertices().get(partFloatsPerVertex * part.indices().get(-2) + indexOfPosAttrInPartVertexFloatArray + 1);
+      z = part.vertices().get(partFloatsPerVertex * part.indices().get(-2) + indexOfPosAttrInPartVertexFloatArray + 2);
+      indices().add(getIndexOrAdd(x, y, z, MAX_SEARCH_DEPTH));
+      x = part.vertices().get(partFloatsPerVertex * part.indices().get(-1) + indexOfPosAttrInPartVertexFloatArray + 0);
+      y = part.vertices().get(partFloatsPerVertex * part.indices().get(-1) + indexOfPosAttrInPartVertexFloatArray + 1);
+      z = part.vertices().get(partFloatsPerVertex * part.indices().get(-1) + indexOfPosAttrInPartVertexFloatArray + 2);
+      indices().add(getIndexOrAdd(x, y, z, MAX_SEARCH_DEPTH));
+      return this;
+    }
+
+    private short getIndexOrAdd(final float x, final float y, final float z, final int maxSearchDepth) {
+      for (int a = 0; a < maxSearchDepth; a++) {
+        int lookupIndex = vertices().size - 3 * (1 + a);
+        if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 0), x)) {
+          continue;
+        }
+        if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 1), y)) {
+          continue;
+        }
+        if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 2), z)) {
+          continue;
+        }
+        return (short) (lookupIndex / 3);
+      }
+      // We reached the max search depth (or bottom) without finding a match for the position, so add new position.
+      short ret = (short) (vertices().size / 3);
+      vertices().add(x);
+      vertices().add(y);
+      vertices().add(z);
+      return ret;
     }
   }
 }

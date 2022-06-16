@@ -31,7 +31,7 @@ public class PPointLight extends PLight implements Pool.Poolable {
   @Override public void reset() {
     transform().reset();
     color().setZero();
-    attenuation().set(1, 1, 1, 0.05f);
+    attenuation().set(2, 1, 1, 0.05f);
   }
 
   public static void assertMeshReady() {
