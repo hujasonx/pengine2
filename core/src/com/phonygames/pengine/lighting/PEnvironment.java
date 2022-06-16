@@ -73,12 +73,13 @@ public class PEnvironment {
     ambientAndDirectionalLightShader.end();
     // Point lights.
     lightsFloatBuffer.reset();
+    renderContext.setCullFaceFront(); // The rest of the models should have cull face front.
     int numLights = 0;
     int vecsPerInstance = 0;
     for (val pointLight : pointLights) {
       int vecsPut = pointLight.addInstanceData(lightsFloatBuffer);
       if (vecsPut > 0) {
-        numLights ++;
+        numLights++;
         vecsPerInstance = vecsPut;
       }
     }

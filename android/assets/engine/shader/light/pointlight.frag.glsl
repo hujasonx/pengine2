@@ -25,6 +25,7 @@ void main() {
     float normalFactor = clamp(dot(worldPosDeltaToCenter, normal), 0.0, 1.0);
     lighted = vec4(attenuationFactor * normalFactor * diffuse, 0.0);
 
+
     #include <engine/shader/end/light.frag>
     #include <engine/shader/end/rendercontext.frag>
     #include <engine/shader/end/instanced.frag>

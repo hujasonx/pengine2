@@ -288,7 +288,7 @@ public class PRenderContext {
   }
 
   public PRenderContext setCullFaceFront() {
-    setCullFace(GL20.GL_BACK);
+    setCullFace(GL20.GL_FRONT);
     return this;
   }
 

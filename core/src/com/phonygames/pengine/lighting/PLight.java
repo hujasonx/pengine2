@@ -21,9 +21,10 @@ public abstract class PLight {
   public static float attenuationCutoffDistance(PVec4 attenuation) {
     // cutoff is attenuation.w
     // cutoff = 1 / (ax^2 + bx + c)
-    // ax^2 + bx + c = 1 / cutoffC
+    // ax^2 + bx + c = 1 / cutoff
     // ax^2 + bx + c - 1 / cutoff = 0
-    return PMath.quadraticFormulaPositive(attenuation.x(), attenuation.y(), attenuation.z() - 1 / attenuation.w());
+    // x is where the distance from the light source results in an attenuation equal to the cutoff.
+    return PMath.quadraticFormulaPositive(attenuation.x(), attenuation.y(), attenuation.z() - 1f / attenuation.w());
   }
 
   public static void initMeshes() {
