@@ -1,18 +1,24 @@
-package com.phonygames.pengine.graphics.model.gen;
+package com.phonygames.pengine.graphics.model;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
-import com.phonygames.pengine.graphics.model.PGlNode;
-import com.phonygames.pengine.graphics.model.PMesh;
-import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
+import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPostableTask;
 import com.phonygames.pengine.util.PPostableTaskQueue;
@@ -75,19 +81,29 @@ public class PModelGen implements PPostableTask {
   protected void modelEnd() {
   }
 
-  protected PModelGen chainGlNode(PList<PGlNode> list, Part part, PMaterial defaultMaterial,
-                                  ArrayMap<String, PMat4> boneInvBindTransforms) {
+  protected PModelGen chainGlNode(@Nullable PList<PGlNode> list, @NonNull Part part, @NonNull PMaterial defaultMaterial,
+                                  @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer) {
     if (list == null) {
       list = new PList<>();
     }
     val glNode = new PGlNode(part.name);
     glNode.drawCall().setMesh(part.getMesh());
     glNode.drawCall().setMaterial(defaultMaterial);
+    glNode.drawCall().setLayer(layer);
     if (boneInvBindTransforms != null) {
       glNode.invBoneTransforms().putAll(boneInvBindTransforms);
     }
     list.add(glNode);
     return this;
+  }
+
+  public void emitStaticPhysicsPartIntoModelBuilder(PModel.Builder builder) {
+    for (val e : staticPhysicsParts) {
+      btBvhTriangleMeshShape triangleMeshShape = e.v().getTriangleMeshShape();
+      PPhysicsCollisionShape<btBvhTriangleMeshShape> collisionShape =
+          new PPhysicsCollisionShape<btBvhTriangleMeshShape>(triangleMeshShape) {};
+      builder.model.staticCollisionShapes().put(e.k(), collisionShape);
+    }
   }
 
   public static class Part {
@@ -264,6 +280,9 @@ public class PModelGen implements PPostableTask {
 
   public static class StaticPhysicsPart {
     private static final int MAX_SEARCH_DEPTH = 100;
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
+    private static final PVertexAttributes vertexAttributes = PVertexAttributes.getPHYSICS();
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     @Accessors(fluent = true)
     private final PList<Short> indices = new PList<>();
@@ -273,8 +292,6 @@ public class PModelGen implements PPostableTask {
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     @Accessors(fluent = true)
     private final PList<Float> vertices = new PList<>();
-    @Getter(value = AccessLevel.PUBLIC, lazy = true)
-    private static final PVertexAttributes vertexAttributes = PVertexAttributes.getPOSITION();
 
     private StaticPhysicsPart(@NonNull String name) {
       this.name = name;
@@ -319,6 +336,17 @@ public class PModelGen implements PPostableTask {
       vertices().add(x);
       vertices().add(y);
       vertices().add(z);
+      return ret;
+    }
+
+    public btBvhTriangleMeshShape getTriangleMeshShape() {
+      PMesh pMesh = new PMesh(true, vertices(), indices(), vertexAttributes());
+      Mesh mesh = pMesh.getBackingMesh();
+      ModelBuilder modelBuilder = new ModelBuilder();
+      modelBuilder.begin();
+      modelBuilder.part(name, mesh, GL20.GL_TRIANGLES, new Material());
+      Model model = modelBuilder.end();
+      btBvhTriangleMeshShape ret = new btBvhTriangleMeshShape(model.meshParts);
       return ret;
     }
   }

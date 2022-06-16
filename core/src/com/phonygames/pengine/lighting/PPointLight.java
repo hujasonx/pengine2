@@ -4,7 +4,7 @@ import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
-import com.phonygames.pengine.graphics.model.gen.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.gen.PUVSphereGen;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;

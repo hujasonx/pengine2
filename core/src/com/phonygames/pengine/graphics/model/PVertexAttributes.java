@@ -128,11 +128,11 @@ public class PVertexAttributes {
     }
 
     public static final class Keys {
-      public static final String bon[] = new String[4];
-      public static final String col[] = new String[4];
+      public static final String bon[] = new String[8];
+      public static final String col[] = new String[8];
       public static final String nor = "a_nor";
       public static final String pos = "a_pos";
-      public static final String uv[] = new String[4];
+      public static final String uv[] = new String[8];
     }
   }
 }

@@ -3,6 +3,7 @@ package com.phonygames.pengine.graphics.model;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
+import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
@@ -16,6 +17,7 @@ import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PModelInstance {
+  private static final PList<PModelInstance> tempModelInstanceList = new PList<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PStringMap<PGlNode> glNodes = new PStringMap<>();
@@ -62,6 +64,12 @@ public class PModelInstance {
         childToParentNodeMap.put(child, node);
       }
     }
+  }
+
+  public void enqueue(PRenderContext renderContext, PShaderProvider shaderProvider) {
+    tempModelInstanceList.clear();
+    tempModelInstanceList.add(this);
+    model().enqueue(renderContext, shaderProvider, tempModelInstanceList, true);
   }
 
   public Node getNode(@NonNull String id) {

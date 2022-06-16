@@ -2,6 +2,7 @@ package com.phonygames.pengine.graphics.model.gen;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool;
+import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PPool;

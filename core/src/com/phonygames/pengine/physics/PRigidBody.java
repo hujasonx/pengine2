@@ -43,6 +43,7 @@ public class PRigidBody implements PPool.Poolable {
         new btRigidBody.btRigidBodyConstructionInfo(mass, null, collisionShape.collisionShape,
                                                     tempVec3.set(ret.localInertia().x(), ret.localInertia().y(),
                                                                  ret.localInertia().z()));
+    ret.collisionShape = collisionShape;
     ret.rigidBody = new btRigidBody(constructionInfo);
     ret.rigidBody.setCollisionShape(collisionShape.collisionShape);
     ret.group = group;

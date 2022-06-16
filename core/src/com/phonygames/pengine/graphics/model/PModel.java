@@ -2,12 +2,14 @@ package com.phonygames.pengine.graphics.model;
 
 import android.support.annotation.NonNull;
 
+import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PStringMap;
@@ -22,6 +24,9 @@ public class PModel {
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PStringMap<PAnimation> animations = new PStringMap<>();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final PStringMap<PPhysicsCollisionShape<btBvhTriangleMeshShape>> staticCollisionShapes = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PStringMap<Node> nodes = new PStringMap<>();
@@ -83,7 +88,7 @@ public class PModel {
   }
 
   public static class Builder extends PBuilder {
-    private PModel model = new PModel();
+    protected final PModel model = new PModel();
 
     public Node addNode(String id, Node parent, PList<PGlNode> glNodes, PMat4 transform) {
       checkLock();
