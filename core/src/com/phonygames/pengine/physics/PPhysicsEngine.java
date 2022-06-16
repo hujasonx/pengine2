@@ -1,5 +1,6 @@
 package com.phonygames.pengine.physics;
 
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
@@ -20,15 +21,15 @@ import com.phonygames.pengine.util.PSet;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PPhysicsEngine {
+  public static final short ALL_FLAG = -1;
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private static final PSet<PPhysicsCollisionShape> collisionShapes = new PSet<>();
-
-  private static boolean inited = false, enableDebugRender = false;
   public static btMultiBodyDynamicsWorld dynamicsWorld;
   private static btDbvtBroadphase broadphase;
   private static ClosestRayResultCallback closestRayResultCallback;
@@ -36,8 +37,12 @@ public class PPhysicsEngine {
   private static btMultiBodyConstraintSolver constraintSolver;
   //  private static ContactListener bulletContactListener;
   private static DebugDrawer debugDrawer;
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private static Camera debugDrawerCamera;
   private static btDispatcher dispatcher;
   private static btGhostPairCallback ghostPairCallback;
+  private static boolean inited = false, enableDebugRender = true;
   private static btPersistentManifold sharedManifold;
 
   public static void dispose() {
@@ -45,6 +50,10 @@ public class PPhysicsEngine {
       e.dispose();
     }
     collisionShapes().clear();
+  }
+
+  public static void enableDebugRender(boolean enabled) {
+    enableDebugRender = enabled;
   }
 
   public static void init() {
@@ -71,19 +80,21 @@ public class PPhysicsEngine {
     inited = true;
   }
 
+  public static void postFrameUpdate() {
+    if (!enableDebugRender || !inited) {
+      return;
+    }
+    PAssert.isNotNull(debugDrawerCamera);
+    debugDrawer.begin(debugDrawerCamera);
+    dynamicsWorld.debugDrawWorld();
+    debugDrawer.end();
+  }
+
   public static void postLogicUpdate() {
     if (!inited) {
       return;
     }
     dynamicsWorld.stepSimulation(PEngine.logictimestep);
-  }
-
-  public static void postFrameUpdate() {
-
-  }
-
-  public static void enableDebugRender(boolean enabled) {
-    enableDebugRender = enabled;
   }
 
   protected static void trackShape(PPhysicsCollisionShape collisionShape) {

@@ -15,6 +15,7 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.physics.PPhysicsEngine;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PPool;
@@ -106,6 +107,10 @@ public class PRenderContext {
     PAssert.isTrue(isActive());
     backingRenderContext().setDepthTest(0);
     return this;
+  }
+
+  public void setPhysicsDebugDrawerCameraFromSelf() {
+    PPhysicsEngine.debugDrawerCamera(perspectiveCamera());
   }
 
   public boolean isActive() {

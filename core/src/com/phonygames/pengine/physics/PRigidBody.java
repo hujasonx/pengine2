@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PPool;
 
@@ -34,6 +35,18 @@ public class PRigidBody implements PPool.Poolable {
   private btRigidBody rigidBody;
 
   private PRigidBody() {
+  }
+
+  public PRigidBody setWorldTransform(PMat4 mat4) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setWorldTransform(mat4.getBackingMatrix4());
+    return this;
+  }
+
+  public PMat4 getWorldTransform(PMat4 mat4) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.getWorldTransform(mat4.getBackingMatrix4());
+    return mat4;
   }
 
   public static PRigidBody obtain(@NonNull PPhysicsCollisionShape collisionShape, float mass, int group, int mask) {

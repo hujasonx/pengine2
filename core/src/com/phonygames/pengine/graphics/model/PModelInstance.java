@@ -5,6 +5,8 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.physics.PPhysicsEngine;
+import com.phonygames.pengine.physics.PStaticBody;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PStringMap;
@@ -33,6 +35,9 @@ public class PModelInstance {
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PList<Node> rootNodes = new PList<>();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final PStringMap<PStaticBody> staticBodies = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PMat4 worldTransform = PMat4.obtain();
@@ -64,6 +69,17 @@ public class PModelInstance {
         childToParentNodeMap.put(child, node);
       }
     }
+  }
+
+  public PModelInstance createAndAddStaticBodiesFromModelWithCurrentWorldTransform() {
+    for (val e : model.staticCollisionShapes()) {
+      if (staticBodies().has(e.k())) {continue;}
+      PStaticBody staticBody = PStaticBody.obtain(e.v(), PPhysicsEngine.ALL_FLAG, PPhysicsEngine.ALL_FLAG);
+      staticBody.setWorldTransform(worldTransform());
+      staticBodies().put(e.k(), staticBody);
+      staticBody.addToDynamicsWorld();
+    }
+    return this;
   }
 
   public void enqueue(PRenderContext renderContext, PShaderProvider shaderProvider) {

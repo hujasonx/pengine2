@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -200,12 +199,22 @@ public class PModelGen implements PPostableTask {
     }
 
     public Part quad(boolean flip) {
+      return quad(flip, null);
+    }
+
+    public Part quad(boolean flip, @Nullable StaticPhysicsPart copyTo) {
       indices().add((short) latestIndices().get(3));
       indices().add((short) latestIndices().get(flip ? 1 : 2));
       indices().add((short) latestIndices().get(flip ? 2 : 1));
+      if (copyTo != null) {
+        copyTo.copyLastTri(this);
+      }
       indices().add((short) latestIndices().get(3));
       indices().add((short) latestIndices().get(flip ? 0 : 1));
       indices().add((short) latestIndices().get(flip ? 1 : 0));
+      if (copyTo != null) {
+        copyTo.copyLastTri(this);
+      }
       return this;
     }
 
@@ -271,9 +280,16 @@ public class PModelGen implements PPostableTask {
     }
 
     public Part tri(boolean flip) {
+      return tri(flip, null);
+    }
+
+    public Part tri(boolean flip, @Nullable StaticPhysicsPart copyTo) {
       indices().add((short) latestIndices().get(2));
       indices().add((short) latestIndices().get(flip ? 0 : 1));
       indices().add((short) latestIndices().get(flip ? 1 : 0));
+      if (copyTo != null) {
+        copyTo.copyLastTri(this);
+      }
       return this;
     }
   }
@@ -318,18 +334,20 @@ public class PModelGen implements PPostableTask {
     }
 
     private short getIndexOrAdd(final float x, final float y, final float z, final int maxSearchDepth) {
-      for (int a = 0; a < maxSearchDepth; a++) {
-        int lookupIndex = vertices().size - 3 * (1 + a);
-        if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 0), x)) {
-          continue;
+      if (!vertices().isEmpty()) {
+        for (int a = 0; a < maxSearchDepth; a++) {
+          int lookupIndex = vertices().size - 3 * (1 + a);
+          if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 0), x)) {
+            continue;
+          }
+          if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 1), y)) {
+            continue;
+          }
+          if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 2), z)) {
+            continue;
+          }
+          return (short) (lookupIndex / 3);
         }
-        if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 1), y)) {
-          continue;
-        }
-        if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 2), z)) {
-          continue;
-        }
-        return (short) (lookupIndex / 3);
       }
       // We reached the max search depth (or bottom) without finding a match for the position, so add new position.
       short ret = (short) (vertices().size / 3);

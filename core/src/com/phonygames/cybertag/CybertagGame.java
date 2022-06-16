@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.math.MathUtils;
+import com.phonygames.cybertag.world.World;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
@@ -35,8 +36,7 @@ public class CybertagGame implements PGame {
   private PPbrPipeline pPbrPipeline;
   private PRenderContext renderContext;
   private PModel testBoxModel;
-  private PModelInstance testBoxModelInstance;
-  private PModel testModel2;
+  private World world;
 
   @Override public void frameUpdate() {
     renderContext.cameraRange().y(1000);
@@ -44,7 +44,10 @@ public class CybertagGame implements PGame {
     renderContext.cameraUp().set(0, 1, 0);
     renderContext.cameraDir().set(-1, -1, -1);
     renderContext.start();
+    renderContext.setPhysicsDebugDrawerCameraFromSelf();
     pPbrPipeline.attach(renderContext);
+    world.render(renderContext);
+
     // Set environment.
     environment.setAmbientLightCol(0, 0, 0);
     PVec3 tempV3 = PVec3.obtain().set(-1, -1, -1).nor();
@@ -82,9 +85,6 @@ public class CybertagGame implements PGame {
     //      // Enqueue the model instances into the buffer.
     //      duckModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, duckModelInstances, false);
     //    }
-    if (testBoxModelInstance != null) {
-      testBoxModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
-    }
     renderContext.glRenderQueue();
     renderContext.end();
   }
@@ -113,34 +113,7 @@ public class CybertagGame implements PGame {
     for (int a = 0; a < testLights.length; a++) {
       environment.addLight(testLights[a] = new PPointLight());
     }
-    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
-      PModelGen.Part basePart;
-
-      @Override protected void modelIntro() {
-        basePart = addPart("base", new PVertexAttributes(
-            new VertexAttribute[]{PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos),
-                                  PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.nor)}));
-      }
-
-      @Override protected void modelMiddle() {
-        basePart.set(PVertexAttributes.Attribute.Keys.nor, 1, 0, 0);
-        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, -1, 0).emitVertex();
-        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, -1, 0).emitVertex();
-        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, 1, 0).emitVertex();
-        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, 1, 0).emitVertex();
-        basePart.quad(false);
-      }
-
-      @Override protected void modelEnd() {
-        PList<PGlNode> glNodes = new PList<>();
-        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null), null, "PBR");
-        PModel.Builder builder = new PModel.Builder();
-        emitStaticPhysicsPartIntoModelBuilder(builder);
-        builder.addNode("box", null, glNodes, PMat4.IDT);
-        testBoxModel = builder.build();
-        testBoxModelInstance = new PModelInstance(testBoxModel);
-      }
-    });
+    world = new World();
   }
 
   @Override public void logicUpdate() {
