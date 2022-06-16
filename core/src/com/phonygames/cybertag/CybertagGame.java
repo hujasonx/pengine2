@@ -2,29 +2,27 @@ package com.phonygames.cybertag;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.world.World;
+import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PPbrPipeline;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
-import com.phonygames.pengine.graphics.material.PMaterial;
-import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModel;
-import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PModelInstance;
-import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PStringMap;
 
 public class CybertagGame implements PGame {
   protected final PRenderBuffer[] gBuffers = new PRenderBuffer[4];
@@ -47,7 +45,6 @@ public class CybertagGame implements PGame {
     renderContext.setPhysicsDebugDrawerCameraFromSelf();
     pPbrPipeline.attach(renderContext);
     world.render(renderContext);
-
     // Set environment.
     environment.setAmbientLightCol(0, 0, 0);
     PVec3 tempV3 = PVec3.obtain().set(-1, -1, -1).nor();
@@ -59,53 +56,45 @@ public class CybertagGame implements PGame {
                                                  MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
                                                  MathUtils.sin(PEngine.t * .4f + 2f + 3 * a) * 2);
     }
-    //    if (catModel != null) {
-    //      // Process the cat model instances.
-    //      PAnimation animation = catModel.animations().get("All Animations");
-    //      for (int a = 0; a < catModelInstances.size; a++) {
-    //        PModelInstance modelInstance = catModelInstances.get(a);
-    //        modelInstance.worldTransform().idt().setToTranslation(a * .3f, 0, 0).rot(0, 1, 0, 0);
-    //        PStringMap<PMat4> transformMap =
-    //            modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true, 1);
-    //        animation.apply(transformMap, (PEngine.t + a) % animation.getLength(), 1f);
-    //        modelInstance.setNodeTransformsFromMap(transformMap, 1f);
-    //        transformMap.clearRecursive();
-    //        PMat4.getMat4StringMapsPool().free(transformMap);
-    //        modelInstance.recalcTransforms();
-    //      }
-    //      // Enqueue the model instances into the buffer.
-    //      catModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, catModelInstances, false);
-    //    }
-    //    if (duckModel != null) {
-    //      for (int a = 0; a < duckModelInstances.size; a++) {
-    //        PModelInstance modelInstance = duckModelInstances.get(a);
-    //        modelInstance.worldTransform().idt().setToTranslation(a * .2f, 0, 1).scl(.1f).rot(0, 1, 0, a);
-    //        modelInstance.recalcTransforms();
-    //      }
-    //      // Enqueue the model instances into the buffer.
-    //      duckModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, duckModelInstances, false);
-    //    }
+    if (catModel != null) {
+      // Process the cat model instances.
+      PAnimation animation = catModel.animations().get("All Animations");
+      for (int a = 0; a < catModelInstances.size; a++) {
+        PModelInstance modelInstance = catModelInstances.get(a);
+        modelInstance.worldTransform().idt().setToTranslation(a * .3f, 0, 0).rot(0, 1, 0, 0);
+        PStringMap<PMat4> transformMap =
+            modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true, 1);
+        animation.apply(transformMap, (PEngine.t + a) % animation.getLength(), 1f);
+        modelInstance.setNodeTransformsFromMap(transformMap, 1f);
+        transformMap.clearRecursive();
+        PMat4.getMat4StringMapsPool().free(transformMap);
+        modelInstance.recalcTransforms();
+      }
+      // Enqueue the model instances into the buffer.
+      catModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, catModelInstances, false);
+    }
+    if (duckModel != null) {
+      for (int a = 0; a < duckModelInstances.size; a++) {
+        PModelInstance modelInstance = duckModelInstances.get(a);
+        modelInstance.worldTransform().idt().setToTranslation(a * .7f, 0, 1).scl(.1f).rot(0, 1, 0, a);
+        modelInstance.recalcTransforms();
+      }
+      // Enqueue the model instances into the buffer.
+      duckModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, duckModelInstances, false);
+    }
     renderContext.glRenderQueue();
     renderContext.end();
   }
 
   @Override public void init() {
-    new PGltf("engine/model/Persian.glb").loadThenDo(new PGltf.OnloadCallback() {
-      @Override public void onLoad(PGltf gltf) {
-        catModel = gltf.getModel();
-        for (int a = 0; a < 10; a++) {
-          catModelInstances.add(new PModelInstance(catModel));
-        }
-      }
-    });
-    new PGltf("engine/model/duck.glb").loadThenDo(new PGltf.OnloadCallback() {
-      @Override public void onLoad(PGltf gltf) {
-        duckModel = gltf.getModel();
-        for (int a = 0; a < 10; a++) {
-          duckModelInstances.add(new PModelInstance(duckModel));
-        }
-      }
-    });
+    catModel = PAssetManager.model("engine/model/Persian.glb", true);
+    for (int a = 0; a < 10; a++) {
+      catModelInstances.add(new PModelInstance(catModel));
+    }
+    duckModel = PAssetManager.model("engine/model/duck.glb", true);
+    for (int a = 0; a < 10; a++) {
+      duckModelInstances.add(new PModelInstance(duckModel));
+    }
     renderContext = new PRenderContext();
     pPbrPipeline = new PPbrPipeline();
     environment = new PEnvironment();

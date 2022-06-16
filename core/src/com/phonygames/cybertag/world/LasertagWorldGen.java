@@ -3,6 +3,7 @@ package com.phonygames.cybertag.world;
 import android.support.annotation.NonNull;
 
 import com.badlogic.gdx.graphics.VertexAttribute;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PModel;
@@ -13,10 +14,12 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PList;
 
 public class LasertagWorldGen {
+  private boolean wasGenned = false;
   public LasertagWorldGen() {
   }
 
   public void gen(@NonNull final OnFinishedCallback onFinishedCallback) {
+    PAssert.isFalse(wasGenned);
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
       PModelGen.Part basePart;
       PModelGen.StaticPhysicsPart basePhysicsPart;
@@ -44,6 +47,7 @@ public class LasertagWorldGen {
         emitStaticPhysicsPartIntoModelBuilder(builder);
         builder.addNode("box", null, glNodes, PMat4.IDT);
         onFinishedCallback.onFinished(builder.build());
+        wasGenned = true;
       }
     });
   }

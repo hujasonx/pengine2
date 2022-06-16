@@ -5,10 +5,9 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.phonygames.pengine.file.PFileHandleUtils;
-import com.phonygames.pengine.graphics.model.PGltf;
+import com.phonygames.pengine.graphics.model.PGLBAssetLoader;
+import com.phonygames.pengine.graphics.model.PModel;
 
-import net.mgsx.gltf.loaders.glb.GLBAssetLoader;
-import net.mgsx.gltf.loaders.gltf.GLTFAssetLoader;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
 
 import java.util.List;
@@ -19,16 +18,19 @@ public class PAssetManager {
   @Getter
   private static final AssetManager assetManager = new AssetManager();
 
+  public static void dispose() {
+    assetManager.dispose();
+  }
+
   public static void init() {
-    assetManager.setLoader(SceneAsset.class, ".glb", new GLBAssetLoader());
-    assetManager.setLoader(SceneAsset.class, ".gltf", new GLTFAssetLoader());
+    assetManager.setLoader(PModel.class, ".glb", new PGLBAssetLoader());
     List<FileHandle> textureAtlasFiles = PFileHandleUtils.allFilesRecursive(Gdx.files.local(""), "atlas");
     List<FileHandle> gltfFiles = PFileHandleUtils.allFilesRecursive(Gdx.files.local(""), "glb|gltf");
     for (FileHandle f : textureAtlasFiles) {
       assetManager.load(f.path(), TextureAtlas.class);
     }
     for (FileHandle f : gltfFiles) {
-      assetManager.load(f.path(), SceneAsset.class);
+      assetManager.load(f.path(), PModel.class);
     }
   }
 
@@ -36,13 +38,18 @@ public class PAssetManager {
     return assetManager.isLoaded(id);
   }
 
-  public static void preFrameUpdate() {
-    PGltf.triggerLoads();
-    assetManager.update();
+  public static PModel model(String filename, boolean blockIfUnloaded) {
+    if (assetManager.isLoaded(filename)) {
+      return assetManager.get(filename);
+    }
+    if (blockIfUnloaded) {
+      return assetManager.finishLoadingAsset(filename);
+    }
+    return null;
   }
 
-  public static SceneAsset sceneAsset(String id) {
-    return assetManager.get(id, SceneAsset.class);
+  public static void preFrameUpdate() {
+    assetManager.update();
   }
 
   public static class Directories {}
