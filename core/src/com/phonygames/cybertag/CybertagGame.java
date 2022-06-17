@@ -37,19 +37,19 @@ public class CybertagGame implements PGame {
   private World world;
 
   @Override public void frameUpdate() {
-    renderContext.cameraRange().y(1000);
-    renderContext.cameraPos().set(2, 2, 2);
+    renderContext.cameraRange().set(.1f, 1000);
+    renderContext.cameraPos().set(.8f, 1, .8f);
     renderContext.cameraUp().set(0, 1, 0);
-    renderContext.cameraDir().set(-1, -1, -1);
+    renderContext.cameraDir().set(-.2f, -.5f, -.2f);
     renderContext.start();
     renderContext.setPhysicsDebugDrawerCameraFromSelf();
     pPbrPipeline.attach(renderContext);
     world.render(renderContext);
     // Set environment.
-    environment.setAmbientLightCol(0, 0, 0);
-    PVec3 tempV3 = PVec3.obtain().set(-1, -1, -1).nor();
+    environment.setAmbientLightCol(.1f, .1f, .1f);
+    PVec3 tempV3 = PVec3.obtain().set(1, -1, -1).nor();
     environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
-    environment.setDirectionalLightColor(0, 0, 0, 0);
+    environment.setDirectionalLightColor(0, .3f, .3f, .3f);
     tempV3.free();
     for (int a = 0; a < testLights.length; a++) {
       testLights[a].transform().setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2,
