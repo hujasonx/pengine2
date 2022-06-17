@@ -23,6 +23,8 @@ public class PMesh {
   private final PVertexAttributes vertexAttributes;
   @Getter
   private boolean autobind = false;
+  private float[] backingMeshFloats;
+  private short[] backingMeshShorts;
 
   public PMesh(Mesh mesh, PVertexAttributes vertexAttributes) {
     backingMesh = mesh;
@@ -97,6 +99,21 @@ public class PMesh {
         FULLSCREEN_QUAD_MESH = basePart.getMesh();
       }
     }.buildSynchronous();
+  }
+
+  public float[] getBackingMeshFloats() {
+    if (backingMeshFloats == null) {
+      backingMesh.getVertices(
+          backingMeshFloats = new float[backingMesh.getNumVertices() * vertexAttributes().getNumFloatsPerVertex()]);
+    }
+    return backingMeshFloats;
+  }
+
+  public short[] getBackingMeshShorts() {
+    if (backingMeshShorts == null) {
+      backingMesh.getIndices(backingMeshShorts = new short[backingMesh.getNumIndices()]);
+    }
+    return backingMeshShorts;
   }
 
   public void glRenderInstanced(PShader shader, int numInstances) {

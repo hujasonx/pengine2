@@ -1,8 +1,10 @@
 package com.phonygames.pengine.graphics.model;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
+import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
@@ -26,13 +28,13 @@ public class PModel {
   private final PStringMap<PAnimation> animations = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
-  private final PStringMap<PPhysicsCollisionShape<btBvhTriangleMeshShape>> staticCollisionShapes = new PStringMap<>();
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
-  @Accessors(fluent = true)
   private final PStringMap<Node> nodes = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PList<String> rootNodeIds = new PList<>();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final PStringMap<PPhysicsCollisionShape<btBvhTriangleMeshShape>> staticCollisionShapes = new PStringMap<>();
 
   private PModel() {
   }
@@ -75,6 +77,27 @@ public class PModel {
     renderContext.snapshotBufferOffsets();
   }
 
+  public @Nullable PGlNode getFirstNode() {
+    for (String nodeId : rootNodeIds()) {
+      val node = nodes().get(nodeId);
+      for (PGlNode glNode : node.glNodes()) {
+        return glNode;
+      }
+    }
+    return null;
+  }
+
+  public @Nullable PGlNode glNodeWithId(String id) {
+    for (String nodeId : rootNodeIds()) {
+      val node = nodes().get(nodeId);
+      for (PGlNode glNode : node.glNodes()) {
+        if (glNode.id().equals(id))
+        return glNode;
+      }
+    }
+    return null;
+  }
+
   // Will use the material of the first instance. So make sure all buffers point to the same source!
   public void render(PList<PModelInstance> instances) {
     for (PModelInstance instance : instances) {
@@ -107,7 +130,7 @@ public class PModel {
     }
   }
 
-  protected static class Node {
+  public static class Node {
     @Getter(value = AccessLevel.PUBLIC, lazy = true)
     @Accessors(fluent = true)
     private final PList<Node> children = new PList<>();

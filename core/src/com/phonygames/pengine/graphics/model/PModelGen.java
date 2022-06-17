@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -98,6 +99,7 @@ public class PModelGen implements PPostableTask {
 
   public void emitStaticPhysicsPartIntoModelBuilder(PModel.Builder builder) {
     for (val e : staticPhysicsParts) {
+      if (e.v().indices().isEmpty()) {continue;}
       btBvhTriangleMeshShape triangleMeshShape = e.v().getTriangleMeshShape();
       PPhysicsCollisionShape<btBvhTriangleMeshShape> collisionShape =
           new PPhysicsCollisionShape<btBvhTriangleMeshShape>(triangleMeshShape) {};
@@ -106,7 +108,7 @@ public class PModelGen implements PPostableTask {
   }
 
   public static class Part {
-    @Getter(value = AccessLevel.PRIVATE)
+    @Getter(value = AccessLevel.PROTECTED)
     @Accessors(fluent = true)
     private final float[] currentVertexValues;
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
@@ -118,7 +120,7 @@ public class PModelGen implements PPostableTask {
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private final String name;
-    @Getter(value = AccessLevel.PRIVATE)
+    @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private final PVertexAttributes vertexAttributes;
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
@@ -140,8 +142,98 @@ public class PModelGen implements PPostableTask {
       return this;
     }
 
+    public Part emit(@NonNull PMesh mesh, @Nullable StaticPhysicsPart staticPhysicsPart, @NonNull PMat4 transform,
+                     @NonNull PVertexAttributes attributesToCopy) {
+      @NonNull final float[] meshVerts = mesh.getBackingMeshFloats();
+      @NonNull final short[] meshShorts = mesh.getBackingMeshShorts();
+      int meshFloatsPerVert = mesh.vertexAttributes().getNumFloatsPerVertex();
+      for (int meshVIndex = 0; meshVIndex < meshShorts.length; meshVIndex++) { // Loop through all vertices in the mesh.
+        for (VertexAttribute vertexAttribute : mesh.vertexAttributes().getBackingVertexAttributes()) {
+          if (attributesToCopy.hasAttributeWithName(vertexAttribute.alias) &&
+              this.vertexAttributes.hasAttributeWithName(
+                  vertexAttribute.alias)) { // Loop through all the vertex attributes and ensure they are valid.
+            PAssert.isFalse(vertexAttribute.usage == VertexAttribute.ColorUnpacked().usage);
+            int lookupIndexStart = meshShorts[meshVIndex] * meshFloatsPerVert +
+                                   mesh.vertexAttributes().indexForVertexAttribute(vertexAttribute);
+            switch (vertexAttribute.numComponents) {
+              case 1:
+                set(vertexAttribute.alias, meshVerts[lookupIndexStart]);
+                break;
+              case 2:
+                set(vertexAttribute.alias, meshVerts[lookupIndexStart + 0], meshVerts[lookupIndexStart + 1]);
+                break;
+              // TODO: transform.
+              case 3:
+                PVec3 tempResult = PVec3.obtain().set(meshVerts[lookupIndexStart + 0], meshVerts[lookupIndexStart + 1],
+                                                      meshVerts[lookupIndexStart + 2]);
+                PVertexAttributes.transformVecWithMatrix(vertexAttribute, tempResult, transform);
+                set(vertexAttribute.alias, tempResult);
+                tempResult.free();
+                break;
+              case 4:
+                set(vertexAttribute.alias, meshVerts[lookupIndexStart + 0], meshVerts[lookupIndexStart + 1],
+                    meshVerts[lookupIndexStart + 2], meshVerts[lookupIndexStart + 3]);
+                break;
+              default:
+                PAssert.fail(
+                    "Invalid vertexAttribute size: " + vertexAttribute.numComponents + " for " + vertexAttribute.alias);
+            }
+          }
+        }
+        emitVertex();
+        if (meshVIndex % 3 == 2) { // Emit the triangle.
+          tri(false, staticPhysicsPart);
+        }
+      }
+      return this;
+    }
+
+    public Part set(String alias, float x) {
+      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = x;
+      return this;
+    }
+
+    public Part set(String alias, float x, float y) {
+      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = x;
+      currentVertexValues()[ind + 1] = y;
+      return this;
+    }
+
+    public Part set(String alias, PVec3 vec) {
+      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
+      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = vec.x();
+      currentVertexValues()[ind + 1] = vec.y();
+      currentVertexValues()[ind + 2] = vec.z();
+      return this;
+    }
+
+    public Part set(String alias, float x, float y, float z, float w) {
+      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
+      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      currentVertexValues()[ind + 0] = x;
+      currentVertexValues()[ind + 1] = y;
+      currentVertexValues()[ind + 2] = z;
+      currentVertexValues()[ind + 3] = w;
+      return this;
+    }
+
     public Part emitVertex() {
       return emitVertex(100);
+    }
+
+    public Part tri(boolean flip, @Nullable StaticPhysicsPart copyTo) {
+      indices().add((short) latestIndices().get(2));
+      indices().add((short) latestIndices().get(flip ? 0 : 1));
+      indices().add((short) latestIndices().get(flip ? 1 : 0));
+      if (copyTo != null) {
+        copyTo.copyLastTri(this);
+      }
+      return this;
     }
 
     public Part emitVertex(int maxLookbackAmount) {
@@ -218,45 +310,21 @@ public class PModelGen implements PPostableTask {
       return this;
     }
 
-    public Part set(String alias, PVec2 out) {
+    public Part set(String alias, PVec2 vec) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
       int ind = vertexAttributes().indexForVertexAttribute(alias);
-      currentVertexValues()[ind + 0] = out.x();
-      currentVertexValues()[ind + 1] = out.y();
+      currentVertexValues()[ind + 0] = vec.x();
+      currentVertexValues()[ind + 1] = vec.y();
       return this;
     }
 
-    public Part set(String alias, PVec3 out) {
-      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues()[ind + 0] = out.x();
-      currentVertexValues()[ind + 1] = out.y();
-      currentVertexValues()[ind + 2] = out.z();
-      return this;
-    }
-
-    public Part set(String alias, PVec4 out) {
+    public Part set(String alias, PVec4 vec) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
       int ind = vertexAttributes.indexForVertexAttribute(alias);
-      currentVertexValues()[ind + 0] = out.x();
-      currentVertexValues()[ind + 1] = out.y();
-      currentVertexValues()[ind + 2] = out.z();
-      currentVertexValues()[ind + 3] = out.w();
-      return this;
-    }
-
-    public Part set(String alias, float x) {
-      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
-      currentVertexValues()[ind + 0] = x;
-      return this;
-    }
-
-    public Part set(String alias, float x, float y) {
-      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
-      currentVertexValues()[ind + 0] = x;
-      currentVertexValues()[ind + 1] = y;
+      currentVertexValues()[ind + 0] = vec.x();
+      currentVertexValues()[ind + 1] = vec.y();
+      currentVertexValues()[ind + 2] = vec.z();
+      currentVertexValues()[ind + 3] = vec.w();
       return this;
     }
 
@@ -269,28 +337,8 @@ public class PModelGen implements PPostableTask {
       return this;
     }
 
-    public Part set(String alias, float x, float y, float z, float w) {
-      PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
-      currentVertexValues()[ind + 0] = x;
-      currentVertexValues()[ind + 1] = y;
-      currentVertexValues()[ind + 2] = z;
-      currentVertexValues()[ind + 3] = w;
-      return this;
-    }
-
     public Part tri(boolean flip) {
       return tri(flip, null);
-    }
-
-    public Part tri(boolean flip, @Nullable StaticPhysicsPart copyTo) {
-      indices().add((short) latestIndices().get(2));
-      indices().add((short) latestIndices().get(flip ? 0 : 1));
-      indices().add((short) latestIndices().get(flip ? 1 : 0));
-      if (copyTo != null) {
-        copyTo.copyLastTri(this);
-      }
-      return this;
     }
   }
 

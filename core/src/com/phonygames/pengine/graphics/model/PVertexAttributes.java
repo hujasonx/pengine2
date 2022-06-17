@@ -1,8 +1,11 @@
 package com.phonygames.pengine.graphics.model;
 
+import android.support.annotation.NonNull;
+
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -68,6 +71,10 @@ public class PVertexAttributes {
     Attribute.init();
   }
 
+  public boolean hasAttributeWithName(String name) {
+    return vertexAttributeFloatIndexInVertex.containsKey(name);
+  }
+
   @Override public int hashCode() {
     return backingVertexAttributes.hashCode();
   }
@@ -88,6 +95,18 @@ public class PVertexAttributes {
     PAssert.isTrue(vertexAttributeFloatIndexInVertex.containsKey(alias),
                    alias + " not found in vertexAttributeFloatIndexInVertex");
     return vertexAttributeFloatIndexInVertex.get(alias);
+  }
+
+  public static PVec3 transformVecWithMatrix(@NonNull VertexAttribute vertexAttribute, @NonNull PVec3 inout, @NonNull
+      PMat4 mat4) {
+    if (vertexAttribute.alias.equals(Attribute.Keys.pos)) {
+      return inout.mul(mat4, 1);
+    }
+    if (vertexAttribute.alias.equals(Attribute.Keys.nor)) {
+      return inout.mul(mat4, 0);
+    }
+    // TODO: binormal, tangent
+    return inout;
   }
 
   public static final class Attribute {
