@@ -20,6 +20,7 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PPostableTask;
 import com.phonygames.pengine.util.PPostableTaskQueue;
 import com.phonygames.pengine.util.PStringMap;
@@ -27,6 +28,7 @@ import com.phonygames.pengine.util.PWindowedBuffer;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
 
@@ -142,7 +144,7 @@ public class PModelGen implements PPostableTask {
       return this;
     }
 
-    public Part emit(@NonNull PMesh mesh, @Nullable StaticPhysicsPart staticPhysicsPart, @NonNull PMat4 transform,
+    public Part emit(@NonNull PMesh mesh, @Nullable StaticPhysicsPart staticPhysicsPart, VertexProcessor processor,
                      @NonNull PVertexAttributes attributesToCopy) {
       @NonNull final float[] meshVerts = mesh.getBackingMeshFloats();
       @NonNull final short[] meshShorts = mesh.getBackingMeshShorts();
@@ -166,7 +168,7 @@ public class PModelGen implements PPostableTask {
               case 3:
                 PVec3 tempResult = PVec3.obtain().set(meshVerts[lookupIndexStart + 0], meshVerts[lookupIndexStart + 1],
                                                       meshVerts[lookupIndexStart + 2]);
-                PVertexAttributes.transformVecWithMatrix(vertexAttribute, tempResult, transform);
+                processor.process(vertexAttribute, tempResult);
                 set(vertexAttribute.alias, tempResult);
                 tempResult.free();
                 break;
@@ -339,6 +341,39 @@ public class PModelGen implements PPostableTask {
 
     public Part tri(boolean flip) {
       return tri(flip, null);
+    }
+
+    public static class VertexProcessor implements PPool.Poolable {
+      @Getter(value = AccessLevel.PUBLIC, lazy = true)
+      @Accessors(fluent = true)
+      private static final PPool<VertexProcessor> staticPool = new PPool<VertexProcessor>() {
+        @Override protected VertexProcessor newObject() {
+          return new VertexProcessor();
+        }
+      };
+      @Getter
+      @Setter
+      private PPool ownerPool;
+      @Getter(value = AccessLevel.PUBLIC)
+      @Accessors(fluent = true)
+      private PMat4 transform;
+
+      private final PVec3 process(VertexAttribute attribute, PVec3 out) {
+        if (transform != null) {
+          return PVertexAttributes.transformVecWithMatrix(attribute, out, transform);
+        }
+        PAssert.fail("No valid vertex processing strategy");
+        return out;
+      }
+
+      @Override public void reset() {
+        this.transform = null;
+      }
+
+      public VertexProcessor transform(PMat4 mat4) {
+        this.transform = mat4;
+        return this;
+      }
     }
   }
 

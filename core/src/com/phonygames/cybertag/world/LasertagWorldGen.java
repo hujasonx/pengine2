@@ -38,19 +38,22 @@ public class LasertagWorldGen {
         PGlNode basicWallNode = PAssetManager.model("model/template/wall/basic.glb", true).getFirstNode();
         PMesh basicWallMesh = basicWallNode.drawCall().mesh();
         boolean basicWallStaticBody = basicWallNode.drawCall().material().id().contains(".alsoStaticBody");
-        basicWallStaticBody = false;
         //        basePart.set(PVertexAttributes.Attribute.Keys.nor, 0, 0, 1);
         //        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, -1, 0).emitVertex();
         //        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, -1, 0).emitVertex();
         //        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, 1, 0).emitVertex();
         //        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, 1, 0).emitVertex();
         //        basePart.quad(false, basePhysicsPart);
+        Part.VertexProcessor vertexProcessor = Part.VertexProcessor.staticPool().obtain();
         PMat4 emitTransform = PMat4.obtain();
-        basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, emitTransform,
+        vertexProcessor.transform(emitTransform);
+        basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
-        basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, emitTransform.translate(1, 0, 0),
+        emitTransform.translate(1, 0, 0);
+        basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
         emitTransform.free();
+        Part.VertexProcessor.staticPool().free(vertexProcessor);
       }
 
       @Override protected void modelEnd() {
