@@ -69,7 +69,10 @@ public abstract class PPool<T extends PPool.Poolable> {
    * {@link #free(T) freed}).
    */
   public T obtain() {
-    T t = freeObjects.size == 0 ? newObject() : freeObjects.pop();
+    T t;
+    synchronized (freeObjects) {
+      t = freeObjects.size == 0 ? newObject() : freeObjects.pop();
+    }
     t.setOwnerPool(null);
     return t;
   }
@@ -83,8 +86,10 @@ public abstract class PPool<T extends PPool.Poolable> {
    * @param size the number of objects to be added
    */
   public void fill(int size) {
-    for (int i = 0; i < size; i++) {if (freeObjects.size < max) {freeObjects.add(newObject());}}
-    peak = Math.max(peak, freeObjects.size);
+    synchronized (freeObjects) {
+      for (int i = 0; i < size; i++) {if (freeObjects.size < max) {freeObjects.add(newObject());}}
+      peak = Math.max(peak, freeObjects.size);
+    }
   }
 
   public void free(@NonNull T t) {
@@ -96,8 +101,10 @@ public abstract class PPool<T extends PPool.Poolable> {
     t.reset();
     PAssert.isNull(t.getOwnerPool(), "Freeing an object that is already held in a pool!");
     t.setOwnerPool(this);
-    if (freeObjects.size < max) {
-      freeObjects.add(t);
+    synchronized (freeObjects) {
+      if (freeObjects.size < max) {
+        freeObjects.add(t);
+      }
     }
   }
 
@@ -113,11 +120,15 @@ public abstract class PPool<T extends PPool.Poolable> {
     for (T t : objects) {
       freeInternal(t);
     }
-    peak = Math.max(peak, freeObjects.size);
+    synchronized (freeObjects) {
+      peak = Math.max(peak, freeObjects.size);
+    }
   }
 
   public int numFree() {
-    return freeObjects.size;
+    synchronized (freeObjects) {
+      return freeObjects.size;
+    }
   }
 
   public interface Poolable {

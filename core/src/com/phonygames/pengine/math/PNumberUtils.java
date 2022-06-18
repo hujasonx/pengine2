@@ -1,11 +1,17 @@
 package com.phonygames.pengine.math;
 
+import com.badlogic.gdx.math.MathUtils;
+
 public class PNumberUtils {
-  public static int clamp(int n, int min, int max) {
-    return Math.max(Math.min(n, max), min);
+  public static float angle(float x1, float y1, float x2, float y2) {
+    return MathUtils.atan2(y2 - y1, x2 - x1);
   }
 
   public static float clamp(float n, float min, float max) {
+    return Math.max(Math.min(n, max), min);
+  }
+
+  public static int clamp(int n, int min, int max) {
     return Math.max(Math.min(n, max), min);
   }
 
@@ -13,12 +19,12 @@ public class PNumberUtils {
     return (a == b ? 0 : (a > b ? 1 : -1));
   }
 
-  public static boolean epsilonEquals(float x, float y) {
-    return Math.abs(x - y) < 0.001f;
-  }
-
   public static boolean epsilonEquals(float x, float y, float epsilon) {
     return Math.abs(x - y) < epsilon;
+  }
+
+  public static boolean epsilonEquals(float x, float y) {
+    return Math.abs(x - y) < 0.001f;
   }
 
   public static boolean isPrimeBruteForce(int number) {

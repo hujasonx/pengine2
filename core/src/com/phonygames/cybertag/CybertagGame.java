@@ -38,9 +38,9 @@ public class CybertagGame implements PGame {
 
   @Override public void frameUpdate() {
     renderContext.cameraRange().set(.1f, 1000);
-    renderContext.cameraPos().set(.8f, 1, .8f);
+    renderContext.cameraPos().set(2, 2, 2);
     renderContext.cameraUp().set(0, 1, 0);
-    renderContext.cameraDir().set(-.2f, -.5f, -.2f);
+    renderContext.cameraDir().set(-1, -1, -1).nor();
     renderContext.start();
     renderContext.setPhysicsDebugDrawerCameraFromSelf();
     pPbrPipeline.attach(renderContext);

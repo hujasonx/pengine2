@@ -351,28 +351,88 @@ public class PModelGen implements PPostableTask {
           return new VertexProcessor();
         }
       };
+      @Getter(value = AccessLevel.PRIVATE, lazy = true)
+      @Accessors(fluent = true)
+      private static final PVec3 tempVec30 = PVec3.obtain(), tempVec31 = PVec3.obtain(), tempVec32 = PVec3.obtain(),
+          tempVec313 = PVec3.obtain();
+      @Accessors(fluent = true)
+      private final PVec4 flatQuadA = PVec4.obtain(), flatQuadB = PVec4.obtain(), flatQuadC = PVec4.obtain(),
+          flatQuadD = PVec4.obtain();
+      @Getter(value = AccessLevel.PRIVATE, lazy = true)
+      @Accessors(fluent = true)
+      private final PMat4 transform = PMat4.obtain();
+      @Getter(value = AccessLevel.PRIVATE, lazy = true)
+      @Accessors(fluent = true)
+      private final PVec4 wallCornerA = PVec4.obtain(), wallCornerB = PVec4.obtain();
       @Getter
       @Setter
       private PPool ownerPool;
-      @Getter(value = AccessLevel.PUBLIC)
-      @Accessors(fluent = true)
-      private PMat4 transform;
+      private Strategy strategy = Strategy.Transform;
 
-      private final PVec3 process(VertexAttribute attribute, PVec3 out) {
-        if (transform != null) {
-          return PVertexAttributes.transformVecWithMatrix(attribute, out, transform);
+      /**
+       * Processes the vector, applying whatever transform using the strategy supplied.
+       * @param attribute
+       * @param out
+       * @return
+       */
+      private final PVec3 process(@NonNull VertexAttribute attribute, @NonNull PVec3 out) {
+        boolean isPos = attribute.alias.equals(PVertexAttributes.Attribute.Keys.pos);
+        boolean isNor = attribute.alias.equals(PVertexAttributes.Attribute.Keys.nor);
+        switch (strategy) {
+          case Transform:
+            if (isPos) {return out.mul(transform(), 1);}
+            if (isNor) {return out.mul(transform(), 0);}
+            return out;
+          case Wall:
+            if (isPos) {
+              float wallDx = wallCornerB().x() - wallCornerA().x();
+              float wallDz = wallCornerB().z() - wallCornerA().z();
+              tempVec30().set(wallDx, 0, wallDz); // tempVec30 is Dir.
+              tempVec32().set(tempVec30()).nor(); // tempVec32 is nor of Dir.
+              tempVec31().set(-wallDz, 0, wallDx).nor(); // tempVec30 is Left. This should be normalized.
+              // Transform from the 1x1x1 template model to the desired coordinates.
+              float x = wallCornerA().x() + out.x() * tempVec30().x() + out.z() * tempVec31().x();
+              float z = wallCornerA().z() + out.x() * tempVec30().z() + out.z() * tempVec31().z();
+              tempVec30().set(wallCornerA().x(), 0, wallCornerA().z()); // Get the wall corner locations to compare
+              tempVec31().set(wallCornerB().x(), 0, wallCornerB().z()); // with the new x and z.
+              float lengthAlongLine = tempVec32().set(x, 0, z).progressAlongLineSegment(tempVec30(), tempVec31());
+              float y = wallCornerA().y() +
+                        out.y() * ((wallCornerB().w() - wallCornerA().w()) * lengthAlongLine + wallCornerA().w());
+              return out.set(x, y, z);
+            }
+            if (isNor) {
+              float angle =
+                  PNumberUtils.angle(wallCornerB().x(), wallCornerB().z(), wallCornerA().x(), wallCornerA().z());
+              return out.rotate(0, 1, 0, angle);
+            }
+            return out;
+          case FlatQuad:
+            return out;
+          default:
+            PAssert.fail("No valid vertex processing strategy");
+            return out;
         }
-        PAssert.fail("No valid vertex processing strategy");
-        return out;
       }
 
       @Override public void reset() {
-        this.transform = null;
       }
 
-      public VertexProcessor transform(PMat4 mat4) {
-        this.transform = mat4;
+      public VertexProcessor setTransform(PMat4 mat4) {
+        this.transform().set(mat4);
+        strategy = Strategy.Transform;
         return this;
+      }
+
+      public VertexProcessor setWall(float x0, float y0, float z0, float height0, float x1, float y1, float z1,
+                                     float height1) {
+        this.wallCornerA().set(x0, y0, z0, height0);
+        this.wallCornerB().set(x1, y1, z1, height1);
+        strategy = Strategy.Wall;
+        return this;
+      }
+
+      enum Strategy {
+        Transform, Wall, FlatQuad
       }
     }
   }

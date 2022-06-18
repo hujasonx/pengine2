@@ -46,10 +46,11 @@ public class LasertagWorldGen {
         //        basePart.quad(false, basePhysicsPart);
         Part.VertexProcessor vertexProcessor = Part.VertexProcessor.staticPool().obtain();
         PMat4 emitTransform = PMat4.obtain();
-        vertexProcessor.transform(emitTransform);
+        vertexProcessor.setTransform(emitTransform);
         basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
-        emitTransform.translate(1, 0, 0);
+//        vertexProcessor.setTransform(emitTransform.translate(1, 0, 0));
+        vertexProcessor.setWall(0, 0, 0, 1, 0,0,1, .5f);
         basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
         emitTransform.free();

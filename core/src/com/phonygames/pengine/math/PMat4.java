@@ -111,6 +111,13 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     backingMatrix4.idt();
   }
 
+  public PMat4 rot(float axisX, float axisY, float axisZ, float rad) {
+    synchronized (IDT) {
+      backingMatrix4.rotateRad(axisX, axisY, axisZ, rad);
+    }
+    return this;
+  }
+
   public PMat4 scl(float scl) {
     for (int a = 0; a < 16; a++) {
       backingMatrix4.val[a] *= scl;
@@ -135,20 +142,12 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     this.backingMatrix4.set(xAxis.backingVec3(), yAxis.backingVec3(), zAxis.backingVec3(), pos.backingVec3());
     return this;
   }
+  //  public PMat4 setToRotation(float axisX, float axisY, float axisZ, float rad) {
+  //    return idt().rot(axisX, axisY, axisZ, rad);
+  //  }
 
-  public PMat4 setToRotation(float axisX, float axisY, float axisZ, float rad) {
-    return idt().rot(axisX, axisY, axisZ, rad);
-  }
-
-  public PMat4 rot(float axisX, float axisY, float axisZ, float rad) {
-    synchronized (IDT) {
-      backingMatrix4.rotateRad(axisX, axisY, axisZ, rad);
-    }
-    return this;
-  }
-
-  public PMat4 idt() {
-    set(IDT);
+  public PMat4 setToRotation(float axisX, float axisY, float axisZ, float angleRad) {
+    this.backingMatrix4.setToRotationRad(axisX, axisY, axisZ, angleRad);
     return this;
   }
 
@@ -158,6 +157,11 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
 
   public PMat4 translate(PVec3 vec3) {
     backingMatrix4.translate(vec3.backingVec3());
+    return this;
+  }
+
+  public PMat4 idt() {
+    set(IDT);
     return this;
   }
 

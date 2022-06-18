@@ -17,6 +17,9 @@ public class PVec3 extends PVec<PVec3> {
       return new PVec3();
     }
   };
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
+  private static final PMat4 tempMat = PMat4.obtain();
   public static PVec3 X = new PVec3().set(1, 0, 0);
   public static PVec3 Y = new PVec3().set(0, 1, 0);
   public static PVec3 Z = new PVec3().set(0, 0, 1);
@@ -161,6 +164,13 @@ public class PVec3 extends PVec<PVec3> {
     return in;
   }
 
+  public PVec3 rotate(float axisX, float axisY, float axisZ, float angleRad) {
+    synchronized (tempMat()) {
+      backingVec3.mul(tempMat().setToRotation(axisX, axisY, axisZ, angleRad).getBackingMatrix4());
+    }
+    return this;
+  }
+
   public PVec3 set(Vector3 other) {
     backingVec3.set(other);
     return this;
@@ -172,6 +182,11 @@ public class PVec3 extends PVec<PVec3> {
    */
   public PVec3 setOne() {
     backingVec3.set(1, 1, 1);
+    return this;
+  }
+
+  public PVec3 setXYZ(PVec4 vec4) {
+    backingVec3.set(vec4.x(), vec4.y(), vec4.z());
     return this;
   }
 
@@ -193,9 +208,23 @@ public class PVec3 extends PVec<PVec3> {
   }
 
   @Override public String toString() {
-    return "<" + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestHundredth(backingVec3.x), 6) + ", " +
-           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestHundredth(backingVec3.y), 6) + ", " +
-           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestHundredth(backingVec3.z), 6) + ">";
+    return "[PVec3] <" + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingVec3.x), 7) +
+           ", " + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingVec3.y), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingVec3.z), 7) + ">";
+  }
+
+  public float progressAlongLineSegment(PVec3 lineStart, PVec3 lineEnd) {
+    PVec3 t0 = PVec3.obtain().set(lineEnd).sub(lineStart);
+    float lineLen = t0.len();
+    t0.nor();
+
+
+    PVec3 t1 = PVec3.obtain().set(this).sub(lineStart);
+    float dotAmount = t1.dot(t0);
+
+    t0.free();
+    t1.free();
+    return dotAmount / lineLen;
   }
 
   public float x() {
