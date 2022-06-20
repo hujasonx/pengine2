@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
@@ -150,11 +151,18 @@ public class PModelGen implements PPostableTask {
       @NonNull final short[] meshShorts = mesh.getBackingMeshShorts();
       int meshFloatsPerVert = mesh.vertexAttributes().getNumFloatsPerVertex();
       for (int meshVIndex = 0; meshVIndex < meshShorts.length; meshVIndex++) { // Loop through all vertices in the mesh.
+        // Get the raw position.
+        int posLookupI = meshShorts[meshVIndex] * meshFloatsPerVert + vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+        float rawPosX = meshVerts[posLookupI + 0];
+        float rawPosY = meshVerts[posLookupI + 1];
+        float rawPosZ = meshVerts[posLookupI + 2];
+        // Loop through all the vertex attributes and ensure they are valid.
         for (VertexAttribute vertexAttribute : mesh.vertexAttributes().getBackingVertexAttributes()) {
           if (attributesToCopy.hasAttributeWithName(vertexAttribute.alias) &&
               this.vertexAttributes.hasAttributeWithName(
-                  vertexAttribute.alias)) { // Loop through all the vertex attributes and ensure they are valid.
+                  vertexAttribute.alias)) {
             PAssert.isFalse(vertexAttribute.usage == VertexAttribute.ColorUnpacked().usage);
+            // Process the attribute data.
             int lookupIndexStart = meshShorts[meshVIndex] * meshFloatsPerVert +
                                    mesh.vertexAttributes().indexForVertexAttribute(vertexAttribute);
             switch (vertexAttribute.numComponents) {
@@ -168,7 +176,7 @@ public class PModelGen implements PPostableTask {
               case 3:
                 PVec3 tempResult = PVec3.obtain().set(meshVerts[lookupIndexStart + 0], meshVerts[lookupIndexStart + 1],
                                                       meshVerts[lookupIndexStart + 2]);
-                processor.process(vertexAttribute, tempResult);
+                processor.process(rawPosX, rawPosY, rawPosZ, vertexAttribute, tempResult);
                 set(vertexAttribute.alias, tempResult);
                 tempResult.free();
                 break;
@@ -353,11 +361,8 @@ public class PModelGen implements PPostableTask {
       };
       @Getter(value = AccessLevel.PRIVATE, lazy = true)
       @Accessors(fluent = true)
-      private static final PVec3 tempVec30 = PVec3.obtain(), tempVec31 = PVec3.obtain(), tempVec32 = PVec3.obtain(),
-          tempVec313 = PVec3.obtain();
-      @Accessors(fluent = true)
-      private final PVec4 flatQuadA = PVec4.obtain(), flatQuadB = PVec4.obtain(), flatQuadC = PVec4.obtain(),
-          flatQuadD = PVec4.obtain();
+      private final PVec3 flatQuad00 = PVec3.obtain(), flatQuad01 = PVec3.obtain(), flatQuad11 = PVec3.obtain(),
+          flatQuad10 = PVec3.obtain();
       @Getter(value = AccessLevel.PRIVATE, lazy = true)
       @Accessors(fluent = true)
       private final PMat4 transform = PMat4.obtain();
@@ -375,7 +380,7 @@ public class PModelGen implements PPostableTask {
        * @param out
        * @return
        */
-      private final PVec3 process(@NonNull VertexAttribute attribute, @NonNull PVec3 out) {
+      private final PVec3 process(float rawPosX, float rawPosY, float rawPosZ, @NonNull VertexAttribute attribute, @NonNull PVec3 out) {
         boolean isPos = attribute.alias.equals(PVertexAttributes.Attribute.Keys.pos);
         boolean isNor = attribute.alias.equals(PVertexAttributes.Attribute.Keys.nor);
         switch (strategy) {
@@ -385,28 +390,19 @@ public class PModelGen implements PPostableTask {
             return out;
           case Wall:
             if (isPos) {
-              float wallDx = wallCornerB().x() - wallCornerA().x();
-              float wallDz = wallCornerB().z() - wallCornerA().z();
-              tempVec30().set(wallDx, 0, wallDz); // tempVec30 is Dir.
-              tempVec32().set(tempVec30()).nor(); // tempVec32 is nor of Dir.
-              tempVec31().set(-wallDz, 0, wallDx).nor(); // tempVec30 is Left. This should be normalized.
-              // Transform from the 1x1x1 template model to the desired coordinates.
-              float x = wallCornerA().x() + out.x() * tempVec30().x() + out.z() * tempVec31().x();
-              float z = wallCornerA().z() + out.x() * tempVec30().z() + out.z() * tempVec31().z();
-              tempVec30().set(wallCornerA().x(), 0, wallCornerA().z()); // Get the wall corner locations to compare
-              tempVec31().set(wallCornerB().x(), 0, wallCornerB().z()); // with the new x and z.
-              float lengthAlongLine = tempVec32().set(x, 0, z).progressAlongLineSegment(tempVec30(), tempVec31());
-              float y = wallCornerA().y() +
-                        out.y() * ((wallCornerB().w() - wallCornerA().w()) * lengthAlongLine + wallCornerA().w());
-              return out.set(x, y, z);
+              return processPositionForWall(out);
             }
             if (isNor) {
-              float angle =
-                  PNumberUtils.angle(wallCornerB().x(), wallCornerB().z(), wallCornerA().x(), wallCornerA().z());
-              return out.rotate(0, 1, 0, angle);
+              return processNormalForWall(rawPosX, rawPosY, rawPosZ, out);
             }
             return out;
           case FlatQuad:
+            if (isPos) {
+              return processPositionForFlatQuad(out);
+            }
+            if (isNor) {
+              return processNormalForFlatQuad(out);
+            }
             return out;
           default:
             PAssert.fail("No valid vertex processing strategy");
@@ -414,7 +410,57 @@ public class PModelGen implements PPostableTask {
         }
       }
 
+      private final PVec3 processPositionForWall(PVec3 out) {
+        PPool.PoolBuffer pool = PPool.getBuffer();
+        float wallDx = wallCornerB().x() - wallCornerA().x();
+        float wallDz = wallCornerB().z() - wallCornerA().z();
+        PVec3 flatWallDir = pool.vec3().set(wallDx, 0, wallDz); // Z forward.
+        PVec3 flatWallLeftDirNor = pool.vec3().set(wallDz, 0, -wallDx).nor(); // X left.
+        PVec3 wallCornerFlatA = pool.vec3().set(wallCornerA().x(), 0, wallCornerA().z());
+        PVec3 wallCornerFlatB = pool.vec3().set(wallCornerB().x(), 0, wallCornerB().z());
+        // Transform from the 1x1x1 template model to the desired coordinates.
+        float x = wallCornerA().x() + out.x() * flatWallLeftDirNor.x() + out.z() * flatWallDir.x();
+        float z = wallCornerA().z() + out.x() * flatWallLeftDirNor.z() + out.z() * flatWallDir.z();
+        float lengthAlongLine = pool.vec3().set(x, 0, z).progressAlongLineSegment(wallCornerFlatA, wallCornerFlatB);
+        float y = out.y() * ((wallCornerB().w() - wallCornerA().w()) * lengthAlongLine + wallCornerA().w())
+        + ((wallCornerB().y() - wallCornerA().y()) * lengthAlongLine + wallCornerA().y());
+
+        pool.finish();
+        return out.set(x, y, z);
+      }
+
+      private final PVec3 processNormalForWall(float rawPosX, float rawPosY, float rawPosZ, PVec3 out) {
+//        float angle = PNumberUtils.angle(wallCornerB().z(), -wallCornerB().x(), wallCornerA().z(), -wallCornerA().x());
+        float angle = PNumberUtils.angle(wallCornerA().x(), wallCornerA().z(), wallCornerB().x(), wallCornerB().z()) - MathUtils.HALF_PI;
+        return out.rotate(0, 1, 0, angle);
+      }
+
+      private final PVec3 processPositionForFlatQuad(PVec3 out) {
+        PPool.PoolBuffer pool = PPool.getBuffer();
+        PVec3 lerpPosX0 = pool.vec3().set(flatQuad00()).lerp(flatQuad01(), out.z());
+        PVec3 lerpPosX1 = pool.vec3().set(flatQuad10()).lerp(flatQuad11(), out.z());
+        PVec3 lerpPosXZ = pool.vec3().set(lerpPosX0).lerp(lerpPosX1, out.x());
+        float outY = lerpPosXZ.y() + out.y();
+        out.set(lerpPosXZ.x(), outY, lerpPosXZ.z());
+        pool.finish();
+        return out;
+      }
+
+      private final PVec3 processNormalForFlatQuad(PVec3 out) {
+        return out;
+      }
+
       @Override public void reset() {
+      }
+
+      public VertexProcessor setFlatQuad(float x00, float y00, float z00, float x10, float y10, float z10, float x11,
+                                         float y11, float z11, float x01, float y01, float z01) {
+        this.flatQuad00().set(x00, y00, z00);
+        this.flatQuad10().set(x10, y10, z10);
+        this.flatQuad11().set(x11, y11, z11);
+        this.flatQuad01().set(x01, y01, z01);
+        strategy = Strategy.FlatQuad;
+        return this;
       }
 
       public VertexProcessor setTransform(PMat4 mat4) {

@@ -37,21 +37,24 @@ public class LasertagWorldGen {
         // Get the first glNode's mesh and physics status from the model.
         PGlNode basicWallNode = PAssetManager.model("model/template/wall/basic.glb", true).getFirstNode();
         PMesh basicWallMesh = basicWallNode.drawCall().mesh();
-        boolean basicWallStaticBody = basicWallNode.drawCall().material().id().contains(".alsoStaticBody");
-        //        basePart.set(PVertexAttributes.Attribute.Keys.nor, 0, 0, 1);
-        //        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, -1, 0).emitVertex();
-        //        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, -1, 0).emitVertex();
-        //        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, 1, 0).emitVertex();
-        //        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, 1, 0).emitVertex();
-        //        basePart.quad(false, basePhysicsPart);
+        boolean basicWallStaticBody = basicWallNode.drawCall().material().id().contains(".alsoStaticBody") && false;
+        PGlNode basicFloorNode = PAssetManager.model("model/template/floor/basic.glb", true).getFirstNode();
+        PMesh basicFloorMesh = basicFloorNode.drawCall().mesh();
+        boolean basicFloorStaticBody = basicFloorNode.drawCall().material().id().contains(".alsoStaticBody") && false;
         Part.VertexProcessor vertexProcessor = Part.VertexProcessor.staticPool().obtain();
         PMat4 emitTransform = PMat4.obtain();
         vertexProcessor.setTransform(emitTransform);
         basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
-//        vertexProcessor.setTransform(emitTransform.translate(1, 0, 0));
-        vertexProcessor.setWall(0, 0, 0, 1, 0,0,1, .5f);
+        basePart.emit(basicFloorMesh, basicFloorStaticBody ? basePhysicsPart : null, vertexProcessor,
+                      basePart.vertexAttributes());
+        //        vertexProcessor.setTransform(emitTransform.translate(1, 0, 0));
+        vertexProcessor.setWall(0, 0, 1, 1, 0, -.5f, 1.4f, 1f);
         basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
+                      basePart.vertexAttributes());
+//        vertexProcessor.setFlatQuad(0, 0, 1, 1, 0, 1, 1, -.4f, 2, 0, -.6f, 2);
+        vertexProcessor.setFlatQuad(0, -.6f, 2, 0, 0, 1, 1, 0, 1, 1, -.4f, 2);
+        basePart.emit(basicFloorMesh, basicFloorStaticBody ? basePhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
         emitTransform.free();
         Part.VertexProcessor.staticPool().free(vertexProcessor);
