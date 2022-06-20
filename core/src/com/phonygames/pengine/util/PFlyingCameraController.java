@@ -27,35 +27,37 @@ public class PFlyingCameraController {
 
   public PFlyingCameraController(@NonNull PRenderContext renderContext) {
     this.renderContext = renderContext;
+    dir().set(renderContext.cameraDir());
+    pos().set(renderContext.cameraPos());
   }
 
   public void frameUpdate() {
     PPool.PoolBuffer pool = PPool.getBuffer();
     float rawSpeed = speed * (PKeyboard.isDown(Input.Keys.SHIFT_LEFT) ? shiftSpeedFactor : 1) * PEngine.uidt;
-    PVec3 rawDir = pool.vec3().setZero();
-    PVec3 cameraFlatLeft = pool.vec3().set(renderContext.cameraDir().z(), 0, -renderContext.cameraDir().x()).nor();
-    PVec3 cameraFlatDir = pool.vec3().set(renderContext.cameraDir().x(), 0, renderContext.cameraDir().z()).nor();
-    PVec3 cameraPos = pool.vec3().set(renderContext.cameraPos());
+    PVec3 wasdFactor = pool.vec3().setZero();
+    PVec3 flatLeft = pool.vec3().set(dir().z(), 0, -dir().x()).nor();
+    PVec3 flatDir = pool.vec3().set(dir().x(), 0, dir().z()).nor();
+    PVec3 cameraPos = pool.vec3().set(pos());
     boolean move = false;
     if (PKeyboard.isDown(Input.Keys.W)) {
-      rawDir.z(1);
+      wasdFactor.z(1);
       move = true;
     }
     if (PKeyboard.isDown(Input.Keys.S)) {
-      rawDir.z(-1);
+      wasdFactor.z(-1);
       move = true;
     }
     if (PKeyboard.isDown(Input.Keys.A)) {
-      rawDir.x(1);
+      wasdFactor.x(1);
       move = true;
     }
     if (PKeyboard.isDown(Input.Keys.D)) {
-      rawDir.x(-1);
+      wasdFactor.x(-1);
       move = true;
     }
     if (move) {
-      rawDir.nor().scl(rawSpeed);
-      cameraPos.add(cameraFlatDir, rawDir.z()).add(cameraFlatLeft, rawDir.x());
+      wasdFactor.nor().scl(rawSpeed);
+      cameraPos.add(flatDir, wasdFactor.z()).add(flatLeft, wasdFactor.x());
     }
     cameraPos.add(0f, PKeyboard.isDown(Input.Keys.SPACE) ? rawSpeed :
                       (PKeyboard.isDown(Input.Keys.CONTROL_LEFT) ? -rawSpeed : 0), 0f);
@@ -63,7 +65,7 @@ public class PFlyingCameraController {
                             (PMouse.isCatched() ? PMouse.frameDx() * .35f : 0);
     float pitchRotateAmount = (PKeyboard.isDown(Input.Keys.F) ? -1 : 0) + (PKeyboard.isDown(Input.Keys.R) ? 1 : 0) +
                               (PMouse.isCatched() ? PMouse.frameDy() * -.35f : 0);
-    float currentPitch = MathUtils.asin(renderContext.cameraDir().y());
+    float currentPitch = MathUtils.asin(dir().y());
     float maxPitch = MathUtils.HALF_PI - .15f;
     float minPitch = -MathUtils.HALF_PI + .15f;
     yawRotateAmount *= rotateSpeed * PEngine.uidt;
@@ -73,9 +75,13 @@ public class PFlyingCameraController {
     } else if (currentPitch + pitchRotateAmount < minPitch) {
       pitchRotateAmount = minPitch - currentPitch;
     }
-    renderContext.cameraDir().rotate(cameraFlatLeft, -pitchRotateAmount);
-    renderContext.cameraDir().rotate(0, -1, 0, yawRotateAmount);
-    renderContext.cameraPos().set(cameraPos);
+    dir().rotate(flatLeft, -pitchRotateAmount);
+    dir().rotate(0, -1, 0, yawRotateAmount);
+    pos().set(cameraPos);
+    // Use lerp to smooth the camera movement.
+    final float smoothFactor = 10;
+    renderContext.cameraPos().lerp(pos(), Math.min(1, PEngine.uidt * smoothFactor));
+    renderContext.cameraDir().lerp(dir(), Math.min(1, PEngine.uidt * smoothFactor));
     renderContext.cameraUp().set(0, 1, 0);
     pool.finish();
   }
