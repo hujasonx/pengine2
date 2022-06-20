@@ -20,6 +20,13 @@ public class PMouse {
   private static boolean catched = false;
   private static int uncatchedTimer = 0; // Set to 2 when uncatched. Until it reaches 0, dx and dy will return 0.
 
+  /**
+   * Call this to zero out the dx and dy of the mouse for 2 frames.
+   */
+  public static void __resetUncatchedTimer() {
+    uncatchedTimer = 5;
+  }
+
   public static float frameDx() {
     return frameDx(0);
   }

@@ -15,6 +15,7 @@ import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.input.PInput;
 import com.phonygames.pengine.input.PKeyboard;
+import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.lighting.PLight;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.physics.PPhysicsEngine;
@@ -77,6 +78,7 @@ public class PEngine extends ApplicationAdapter {
       PLog.i("Resize window: 0x0").pEngine();
       return;
     }
+    PMouse.__resetUncatchedTimer();
     PApplicationWindow.triggerResize(width, height);
   }
 
