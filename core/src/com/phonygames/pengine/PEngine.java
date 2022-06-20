@@ -14,6 +14,7 @@ import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.input.PInput;
+import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.lighting.PLight;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.physics.PPhysicsEngine;
@@ -80,6 +81,7 @@ public class PEngine extends ApplicationAdapter {
   }
 
   @Override public void render() {
+    PInput.preFrameUpdate();
     float gdxdt = Gdx.graphics.getDeltaTime();
     gdxdt = Math.max(gdxdt, 1f / 300f);
     uidtWindowedMean.addValue(gdxdt);
@@ -118,7 +120,6 @@ public class PEngine extends ApplicationAdapter {
             PStringUtils.roundNearestHundredth(PApplicationUtils.runtimeUsedMemoryMb() / 1024), 5) + "GB");
     PApplicationWindow.preFrameUpdate();
     PAssetManager.preFrameUpdate();
-    PInput.preFrameUpdate();
     game.preFrameUpdate();
     game.frameUpdate();
     game.postFrameUpdate();
@@ -132,6 +133,14 @@ public class PEngine extends ApplicationAdapter {
   private static void postFrameUpdateStatic() {
     PPhysicsEngine.postFrameUpdate();
     glProfiler.reset();
+
+    if (PKeyboard.isDown(Input.Keys.ALT_RIGHT) && PKeyboard.isFrameJustDown(Input.Keys.ENTER)) {
+      if (Gdx.graphics.isFullscreen()) {
+        Gdx.graphics.setWindowedMode(1600, 900);
+      } else {
+        Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+      }
+    }
   }
 
   @Override public void dispose() {

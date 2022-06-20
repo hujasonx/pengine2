@@ -30,10 +30,6 @@ public class PVec3 extends PVec<PVec3> {
 
   private PVec3() {}
 
-  public static PVec3 obtain() {
-    return getStaticPool().obtain();
-  }
-
   /**
    * Adds other to caller into caller.
    * @param other
@@ -111,6 +107,11 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  public PVec3 add(float x, float y, float z) {
+    backingVec3.add(x, y, z);
+    return this;
+  }
+
   public PVec3 cpy() {
     return new PVec3().set(this);
   }
@@ -154,6 +155,21 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  public float progressAlongLineSegment(PVec3 lineStart, PVec3 lineEnd) {
+    PVec3 t0 = PVec3.obtain().set(lineEnd).sub(lineStart);
+    float lineLen = t0.len();
+    t0.nor();
+    PVec3 t1 = PVec3.obtain().set(this).sub(lineStart);
+    float dotAmount = t1.dot(t0);
+    t0.free();
+    t1.free();
+    return dotAmount / lineLen;
+  }
+
+  public static PVec3 obtain() {
+    return getStaticPool().obtain();
+  }
+
   public PVec3 nor() {
     backingVec3.nor();
     return this;
@@ -176,6 +192,18 @@ public class PVec3 extends PVec<PVec3> {
       backingVec3.mul(tempMat().setToRotation(axis.x(), axis.y(), axis.z(), angleRad).getBackingMatrix4());
     }
     return this;
+  }
+
+  public float x() {
+    return backingVec3.x;
+  }
+
+  public float y() {
+    return backingVec3.y;
+  }
+
+  public float z() {
+    return backingVec3.z;
   }
 
   public PVec3 set(Vector3 other) {
@@ -220,40 +248,14 @@ public class PVec3 extends PVec<PVec3> {
            PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingVec3.z), 7) + ">";
   }
 
-  public float progressAlongLineSegment(PVec3 lineStart, PVec3 lineEnd) {
-    PVec3 t0 = PVec3.obtain().set(lineEnd).sub(lineStart);
-    float lineLen = t0.len();
-    t0.nor();
-
-
-    PVec3 t1 = PVec3.obtain().set(this).sub(lineStart);
-    float dotAmount = t1.dot(t0);
-
-    t0.free();
-    t1.free();
-    return dotAmount / lineLen;
-  }
-
-  public float x() {
-    return backingVec3.x;
-  }
-
   public PVec3 x(float x) {
     backingVec3.x = x;
     return this;
   }
 
-  public float y() {
-    return backingVec3.y;
-  }
-
   public PVec3 y(float y) {
     backingVec3.y = y;
     return this;
-  }
-
-  public float z() {
-    return backingVec3.z;
   }
 
   public PVec3 z(float z) {

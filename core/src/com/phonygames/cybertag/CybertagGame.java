@@ -9,7 +9,6 @@ import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PPbrPipeline;
-import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
@@ -17,11 +16,13 @@ import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.util.PFlyingCameraController;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PStringMap;
 
@@ -31,17 +32,20 @@ public class CybertagGame implements PGame {
   PPointLight[] testLights = new PPointLight[10];
   private PModel catModel, duckModel;
   private PList<PModelInstance> catModelInstances = new PList<>(), duckModelInstances = new PList<>();
+  private PFlyingCameraController flyingCameraController;
   private PPbrPipeline pPbrPipeline;
   private PRenderContext renderContext;
   private PModel testBoxModel;
   private World world;
 
   @Override public void frameUpdate() {
-    System.out.println(PMouse.x() + ", " + PMouse.y());
-    renderContext.cameraRange().set(.1f, 1000);
-    renderContext.cameraPos().set(2, 2, 2);
-    renderContext.cameraUp().set(0, 1, 0);
-    renderContext.cameraDir().set(-1, -1, -1).nor();
+    if (PKeyboard.isFrameJustDown(Input.Keys.ESCAPE)) {
+      PMouse.setCatched(!PMouse.isCatched());
+    }
+    if (!PMouse.isCatched() && PMouse.isFrameJustDown()) {
+      PMouse.setCatched(true);
+    }
+    flyingCameraController.frameUpdate();
     renderContext.start();
     renderContext.setPhysicsDebugDrawerCameraFromSelf();
     pPbrPipeline.attach(renderContext);
@@ -97,12 +101,17 @@ public class CybertagGame implements PGame {
       duckModelInstances.add(new PModelInstance(duckModel));
     }
     renderContext = new PRenderContext();
+    renderContext.cameraRange().set(.1f, 1000);
+    renderContext.cameraPos().set(2, 2, 2);
+    renderContext.cameraUp().set(0, 1, 0);
+    renderContext.cameraDir().set(-1, -1, -1).nor();
     pPbrPipeline = new PPbrPipeline();
     environment = new PEnvironment();
     pPbrPipeline.environment(environment);
     for (int a = 0; a < testLights.length; a++) {
       environment.addLight(testLights[a] = new PPointLight());
     }
+    flyingCameraController = new PFlyingCameraController(renderContext);
     world = new World();
   }
 

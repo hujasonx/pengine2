@@ -3,7 +3,6 @@ package com.phonygames.pengine.input;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
-import com.phonygames.pengine.exception.PAssert;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,23 +20,26 @@ public class PInput {
     inputMultiplexer().addProcessor(inputProcessor());
     Gdx.input.setInputProcessor(inputMultiplexer());
     PMouse.init();
+    PKeyboard.init();
   }
 
   public static void preFrameUpdate() {
     PMouse.preFrameUpdate();
+    PKeyboard.preFrameUpdate();
   }
 
   public static void preLogicUpdate() {
     PMouse.preLogicUpdate();
+    PKeyboard.preLogicUpdate();
   }
 
   private static class PInputProcessor implements InputProcessor {
     @Override public boolean keyDown(int keycode) {
-      return false;
+      return PKeyboard.keyDown(keycode);
     }
 
     @Override public boolean keyUp(int keycode) {
-      return false;
+      return PKeyboard.keyUp(keycode);
     }
 
     @Override public boolean keyTyped(char character) {

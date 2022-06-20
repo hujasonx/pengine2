@@ -59,6 +59,7 @@ public class PShader implements Disposable, Comparable<PShader> {
   }
 
   public void reloadFromSources() {
+    combinedStaticStringResult = null;
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder =
         new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
@@ -196,13 +197,10 @@ public class PShader implements Disposable, Comparable<PShader> {
   }
 
   private String combinedStaticString() {
-    String newResult = (prefix + fragmentLayout + vsSourceFH.path() + fsSourceFH.path());
     if (combinedStaticStringResult == null) {
-      combinedStaticStringResult = newResult;
+      combinedStaticStringResult = (prefix + fragmentLayout + vsSourceFH.path() + fsSourceFH.path());
     }
-    PAssert.isTrue(newResult.equals(combinedStaticStringResult),
-                   "OLD:\n" + combinedStaticStringResult + "\nNEW:\n" + newResult);
-    return newResult;
+    return combinedStaticStringResult;
   }
 
   @Override public void dispose() {
