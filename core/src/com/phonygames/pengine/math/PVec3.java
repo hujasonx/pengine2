@@ -171,6 +171,13 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  public PVec3 rotate(PVec3 axis, float angleRad) {
+    synchronized (tempMat()) {
+      backingVec3.mul(tempMat().setToRotation(axis.x(), axis.y(), axis.z(), angleRad).getBackingMatrix4());
+    }
+    return this;
+  }
+
   public PVec3 set(Vector3 other) {
     backingVec3.set(other);
     return this;

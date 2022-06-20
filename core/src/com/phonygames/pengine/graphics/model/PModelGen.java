@@ -401,7 +401,7 @@ public class PModelGen implements PPostableTask {
               return processPositionForFlatQuad(out);
             }
             if (isNor) {
-              return processNormalForFlatQuad(out);
+              return processNormalForFlatQuad(rawPosX, rawPosY, rawPosZ, out);
             }
             return out;
           default:
@@ -430,9 +430,34 @@ public class PModelGen implements PPostableTask {
       }
 
       private final PVec3 processNormalForWall(float rawPosX, float rawPosY, float rawPosZ, PVec3 out) {
-//        float angle = PNumberUtils.angle(wallCornerB().z(), -wallCornerB().x(), wallCornerA().z(), -wallCornerA().x());
-        float angle = PNumberUtils.angle(wallCornerA().x(), wallCornerA().z(), wallCornerB().x(), wallCornerB().z()) - MathUtils.HALF_PI;
-        return out.rotate(0, 1, 0, angle);
+        PPool.PoolBuffer pool = PPool.getBuffer();
+        // Calculate the x and z axes using the wall angle, and y axis depending on the raw Y and Z position.
+
+        PVec3 pos0Bottom = pool.vec3().setXYZ(wallCornerA());
+        PVec3 pos0Top = pool.vec3().setXYZ(wallCornerA());
+        pos0Top.y(pos0Top.y() + wallCornerA().w());
+        PVec3 pos1Bottom = pool.vec3().setXYZ(wallCornerB());
+        PVec3 pos1Top = pool.vec3().setXYZ(wallCornerB());
+        pos1Top.y(pos1Top.y() + wallCornerB().w());
+
+        PVec3 flatDir = pool.vec3().set(pos1Bottom).sub(pos0Bottom).y(0);
+        PVec3 flatDirNor = pool.vec3().set(flatDir).nor();
+        PVec3 flatLeftNor = pool.vec3().set(flatDir.z(), 0, -flatDir.x());
+
+        PVec3 yNor0 = pool.vec3().set(pos1Bottom).sub(pos0Bottom).rotate(flatLeftNor, -MathUtils.HALF_PI);
+        PVec3 yNor1 = pool.vec3().set(pos1Top).sub(pos0Top).rotate(flatLeftNor, -MathUtils.HALF_PI);
+        float bottomYForRawZ = pos0Bottom.y() + rawPosZ * (pos1Bottom.y() - pos0Bottom.y());
+        float topYForRawZ = pos0Top.y() + rawPosZ * (pos1Top.y() - pos0Top.y());
+        float yNorMixAmount = bottomYForRawZ + (topYForRawZ - bottomYForRawZ) * rawPosY;
+
+        PVec3 xNor = flatLeftNor;
+        PVec3 yNor = pool.vec3().set(yNor0).lerp(yNor1,yNorMixAmount);
+        PVec3 zNor = flatDirNor;
+        float x = xNor.x() * out.x() + yNor.x() * out.y() + zNor.x() * out.z();
+        float y = xNor.y() * out.x() + yNor.y() * out.y() + zNor.y() * out.z();
+        float z = xNor.z() * out.x() + yNor.z() * out.y() + zNor.z() * out.z();
+        pool.finish();
+        return out.set(x, y, z).nor();
       }
 
       private final PVec3 processPositionForFlatQuad(PVec3 out) {
@@ -446,8 +471,23 @@ public class PModelGen implements PPostableTask {
         return out;
       }
 
-      private final PVec3 processNormalForFlatQuad(PVec3 out) {
-        return out;
+      private final PVec3 processNormalForFlatQuad(float rawPosX, float rawPosY, float rawPosZ, PVec3 out) {
+        PPool.PoolBuffer pool = PPool.getBuffer();
+        // Calculate the x and z axes at the edges of the 1x1 quad (using the normal of the quad's edge)
+        PVec3 xAtX0 = pool.vec3().set(flatQuad01().z() - flatQuad00().z(), 0, flatQuad00().x() - flatQuad01().x());
+        PVec3 xAtX1 = pool.vec3().set(flatQuad11().z() - flatQuad10().z(), 0, flatQuad10().x() - flatQuad11().x());
+        PVec3 zAtZ0 = pool.vec3().set(flatQuad00().z() - flatQuad10().z(), 0, flatQuad10().x() - flatQuad00().x());
+        PVec3 zAtZ1 = pool.vec3().set(flatQuad01().z() - flatQuad11().z(), 0, flatQuad11().x() - flatQuad01().x());
+        PVec3 yNor0 = pool.vec3().set(flatQuad11()).sub(flatQuad00()).crs(pool.vec3().set(flatQuad10()).sub(flatQuad00()));
+        PVec3 yNor1 = pool.vec3().set(flatQuad01()).sub(flatQuad00()).crs(pool.vec3().set(flatQuad11()).sub(flatQuad00()));
+        PVec3 xNor = pool.vec3().set(xAtX0).lerp(xAtX1, rawPosX);
+        PVec3 yNor = pool.vec3().set(yNor0).lerp(yNor1,0.5f); // Average of the normals for triangles 012 and 023.
+        PVec3 zNor = pool.vec3().set(zAtZ0).lerp(zAtZ1, rawPosY);
+        float x = xNor.x() * out.x() + yNor.x() * out.y() + zNor.x() * out.z();
+        float y = xNor.y() * out.x() + yNor.y() * out.y() + zNor.y() * out.z();
+        float z = xNor.z() * out.x() + yNor.z() * out.y() + zNor.z() * out.z();
+        pool.finish();
+        return out.set(x, y, z).nor();
       }
 
       @Override public void reset() {
