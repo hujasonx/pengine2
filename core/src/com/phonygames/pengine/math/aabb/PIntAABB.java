@@ -1,0 +1,47 @@
+package com.phonygames.pengine.math.aabb;
+
+import com.phonygames.pengine.math.PRay;
+import com.phonygames.pengine.util.PPool;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
+public class PIntAABB implements PPool.Poolable {
+  @Getter
+  @Setter
+  private PPool ownerPool;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private int x0, y0, z0, x1, y1, z1;
+
+  public boolean intersects(PIntAABB other) {
+    return (x0 <= other.x1 && x1 >= other.x0) && (y0 <= other.y1 && y1 >= other.y0) &&
+           (z0 <= other.z1 && z1 >= other.z0);
+  }
+
+  public boolean intersects(PRay ray) {
+    float intersectLength = ray.intersectLength(this);
+    return intersectLength >= 0;
+  }
+
+  @Override public void reset() {
+    x0 = 0;
+    x1 = 0;
+    y0 = 0;
+    y1 = 0;
+    z0 = 0;
+    z1 = 0;
+  }
+
+  public PIntAABB set(int x0, int y0, int z0, int x1, int y1, int z1) {
+    this.x0 = Math.min(x0, x1);
+    this.x1 = Math.max(x0, x1);
+    this.y0 = Math.min(y0, y1);
+    this.y1 = Math.max(y0, y1);
+    this.z0 = Math.min(z0, z1);
+    this.z1 = Math.max(z0, z1);
+    return this;
+  }
+}

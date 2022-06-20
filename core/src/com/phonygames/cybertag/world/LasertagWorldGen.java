@@ -37,10 +37,10 @@ public class LasertagWorldGen {
         // Get the first glNode's mesh and physics status from the model.
         PGlNode basicWallNode = PAssetManager.model("model/template/wall/basic.glb", true).getFirstNode();
         PMesh basicWallMesh = basicWallNode.drawCall().mesh();
-        boolean basicWallStaticBody = basicWallNode.drawCall().material().id().contains(".alsoStaticBody") && false;
+        boolean basicWallStaticBody = basicWallNode.drawCall().material().id().contains(".alsoStaticBody");
         PGlNode basicFloorNode = PAssetManager.model("model/template/floor/basic.glb", true).getFirstNode();
         PMesh basicFloorMesh = basicFloorNode.drawCall().mesh();
-        boolean basicFloorStaticBody = basicFloorNode.drawCall().material().id().contains(".alsoStaticBody") && false;
+        boolean basicFloorStaticBody = basicFloorNode.drawCall().material().id().contains(".alsoStaticBody");
         Part.VertexProcessor vertexProcessor = Part.VertexProcessor.staticPool().obtain();
         PMat4 emitTransform = PMat4.obtain();
         vertexProcessor.setTransform(emitTransform);
