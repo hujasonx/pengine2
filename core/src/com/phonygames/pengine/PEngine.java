@@ -13,6 +13,7 @@ import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
+import com.phonygames.pengine.input.PInput;
 import com.phonygames.pengine.lighting.PLight;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.physics.PPhysicsEngine;
@@ -54,6 +55,7 @@ public class PEngine extends ApplicationAdapter {
   }
 
   private static void initStatic() {
+    PInput.init();
     PVertexAttributes.init();
     PLight.initMeshes();
     PLog.init();
@@ -101,6 +103,7 @@ public class PEngine extends ApplicationAdapter {
     }
     while (logict < t) {
       logict += logictimestep;
+      PInput.preLogicUpdate();
       game.preLogicUpdate();
       game.logicUpdate();
       game.postLogicUpdate();
@@ -115,6 +118,7 @@ public class PEngine extends ApplicationAdapter {
             PStringUtils.roundNearestHundredth(PApplicationUtils.runtimeUsedMemoryMb() / 1024), 5) + "GB");
     PApplicationWindow.preFrameUpdate();
     PAssetManager.preFrameUpdate();
+    PInput.preFrameUpdate();
     game.preFrameUpdate();
     game.frameUpdate();
     game.postFrameUpdate();

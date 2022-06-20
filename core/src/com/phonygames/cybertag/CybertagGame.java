@@ -17,6 +17,7 @@ import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
@@ -25,7 +26,6 @@ import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PStringMap;
 
 public class CybertagGame implements PGame {
-  protected final PRenderBuffer[] gBuffers = new PRenderBuffer[4];
   protected PShader testShader;
   PEnvironment environment;
   PPointLight[] testLights = new PPointLight[10];
@@ -37,6 +37,7 @@ public class CybertagGame implements PGame {
   private World world;
 
   @Override public void frameUpdate() {
+    System.out.println(PMouse.x() + ", " + PMouse.y());
     renderContext.cameraRange().set(.1f, 1000);
     renderContext.cameraPos().set(2, 2, 2);
     renderContext.cameraUp().set(0, 1, 0);
