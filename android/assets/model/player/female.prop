@@ -1,5 +1,5 @@
-vcol:skin:#FF0000
-vcol:eye_whites:#CC00000
-vcol:mouth:#DD0000
-vcol:iris:#EE0000
-vcol:pupil:#BB0000
+vcol:skin:#000
+vcol:eye_whites:#100
+vcol:mouth:#200
+vcol:iris:#300
+vcol:pupil:#400

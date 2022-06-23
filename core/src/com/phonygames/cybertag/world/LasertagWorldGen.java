@@ -7,6 +7,7 @@ import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
+import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
@@ -62,7 +63,7 @@ public class LasertagWorldGen {
 
       @Override protected void modelEnd() {
         PList<PGlNode> glNodes = new PList<>();
-        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null), null, "PBR");
+        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null), null, PGltf.Layer.PBR);
         PModel.Builder builder = new PModel.Builder();
         emitStaticPhysicsPartIntoModelBuilder(builder);
         builder.addNode("box", null, glNodes, PMat4.IDT);

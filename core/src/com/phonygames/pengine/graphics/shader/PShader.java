@@ -55,18 +55,20 @@ public class PShader implements Disposable, Comparable<PShader> {
     vsSourceFH = vert;
     fsSourceFH = frag;
     staticShaders.add(this);
-    reloadFromSources();
+    reloadFromSources(false);
   }
 
-  public void reloadFromSources() {
+  public void reloadFromSources(boolean logAlwaysIfSourcesChanged) {
     combinedStaticStringResult = null;
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder =
         new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
     vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR));
     fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR));
+    int oldCombinedSourceHash = (vertexShaderSource == null ? 0 : vertexShaderSource.hashCode()) + (fragmentShaderSource == null ? 0 : fragmentShaderSource.hashCode());
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
+    int newCombinedSourceHash = vertexShaderSource.hashCode() + fragmentShaderSource.hashCode();
     if (shaderProgram != null) {
       shaderProgram.dispose();
     }
@@ -76,7 +78,7 @@ public class PShader implements Disposable, Comparable<PShader> {
     if (!newStringResult.equals(toStringResult)) {
       if (!shaderProgram.isCompiled()) {
         PLog.w(getCompileFailureString());
-      } else {
+      } else if (logAlwaysIfSourcesChanged && (oldCombinedSourceHash != newCombinedSourceHash)) {
         PLog.i(getCompileFailureString());
       }
     }
@@ -188,7 +190,7 @@ public class PShader implements Disposable, Comparable<PShader> {
 
   public static void reloadAllFromSources() {
     for (val shader : staticShaders) {
-      shader.reloadFromSources();
+      shader.reloadFromSources(true);
     }
   }
 

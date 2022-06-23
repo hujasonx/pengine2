@@ -20,6 +20,7 @@ import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
 
@@ -40,6 +41,11 @@ public class PMaterial {
   private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>(PVec4.getStaticPool());
   @Getter
   private String shaderPrefix;
+
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private boolean useVColIndex = false;
 
   public PMaterial(String id, PModelInstance owner) {
     this.id = id;
@@ -93,6 +99,7 @@ public class PMaterial {
     ret.vec3s.tryDeepCopyAllFrom(vec3s);
     ret.vec4s.tryDeepCopyAllFrom(vec4s);
     ret.textures.tryDeepCopyAllFrom(textures);
+    ret.useVColIndex = useVColIndex;
     return ret;
   }
 

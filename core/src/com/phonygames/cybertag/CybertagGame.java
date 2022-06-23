@@ -12,14 +12,17 @@ import com.phonygames.pengine.graphics.PPbrPipeline;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
+import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
+import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PFlyingCameraController;
@@ -32,12 +35,12 @@ public class CybertagGame implements PGame {
   PPointLight[] testLights = new PPointLight[10];
   private PModel catModel, duckModel, femaleModel;
   private PList<PModelInstance> catModelInstances = new PList<>(), duckModelInstances = new PList<>();
+  private PModelInstance femaleModelInstance;
   private PFlyingCameraController flyingCameraController;
   private PPbrPipeline pPbrPipeline;
   private PRenderContext renderContext;
   private PModel testBoxModel;
   private World world;
-  private PModelInstance femaleModelInstance;
 
   @Override public void frameUpdate() {
     if (PKeyboard.isFrameJustDown(Input.Keys.ESCAPE)) {
@@ -107,6 +110,25 @@ public class CybertagGame implements PGame {
     }
     femaleModel = PAssetManager.model("model/player/female.glb", true);
     femaleModelInstance = new PModelInstance(femaleModel);
+    femaleModelInstance.setDataBufferEmitter(new PRenderContext.DataBufferEmitter() {
+      @Override public void emitDataBuffersInto(PRenderContext renderContext) {
+        PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
+        // Note, we use emissiveR, but the shader will output emissiveM and normalR. But we don't want to edit
+        // the normal or the Index with this buffer.
+        vColIndexBuffer.addData(1, 224f/255f, 189f/255f, 1); // Skin color diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Skin color emissiveR.
+        vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Eye whites emissiveR.
+        vColIndexBuffer.addData(.75f, .5f, .5f, 1); // Mouth diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
+        vColIndexBuffer.addData(.5f, .5f, .9f, 1); // Iris diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Iris emissiveR.
+        vColIndexBuffer.addData(.2f, .2f, .2f, 1); // Pupil diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Pupil emissiveR.
+      }
+    });
+    femaleModelInstance.material("matBase").useVColIndex(true);
+    femaleModelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, 1, 1, 0, 1);
     renderContext = new PRenderContext();
     renderContext.cameraRange().set(.1f, 1000);
     renderContext.cameraPos().set(2, 2, 2);

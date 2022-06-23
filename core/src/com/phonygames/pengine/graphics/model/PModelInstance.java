@@ -1,5 +1,8 @@
 package com.phonygames.pengine.graphics.model;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -13,7 +16,6 @@ import com.phonygames.pengine.util.PStringMap;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
@@ -90,6 +92,10 @@ public class PModelInstance {
 
   public Node getNode(@NonNull String id) {
     return nodes().get(id);
+  }
+
+  public @Nullable PMaterial material(@NonNull String name) {
+    return this.materials().get(name);
   }
 
   protected boolean outputBoneTransformsToBuffer(PRenderContext renderContext, String glNodeID) {

@@ -56,7 +56,7 @@ public class PVertexAttributes {
       val va = vertexAttributes[a];
       vertexAttributeFloatIndexInVertex.put(va.alias, floatsPerVertex);
       prefix.append("#define ").append(va.alias).append("Flag\n");
-      floatsPerVertex += va.numComponents;
+      floatsPerVertex += va.getSizeInBytes() / 4;
     }
     this.prefix = prefix.toString();
     this.numFloatsPerVertex = floatsPerVertex;
@@ -69,6 +69,18 @@ public class PVertexAttributes {
 
   public static void init() {
     Attribute.init();
+  }
+
+  public static PVec3 transformVecWithMatrix(@NonNull VertexAttribute vertexAttribute, @NonNull PVec3 inout,
+                                             @NonNull PMat4 mat4) {
+    if (vertexAttribute.alias.equals(Attribute.Keys.pos)) {
+      return inout.mul(mat4, 1);
+    }
+    if (vertexAttribute.alias.equals(Attribute.Keys.nor)) {
+      return inout.mul(mat4, 0);
+    }
+    // TODO: binormal, tangent
+    return inout;
   }
 
   public boolean hasAttributeWithName(String name) {
@@ -95,18 +107,6 @@ public class PVertexAttributes {
     PAssert.isTrue(vertexAttributeFloatIndexInVertex.containsKey(alias),
                    alias + " not found in vertexAttributeFloatIndexInVertex");
     return vertexAttributeFloatIndexInVertex.get(alias);
-  }
-
-  public static PVec3 transformVecWithMatrix(@NonNull VertexAttribute vertexAttribute, @NonNull PVec3 inout, @NonNull
-      PMat4 mat4) {
-    if (vertexAttribute.alias.equals(Attribute.Keys.pos)) {
-      return inout.mul(mat4, 1);
-    }
-    if (vertexAttribute.alias.equals(Attribute.Keys.nor)) {
-      return inout.mul(mat4, 0);
-    }
-    // TODO: binormal, tangent
-    return inout;
   }
 
   public static final class Attribute {

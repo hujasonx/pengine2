@@ -2,6 +2,7 @@ package com.phonygames.pengine.graphics;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
+import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.lighting.PEnvironment;
 
 import lombok.AccessLevel;
@@ -36,7 +37,7 @@ public class PPbrPipeline {
   }
 
   protected void setPhases() {
-    phases = new PRenderContext.PhaseHandler[]{new PRenderContext.PhaseHandler("PBR", gBuffer) {
+    phases = new PRenderContext.PhaseHandler[]{new PRenderContext.PhaseHandler(PGltf.Layer.PBR, gBuffer) {
       @Override public void begin() {
         PGLUtils.clearScreen(0, 0, 0, 1);
       }

@@ -4,11 +4,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
-import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
+import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.physics.PPhysicsCollisionShape;
@@ -73,7 +73,7 @@ public class PModel {
                                        glNode.invBoneTransforms().size) * 4, false);
       }
     }
-    // Finally, snapshot the data buffers so that new drawcalls arent reusing the data here.
+    // Finally, snapshot the data buffers so that new drawcalls arent reusing the data emitted by this enqueueing.
     renderContext.snapshotBufferOffsets();
   }
 
@@ -91,8 +91,7 @@ public class PModel {
     for (String nodeId : rootNodeIds()) {
       val node = nodes().get(nodeId);
       for (PGlNode glNode : node.glNodes()) {
-        if (glNode.id().equals(id))
-        return glNode;
+        if (glNode.id().equals(id)) {return glNode;}
       }
     }
     return null;

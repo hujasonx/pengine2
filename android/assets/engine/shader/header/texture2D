@@ -5,7 +5,7 @@ uniform vec4 u_NAMETexSize;
 uniform vec4 u_NAMETexUVOS;
 uniform int u_NAMETexLookupOffset;
 vec4 NAMETex(vec2 inputUV) { return texture(u_NAMETex, inputUV); }
-vec4 NAMEVec4(int index) { ivec2 fetchLocation = ivec2(int(mod(float(u_boneTransformsTexLookupOffset + index), u_NAMETexSize.x)), int(mod(float(u_NAMETexLookupOffset + index) * u_NAMETexSize.z, u_NAMETexSize.y))); return texelFetch(u_NAMETex, fetchLocation, 0); }
+vec4 NAMEVec4(int index) { ivec2 fetchLocation = ivec2(int(mod(float(u_NAMETexLookupOffset + index), u_NAMETexSize.x)), int(mod(float(u_NAMETexLookupOffset + index) * u_NAMETexSize.z, u_NAMETexSize.y))); return texelFetch(u_NAMETex, fetchLocation, 0); }
 mat4 NAMEMat4(int startIndex) { return mat4(NAMEVec4(startIndex), NAMEVec4(startIndex + 1), NAMEVec4(startIndex + 2), NAMEVec4(startIndex + 3)); }
 #ifdef instancedFlag
 uniform int u_NAMETexVecsPerI;

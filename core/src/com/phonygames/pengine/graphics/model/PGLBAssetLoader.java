@@ -67,7 +67,7 @@ public class PGLBAssetLoader extends AsynchronousAssetLoader<PModel, PGLBAssetLo
           PGlNode node = new PGlNode(gdxNodePart.meshPart.id);
           node.drawCall().setMesh(mesh);
           node.drawCall().setMaterial(genMaterial(gdxNodePart.material));
-          node.drawCall().setLayer("PBR");
+          node.drawCall().setLayer(PGltf.Layer.PBR);
           if (gdxNodePart.invBoneBindTransforms != null) {
             for (val invBoneBT : gdxNodePart.invBoneBindTransforms) {
               node.invBoneTransforms().put(invBoneBT.key.id, PMat4.obtain(invBoneBT.value.val));
