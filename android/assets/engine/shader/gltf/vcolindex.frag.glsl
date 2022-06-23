@@ -14,7 +14,7 @@ void main() {
 
     diffuseM *= v_diffuseM;
     emissiveI.rgb += v_emissiveR.rgb;
-    //    normalR.w *= v_emissiveR.w;
+    normalR.w *= v_emissiveR.w;
 
     #include <engine/shader/end/pbr.frag>
     #include <engine/shader/end/rendercontext.frag>

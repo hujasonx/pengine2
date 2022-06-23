@@ -22,7 +22,6 @@ import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
-import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PFlyingCameraController;
@@ -55,7 +54,7 @@ public class CybertagGame implements PGame {
     pPbrPipeline.attach(renderContext);
     world.render(renderContext);
     // Set environment.
-    environment.setAmbientLightCol(.1f, .1f, .1f);
+        environment.setAmbientLightCol(.1f, .1f, .1f);
     PVec3 tempV3 = PVec3.obtain().set(1, -1, -1).nor();
     environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
     environment.setDirectionalLightColor(0, .3f, .3f, .3f);
@@ -115,20 +114,21 @@ public class CybertagGame implements PGame {
         PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
         // Note, we use emissiveR, but the shader will output emissiveM and normalR. But we don't want to edit
         // the normal or the Index with this buffer.
-        vColIndexBuffer.addData(1, 224f/255f, 189f/255f, 1); // Skin color diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Skin color emissiveR.
+        vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, .7f); // Skin color emissiveR.
         vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eye whites emissiveR.
-        vColIndexBuffer.addData(.75f, .5f, .5f, 1); // Mouth diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
+        vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
         vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
-        vColIndexBuffer.addData(.5f, .5f, .9f, 1); // Iris diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Iris emissiveR.
-        vColIndexBuffer.addData(.2f, .2f, .2f, 1); // Pupil diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Pupil emissiveR.
+        vColIndexBuffer.addData(52f/255f, 136f/255f, 232f/255f, 1); // Iris diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
+        vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
       }
     });
     femaleModelInstance.material("matBase").useVColIndex(true);
-    femaleModelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, 1, 1, 0, 1);
+    femaleModelInstance.material("matHair")
+                       .set(PMaterial.UniformConstants.Vec4.u_diffuseCol, 74f / 255f, 56f / 255f, 39f / 255f, 1);
     renderContext = new PRenderContext();
     renderContext.cameraRange().set(.1f, 1000);
     renderContext.cameraPos().set(2, 2, 2);
@@ -139,6 +139,7 @@ public class CybertagGame implements PGame {
     pPbrPipeline.environment(environment);
     for (int a = 0; a < testLights.length; a++) {
       environment.addLight(testLights[a] = new PPointLight());
+      testLights[a].setColor(1, 1, 1, 1);
     }
     flyingCameraController = new PFlyingCameraController(renderContext);
     world = new World();

@@ -68,7 +68,7 @@ public class PEnvironment {
       ambientAndDirectionalLightShader.set("u_directionalLightDir" + a, directionalLightDir[a]);
     }
     setLightUniforms(ambientAndDirectionalLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex,
-                     renderContext.viewProjInvTransform());
+                     renderContext.viewProjInvTransform(), renderContext.cameraDir());
     PRenderBuffer.activeBuffer().renderQuad(ambientAndDirectionalLightShader);
     ambientAndDirectionalLightShader.end();
     // Point lights.
@@ -86,7 +86,7 @@ public class PEnvironment {
     if (numLights > 0) {
       pointLightShader.start(renderContext);
       setLightUniforms(pointLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex,
-                       renderContext.viewProjInvTransform());
+                       renderContext.viewProjInvTransform(), renderContext.cameraDir());
       lightsFloatBuffer.applyShader(pointLightShader, "lightBuffer", 0, vecsPerInstance);
       PPointLight.MESH().glRenderInstanced(pointLightShader, numLights);
       pointLightShader.end();
@@ -95,12 +95,13 @@ public class PEnvironment {
   }
 
   private void setLightUniforms(PShader shader, Texture depthTex, Texture diffuseMTex, Texture normalRTex,
-                                Texture emissiveITex, PMat4 viewProjInv) {
+                                Texture emissiveITex, PMat4 viewProjInv, PVec3 cameraDir) {
     shader.setWithUniform(UniformConstants.Sampler2D.u_depthTex, depthTex);
     shader.setWithUniform(UniformConstants.Sampler2D.u_diffuseMTex, diffuseMTex);
     shader.setWithUniform(UniformConstants.Sampler2D.u_normalRTex, normalRTex);
     shader.setWithUniform(UniformConstants.Sampler2D.u_emissiveITex, emissiveITex);
     shader.set(UniformConstants.Mat4.u_cameraViewProInv, viewProjInv);
+    shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
   }
 
   public PEnvironment setAmbientLightCol(float r, float g, float b) {
@@ -124,6 +125,10 @@ public class PEnvironment {
 
   public static class UniformConstants {
     private static final int NUM_DIRECTIONAL_LIGHTS = 4;
+
+    public static class Vec3 {
+      public static final String u_cameraDir = "u_cameraDir";
+    }
 
     public static class Mat4 {
       public static final String u_cameraViewProInv = "u_cameraViewProInv";
