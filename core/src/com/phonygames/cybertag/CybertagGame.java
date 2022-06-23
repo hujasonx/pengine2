@@ -30,13 +30,14 @@ public class CybertagGame implements PGame {
   protected PShader testShader;
   PEnvironment environment;
   PPointLight[] testLights = new PPointLight[10];
-  private PModel catModel, duckModel;
+  private PModel catModel, duckModel, femaleModel;
   private PList<PModelInstance> catModelInstances = new PList<>(), duckModelInstances = new PList<>();
   private PFlyingCameraController flyingCameraController;
   private PPbrPipeline pPbrPipeline;
   private PRenderContext renderContext;
   private PModel testBoxModel;
   private World world;
+  private PModelInstance femaleModelInstance;
 
   @Override public void frameUpdate() {
     if (PKeyboard.isFrameJustDown(Input.Keys.ESCAPE)) {
@@ -87,6 +88,10 @@ public class CybertagGame implements PGame {
       // Enqueue the model instances into the buffer.
       duckModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, duckModelInstances, false);
     }
+    if (femaleModelInstance != null) {
+      femaleModelInstance.recalcTransforms();
+      femaleModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+    }
     renderContext.glRenderQueue();
     renderContext.end();
   }
@@ -100,6 +105,8 @@ public class CybertagGame implements PGame {
     for (int a = 0; a < 10; a++) {
       duckModelInstances.add(new PModelInstance(duckModel));
     }
+    femaleModel = PAssetManager.model("model/player/female.glb", true);
+    femaleModelInstance = new PModelInstance(femaleModel);
     renderContext = new PRenderContext();
     renderContext.cameraRange().set(.1f, 1000);
     renderContext.cameraPos().set(2, 2, 2);
