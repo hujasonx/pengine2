@@ -24,6 +24,7 @@ import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PFlyingCameraController;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PStringMap;
@@ -109,6 +110,7 @@ public class CybertagGame implements PGame {
     }
     femaleModel = PAssetManager.model("model/player/female.glb", true);
     femaleModelInstance = new PModelInstance(femaleModel);
+    final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
     femaleModelInstance.setDataBufferEmitter(new PRenderContext.DataBufferEmitter() {
       @Override public void emitDataBuffersInto(PRenderContext renderContext) {
         PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
@@ -124,11 +126,15 @@ public class CybertagGame implements PGame {
         vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
         vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
         vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
+        vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveR.
+        vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveR.
       }
     });
     femaleModelInstance.material("matBase").useVColIndex(true);
     femaleModelInstance.material("matHair")
-                       .set(PMaterial.UniformConstants.Vec4.u_diffuseCol, 74f / 255f, 56f / 255f, 39f / 255f, 1);
+                       .set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
     renderContext = new PRenderContext();
     renderContext.cameraRange().set(.1f, 1000);
     renderContext.cameraPos().set(2, 2, 2);

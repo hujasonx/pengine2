@@ -1,5 +1,7 @@
-vcol:skin:#000
-vcol:eye_whites:#100
-vcol:mouth:#200
-vcol:iris:#300
-vcol:pupil:#400
+vcol:0:skin
+vcol:1:eye_whites
+vcol:2:mouth
+vcol:3:iris
+vcol:4:pupil
+vcol:5:eyelashes
+vcol:6:eyebrows
