@@ -117,7 +117,7 @@ public class CybertagGame implements PGame {
         // Note, we use emissiveR, but the shader will output emissiveM and normalR. But we don't want to edit
         // the normal or the Index with this buffer.
         vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .7f); // Skin color emissiveR.
+        vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
         vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
         vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
         vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.

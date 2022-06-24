@@ -13,7 +13,11 @@ import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PSet;
+
+import lombok.val;
 
 public class LasertagWorldGen {
   private boolean wasGenned = false;
@@ -53,7 +57,7 @@ public class LasertagWorldGen {
         vertexProcessor.setWall(0, 0, 1, 1, 0, -.5f, 1.4f, 1f);
         basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
-//        vertexProcessor.setFlatQuad(0, 0, 1, 1, 0, 1, 1, -.4f, 2, 0, -.6f, 2);
+        //        vertexProcessor.setFlatQuad(0, 0, 1, 1, 0, 1, 1, -.4f, 2, 0, -.6f, 2);
         vertexProcessor.setFlatQuad(0, -.6f, 2, 0, 0, 1, 1, 0, 1, 1, -.4f, 2);
         basePart.emit(basicFloorMesh, basicFloorStaticBody ? basePhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
@@ -71,6 +75,28 @@ public class LasertagWorldGen {
         wasGenned = true;
       }
     });
+  }
+
+  private static class Building {
+    private final PMat4 worldTransform = PMat4.obtain();
+
+    private static class Room {
+      private final PSet<PIntAABB> aabbs = new PSet<>();
+      private final int index;
+
+      private Room(int index) {
+        this.index = index;
+      }
+
+      private boolean containsTile(int x, int y, int z) {
+        for (val e : aabbs) {
+          if (e.contains(x, y, z)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    }
   }
 
   static abstract class OnFinishedCallback {

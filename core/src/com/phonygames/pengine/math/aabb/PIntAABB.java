@@ -44,4 +44,8 @@ public class PIntAABB implements PPool.Poolable {
     this.z1 = Math.max(z0, z1);
     return this;
   }
+
+  public boolean contains(int x, int y, int z) {
+    return x >= x0 && x <= x1 && y >= y0 && y <= y1 && z >= z0 && z <= z1;
+  }
 }

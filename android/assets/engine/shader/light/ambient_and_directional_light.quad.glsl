@@ -29,7 +29,8 @@ void main() {
     // it would go here, subtracting from the diffuse.
     light += albedo * u_ambientLightCol;
 
-    light += albedo * u_directionalLightCol0 * clamp(-dot(u_directionalLightDir0, normal), 0.0, 1.0);
+    float diffuseStrength = clamp(-dot(u_directionalLightDir0, normal), 0.0, 1.0);
+    light += albedo * u_directionalLightCol0 * celShadeStrength(diffuseStrength, .2, .4, .01, .7);// TODO: use a uniform for the cel shade settings.
 
     vec3 reflectedDirection = reflectOrZero(u_directionalLightDir0, normal);
     float specularStrength = max(dot(reflectedDirection, u_cameraDir), 0.0);

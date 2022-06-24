@@ -24,7 +24,8 @@ void main() {
     vec3 worldPosDeltaToCenter = lightPos - worldPos;
     float attenuationFactor = lightAttenuation(attenuation, length(worldPosDeltaToCenter));
     float normalFactor = clamp(dot(worldPosDeltaToCenter, normal), 0.0, 1.0);
-    lighted = vec4(lightCol * attenuationFactor * normalFactor * albedo, 0.0);
+    float diffuseStrength = celShadeStrength(normalFactor, .2, .4, .01, .7);// TODO: use a uniform.
+    lighted = vec4(lightCol * attenuationFactor * diffuseStrength * albedo, 0.0);
 
 
     vec3 reflectedDirection = reflectOrZero(-worldPosDeltaToCenter, normal);
