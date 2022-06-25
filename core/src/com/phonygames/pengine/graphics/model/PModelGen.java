@@ -493,6 +493,15 @@ public class PModelGen implements PPostableTask {
       @Override public void reset() {
       }
 
+      public VertexProcessor setFlatQuad(PVec3 v00, PVec3 v10, PVec3 v11, PVec3 v01) {
+        this.flatQuad00().set(v00);
+        this.flatQuad10().set(v10);
+        this.flatQuad11().set(v11);
+        this.flatQuad01().set(v01);
+        strategy = Strategy.FlatQuad;
+        return this;
+      }
+
       public VertexProcessor setFlatQuad(float x00, float y00, float z00, float x10, float y10, float z10, float x11,
                                          float y11, float z11, float x01, float y01, float z01) {
         this.flatQuad00().set(x00, y00, z00);

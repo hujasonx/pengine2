@@ -31,6 +31,9 @@ public class PModel {
   private final PStringMap<Node> nodes = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
+  private final PStringMap<PGlNode> glNodes = new PStringMap<>();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PList<String> rootNodeIds = new PList<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
@@ -120,6 +123,9 @@ public class PModel {
         model.rootNodeIds().add(id);
       }
       model.nodes().put(id, node);
+      for (PGlNode glNode : glNodes) {
+        model.glNodes().put(glNode.id(), glNode);
+      }
       return node;
     }
 

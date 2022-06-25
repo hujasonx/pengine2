@@ -98,6 +98,11 @@ public class PEngine extends ApplicationAdapter {
         Gdx.input.isKeyJustPressed(Input.Keys.R)) {
       PShader.reloadAllFromSources();
     }
+    // Ctrl + P + D to toggle physics debugdraw.
+    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyPressed(Input.Keys.P) &&
+        Gdx.input.isKeyJustPressed(Input.Keys.D)) {
+      PPhysicsEngine.enableDebugRender(!PPhysicsEngine.enableDebugRender());
+    }
   }
 
   private void processLogicUpdateForFrame() {

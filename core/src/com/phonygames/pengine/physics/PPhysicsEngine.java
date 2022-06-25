@@ -42,7 +42,9 @@ public class PPhysicsEngine {
   private static Camera debugDrawerCamera;
   private static btDispatcher dispatcher;
   private static btGhostPairCallback ghostPairCallback;
-  private static boolean inited = false, enableDebugRender = true;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private static boolean inited = false, enableDebugRender = false;
   private static btPersistentManifold sharedManifold;
 
   public static void dispose() {
