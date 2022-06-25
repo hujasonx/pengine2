@@ -20,6 +20,7 @@ import com.phonygames.pengine.util.PPool;
 import lombok.val;
 
 public class LasertagWorldGenBuilding {
+  protected final int index;
 
   protected final LasertagWorldGenRoom[][][] roomTiles;
   protected final PList<LasertagWorldGenRoom> rooms = new PList<>();
@@ -27,7 +28,8 @@ public class LasertagWorldGenBuilding {
   protected final int sizeX, sizeY, sizeZ;
   protected final PMat4 worldTransform = PMat4.obtain();
 
-  protected LasertagWorldGenBuilding(int sizeX, int sizeY, int sizeZ, float scaleX, float scaleY, float scaleZ, int numRooms) {
+  protected LasertagWorldGenBuilding(int index, int sizeX, int sizeY, int sizeZ, float scaleX, float scaleY, float scaleZ, int numRooms) {
+    this.index = index;
     roomTiles = new LasertagWorldGenRoom[this.sizeX = sizeX][this.sizeY = sizeY][this.sizeZ = sizeZ];
     scale.set(scaleX, scaleY, scaleZ);
     for (int a = 0; a < numRooms; a++) {

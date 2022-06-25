@@ -1,27 +1,22 @@
 package com.phonygames.cybertag.world.gen;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.math.MathUtils;
-import com.phonygames.pengine.PAssetManager;
+import com.phonygames.cybertag.world.LasertagWorldBuilding;
+import com.phonygames.cybertag.world.LasertagWorldRoom;
+import com.phonygames.cybertag.world.World;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PGltf;
-import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.util.Duple;
-import com.phonygames.pengine.util.PArrayUtils;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
-import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PSet;
 
 import lombok.val;
@@ -34,9 +29,11 @@ public class LasertagWorldGen {
         }
       };
   private final Context context = new Context();
+  private final World world;
   private boolean wasGenned = false;
 
-  public LasertagWorldGen() {
+  public LasertagWorldGen(World world) {
+    this.world = world;
   }
 
   public void gen(@NonNull final OnFinishedCallback onFinishedCallback) {
@@ -53,45 +50,34 @@ public class LasertagWorldGen {
       }
 
       @Override protected void modelMiddle() {
-        //        // Get the first glNode's mesh and physics status from the model.
-        //        PGlNode basicWallNode = PAssetManager.model("model/template/wall/basic.glb", true).getFirstNode();
-        //        PMesh basicWallMesh = basicWallNode.drawCall().mesh();
-        //        boolean basicWallStaticBody = basicWallNode.drawCall().material().id().contains(".alsoStaticBody");
-        //        PGlNode basicFloorNode = PAssetManager.model("model/template/floor/basic.glb", true).getFirstNode();
-        //        PMesh basicFloorMesh = basicFloorNode.drawCall().mesh();
-        //        boolean basicFloorStaticBody = basicFloorNode.drawCall().material().id().contains(".alsoStaticBody");
-        //        Part.VertexProcessor vertexProcessor = Part.VertexProcessor.staticPool().obtain();
-        //        PMat4 emitTransform = PMat4.obtain();
-        //        vertexProcessor.setTransform(emitTransform);
-        //        basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
-        //                      basePart.vertexAttributes());
-        //        basePart.emit(basicFloorMesh, basicFloorStaticBody ? basePhysicsPart : null, vertexProcessor,
-        //                      basePart.vertexAttributes());
-        //        //        vertexProcessor.setTransform(emitTransform.translate(1, 0, 0));
-        //        vertexProcessor.setWall(0, 0, 1, 1, 0, -.5f, 1.4f, 1f);
-        //        basePart.emit(basicWallMesh, basicWallStaticBody ? basePhysicsPart : null, vertexProcessor,
-        //                      basePart.vertexAttributes());
-        //        //        vertexProcessor.setFlatQuad(0, 0, 1, 1, 0, 1, 1, -.4f, 2, 0, -.6f, 2);
-        //        vertexProcessor.setFlatQuad(0, -.6f, 2, 0, 0, 1, 1, 0, 1, 1, -.4f, 2);
-        //        basePart.emit(basicFloorMesh, basicFloorStaticBody ? basePhysicsPart : null, vertexProcessor,
-        //                      basePart.vertexAttributes());
-        //        emitTransform.free();
-        //        Part.VertexProcessor.staticPool().free(vertexProcessor);
-        LasertagWorldGenBuilding b = new LasertagWorldGenBuilding(20, 3, 20, 3, 4, 3, 300);
+        LasertagWorldGenBuilding b = new LasertagWorldGenBuilding(0, 20, 3, 20, 3, 4, 3, 300);
         b.generateRoomData();
         b.emit(this, context);
       }
 
       @Override protected void modelEnd() {
         PList<PGlNode> glNodes = new PList<>();
-        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null), null, PGltf.Layer.PBR);
-        for (val e : context.modelgenParts) {
-          PVec3 partCenter = e.getKey();
-          PModelGen.Part part = e.getValue();
-          // TODO: use a different layer for alphablend parts.
-          chainGlNode(glNodes, part, new PMaterial(part.name(), null), null, PGltf.Layer.PBR);
-        }
         PModel.Builder builder = new PModel.Builder();
+        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null), null, PGltf.Layer.PBR);
+        // Go through the roomPartData and generate buildings and rooms.
+        for (val e : context.roomPartData) {
+          int buildingIndex = e.k();
+          LasertagWorldBuilding worldBuilding = new LasertagWorldBuilding(buildingIndex);
+          world.buildings().add(worldBuilding);
+          for (val e2 : e.v()) {
+            int roomIndex = e2.k();
+            LasertagWorldRoom worldRoom =
+                new LasertagWorldRoom(worldBuilding, roomIndex, context.curVColIndexLength);
+            worldBuilding.rooms().add(worldRoom);
+            RoomPartData data = e2.v();
+            for (RoomPartData.Part e3 : data.modelgenParts) {
+              PVec3 partCenter = e3.origin;
+              PModelGen.Part part = e3.part;
+              // TODO: use a different layer for alphablend parts.
+              chainGlNode(glNodes, part, e3.material, null, e3.layer);
+            }
+          }
+        }
         emitStaticPhysicsPartIntoModelBuilder(builder);
         builder.addNode("lasertagworld", null, glNodes, PMat4.IDT);
         onFinishedCallback.onFinished(builder.build());
@@ -101,12 +87,57 @@ public class LasertagWorldGen {
   }
 
   public static class Context {
-    // The key here is the origin of the part, mainly used for alpha blend part sorting.
-    public final PSet<Duple<PVec3, PModelGen.Part>> modelgenParts = new PSet<>();
-    public final PSet<PModelGen.StaticPhysicsPart> modelgenStaticPhysicsParts = new PSet<>();
+    private final PMap<Integer, PMap<Integer, RoomPartData>> roomPartData =
+        new PMap<Integer, PMap<Integer, RoomPartData>>() {
+          @Override public PMap<Integer, RoomPartData> newUnpooled(Integer k) {
+            return new PMap<>();
+          }
+        };
+    private int curVColIndex = 0;
+    private int curVColIndexLength = 16;
+
+    public RoomPartData addRoomPartData(int buildingIndex, int roomIndex) {
+      RoomPartData ret = new RoomPartData(buildingIndex, roomIndex, curVColIndex, curVColIndexLength);
+      curVColIndex += curVColIndexLength;
+      roomPartData.genUnpooled(buildingIndex).put(roomIndex, ret);
+      return ret;
+    }
   }
 
   public static abstract class OnFinishedCallback {
     public abstract void onFinished(PModel model);
+  }
+
+  /**
+   * Helper class that keeps track of room data.
+   */
+  public static class RoomPartData {
+    public final int buildingIndex;
+    // Center location (for sorting alphablend), modelgenPart, layer.
+    public final PSet<Part> modelgenParts = new PSet<>();
+    public final PSet<PModelGen.StaticPhysicsPart> modelgenStaticPhysicsParts = new PSet<>();
+    public final int roomIndex, vColIndex, vColIndexLength;
+
+    private RoomPartData(int buildingIndex, int roomIndex, int vColIndex, int vColIndexLength) {
+      this.buildingIndex = buildingIndex;
+      this.roomIndex = roomIndex;
+      this.vColIndex = vColIndex;
+      this.vColIndexLength = vColIndexLength;
+    }
+
+    public static class Part {
+      final String layer;
+      final PMaterial material;
+      final PVec3 origin;
+      final PModelGen.Part part;
+
+      public Part(@NonNull PVec3 origin, @NonNull PModelGen.Part part, @NonNull String layer,
+                  @NonNull PMaterial material) {
+        this.origin = origin;
+        this.part = part;
+        this.layer = layer;
+        this.material = material;
+      }
+    }
   }
 }

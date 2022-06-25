@@ -50,6 +50,9 @@ public class PSet<E> implements Set<E> {
    * @return A prime number >= a.
    */
   private static int sampledHigherPrime(float a) {
+    if (a < SAMPLED_PRIMES[0]) {
+      return SAMPLED_PRIMES[0];
+    }
     int rangeLower = 0, rangeHigher = SAMPLED_PRIMES.length - 1;
     int bestGuess = SAMPLED_PRIMES[SAMPLED_PRIMES.length - 1];
     // Binary search for a prime.
@@ -60,7 +63,7 @@ public class PSet<E> implements Set<E> {
         bestGuess = primeAtGuess;
       }
       if (a > primeAtGuess) {
-        rangeLower = guessIndex;
+        rangeLower = guessIndex + 1;
       } else if (a < primeAtGuess) {
         rangeHigher = guessIndex;
       } else {

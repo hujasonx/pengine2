@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.phonygames.pengine.util.PPool;
+import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -179,6 +180,40 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  public PVec4 setHSVA(float hue, float saturation, float value, float a) {
+    hue = hue % 1;
+    int h = (int) (hue * 6);
+    float f = hue * 6 - h;
+    float p = value * (1 - saturation);
+    float q = value * (1 - f * saturation);
+    float t = value * (1 - (1 - f) * saturation);
+    switch (h) {
+      case 0:
+        set(value, t, p, a);
+        break;
+      case 1:
+        set(q, value, p, a);
+        break;
+      case 2:
+        set(p, value, t, a);
+        break;
+      case 3:
+        set(p, q, value, a);
+        break;
+      case 4:
+        set(t, p, value, a);
+        break;
+      case 5:
+        set(value, p, q, a);
+        break;
+      default:
+        throw new RuntimeException(
+            "Something went wrong when converting from HSV to RGB. Input was " + hue + ", " + saturation + ", " +
+            value);
+    }
+    return this;
+  }
+
   public PVec4 setIdentityQuaternion() {
     backingQuaterion.idt();
     return this;
@@ -196,6 +231,14 @@ public class PVec4 extends PVec<PVec4> {
   @Override public PVec4 set(@NonNull PVec4 other) {
     this.backingQuaterion.set(other.backingQuaterion);
     return this;
+  }
+
+  @Override public String toString() {
+    return "[PVec4] <" +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingQuaterion.x), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingQuaterion.y), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingQuaterion.z), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingQuaterion.w), 7) + ">";
   }
 
   public float w() {

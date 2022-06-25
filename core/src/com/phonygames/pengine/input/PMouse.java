@@ -10,7 +10,7 @@ import lombok.Getter;
 public class PMouse {
   //  private static final Button[] buttons = new Button[3];
   private static final int INPUTS = 20;
-  private static final Button[] buttons = new Button[3];
+  private static final Button[] buttons = new Button[5];
   private static final ButtonStatus[] frameButtonStatus = new ButtonStatus[INPUTS];
   private static final ButtonStatus[] frameButtonStatusQueued = new ButtonStatus[INPUTS];
   private static final ButtonStatus[] logicButtonStatus = new ButtonStatus[INPUTS];
@@ -198,7 +198,7 @@ public class PMouse {
   }
 
   public enum Button {
-    LEFT(Input.Buttons.LEFT), MIDDLE(Input.Buttons.MIDDLE), RIGHT(Input.Buttons.RIGHT);
+    LEFT(Input.Buttons.LEFT), MIDDLE(Input.Buttons.MIDDLE), RIGHT(Input.Buttons.RIGHT), BACK(Input.Buttons.BACK), FORWARD(Input.Buttons.FORWARD);
     private final int value;
 
     Button(final int newValue) {
@@ -210,7 +210,7 @@ public class PMouse {
       try {
         return buttons[val];
       } catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException) {
-        PAssert.fail("Invalid enum value provided:" + val);
+        PAssert.warn("Invalid enum value provided:" + val);
       }
       return null;
     }

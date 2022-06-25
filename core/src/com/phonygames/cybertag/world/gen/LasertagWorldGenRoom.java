@@ -6,12 +6,15 @@ import android.support.annotation.Nullable;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.material.PMaterial;
+import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.Duple;
 import com.phonygames.pengine.util.PArrayUtils;
 import com.phonygames.pengine.util.PList;
@@ -49,7 +52,7 @@ public class LasertagWorldGenRoom {
   public void addToBuilding() {
     building.rooms.add(this);
     for (int x = roomX; x < roomX + roomSizeX; x++) {
-      for (int y = roomX; y < roomY + roomSizeY; y++) {
+      for (int y = roomY; y < roomY + roomSizeY; y++) {
         for (int z = roomZ; z < roomZ + roomSizeZ; z++) {
           LasertagWorldGenRoom roomAtTile = building.roomTiles[x][y][z];
           if (roomAtTile == null) { // Don't replace existing room tiles.
@@ -61,13 +64,21 @@ public class LasertagWorldGenRoom {
   }
 
   protected void emit(PModelGen modelGen, LasertagWorldGen.Context context) {
+    //
     // Init parts and templates.
-    PModelGen.Part basePart = modelGen.addPart("room" + index + "Part", PVertexAttributes.getGLTF_UNSKINNED());
-    PModelGen.StaticPhysicsPart basePhysicsPart = modelGen.addStaticPhysicsPart("room" + index + "StaticPhysicsPart");
-    context.modelgenParts.add(
-        new Duple<>(PVec3.obtain().set(roomX + roomSizeX / 2, roomY + roomSizeY / 2, roomZ + roomSizeZ / 2), basePart));
-    context.modelgenStaticPhysicsParts.add(basePhysicsPart);
+    final String partNamePrefix = partNamePrefix();
+    PModelGen.Part basePart = modelGen.addPart(partNamePrefix + "Part", PVertexAttributes.getGLTF_UNSKINNED());
+    PModelGen.StaticPhysicsPart basePhysicsPart = modelGen.addStaticPhysicsPart(partNamePrefix + "StaticPhysicsPart");
+    LasertagWorldGen.RoomPartData roomPartData = context.addRoomPartData(building.index, index);
+    roomPartData.modelgenParts.add(new LasertagWorldGen.RoomPartData.Part(
+        PVec3.obtain().set(roomX + roomSizeX / 2, roomY + roomSizeY / 2, roomZ + roomSizeZ / 2), basePart,
+        PGltf.Layer.PBR, new PMaterial(basePart.name(), null).useVColIndex(true)));
+    roomPartData.modelgenStaticPhysicsParts.add(basePhysicsPart);
     initTemplateData();
+    int curVColIndex = roomPartData.vColIndex;
+    int maxVColIndex = roomPartData.vColIndex + roomPartData.vColIndexLength - 1;
+    basePart.set(PVertexAttributes.Attribute.Keys.col[0], PMesh.vColForIndex(PVec4.obtain(), curVColIndex));
+    //
     // Set up the vertex processor and temp variables.
     PModelGen.Part.VertexProcessor vertexProcessor = PModelGen.Part.VertexProcessor.staticPool().obtain();
     PPool.PoolBuffer pool = PPool.getBuffer();
@@ -75,6 +86,7 @@ public class LasertagWorldGenRoom {
     PVec3 tile000 = pool.vec3(), tile100 = pool.vec3(), tile010 = pool.vec3(), tile001 = pool.vec3();
     PVec3 tile110 = pool.vec3(), tile101 = pool.vec3(), tile011 = pool.vec3(), tile111 = pool.vec3();
     vertexProcessor.setTransform(emitTransform);
+    //
     // Loop through walldata and emit the walls.
     for (WallData data : wallData) {
       for (int a = 0; a < data.tileTypes.size; a++) {
@@ -129,13 +141,15 @@ public class LasertagWorldGenRoom {
             templateData = doorframeTemplateData;
             break;
         }
-        emitTemplate(basePart, "room" + index + "AlphaBlendPartZl", basePhysicsPart, context, templateData,
-                     vertexProcessor);
+        emitTemplate(basePart, partNamePrefix + "AlphaBlendPart" + data.side.name() + ":" + x + "," + y + "," + z,
+                     basePhysicsPart, context, templateData, vertexProcessor);
       }
     }
     // TODO: remove this.
+    //
+    // Add floors and ceilings.
     for (int x = roomX; x < roomX + roomSizeX; x++) {
-      for (int y = roomX; y < roomY + roomSizeY; y++) {
+      for (int y = roomY; y < roomY + roomSizeY; y++) {
         for (int z = roomZ; z < roomZ + roomSizeZ; z++) {
           LasertagWorldGenRoom roomAtTile = building.roomTiles[x][y][z];
           if (roomAtTile != this) {continue;}
@@ -150,20 +164,26 @@ public class LasertagWorldGenRoom {
           if (roomYl != this) {
             vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
             // We need to create a floor.
-            emitTemplate(basePart, "room" + index + "AlphaBlendPartYl", basePhysicsPart, context, floorTemplateData,
-                         vertexProcessor);
+            emitTemplate(basePart, partNamePrefix + "AlphaBlendPartYl" + ":" + x + "," + y + "," + z, basePhysicsPart,
+                         context, floorTemplateData, vertexProcessor);
           }
           if (roomYh != this) {
-            vertexProcessor.setFlatQuad(tile010, tile110, tile111, tile011);
+            vertexProcessor.setFlatQuad(tile010.add(0, -.01f, 0), tile110.add(0, -.01f, 0), tile111.add(0, -.01f, 0),
+                                        tile011.add(0, -.01f, 0));
             // We need to create a ceiling.
-            emitTemplate(basePart, "room" + index + "AlphaBlendPartYh", basePhysicsPart, context, floorTemplateData,
-                         vertexProcessor);
+            emitTemplate(basePart, partNamePrefix + "AlphaBlendPartYh" + ":" + x + "," + y + "," + z, basePhysicsPart,
+                         context, floorTemplateData, vertexProcessor);
           }
         }
       }
     }
     pool.finish();
     PModelGen.Part.VertexProcessor.staticPool().free(vertexProcessor);
+  }
+
+  // Keep in sync with the equivalent function in LasertagWorldRoom.
+  protected String partNamePrefix() {
+    return new StringBuilder().append("building").append(building.index).append("_room").append(index).toString();
   }
 
   private void initTemplateData() {
@@ -206,9 +226,12 @@ public class LasertagWorldGenRoom {
     generateFloorData();
   }
 
+  /**
+   * Generates the data regarding what sort of walls to emit.
+   */
   private void generateWallData() {
     for (int x = roomX; x < roomX + roomSizeX; x++) {
-      for (int y = roomX; y < roomY + roomSizeY; y++) {
+      for (int y = roomY; y < roomY + roomSizeY; y++) {
         for (int z = roomZ; z < roomZ + roomSizeZ; z++) {
           if (building.roomAtTile(x, y, z) != this) {continue;}
           LasertagWorldGenRoom roomXl = building.roomAtTile(x - 1, y, z);
@@ -273,7 +296,7 @@ public class LasertagWorldGenRoom {
     // would own that are too small in combined length.
     // First, x-rows.
     int keptTiles = 0;
-    for (int y = roomX; y < roomY + roomSizeY; y++) {
+    for (int y = roomY; y < roomY + roomSizeY; y++) {
       for (int z = roomZ; z < roomZ + roomSizeZ; z++) {
         int consecutiveFreeSpots = 0;
         for (int x = roomX; x < roomX + roomSizeX; x++) {
@@ -296,7 +319,7 @@ public class LasertagWorldGenRoom {
       return false;
     }
     // Then, z-rows.
-    for (int y = roomX; y < roomY + roomSizeY; y++) {
+    for (int y = roomY; y < roomY + roomSizeY; y++) {
       for (int x = roomX; x < roomX + roomSizeX; x++) {
         int consecutiveFreeSpots = 0;
         for (int z = roomZ; z < roomZ + roomSizeZ; z++) {
@@ -337,42 +360,129 @@ public class LasertagWorldGenRoom {
       this.baseZ = baseZ;
     }
 
-    private int indexForTilePosition(int x, int y, int z) {
-      if (y != this.baseY) {
-        return -1;
+    /**
+     * Fills the data buffers.
+     */
+    private void processFromTiles() {
+      // Fill the data buffers with some default data and determine its length.
+      PAssert.isTrue(tileTypes.isEmpty());
+      for (int a = 0; ; a++) {
+        int x = baseX;
+        int y = baseY;
+        int z = baseZ;
+        LasertagWorldGenRoom opposingRoom = null;
+        switch (side) {
+          case Xl: // Moving in the +z direction.
+            z += a;
+            opposingRoom = room.building.roomAtTile(x - 1, y, z);
+            break;
+          case Xh: // Moving in the +z direction.
+            z += a;
+            opposingRoom = room.building.roomAtTile(x + 1, y, z);
+            break;
+          case Zl: // Moving in the +x direction.
+            x += a;
+            opposingRoom = room.building.roomAtTile(x, y, z - 1);
+            break;
+          case Zh: // Moving in the +x direction.
+            x += a;
+            opposingRoom = room.building.roomAtTile(x, y, z + 1);
+            break;
+        }
+        if (room.building.roomAtTile(x, y, z) != room || opposingRoom == room) {
+          break;
+        }
+        tileTypes.add(TileType.NORMAL); // Put in some default values for now.
+        cornerHeightsL.add(1f);
+        cornerHeightsH.add(1f);
+        tileXs.add(x);
+        tileZs.add(z);
+        opposingRooms.add(opposingRoom);
       }
-      switch (side) {
-        case Xl:
-        case Xh:
-          // Moving in the +z direction.
-          return x != baseX ? -1 : z - baseZ;
-        case Zl:
-        case Zh:
-          // Moving in the +x direction.
-          return z != baseZ ? -1 : x - baseX;
-        default:
-          PAssert.fail("WTF");
-          return -1;
+      // Now that we've gotten filled in the data with default data, do extra processing.
+      int tilesTilDoorFrame = -1;
+      boolean doorFrameIsSingleTileWide = false;
+      int remainingDoorFrameSize = 0;
+      boolean doorFrameDataNeedsUpdating = true;
+      for (int a = 0; a < length(); a++) {
+        // Determine if we need / the style of doorframe we need.
+        LasertagWorldGenRoom opposingRoom = opposingRooms.get(a);
+        if (opposingRoom == null) {
+          tilesTilDoorFrame = -1; // You can't build a doorframe into the void!
+          doorFrameDataNeedsUpdating = true;
+          doorFrameIsSingleTileWide = false;
+        } else if (doorFrameDataNeedsUpdating) {
+          // Figure out if the other room already generated a doorframe, and if so, copy it.
+          WallData opposingWallData = opposingDataAtTileIndex(a);
+          if (opposingWallData != null) {
+            // If there is an opposing wall, see if it has a doorframe connected to this wall.
+            int doorframeIndexStart = -1, doorframeIndexEnd = -1;
+            for (int b = a; b < length(); b++) {
+              int indexForOtherWallData =
+                  opposingWallData.indexForOpposingTilePosition(tileXs.get(b), baseY, tileZs.get(b));
+              if (indexForOtherWallData >= opposingWallData.length() || indexForOtherWallData == -1) {
+                break;
+              }
+              TileType tileTypeAtIndexFromOtherWallData = opposingWallData.tileTypes.get(indexForOtherWallData);
+              if (tileTypeAtIndexFromOtherWallData == TileType.DOORFRAME && doorframeIndexStart == -1) {
+                doorframeIndexStart = b;
+              }
+              if (tileTypeAtIndexFromOtherWallData != TileType.DOORFRAME && doorframeIndexStart != -1 &&
+                  doorframeIndexEnd == -1) {
+                doorframeIndexEnd = b - 1;
+              }
+            }
+            if (doorframeIndexEnd == -1 && doorframeIndexStart != -1) {
+              doorframeIndexEnd = doorframeIndexStart;
+            }
+            // If a doorframe is connected to this wall, doorframeIndexEnd will not be -1.
+            if (doorframeIndexEnd != -1) {
+              tilesTilDoorFrame = doorframeIndexStart - a;
+              remainingDoorFrameSize = doorframeIndexEnd - doorframeIndexStart + 1;
+              if (remainingDoorFrameSize == 1) {doorFrameIsSingleTileWide = true;}
+            }
+          } else {
+            // If there is no opposing wall, we get to decide whether or not and where to build a doorframe.
+            int potentialDoorframeLength = 0;
+            for (int b = a; b < length(); b++) {
+              if (opposingRooms.get(b) == opposingRoom) {
+                potentialDoorframeLength++;
+              } else {
+                break;
+              }
+            }
+            if (potentialDoorframeLength > 0) {
+              final float[] doorFrameSizeWeights = new float[]{.5f, .2f, .1f};
+              remainingDoorFrameSize =
+                  Math.min(potentialDoorframeLength, PArrayUtils.randomIndexWithWeights(doorFrameSizeWeights) + 1);
+              if (remainingDoorFrameSize == 1) {doorFrameIsSingleTileWide = true;}
+              tilesTilDoorFrame = MathUtils.random(potentialDoorframeLength - remainingDoorFrameSize);
+            }
+          }
+          doorFrameDataNeedsUpdating = false;
+        }
+        // Generate a doorframe using the tilesTilDoorFrame, remainingDoorFrameSize, and doorFrameIsSingleTileWide vars.
+        if (tilesTilDoorFrame == 0) {
+          if (doorFrameIsSingleTileWide) {
+            tileTypes.set(a, TileType.DOORFRAME);
+            tilesTilDoorFrame = -1;
+          } else {
+            if (remainingDoorFrameSize > 0) {
+              remainingDoorFrameSize--;
+              // TODO: support multiple tile wide doorframes, and set the appropriate tyletype here.
+              if (remainingDoorFrameSize == 0) {
+                tilesTilDoorFrame = -1;
+              }
+            }
+          }
+        } else {
+          tilesTilDoorFrame--;
+        }
       }
     }
 
-    private int indexForOpposingTilePosition(int x, int y, int z) {
-      if (y != this.baseY) {
-        return -1;
-      }
-      switch (side) {
-        case Xl: // Moving in the +z direction.
-          return x != (baseX - 1) ? -1 : z - baseZ;
-        case Xh: // Moving in the +z direction.
-          return x != (baseX + 1) ? -1 : z - baseZ;
-        case Zl: // Moving in the +x direction.
-          return z != (baseZ - 1) ? -1 : x - baseX;
-        case Zh: // Moving in the +x direction.
-          return z != (baseZ + 1) ? -1 : x - baseX;
-        default:
-          PAssert.fail("WTF");
-          return -1;
-      }
+    public final int length() {
+      return tileTypes.size;
     }
 
     private @Nullable WallData opposingDataAtTileIndex(int index) {
@@ -404,8 +514,23 @@ public class LasertagWorldGenRoom {
       return null;
     }
 
-    public final int length() {
-      return tileTypes.size;
+    private int indexForOpposingTilePosition(int x, int y, int z) {
+      if (y != this.baseY) {
+        return -1;
+      }
+      switch (side) {
+        case Xl: // Moving in the +z direction.
+          return x != (baseX - 1) ? -1 : z - baseZ;
+        case Xh: // Moving in the +z direction.
+          return x != (baseX + 1) ? -1 : z - baseZ;
+        case Zl: // Moving in the +x direction.
+          return z != (baseZ - 1) ? -1 : x - baseX;
+        case Zh: // Moving in the +x direction.
+          return z != (baseZ + 1) ? -1 : x - baseX;
+        default:
+          PAssert.fail("WTF");
+          return -1;
+      }
     }
 
     private int xForIndex(int index) {
@@ -438,121 +563,22 @@ public class LasertagWorldGenRoom {
       }
     }
 
-    /**
-     * Fills the data buffers.
-     */
-    private void processFromTiles() {
-      // Fill the data buffers with some default data and determine its length.
-      PAssert.isTrue(tileTypes.isEmpty());
-      for (int a = 0; ; a++) {
-        int x = baseX;
-        int y = baseY;
-        int z = baseZ;
-        LasertagWorldGenRoom opposingRoom = null;
-        switch (side) {
-          case Xl: // Moving in the +z direction.
-            opposingRoom = room.building.roomAtTile(x - 1, y, z);
-            z += a;
-            break;
-          case Xh: // Moving in the +z direction.
-            opposingRoom = room.building.roomAtTile(x + 1, y, z);
-            z += a;
-            break;
-          case Zl: // Moving in the +x direction.
-            opposingRoom = room.building.roomAtTile(x, y, z - 1);
-            x += a;
-            break;
-          case Zh: // Moving in the +x direction.
-            opposingRoom = room.building.roomAtTile(x, y, z + 1);
-            x += a;
-            break;
-        }
-        if (room.building.roomAtTile(x, y, z) != room) {
-          break;
-        }
-        tileTypes.add(TileType.NORMAL); // TODO: doorways and windows and parapets.
-        cornerHeightsL.add(1f);
-        cornerHeightsH.add(1f);
-        tileXs.add(x);
-        tileZs.add(z);
-        opposingRooms.add(opposingRoom);
+    private int indexForTilePosition(int x, int y, int z) {
+      if (y != this.baseY) {
+        return -1;
       }
-      // Now that we've gotten filled in the data with default data, do extra processing.
-      int tilesTilDoorFrame = -1;
-      boolean doorFrameIsSingleTileWide = false;
-      int remainingDoorFrameSize = 0;
-      boolean doorFrameDataNeedsUpdating = true;
-      for (int a = 0; a < length(); a++) {
-        // Determine if we need / the style of doorframe we need.
-        LasertagWorldGenRoom opposingRoom = opposingRooms.get(a);
-        if (opposingRoom == null) {
-          tilesTilDoorFrame = -1; // You can't build a doorframe into the void!
-          doorFrameDataNeedsUpdating = true;
-          doorFrameIsSingleTileWide = false;
-        } else if (doorFrameDataNeedsUpdating) {
-          // Figure out if the other room already generated a doorframe, and if so, copy it.
-          WallData opposingWallData = opposingDataAtTileIndex(a);
-          if (opposingWallData != null) {
-            // If there is an opposing wall, see if it has a doorframe connected to this wall.
-            int doorframeIndexStart = -1, doorframeIndexEnd = -1;
-            for (int b = a; b < length(); b++) {
-              int indexForOtherWallData = opposingWallData.indexForOpposingTilePosition(tileXs.get(b), baseY, tileZs.get(b));
-              if (indexForOtherWallData >= opposingWallData.length() || indexForOtherWallData == -1) {
-                break;
-              }
-              TileType tileTypeAtIndexFromOtherWallData = opposingWallData.tileTypes.get(indexForOtherWallData);
-              if (tileTypeAtIndexFromOtherWallData == TileType.DOORFRAME && doorframeIndexStart == -1) {
-                doorframeIndexStart = b;
-              }
-              if (tileTypeAtIndexFromOtherWallData != TileType.DOORFRAME && doorframeIndexStart != -1 && doorframeIndexEnd == -1) {
-                doorframeIndexEnd = b - 1;
-              }
-            }
-            if (doorframeIndexEnd == -1 && doorframeIndexStart != -1) {
-              doorframeIndexEnd = doorframeIndexStart;
-            }
-            // If a doorframe is connected to this wall, doorframeIndexEnd will not be -1.
-            if (doorframeIndexEnd != -1) {
-              tilesTilDoorFrame = doorframeIndexStart - a;
-              remainingDoorFrameSize = doorframeIndexEnd - doorframeIndexStart + 1;
-              if (remainingDoorFrameSize == 1) { doorFrameIsSingleTileWide = true; }
-            }
-          } else {
-            // If there is no opposing wall, we get to decide whether or not and where to build a doorframe.
-            int potentialDoorframeLength = 0;
-            for (int b = a; b < length(); b++) {
-              if (opposingRooms.get(b) == opposingRoom) {
-                potentialDoorframeLength ++;
-              } else {
-                break;
-              }
-            }
-            if (potentialDoorframeLength > 0) {
-              final float[] doorFrameSizeWeights = new float[] {.5f, .2f, .1f};
-              remainingDoorFrameSize = Math.min(potentialDoorframeLength, PArrayUtils.randomIndexWithWeights(doorFrameSizeWeights) + 1);
-              if (remainingDoorFrameSize == 1) { doorFrameIsSingleTileWide = true; }
-              tilesTilDoorFrame = MathUtils.random(potentialDoorframeLength - remainingDoorFrameSize);
-            }
-          }
-          doorFrameDataNeedsUpdating = false;
-        }
-        // Generate a doorframe using the tilesTilDoorFrame, remainingDoorFrameSize, and doorFrameIsSingleTileWide vars.
-        if (tilesTilDoorFrame == 0) {
-          if (doorFrameIsSingleTileWide) {
-            tileTypes.set(a, TileType.DOORFRAME);
-            tilesTilDoorFrame = -1;
-          } else {
-            if (remainingDoorFrameSize > 0) {
-              remainingDoorFrameSize--;
-              // TODO: support multiple tile wide doorframes, and set the appropriate tyletype here.
-              if (remainingDoorFrameSize == 0) {
-                tilesTilDoorFrame = -1;
-              }
-            }
-          }
-        } else {
-          tilesTilDoorFrame--;
-        }
+      switch (side) {
+        case Xl:
+        case Xh:
+          // Moving in the +z direction.
+          return x != baseX ? -1 : z - baseZ;
+        case Zl:
+        case Zh:
+          // Moving in the +x direction.
+          return z != baseZ ? -1 : x - baseX;
+        default:
+          PAssert.fail("WTF");
+          return -1;
       }
     }
 

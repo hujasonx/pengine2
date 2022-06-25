@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PCollectionUtils;
 import com.phonygames.pengine.util.PList;
 
@@ -145,5 +147,19 @@ public class PMesh {
     public int getGlType() {
       return glType;
     }
+  }
+
+  public static PVec4 vColForIndex(PVec4 out, int index) {
+    int ratio = 16;
+    float indexRemaining = index;
+    out.x((indexRemaining % ratio) / ratio);
+    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
+    out.y((indexRemaining % ratio) / ratio);
+    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
+    out.z((indexRemaining % ratio) / ratio);
+    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
+    out.w(1);
+    System.out.println("indexc" + index +", " + out);
+    return out;
   }
 }

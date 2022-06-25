@@ -53,6 +53,7 @@ public class CybertagGame implements PGame {
     renderContext.start();
     renderContext.setPhysicsDebugDrawerCameraFromSelf();
     pPbrPipeline.attach(renderContext);
+    world.frameUpdate();
     world.render(renderContext);
     // Set environment.
         environment.setAmbientLightCol(.1f, .1f, .1f);
