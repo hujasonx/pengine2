@@ -70,10 +70,7 @@ public class LasertagWorldGenBuilding {
 
   protected void generateRoomData() {
     for (LasertagWorldGenRoom room : rooms) {
-      room.generateFloorData();
-      room.generatePropsData();
-      room.generateWalkwayData();
-      room.generateWallData();
+      room.generateRoomData();
     }
   }
 
