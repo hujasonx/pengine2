@@ -35,7 +35,7 @@ public class LasertagWorldGenBuilding {
     for (int a = 0; a < numRooms; a++) {
       LasertagWorldGenRoom potentialRoom = genRoom(rooms.size);
       // Check for overlaps with other rooms.
-      final int minimumRoomSegmentSizeAfterEncroachment = 3; // This room will not replace existing room tiles, so
+      final int minimumRoomSegmentSizeAfterEncroachment = 2; // This room will not replace existing room tiles, so
       // make sure there arent any parts of this room that will be smaller than this value in dimension.
       final float minimumKeptTilesRatio = .5f;
       if (potentialRoom.isValidWithEncroachment(roomTiles, minimumRoomSegmentSizeAfterEncroachment, minimumKeptTilesRatio)) {
@@ -49,7 +49,7 @@ public class LasertagWorldGenBuilding {
    * @return the room.
    */
   protected LasertagWorldGenRoom genRoom(int index) {
-    final int minRoomSize = 5, maxRoomSize = 10;
+    final int minRoomSize = 4, maxRoomSize = 8;
     // The edgeShiftBoundary is added to the range edges of the location random() call. The location is then clamped
     // back down to the original range. This allows for the rooms to be more clustered towards the edge of the
     // building.

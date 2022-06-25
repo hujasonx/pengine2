@@ -50,7 +50,7 @@ public class LasertagWorldGen {
       }
 
       @Override protected void modelMiddle() {
-        LasertagWorldGenBuilding b = new LasertagWorldGenBuilding(0, 20, 3, 20, 3, 4, 3, 300);
+        LasertagWorldGenBuilding b = new LasertagWorldGenBuilding(0, 12, 3, 12, 4, 4, 4, 300);
         b.generateRoomData();
         b.emit(this, context);
       }
@@ -66,8 +66,7 @@ public class LasertagWorldGen {
           world.buildings().add(worldBuilding);
           for (val e2 : e.v()) {
             int roomIndex = e2.k();
-            LasertagWorldRoom worldRoom =
-                new LasertagWorldRoom(worldBuilding, roomIndex, context.curVColIndexLength);
+            LasertagWorldRoom worldRoom = new LasertagWorldRoom(worldBuilding, roomIndex, context.curVColIndexLength);
             worldBuilding.rooms().add(worldRoom);
             RoomPartData data = e2.v();
             for (RoomPartData.Part e3 : data.modelgenParts) {

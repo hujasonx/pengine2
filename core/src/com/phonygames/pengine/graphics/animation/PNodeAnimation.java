@@ -98,20 +98,20 @@ public class PNodeAnimation {
    */
   private final int getLowerNodeKeyframeIndexForTime(PList keyFrames, float time) {
     PAssert.isTrue(!keyFrames.isEmpty());
-//    for (int a = 1; a < keyFrames.size; a++) {
-//      if (((NodeKeyframe) keyFrames.get(a)).keytime > time) {
-//        return a - 1;
-//      }
-//    }
-//    return keyFrames.size - 1;
+    if (time >= length) {
+      return keyFrames.size - 1;
+    }
+
     int lowerIndex = 0; int higherIndex = keyFrames.size - 1;
     while (lowerIndex < higherIndex) {
       int guessIndex = (lowerIndex + higherIndex) / 2;
       float guessTime = ((NodeKeyframe) keyFrames.get(guessIndex)).keytime;
       if (guessTime > time) {
-        higherIndex = guessIndex;
+        higherIndex = guessIndex - 1;
       } else if (guessTime < time) {
         lowerIndex = guessIndex;
+      } else {
+        return guessIndex;
       }
 
       if (lowerIndex >= higherIndex - 1) {
