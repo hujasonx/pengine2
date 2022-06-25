@@ -9,9 +9,12 @@ import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.experimental.Accessors;
 
 public class PVec4 extends PVec<PVec4> {
+  public static final PVec4 X = new PVec4().set(1, 0, 0, 0);
+  public static final PVec4 Y = new PVec4().set(0, 1, 0, 0);
+  public static final PVec4 Z = new PVec4().set(0, 0, 1, 0);
+  public static final PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PVec4> staticPool = new PPool<PVec4>() {
     @Override protected PVec4 newObject() {
@@ -19,10 +22,6 @@ public class PVec4 extends PVec<PVec4> {
     }
   };
   public static PVec4 W = new PVec4().set(0, 0, 0, 1);
-  public static final PVec4 X = new PVec4().set(1, 0, 0, 0);
-  public static final PVec4 Y = new PVec4().set(0, 1, 0, 0);
-  public static final PVec4 Z = new PVec4().set(0, 0, 1, 0);
-  public static final PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
   private final Quaternion backingQuaterion = new Quaternion().set(0, 0, 0, 0);
 
   private PVec4() {}
@@ -103,6 +102,14 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  @Override public PVec4 roundComponents(float factor) {
+    this.backingQuaterion.x = (Math.round(this.backingQuaterion.x * factor) / factor);
+    this.backingQuaterion.y = (Math.round(this.backingQuaterion.y * factor) / factor);
+    this.backingQuaterion.z = (Math.round(this.backingQuaterion.z * factor) / factor);
+    this.backingQuaterion.w = (Math.round(this.backingQuaterion.w * factor) / factor);
+    return this;
+  }
+
   @Override public PVec4 setZero() {
     return set(0, 0, 0, 0);
   }
@@ -150,11 +157,6 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
-  public PVec4 slerp(PVec4 other, float mix) {
-    backingQuaterion.slerp(other.backingQuaterion, mix);
-    return this;
-  }
-
   public PVec4 mul(@NonNull PMat4 mat4) {
     float[] l_mat = mat4.values();
     return this.set(backingQuaterion.x * l_mat[Matrix4.M00] + backingQuaterion.y * l_mat[Matrix4.M01] +
@@ -179,6 +181,11 @@ public class PVec4 extends PVec<PVec4> {
 
   public PVec4 setIdentityQuaternion() {
     backingQuaterion.idt();
+    return this;
+  }
+
+  public PVec4 slerp(PVec4 other, float mix) {
+    backingQuaterion.slerp(other.backingQuaterion, mix);
     return this;
   }
 

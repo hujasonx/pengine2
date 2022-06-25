@@ -38,9 +38,6 @@ public class LasertagWorldGenBuilding {
       final float minimumKeptTilesRatio = .5f;
       if (potentialRoom.isValidWithEncroachment(roomTiles, minimumRoomSegmentSizeAfterEncroachment, minimumKeptTilesRatio)) {
         potentialRoom.addToBuilding();
-        System.out.println("!!!JASON adding room");
-      } else {
-        System.out.println("!!!JASON not adding room");
       }
     }
   }

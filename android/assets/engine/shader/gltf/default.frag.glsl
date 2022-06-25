@@ -7,6 +7,8 @@ void main() {
     #include <engine/shader/start/rendercontext.frag>
     #include <engine/shader/start/pbr.frag>
 
+    diffuseM.rgb += (v_worldNor * 0.5 + vec3(0.5));
+
     #include <engine/shader/end/pbr.frag>
     #include <engine/shader/end/rendercontext.frag>
     #include <engine/shader/end/instanced.frag>

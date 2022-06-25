@@ -31,12 +31,6 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
-  @Override public PVec2 lerp(PVec2 other, float mix) {
-    x += (other.x - x) * mix;
-    y += (other.y - y) * mix;
-    return this;
-  }
-
   /**
    * Adds scale * other to caller into caller.
    * @param other
@@ -77,6 +71,12 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
+  @Override public PVec2 roundComponents(float factor) {
+    this.x = (Math.round(this.x * factor) / factor);
+    this.y = (Math.round(this.y * factor) / factor);
+    return this;
+  }
+
   @Override public PVec2 setZero() {
     x = 0;
     y = 0;
@@ -99,20 +99,26 @@ public class PVec2 extends PVec<PVec2> {
     return PNumberUtils.epsilonEquals(x, vec2.x) && PNumberUtils.epsilonEquals(y, vec2.y);
   }
 
+  @Override public PVec2 lerp(PVec2 other, float mix) {
+    x += (other.x - x) * mix;
+    y += (other.y - y) * mix;
+    return this;
+  }
+
   public PVec2 set(float x, float y) {
     this.x = x;
     this.y = y;
     return this;
   }
 
+  @Override protected PPool staticPool() {
+    return getStaticPool();
+  }
+
   @Override public PVec2 set(PVec2 other) {
     this.x = other.x;
     this.y = other.y;
     return this;
-  }
-
-  @Override protected PPool staticPool() {
-    return getStaticPool();
   }
 
   public float u() {

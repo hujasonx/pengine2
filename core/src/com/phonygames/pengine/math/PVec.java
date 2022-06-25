@@ -47,6 +47,14 @@ public abstract class PVec<V extends PVec> extends PBasic<V> implements PLerpabl
     setZero();
   }
 
+
+  /**
+   * Rounds the components of this vector to the reciprocal nearest factor (i.e. input 10 for nearest 10th).
+   * @param factor
+   * @return
+   */
+  public abstract V roundComponents(float factor);
+
   public abstract V setZero();
   public abstract V scl(float scl);
   public abstract V sub(V other);

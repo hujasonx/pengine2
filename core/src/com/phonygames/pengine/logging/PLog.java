@@ -6,7 +6,7 @@ public class PLog {
   private static final int MESSAGE_BUFFER_SIZE = 10000;
   private static PLogMessage[] MESSAGE_BUFFER = new PLogMessage[MESSAGE_BUFFER_SIZE];
   private static int nextIndex = 0;
-  private static boolean printToStdOut = false;
+  private static boolean printToStdOut = true;
 
   public static PLogMessage c(String message) {
     return log(PLogMessage.CRITICAL, message);

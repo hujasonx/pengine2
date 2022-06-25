@@ -80,6 +80,13 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  @Override public PVec3 roundComponents(float factor) {
+    this.backingVec3.x = (Math.round(this.backingVec3.x * factor) / factor);
+    this.backingVec3.y = (Math.round(this.backingVec3.y * factor) / factor);
+    this.backingVec3.z = (Math.round(this.backingVec3.z * factor) / factor);
+    return this;
+  }
+
   @Override public PVec3 setZero() {
     this.backingVec3.setZero();
     return this;

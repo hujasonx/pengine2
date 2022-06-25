@@ -57,11 +57,11 @@ public class PVec1 extends PVec<PVec1> {
   @Override public float dot(PVec1 other) {
     return x * other.x;
   }
-  // End static.
 
   @Override public float len() {
     return Math.abs(x);
   }
+  // End static.
 
   /**
    * Multiplies other with caller into caller.
@@ -70,6 +70,11 @@ public class PVec1 extends PVec<PVec1> {
    */
   @Override public PVec1 mul(PVec1 other) {
     x *= other.x;
+    return this;
+  }
+
+  @Override public PVec1 roundComponents(float factor) {
+    this.x = (Math.round(this.x * factor) / factor);
     return this;
   }
 
