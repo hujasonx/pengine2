@@ -572,6 +572,13 @@ public class PModelGen implements PPostableTask {
       return this;
     }
 
+    private StaticPhysicsPart addTri(PVec3 v0, PVec3 v1, PVec3 v2) {
+      indices().add(getIndexOrAdd(v0.x(), v0.y(), v0.z(), MAX_SEARCH_DEPTH));
+      indices().add(getIndexOrAdd(v1.x(), v1.y(), v1.z(), MAX_SEARCH_DEPTH));
+      indices().add(getIndexOrAdd(v2.x(), v2.y(), v2.z(), MAX_SEARCH_DEPTH));
+      return this;
+    }
+
     private short getIndexOrAdd(final float x, final float y, final float z, final int maxSearchDepth) {
       if (!vertices().isEmpty()) {
         for (int a = 0; a < maxSearchDepth; a++) {
