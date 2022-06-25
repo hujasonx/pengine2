@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world;
 
+import com.phonygames.cybertag.world.gen.LasertagWorldGen;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModel;
