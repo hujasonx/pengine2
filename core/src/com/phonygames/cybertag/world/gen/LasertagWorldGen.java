@@ -6,10 +6,12 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.phonygames.cybertag.world.LasertagWorldBuilding;
 import com.phonygames.cybertag.world.LasertagWorldRoom;
 import com.phonygames.cybertag.world.World;
+import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PGltf;
+import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
@@ -28,7 +30,7 @@ public class LasertagWorldGen {
           return new PMap<>();
         }
       };
-  private final Context context = new Context();
+  private final Context context = new Context(this);
   private final World world;
   private boolean wasGenned = false;
 
@@ -86,6 +88,12 @@ public class LasertagWorldGen {
   }
 
   public static class Context {
+    public final PMap<String, MeshTemplate> meshTemplates = new PMap<String, MeshTemplate>() {
+      @Override public MeshTemplate newUnpooled(String filename) {
+        return new MeshTemplate(PAssetManager.model(filename, true));
+      }
+    };
+    public final LasertagWorldGen worldGen;
     private final PMap<Integer, PMap<Integer, RoomPartData>> roomPartData =
         new PMap<Integer, PMap<Integer, RoomPartData>>() {
           @Override public PMap<Integer, RoomPartData> newUnpooled(Integer k) {
@@ -95,11 +103,42 @@ public class LasertagWorldGen {
     private int curVColIndex = 0;
     private int curVColIndexLength = 16;
 
+    public Context(LasertagWorldGen worldGen) {
+      this.worldGen = worldGen;
+    }
+
     public RoomPartData addRoomPartData(int buildingIndex, int roomIndex) {
       RoomPartData ret = new RoomPartData(buildingIndex, roomIndex, curVColIndex, curVColIndexLength);
       curVColIndex += curVColIndexLength;
       roomPartData.genUnpooled(buildingIndex).put(roomIndex, ret);
       return ret;
+    }
+
+    public MeshTemplate template(String filename) {
+      return meshTemplates.genUnpooled(filename);
+    }
+  }
+
+  public static class MeshTemplate {
+    public final PList<Boolean> emitMesh = new PList<>();
+    public final PList<Boolean> emitPhysics = new PList<>();
+    public final PList<PMesh> meshes = new PList<>();
+
+    public MeshTemplate(PModel model) {
+      for (val e : model.glNodes()) {
+        meshes.add(e.v().drawCall().mesh());
+        String materialId = e.v().drawCall().material().id();
+        if (materialId.contains(".alsoStaticBody")) {
+          emitPhysics.add(true);
+          emitMesh.add(true);
+        } else if (materialId.contains(".onlyStaticBody")) {
+          emitPhysics.add(true);
+          emitMesh.add(false);
+        } else {
+          emitPhysics.add(false);
+          emitMesh.add(true);
+        }
+      }
     }
   }
 

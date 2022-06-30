@@ -572,7 +572,32 @@ public class PModelGen implements PPostableTask {
       return this;
     }
 
-    private StaticPhysicsPart addTri(PVec3 v0, PVec3 v1, PVec3 v2) {
+    public StaticPhysicsPart emit(@NonNull PMesh mesh, Part.VertexProcessor processor) {
+      @NonNull final float[] meshVerts = mesh.getBackingMeshFloats();
+      @NonNull final short[] meshShorts = mesh.getBackingMeshShorts();
+      int meshFloatsPerVert = mesh.vertexAttributes().getNumFloatsPerVertex();
+      for (int meshVIndex = 0; meshVIndex < meshShorts.length; meshVIndex+= 3) { // Loop through all triangles in the mesh.
+        // Get the raw position.
+        int posLookupI0 = meshShorts[meshVIndex + 0] * meshFloatsPerVert +
+                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+        int posLookupI1 = meshShorts[meshVIndex + 1] * meshFloatsPerVert +
+                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+        int posLookupI2 = meshShorts[meshVIndex + 2] * meshFloatsPerVert +
+                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+        PPool.PoolBuffer pool = PPool.getBuffer();
+        PVec3 pos0 = pool.vec3().set(meshVerts[posLookupI0 + 0], meshVerts[posLookupI0 + 1], meshVerts[posLookupI0 + 2]);
+        processor.process(pos0.x(), pos0.y(), pos0.z(), PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos0);
+        PVec3 pos1 = pool.vec3().set(meshVerts[posLookupI1 + 0], meshVerts[posLookupI1 + 1], meshVerts[posLookupI1 + 2]);
+        processor.process(pos1.x(), pos1.y(), pos1.z(), PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos1);
+        PVec3 pos2 = pool.vec3().set(meshVerts[posLookupI2 + 0], meshVerts[posLookupI2 + 1], meshVerts[posLookupI2 + 2]);
+        processor.process(pos2.x(), pos2.y(), pos2.z(), PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos2);
+        addTri(pos0, pos1, pos2);
+        pool.finish();
+      }
+      return this;
+    }
+
+    public StaticPhysicsPart addTri(PVec3 v0, PVec3 v1, PVec3 v2) {
       indices().add(getIndexOrAdd(v0.x(), v0.y(), v0.z(), MAX_SEARCH_DEPTH));
       indices().add(getIndexOrAdd(v1.x(), v1.y(), v1.z(), MAX_SEARCH_DEPTH));
       indices().add(getIndexOrAdd(v2.x(), v2.y(), v2.z(), MAX_SEARCH_DEPTH));

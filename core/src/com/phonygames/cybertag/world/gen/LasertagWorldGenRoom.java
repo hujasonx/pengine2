@@ -25,14 +25,11 @@ import lombok.val;
 
 public class LasertagWorldGenRoom {
   private final LasertagWorldGenBuilding building;
-  private final transient PList<Duple<PMesh, Boolean>> doorframeTemplateData = new PList<>();
   // Should be a wall with a window, with multiple parts.
   // private String windowModel = "model/template/window/basic.glb";
-  private final transient PList<Duple<PMesh, Boolean>> floorTemplateData = new PList<>();
   private final int index, roomX, roomY, roomZ, roomSizeX, roomSizeY, roomSizeZ;
   private final transient PSet<Integer> roomIndicesConnectedByDoorFrames = new PSet<>();
   private final PList<WallData> wallData = new PList<>();
-  private final transient PList<Duple<PMesh, Boolean>> wallTemplateData = new PList<>();
   private String doorframeModel = "model/template/doorframe/basic.glb";
   private String floorModel = "model/template/floor/basic.glb";
   private String wallModel = "model/template/wall/basic.glb";
@@ -74,7 +71,6 @@ public class LasertagWorldGenRoom {
         PVec3.obtain().set(roomX + roomSizeX / 2, roomY + roomSizeY / 2, roomZ + roomSizeZ / 2), basePart,
         PGltf.Layer.PBR, new PMaterial(basePart.name(), null).useVColIndex(true)));
     roomPartData.modelgenStaticPhysicsParts.add(basePhysicsPart);
-    initTemplateData();
     int curVColIndex = roomPartData.vColIndex;
     int maxVColIndex = roomPartData.vColIndex + roomPartData.vColIndexLength - 1;
     basePart.set(PVertexAttributes.Attribute.Keys.col[0], PMesh.vColForIndex(PVec4.obtain(), curVColIndex));
@@ -128,21 +124,21 @@ public class LasertagWorldGenRoom {
         }
         vertexProcessor.setWall(first.x(), first.y(), first.z(), firstHeight * heightL, second.x(), second.y(),
                                 second.z(), secondHeight * heightH);
-        PList<Duple<PMesh, Boolean>> templateData = null;
+        LasertagWorldGen.MeshTemplate template = null;
         switch (tileType) {
           case NORMAL:
           default:
-            templateData = wallTemplateData;
+            template = context.template(wallModel);
             break;
           case WINDOW:
             PAssert.failNotImplemented("WINDOW");
             break;
           case DOORFRAME:
-            templateData = doorframeTemplateData;
+            template = context.template(doorframeModel);;
             break;
         }
         emitTemplate(basePart, partNamePrefix + "AlphaBlendPart" + data.side.name() + ":" + x + "," + y + "," + z,
-                     basePhysicsPart, context, templateData, vertexProcessor);
+                     basePhysicsPart, context, template, vertexProcessor);
       }
     }
     // TODO: remove this.
@@ -165,14 +161,14 @@ public class LasertagWorldGenRoom {
             vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
             // We need to create a floor.
             emitTemplate(basePart, partNamePrefix + "AlphaBlendPartYl" + ":" + x + "," + y + "," + z, basePhysicsPart,
-                         context, floorTemplateData, vertexProcessor);
+                         context, context.template(floorModel), vertexProcessor);
           }
           if (roomYh != this) {
             vertexProcessor.setFlatQuad(tile010.add(0, -.01f, 0), tile110.add(0, -.01f, 0), tile111.add(0, -.01f, 0),
                                         tile011.add(0, -.01f, 0));
             // We need to create a ceiling.
             emitTemplate(basePart, partNamePrefix + "AlphaBlendPartYh" + ":" + x + "," + y + "," + z, basePhysicsPart,
-                         context, floorTemplateData, vertexProcessor);
+                         context, context.template(floorModel), vertexProcessor);
           }
         }
       }
@@ -186,36 +182,20 @@ public class LasertagWorldGenRoom {
     return new StringBuilder().append("building").append(building.index).append("_room").append(index).toString();
   }
 
-  private void initTemplateData() {
-    PModel floorPModel = PAssetManager.model(floorModel, true);
-    floorTemplateData.clear();
-    for (val e : floorPModel.glNodes()) {
-      floorTemplateData.add(
-          new Duple<>(e.v().drawCall().mesh(), e.v().drawCall().material().id().contains(".alsoStaticBody")));
-    }
-    PModel doorframePModel = PAssetManager.model(doorframeModel, true);
-    doorframeTemplateData.clear();
-    for (val e : doorframePModel.glNodes()) {
-      doorframeTemplateData.add(
-          new Duple<>(e.v().drawCall().mesh(), e.v().drawCall().material().id().contains(".alsoStaticBody")));
-    }
-    PModel wallPModel = PAssetManager.model(wallModel, true);
-    wallTemplateData.clear();
-    for (val e : wallPModel.glNodes()) {
-      wallTemplateData.add(
-          new Duple<>(e.v().drawCall().mesh(), e.v().drawCall().material().id().contains(".alsoStaticBody")));
-    }
-  }
-
   protected void emitTemplate(@NonNull PModelGen.Part basePart, @Nullable String alphaBlendPartName,
                               @Nullable PModelGen.StaticPhysicsPart staticPhysicsPart,
-                              @NonNull LasertagWorldGen.Context context, @NonNull PList<Duple<PMesh, Boolean>> template,
+                              @NonNull LasertagWorldGen.Context context, @NonNull LasertagWorldGen.MeshTemplate template,
                               @NonNull PModelGen.Part.VertexProcessor vertexProcessor) {
-    for (val e : template) {
-      PMesh mesh = e.getKey();
-      boolean alsoStaticBody = e.getValue();
-      basePart.emit(mesh, (alsoStaticBody && staticPhysicsPart != null) ? staticPhysicsPart : null, vertexProcessor,
-                    basePart.vertexAttributes());
+    for (int a = 0; a < template.meshes.size; a++) {
+      PMesh mesh = template.meshes.get(a);
+      boolean emitMesh = template.emitMesh.get(a);
+      boolean emitPhysics = template.emitPhysics.get(a);
+      if (emitMesh) {
+        basePart.emit(mesh, (emitPhysics && staticPhysicsPart != null) ? staticPhysicsPart : null, vertexProcessor,
+                      basePart.vertexAttributes());
+      } else if (staticPhysicsPart != null && emitPhysics){
+        staticPhysicsPart.emit(mesh, vertexProcessor);
+      }
     }
   }
 
