@@ -1,23 +1,12 @@
 package com.phonygames.cybertag.world.gen;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.badlogic.gdx.math.MathUtils;
-import com.phonygames.pengine.PAssetManager;
-import com.phonygames.pengine.graphics.model.PMesh;
-import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
-import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.util.Duple;
 import com.phonygames.pengine.util.PArrayUtils;
 import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PPool;
-
-import lombok.val;
 
 public class LasertagWorldGenBuilding {
   protected final int index;
@@ -73,7 +62,7 @@ public class LasertagWorldGenBuilding {
     }
   }
 
-  protected void emit(PModelGen modelGen, LasertagWorldGen.Context context) {
+  protected void emit(PModelGen modelGen, LasertagWorldGenOld.Context context) {
     for (LasertagWorldGenRoom room : rooms) {
       room.emit(modelGen, context);
     }

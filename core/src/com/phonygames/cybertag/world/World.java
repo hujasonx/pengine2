@@ -1,61 +1,37 @@
 package com.phonygames.cybertag.world;
 
-import com.phonygames.cybertag.world.gen.LasertagWorldGen;
-import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.cybertag.world.lasertag.LasertagBuildingGen;
+import com.phonygames.cybertag.world.lasertag.LasertagBuildingGenAABBPlacer;
+import com.phonygames.cybertag.world.lasertag.LasertagRoomGen;
+import com.phonygames.cybertag.world.lasertag.LasertagRoomGenRoomPlacer;
+import com.phonygames.cybertag.world.lasertag.LasertagWorld;
+import com.phonygames.cybertag.world.lasertag.LasertagWorldGen;
 import com.phonygames.pengine.graphics.PRenderContext;
-import com.phonygames.pengine.graphics.model.PGltf;
-import com.phonygames.pengine.graphics.model.PModel;
-import com.phonygames.pengine.graphics.model.PModelInstance;
-import com.phonygames.pengine.graphics.texture.PFloat4Texture;
-import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PStringMap;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.experimental.Accessors;
+import com.phonygames.pengine.math.aabb.PIntAABB;
 
 public class World {
-  @Getter(value = AccessLevel.PRIVATE, lazy = true)
-  @Accessors(fluent = true)
-  private final PStringMap<PModelInstance> modelInstances = new PStringMap<>();
-  @Getter(value = AccessLevel.PRIVATE, lazy = true)
-  @Accessors(fluent = true)
-  private final PStringMap<PModel> models = new PStringMap<>();
-  private PModelInstance testWorldModelInstance;
-  private PModel worldModel;
-
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
-  @Accessors(fluent = true)
-  private final PList<LasertagWorldBuilding> buildings = new PList<>();
+  public final LasertagWorld lasertagWorld;
 
   public World() {
     LasertagWorldGen worldGen = new LasertagWorldGen(this);
-    worldGen.gen(new LasertagWorldGen.OnFinishedCallback() {
-      @Override public void onFinished(PModel model) {
-        worldModel = model;
-        testWorldModelInstance = new PModelInstance(worldModel);
-        testWorldModelInstance.createAndAddStaticBodiesFromModelWithCurrentWorldTransform();
-        testWorldModelInstance.setDataBufferEmitter(new PRenderContext.DataBufferEmitter() {
-          @Override public void emitDataBuffersInto(PRenderContext renderContext) {
-            PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
-            for (LasertagWorldBuilding building :  buildings()) {
-              building.outputColorData(vColIndexBuffer);
-            }
-          }
-        });
+    LasertagBuildingGen buildingGen = new LasertagBuildingGen(worldGen);
+    buildingGen.setTileTranslation(0, 0, 0).setTileRotation(.2f).setTileScale(3, 3, 3);
+    LasertagBuildingGenAABBPlacer.addAABBs(buildingGen);
+    LasertagRoomGenRoomPlacer.reset();
+    for (int a = 0; a < 10; a++) {
+      PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen);
+      if (roomAABB != null) {
+        LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen, roomAABB);
       }
-    });
+    }
+    this.lasertagWorld = worldGen.build();
   }
 
   public void frameUpdate() {
-    for (LasertagWorldBuilding building :  buildings()) {
-      building.frameUpdate();
-    }
+    lasertagWorld.frameUpdate();
   }
 
   public void render(PRenderContext renderContext) {
-    if (testWorldModelInstance != null) {
-      testWorldModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
-    }
+    lasertagWorld.render(renderContext);
   }
 }

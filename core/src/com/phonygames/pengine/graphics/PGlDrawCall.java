@@ -62,9 +62,9 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private PShader shader;
-  @Getter(value = AccessLevel.PUBLIC)
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
-  private PVec3 worldLoc;
+  private final PVec3 origin = PVec3.obtain();
 
   private PGlDrawCall(boolean renderingDisabled) {
     reset();
@@ -85,7 +85,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     dptTest = GL20.GL_LESS;
     cullFace = GL20.GL_BACK;
     numInstances = 0;
-    worldLoc = null;
+    origin().setZero();
     shader = null;
     layer = null;
     boneTransformsLookupOffset = 0;
@@ -123,7 +123,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     dptTest = other.dptTest;
     cullFace = other.cullFace;
     numInstances = other.numInstances;
-    worldLoc = other.worldLoc;
+    origin().set(other.origin());
     shader = other.shader;
     layer = other.layer;
     boneTransformsLookupOffset = other.boneTransformsLookupOffset;
@@ -237,8 +237,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     return this;
   }
 
-  public PGlDrawCall setWorldLoc(PVec3 worldLoc) {
-    this.worldLoc = worldLoc;
+  public PGlDrawCall setOrigin(PVec3 origin) {
+    origin().set(origin);
     return this;
   }
 }

@@ -84,8 +84,11 @@ public class PModelGen implements PPostableTask {
   protected void modelEnd() {
   }
 
+  /**
+   * Creates or appends to a list of GLNodes, generating a new node using the given part.
+   */
   protected PModelGen chainGlNode(@Nullable PList<PGlNode> list, @NonNull Part part, @NonNull PMaterial defaultMaterial,
-                                  @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer) {
+                                  @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer, boolean setOriginToMeshCenter) {
     if (list == null) {
       list = new PList<>();
     }
@@ -93,6 +96,9 @@ public class PModelGen implements PPostableTask {
     glNode.drawCall().setMesh(part.getMesh());
     glNode.drawCall().setMaterial(defaultMaterial);
     glNode.drawCall().setLayer(layer);
+    if (setOriginToMeshCenter) {
+      glNode.drawCall().setOrigin(glNode.drawCall().mesh().center());
+    }
     if (boneInvBindTransforms != null) {
       glNode.invBoneTransforms().putAll(boneInvBindTransforms);
     }
@@ -120,6 +126,9 @@ public class PModelGen implements PPostableTask {
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     @Accessors(fluent = true)
     private final PWindowedBuffer latestIndices = new PWindowedBuffer(4);
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    @Accessors(fluent = true)
+    private final PVec3 minPos = PVec3.obtain(), maxPos = PVec3.obtain();
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private final String name;
@@ -215,10 +224,14 @@ public class PModelGen implements PPostableTask {
 
     public Part set(String alias, PVec3 vec) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
+      if (alias.equals(PVertexAttributes.Attribute.Keys.pos)) {
+        minPos().set(Math.min(minPos().x(), vec.x()), Math.min(minPos().y(), vec.y()), Math.min(minPos().z(), vec.z()));
+        maxPos().set(Math.max(maxPos().x(), vec.x()), Math.max(maxPos().y(), vec.y()), Math.max(maxPos().z(), vec.z()));
+      }
       int ind = vertexAttributes.indexForVertexAttribute(alias);
-            currentVertexValues()[ind + 0] = vec.x();
-            currentVertexValues()[ind + 1] = vec.y();
-            currentVertexValues()[ind + 2] = vec.z();
+      currentVertexValues()[ind + 0] = vec.x();
+      currentVertexValues()[ind + 1] = vec.y();
+      currentVertexValues()[ind + 2] = vec.z();
       return this;
     }
 
@@ -300,6 +313,11 @@ public class PModelGen implements PPostableTask {
       return ret;
     }
 
+    public PVec3 getMiddle(PVec3 out) {
+      out.set(minPos()).lerp(maxPos(), 0.5f);
+      return out;
+    }
+
     public Part quad(boolean flip) {
       return quad(flip, null);
     }
@@ -322,6 +340,10 @@ public class PModelGen implements PPostableTask {
 
     public Part set(String alias, float x, float y, float z) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
+      if (alias.equals(PVertexAttributes.Attribute.Keys.pos)) {
+        minPos().set(Math.min(minPos().x(), x), Math.min(minPos().y(), y), Math.min(minPos().z(), z));
+        maxPos().set(Math.max(maxPos().x(), x), Math.max(maxPos().y(), y), Math.max(maxPos().z(), z));
+      }
       int ind = vertexAttributes().indexForVertexAttribute(alias);
       currentVertexValues()[ind + 0] = x;
       currentVertexValues()[ind + 1] = y;
@@ -572,38 +594,6 @@ public class PModelGen implements PPostableTask {
       return this;
     }
 
-    public StaticPhysicsPart emit(@NonNull PMesh mesh, Part.VertexProcessor processor) {
-      @NonNull final float[] meshVerts = mesh.getBackingMeshFloats();
-      @NonNull final short[] meshShorts = mesh.getBackingMeshShorts();
-      int meshFloatsPerVert = mesh.vertexAttributes().getNumFloatsPerVertex();
-      for (int meshVIndex = 0; meshVIndex < meshShorts.length; meshVIndex+= 3) { // Loop through all triangles in the mesh.
-        // Get the raw position.
-        int posLookupI0 = meshShorts[meshVIndex + 0] * meshFloatsPerVert +
-                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
-        int posLookupI1 = meshShorts[meshVIndex + 1] * meshFloatsPerVert +
-                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
-        int posLookupI2 = meshShorts[meshVIndex + 2] * meshFloatsPerVert +
-                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
-        PPool.PoolBuffer pool = PPool.getBuffer();
-        PVec3 pos0 = pool.vec3().set(meshVerts[posLookupI0 + 0], meshVerts[posLookupI0 + 1], meshVerts[posLookupI0 + 2]);
-        processor.process(pos0.x(), pos0.y(), pos0.z(), PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos0);
-        PVec3 pos1 = pool.vec3().set(meshVerts[posLookupI1 + 0], meshVerts[posLookupI1 + 1], meshVerts[posLookupI1 + 2]);
-        processor.process(pos1.x(), pos1.y(), pos1.z(), PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos1);
-        PVec3 pos2 = pool.vec3().set(meshVerts[posLookupI2 + 0], meshVerts[posLookupI2 + 1], meshVerts[posLookupI2 + 2]);
-        processor.process(pos2.x(), pos2.y(), pos2.z(), PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos2);
-        addTri(pos0, pos1, pos2);
-        pool.finish();
-      }
-      return this;
-    }
-
-    public StaticPhysicsPart addTri(PVec3 v0, PVec3 v1, PVec3 v2) {
-      indices().add(getIndexOrAdd(v0.x(), v0.y(), v0.z(), MAX_SEARCH_DEPTH));
-      indices().add(getIndexOrAdd(v1.x(), v1.y(), v1.z(), MAX_SEARCH_DEPTH));
-      indices().add(getIndexOrAdd(v2.x(), v2.y(), v2.z(), MAX_SEARCH_DEPTH));
-      return this;
-    }
-
     private short getIndexOrAdd(final float x, final float y, final float z, final int maxSearchDepth) {
       if (!vertices().isEmpty()) {
         for (int a = 0; a < maxSearchDepth; a++) {
@@ -626,6 +616,45 @@ public class PModelGen implements PPostableTask {
       vertices().add(y);
       vertices().add(z);
       return ret;
+    }
+
+    public StaticPhysicsPart emit(@NonNull PMesh mesh, Part.VertexProcessor processor) {
+      @NonNull final float[] meshVerts = mesh.getBackingMeshFloats();
+      @NonNull final short[] meshShorts = mesh.getBackingMeshShorts();
+      int meshFloatsPerVert = mesh.vertexAttributes().getNumFloatsPerVertex();
+      for (int meshVIndex = 0; meshVIndex < meshShorts.length;
+           meshVIndex += 3) { // Loop through all triangles in the mesh.
+        // Get the raw position.
+        int posLookupI0 = meshShorts[meshVIndex + 0] * meshFloatsPerVert +
+                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+        int posLookupI1 = meshShorts[meshVIndex + 1] * meshFloatsPerVert +
+                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+        int posLookupI2 = meshShorts[meshVIndex + 2] * meshFloatsPerVert +
+                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+        PPool.PoolBuffer pool = PPool.getBuffer();
+        PVec3 pos0 =
+            pool.vec3().set(meshVerts[posLookupI0 + 0], meshVerts[posLookupI0 + 1], meshVerts[posLookupI0 + 2]);
+        processor.process(pos0.x(), pos0.y(), pos0.z(),
+                          PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos0);
+        PVec3 pos1 =
+            pool.vec3().set(meshVerts[posLookupI1 + 0], meshVerts[posLookupI1 + 1], meshVerts[posLookupI1 + 2]);
+        processor.process(pos1.x(), pos1.y(), pos1.z(),
+                          PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos1);
+        PVec3 pos2 =
+            pool.vec3().set(meshVerts[posLookupI2 + 0], meshVerts[posLookupI2 + 1], meshVerts[posLookupI2 + 2]);
+        processor.process(pos2.x(), pos2.y(), pos2.z(),
+                          PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos2);
+        addTri(pos0, pos1, pos2);
+        pool.finish();
+      }
+      return this;
+    }
+
+    public StaticPhysicsPart addTri(PVec3 v0, PVec3 v1, PVec3 v2) {
+      indices().add(getIndexOrAdd(v0.x(), v0.y(), v0.z(), MAX_SEARCH_DEPTH));
+      indices().add(getIndexOrAdd(v1.x(), v1.y(), v1.z(), MAX_SEARCH_DEPTH));
+      indices().add(getIndexOrAdd(v2.x(), v2.y(), v2.z(), MAX_SEARCH_DEPTH));
+      return this;
     }
 
     public btBvhTriangleMeshShape getTriangleMeshShape() {

@@ -219,6 +219,13 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  public PVec4 setToRotation(float axisX, float axisY, float axisZ, float rad) {
+    PMat4 temp = PMat4.obtain().setToRotation(axisX, axisY, axisZ, rad);
+    backingQuaterion.setFromMatrix(temp.getBackingMatrix4());
+    temp.free();
+    return this;
+  }
+
   public PVec4 slerp(PVec4 other, float mix) {
     backingQuaterion.slerp(other.backingQuaterion, mix);
     return this;

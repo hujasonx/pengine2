@@ -49,7 +49,7 @@ public class PSet<E> implements Set<E> {
    * @param a
    * @return A prime number >= a.
    */
-  private static int sampledHigherPrime(float a) {
+  public static int sampledHigherPrime(float a) {
     if (a < SAMPLED_PRIMES[0]) {
       return SAMPLED_PRIMES[0];
     }

@@ -20,13 +20,9 @@ import lombok.val;
 
 public class PVertexAttributes {
   @Getter
-  private static PVertexAttributes DEFAULT;
-  @Getter
-  private static PVertexAttributes GLTF_UNSKINNED;
-  @Getter
   private static PVertexAttributes PHYSICS = new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position()});
   @Getter
-  private static PVertexAttributes POSITION;
+  private static PVertexAttributes POSITION, DEFAULT, GLTF_UNSKINNED, GLTF_UNSKINNED_NOCOLOR;
   @Getter
   private final VertexAttributes backingVertexAttributes;
   private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
@@ -114,8 +110,8 @@ public class PVertexAttributes {
     private static final PStringMap<VertexAttribute> list = new PStringMap<>();
 
     private static void init() {
-      registerAttribute(Keys.pos, 3);
-      registerAttribute(Keys.nor, 3);
+      registerAttribute(Keys.pos, 3, VertexAttributes.Usage.Position);
+      registerAttribute(Keys.nor, 3, VertexAttributes.Usage.Normal);
       for (int a = 0; a < Keys.uv.length; a++) {
         Keys.uv[a] = "a_uv" + a;
         registerAttribute(Keys.uv[a], 2);
@@ -135,6 +131,13 @@ public class PVertexAttributes {
       GLTF_UNSKINNED = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
                                 Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Keys.col[0])});
+      GLTF_UNSKINNED_NOCOLOR = new PVertexAttributes(
+          new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
+                                Attribute.get(Attribute.Keys.uv[0])});
+    }
+
+    private static void registerAttribute(String id, int numComponents, int usage) {
+      list.put(id, new VertexAttribute(usage /* unused */, numComponents, id));
     }
 
     private static void registerAttribute(String id, int numComponents) {

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec3;
@@ -27,6 +28,8 @@ public class PMesh {
   private boolean autobind = false;
   private float[] backingMeshFloats;
   private short[] backingMeshShorts;
+  private BoundingBox boundingBox;
+  private PVec3 center;
 
   public PMesh(Mesh mesh, PVertexAttributes vertexAttributes) {
     backingMesh = mesh;
@@ -103,6 +106,33 @@ public class PMesh {
     }.buildSynchronous();
   }
 
+  public static PVec4 vColForIndex(PVec4 out, int index) {
+    int ratio = 16;
+    float indexRemaining = index;
+    out.x((indexRemaining % ratio) / ratio);
+    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
+    out.y((indexRemaining % ratio) / ratio);
+    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
+    out.z((indexRemaining % ratio) / ratio);
+    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
+    out.w(1);
+    System.out.println("indexc" + index + ", " + out);
+    return out;
+  }
+
+  public PVec3 center() {
+    if (center != null) {
+      return center;
+    }
+    if (backingMesh.getNumVertices() == 0) {
+      return center = PVec3.obtain().setZero();
+    }
+    if (boundingBox == null) {
+      boundingBox = backingMesh.calculateBoundingBox();
+    }
+    return (center = PVec3.obtain()).set(boundingBox.getCenterX(), boundingBox.getCenterY(), boundingBox.getCenterZ());
+  }
+
   public float[] getBackingMeshFloats() {
     if (backingMeshFloats == null) {
       backingMesh.getVertices(
@@ -147,19 +177,5 @@ public class PMesh {
     public int getGlType() {
       return glType;
     }
-  }
-
-  public static PVec4 vColForIndex(PVec4 out, int index) {
-    int ratio = 16;
-    float indexRemaining = index;
-    out.x((indexRemaining % ratio) / ratio);
-    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
-    out.y((indexRemaining % ratio) / ratio);
-    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
-    out.z((indexRemaining % ratio) / ratio);
-    indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
-    out.w(1);
-    System.out.println("indexc" + index +", " + out);
-    return out;
   }
 }

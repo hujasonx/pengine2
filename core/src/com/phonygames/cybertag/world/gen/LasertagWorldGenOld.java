@@ -24,7 +24,7 @@ import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.val;
 
-public class LasertagWorldGen {
+public class LasertagWorldGenOld {
   private static final PMap<String, PMap<String, Float>> styleCompatibilities =
       new PMap<String, PMap<String, Float>>() {
         @Override public PMap<String, Float> newUnpooled(String key) {
@@ -35,7 +35,7 @@ public class LasertagWorldGen {
   private final World world;
   private boolean wasGenned = false;
 
-  public LasertagWorldGen(World world) {
+  public LasertagWorldGenOld(World world) {
     this.world = world;
   }
 
@@ -59,31 +59,31 @@ public class LasertagWorldGen {
       }
 
       @Override protected void modelEnd() {
-        PList<PGlNode> glNodes = new PList<>();
-        PModel.Builder builder = new PModel.Builder();
-        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null), null, PGltf.Layer.PBR);
-        // Go through the roomPartData and generate buildings and rooms.
-        for (val e : context.roomPartData) {
-          int buildingIndex = e.k();
-          LasertagWorldBuilding worldBuilding = new LasertagWorldBuilding(buildingIndex);
-          world.buildings().add(worldBuilding);
-          for (val e2 : e.v()) {
-            int roomIndex = e2.k();
-            LasertagWorldRoom worldRoom = new LasertagWorldRoom(worldBuilding, roomIndex, new LasertagWorldRoom.LightFixture[0]);
-            worldBuilding.rooms().add(worldRoom);
-            RoomPartData data = e2.v();
-            for (RoomPartData.Part e3 : data.modelgenParts) {
-              PVec3 partCenter = e3.origin;
-              PModelGen.Part part = e3.part;
-              // TODO: use a different layer for alphablend parts.
-              chainGlNode(glNodes, part, e3.material, null, e3.layer);
-            }
-          }
-        }
-        emitStaticPhysicsPartIntoModelBuilder(builder);
-        builder.addNode("lasertagworld", null, glNodes, PMat4.IDT);
-        onFinishedCallback.onFinished(builder.build());
-        wasGenned = true;
+//        PList<PGlNode> glNodes = new PList<>();
+//        PModel.Builder builder = new PModel.Builder();
+//        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null), null, PGltf.Layer.PBR);
+//        // Go through the roomPartData and generate buildings and rooms.
+//        for (val e : context.roomPartData) {
+//          int buildingIndex = e.k();
+//          LasertagWorldBuilding worldBuilding = new LasertagWorldBuilding(buildingIndex);
+//          world.buildings().add(worldBuilding);
+//          for (val e2 : e.v()) {
+//            int roomIndex = e2.k();
+//            LasertagWorldRoom worldRoom = new LasertagWorldRoom(worldBuilding, roomIndex, new LasertagWorldRoom.LightFixture[0]);
+//            worldBuilding.rooms().add(worldRoom);
+//            RoomPartData data = e2.v();
+//            for (RoomPartData.Part e3 : data.modelgenParts) {
+//              PVec3 partCenter = e3.origin;
+//              PModelGen.Part part = e3.part;
+//              // TODO: use a different layer for alphablend parts.
+//              chainGlNode(glNodes, part, e3.material, null, e3.layer);
+//            }
+//          }
+//        }
+//        emitStaticPhysicsPartIntoModelBuilder(builder);
+//        builder.addNode("lasertagworld", null, glNodes, PMat4.IDT);
+//        onFinishedCallback.onFinished(builder.build());
+//        wasGenned = true;
       }
     });
   }
@@ -94,7 +94,7 @@ public class LasertagWorldGen {
         return new MeshTemplate(PAssetManager.model(filename, true));
       }
     };
-    public final LasertagWorldGen worldGen;
+    public final LasertagWorldGenOld worldGen;
     private final PMap<Integer, PMap<Integer, RoomPartData>> roomPartData =
         new PMap<Integer, PMap<Integer, RoomPartData>>() {
           @Override public PMap<Integer, RoomPartData> newUnpooled(Integer k) {
@@ -104,7 +104,7 @@ public class LasertagWorldGen {
     private int curVColIndex = 0;
     private int curVColIndexLength = 16;
 
-    public Context(LasertagWorldGen worldGen) {
+    public Context(LasertagWorldGenOld worldGen) {
       this.worldGen = worldGen;
     }
 

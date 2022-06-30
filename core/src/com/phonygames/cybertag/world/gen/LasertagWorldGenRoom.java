@@ -3,7 +3,6 @@ package com.phonygames.cybertag.world.gen;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -13,7 +12,6 @@ import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.PArrayUtils;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PSet;
@@ -55,14 +53,14 @@ public class LasertagWorldGenRoom {
     }
   }
 
-  protected void emit(PModelGen modelGen, LasertagWorldGen.Context context) {
+  protected void emit(PModelGen modelGen, LasertagWorldGenOld.Context context) {
     //
     // Init parts and templates.
     final String partNamePrefix = partNamePrefix();
     PModelGen.Part basePart = modelGen.addPart(partNamePrefix + "Part", PVertexAttributes.getGLTF_UNSKINNED());
     PModelGen.StaticPhysicsPart basePhysicsPart = modelGen.addStaticPhysicsPart(partNamePrefix + "StaticPhysicsPart");
-    LasertagWorldGen.RoomPartData roomPartData = context.addRoomPartData(building.index, index);
-    roomPartData.modelgenParts.add(new LasertagWorldGen.RoomPartData.Part(
+    LasertagWorldGenOld.RoomPartData roomPartData = context.addRoomPartData(building.index, index);
+    roomPartData.modelgenParts.add(new LasertagWorldGenOld.RoomPartData.Part(
         PVec3.obtain().set(roomX + roomSizeX / 2, roomY + roomSizeY / 2, roomZ + roomSizeZ / 2), basePart,
         PGltf.Layer.PBR, new PMaterial(basePart.name(), null).useVColIndex(true)));
     roomPartData.modelgenStaticPhysicsParts.add(basePhysicsPart);
@@ -118,7 +116,7 @@ public class LasertagWorldGenRoom {
         }
         vertexProcessor.setWall(first.x(), first.y(), first.z(), firstHeight * heightL, second.x(), second.y(),
                                 second.z(), secondHeight * heightH);
-        LasertagWorldGen.MeshTemplate template = null;
+        LasertagWorldGenOld.MeshTemplate template = null;
         switch (tileType) {
           case NORMAL:
           default:
@@ -178,8 +176,8 @@ public class LasertagWorldGenRoom {
 
   protected void emitTemplate(@NonNull PModelGen.Part basePart, @Nullable String alphaBlendPartName,
                               @Nullable PModelGen.StaticPhysicsPart staticPhysicsPart,
-                              @NonNull LasertagWorldGen.Context context,
-                              @NonNull LasertagWorldGen.MeshTemplate template,
+                              @NonNull LasertagWorldGenOld.Context context,
+                              @NonNull LasertagWorldGenOld.MeshTemplate template,
                               @NonNull PModelGen.Part.VertexProcessor vertexProcessor, int vColIndexStart) {
     for (int a = 0; a < template.meshes.size; a++) {
       PMesh mesh = template.meshes.get(a);
