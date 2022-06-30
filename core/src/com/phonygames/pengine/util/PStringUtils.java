@@ -38,7 +38,7 @@ public class PStringUtils {
     if (indexAfterDelimL == -1) {
       return null;
     }
-    int indexOfDelimR = s.indexOf(delimR);
+    int indexOfDelimR = s.indexOf(delimR, indexAfterDelimL);
     if (indexOfDelimR == -1) {
       return null;
     }

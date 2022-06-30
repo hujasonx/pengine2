@@ -4,24 +4,19 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.math.MathUtils;
-import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
-import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.Duple;
 import com.phonygames.pengine.util.PArrayUtils;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PSet;
-
-import lombok.val;
 
 public class LasertagWorldGenRoom {
   private final LasertagWorldGenBuilding building;
@@ -73,7 +68,6 @@ public class LasertagWorldGenRoom {
     roomPartData.modelgenStaticPhysicsParts.add(basePhysicsPart);
     int curVColIndex = roomPartData.vColIndex;
     int maxVColIndex = roomPartData.vColIndex + roomPartData.vColIndexLength - 1;
-    basePart.set(PVertexAttributes.Attribute.Keys.col[0], PMesh.vColForIndex(PVec4.obtain(), curVColIndex));
     //
     // Set up the vertex processor and temp variables.
     PModelGen.Part.VertexProcessor vertexProcessor = PModelGen.Part.VertexProcessor.staticPool().obtain();
@@ -134,11 +128,11 @@ public class LasertagWorldGenRoom {
             PAssert.failNotImplemented("WINDOW");
             break;
           case DOORFRAME:
-            template = context.template(doorframeModel);;
+            template = context.template(doorframeModel);
             break;
         }
         emitTemplate(basePart, partNamePrefix + "AlphaBlendPart" + data.side.name() + ":" + x + "," + y + "," + z,
-                     basePhysicsPart, context, template, vertexProcessor);
+                     basePhysicsPart, context, template, vertexProcessor, curVColIndex);
       }
     }
     // TODO: remove this.
@@ -161,14 +155,14 @@ public class LasertagWorldGenRoom {
             vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
             // We need to create a floor.
             emitTemplate(basePart, partNamePrefix + "AlphaBlendPartYl" + ":" + x + "," + y + "," + z, basePhysicsPart,
-                         context, context.template(floorModel), vertexProcessor);
+                         context, context.template(floorModel), vertexProcessor, curVColIndex);
           }
           if (roomYh != this) {
             vertexProcessor.setFlatQuad(tile010.add(0, -.01f, 0), tile110.add(0, -.01f, 0), tile111.add(0, -.01f, 0),
                                         tile011.add(0, -.01f, 0));
             // We need to create a ceiling.
             emitTemplate(basePart, partNamePrefix + "AlphaBlendPartYh" + ":" + x + "," + y + "," + z, basePhysicsPart,
-                         context, context.template(floorModel), vertexProcessor);
+                         context, context.template(floorModel), vertexProcessor, curVColIndex);
           }
         }
       }
@@ -184,16 +178,19 @@ public class LasertagWorldGenRoom {
 
   protected void emitTemplate(@NonNull PModelGen.Part basePart, @Nullable String alphaBlendPartName,
                               @Nullable PModelGen.StaticPhysicsPart staticPhysicsPart,
-                              @NonNull LasertagWorldGen.Context context, @NonNull LasertagWorldGen.MeshTemplate template,
-                              @NonNull PModelGen.Part.VertexProcessor vertexProcessor) {
+                              @NonNull LasertagWorldGen.Context context,
+                              @NonNull LasertagWorldGen.MeshTemplate template,
+                              @NonNull PModelGen.Part.VertexProcessor vertexProcessor, int vColIndexStart) {
     for (int a = 0; a < template.meshes.size; a++) {
       PMesh mesh = template.meshes.get(a);
       boolean emitMesh = template.emitMesh.get(a);
       boolean emitPhysics = template.emitPhysics.get(a);
       if (emitMesh) {
+        basePart.set(PVertexAttributes.Attribute.Keys.col[0],
+                     PMesh.vColForIndex(PVec4.obtain(), vColIndexStart + template.vColIndexOffsets.get(a)));
         basePart.emit(mesh, (emitPhysics && staticPhysicsPart != null) ? staticPhysicsPart : null, vertexProcessor,
                       basePart.vertexAttributes());
-      } else if (staticPhysicsPart != null && emitPhysics){
+      } else if (staticPhysicsPart != null && emitPhysics) {
         staticPhysicsPart.emit(mesh, vertexProcessor);
       }
     }

@@ -20,6 +20,7 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PSet;
+import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.val;
 
@@ -123,11 +124,23 @@ public class LasertagWorldGen {
     public final PList<Boolean> emitMesh = new PList<>();
     public final PList<Boolean> emitPhysics = new PList<>();
     public final PList<PMesh> meshes = new PList<>();
+    public final PList<Integer> vColIndexOffsets = new PList<>();
+
+    public int numVColIndicesUsed() {
+      int max = 0;
+      for (int a = 0; a < vColIndexOffsets.size; a++) {
+        max = Math.max(vColIndexOffsets.get(a), max);
+      }
+
+      return max + 1;
+    }
 
     public MeshTemplate(PModel model) {
       for (val e : model.glNodes()) {
         meshes.add(e.v().drawCall().mesh());
         String materialId = e.v().drawCall().material().id();
+        String vColIString = PStringUtils.extract(materialId, ".vCol", ".");
+        vColIndexOffsets.add(vColIString == null ? 0 : Integer.parseInt(vColIString));
         if (materialId.contains(".alsoStaticBody")) {
           emitPhysics.add(true);
           emitMesh.add(true);
