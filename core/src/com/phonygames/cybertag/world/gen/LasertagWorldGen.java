@@ -69,7 +69,7 @@ public class LasertagWorldGen {
           world.buildings().add(worldBuilding);
           for (val e2 : e.v()) {
             int roomIndex = e2.k();
-            LasertagWorldRoom worldRoom = new LasertagWorldRoom(worldBuilding, roomIndex, context.curVColIndexLength);
+            LasertagWorldRoom worldRoom = new LasertagWorldRoom(worldBuilding, roomIndex, new LasertagWorldRoom.LightFixture[0]);
             worldBuilding.rooms().add(worldRoom);
             RoomPartData data = e2.v();
             for (RoomPartData.Part e3 : data.modelgenParts) {

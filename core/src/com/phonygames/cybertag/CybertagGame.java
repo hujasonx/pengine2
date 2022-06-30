@@ -115,7 +115,7 @@ public class CybertagGame implements PGame {
     femaleModelInstance.setDataBufferEmitter(new PRenderContext.DataBufferEmitter() {
       @Override public void emitDataBuffersInto(PRenderContext renderContext) {
         PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
-        // Note, we use emissiveR, but the shader will output emissiveM and normalR. But we don't want to edit
+        // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
         // the normal or the Index with this buffer.
         vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
         vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
