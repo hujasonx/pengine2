@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import com.phonygames.cybertag.world.ColorDataEmitter;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -51,9 +52,11 @@ public class LasertagRoomGen extends PBuilder {
       PList<Part> alphaBlendParts = new PList<>();
       Part basePart;
       StaticPhysicsPart staticPhysicsPart;
+      int tileVColIndex = lasertagRoom.numBaseVCols;
 
       @Override protected void modelIntro() {
         basePart = addPart("base", PVertexAttributes.getGLTF_UNSKINNED());
+        staticPhysicsPart = addStaticPhysicsPart("staticPhysics");
       }
 
       @Override protected void modelMiddle() {
@@ -69,7 +72,9 @@ public class LasertagRoomGen extends PBuilder {
           LasertagTile tile = e.val();
           tile.getCornersFloorCeiling(tile000, tile001, tile010, tile011, tile100, tile101, tile110, tile111);
           vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
-          meshTemplate.emit(this, vertexProcessor, basePart, staticPhysicsPart, 0, alphaBlendParts);
+          meshTemplate.emit(this, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
+          tile.tileVColIndexStart = tileVColIndex;
+          tileVColIndex+= LasertagTile.PER_TILE_VCOL_INDICES;
         }
         pool.finish();
         PModelGen.Part.VertexProcessor.staticPool().free(vertexProcessor);
@@ -81,7 +86,7 @@ public class LasertagRoomGen extends PBuilder {
         chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null, PGltf.Layer.PBR,
                     true);
         emitStaticPhysicsPartIntoModelBuilder(builder);
-        builder.addNode(lasertagRoom.id, null, glNodes, PMat4.IDT);
+        builder.addNode(basePart.name(), null, glNodes, PMat4.IDT);
         for (Part part : alphaBlendParts) {
           glNodes.clear();
           chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null,
@@ -90,6 +95,13 @@ public class LasertagRoomGen extends PBuilder {
         }
         lasertagRoom.modelInstance = new PModelInstance(builder.build());
         lasertagRoom.initialized = true;
+        // Create the color data emitter buffer.
+        int numVCols = lasertagRoom.numBaseVCols;
+        for (val e : lasertagRoom.tiles().iterator3d()) {
+          numVCols += LasertagTile.PER_TILE_VCOL_INDICES;
+        }
+        lasertagRoom.colorDataEmitter = new ColorDataEmitter(numVCols);
+        lasertagRoom.modelInstance.createAndAddStaticBodiesFromModelWithCurrentWorldTransform();
       }
     });
   }

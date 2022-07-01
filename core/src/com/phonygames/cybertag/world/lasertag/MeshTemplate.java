@@ -26,10 +26,15 @@ public class MeshTemplate {
     for (val e : model.glNodes()) {
       meshes.add(e.v().drawCall().mesh());
       String materialId = e.v().drawCall().material().id();
-      String vColIString = PStringUtils.extract(materialId, ".vCol", ".");
-      vColIndexOffsets.add(vColIString == null ? -1 : Integer.parseInt(vColIString));
-      String vColIBaseString = PStringUtils.extract(materialId, ".vColBase", ".");
+      // Determine the vCol index from the material.
+      String vColIBaseString = PStringUtils.extract(materialId, ".vColBase", ".", true);
       vColIndexBaseOffsets.add(vColIBaseString == null ? -1 : Integer.parseInt(vColIBaseString));
+      if (vColIBaseString == null) {
+        String vColIString = PStringUtils.extract(materialId, ".vCol", ".", true);
+        vColIndexOffsets.add(vColIString == null ? -1 : Integer.parseInt(vColIString));
+      } else {
+        vColIndexOffsets.add(-1);
+      }
       isAlphaBlend.add(materialId.contains(".alphaBlend"));
       if (materialId.contains(".alsoStaticBody")) {
         emitPhysics.add(true);
@@ -59,13 +64,11 @@ public class MeshTemplate {
    * @param basePart
    * @param staticPhysicsPart
    * @param vColIndexOffset
-   * @return the next free vColIndexOffset
    */
-  public int emit(PModelGen modelGen, PModelGen.Part.VertexProcessor vertexProcessor, PModelGen.Part basePart,
+  public void emit(PModelGen modelGen, PModelGen.Part.VertexProcessor vertexProcessor, PModelGen.Part basePart,
                   PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
                   PList<PModelGen.Part> alphaBlendParts) {
     PVec4 temp = PVec4.obtain();
-    int nextVColIndexOffset = vColIndexOffset;
     for (int a = 0; a < this.meshes.size; a++) {
       PMesh mesh = this.meshes.get(a);
       boolean emitMesh = this.emitMesh.get(a);
@@ -75,7 +78,6 @@ public class MeshTemplate {
         int vColOffset = this.vColIndexOffsets.get(a);
         int vColBaseOffset = this.vColIndexBaseOffsets.get(a);
         int vColIndex = vColOffset == -1 ? (vColBaseOffset == -1 ? 0 : vColBaseOffset) : (vColIndexOffset + vColOffset);
-        nextVColIndexOffset = Math.max(nextVColIndexOffset, vColOffset);
         PModelGen.Part part;
         if (isAlphaBlend) {
           part = modelGen.addPart(basePart.name() + ".alphaBlend" + ".id" + a + "_" + vColIndexOffset + "",
@@ -92,6 +94,5 @@ public class MeshTemplate {
       }
     }
     temp.free();
-    return nextVColIndexOffset;
   }
 }

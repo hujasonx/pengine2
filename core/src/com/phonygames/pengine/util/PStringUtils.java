@@ -34,12 +34,19 @@ public class PStringUtils {
   }
 
   public static String extract(String s, String delimL, String delimR) {
+    return extract(s, delimL, delimR, false);
+  }
+
+  public static String extract(String s, String delimL, String delimR, boolean delimRSoftRequirement) {
     int indexAfterDelimL = indexAfter(s, delimL);
     if (indexAfterDelimL == -1) {
       return null;
     }
     int indexOfDelimR = s.indexOf(delimR, indexAfterDelimL);
     if (indexOfDelimR == -1) {
+      if (delimRSoftRequirement) {
+        return s.substring(indexAfterDelimL);
+      }
       return null;
     }
     return s.substring(indexAfterDelimL, indexOfDelimR);

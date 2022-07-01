@@ -626,11 +626,11 @@ public class PModelGen implements PPostableTask {
            meshVIndex += 3) { // Loop through all triangles in the mesh.
         // Get the raw position.
         int posLookupI0 = meshShorts[meshVIndex + 0] * meshFloatsPerVert +
-                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+                          mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
         int posLookupI1 = meshShorts[meshVIndex + 1] * meshFloatsPerVert +
-                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+                          mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
         int posLookupI2 = meshShorts[meshVIndex + 2] * meshFloatsPerVert +
-                          vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+                          mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
         PPool.PoolBuffer pool = PPool.getBuffer();
         PVec3 pos0 =
             pool.vec3().set(meshVerts[posLookupI0 + 0], meshVerts[posLookupI0 + 1], meshVerts[posLookupI0 + 2]);

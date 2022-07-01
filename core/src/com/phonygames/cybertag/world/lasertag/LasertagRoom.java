@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.world.ColorDataEmitter;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -28,6 +29,9 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected ColorDataEmitter colorDataEmitter;
+  /** The number of vCol indices dedicated to shared base colors, as opposed to per-tile colors. */
+  protected int numBaseVCols = 16;
+  private transient boolean roomColorsInitialized = false;
 
   protected LasertagRoom(String id) {
     this.id = id;
@@ -41,11 +45,21 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
 
   public void frameUpdate() {
     if (!initialized) {return;}
-    if (colorDataEmitter != null) {
-      colorDataEmitter.frameUpdateColorData();
+    if (colorDataEmitter != null && !roomColorsInitialized) {
+      for (int a = 0; a < numBaseVCols; a++) {
+        // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+        // the normal or the index with this buffer.
+        colorDataEmitter.colorData[a * 2 + 0].setHSVA(MathUtils.random(), MathUtils.random(.1f, .3f), MathUtils.random(.2f, .5f), 1); // DiffuseM;
+        colorDataEmitter.colorData[a * 2 + 1].set(0, 0, 0, 1); // EmissiveR;
+      }
+      roomColorsInitialized = true;
     }
-    for (val tile : tiles().iterator3d()) {
-      tile.val().frameUpdate();
+    for (val e : tiles().iterator3d()) {
+      LasertagTile tile = e.val();
+      tile.frameUpdate();
+      if (colorDataEmitter != null) {
+        colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 0].set((tile.x * .2f) % 1, (tile.y * .2f) % 1, (tile.z * .2f) % 1, 1);
+      }
     }
   }
 

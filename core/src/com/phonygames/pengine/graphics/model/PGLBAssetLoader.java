@@ -64,7 +64,7 @@ public class PGLBAssetLoader extends AsynchronousAssetLoader<PModel, PGLBAssetLo
       if (!nodePlus.parts.isEmpty()) {
         for (val gdxNodePart : nodePlus.parts) {
           PMesh mesh = new PMesh(gdxNodePart.meshPart.mesh);
-          PGlNode node = new PGlNode(gdxNodePart.meshPart.id);
+          PGlNode node = new PGlNode(gdxNodePart.meshPart.id+"["+glNodes.size+"]");
           node.drawCall().setMesh(mesh);
           node.drawCall().setMaterial(genMaterial(gdxNodePart.material));
           node.drawCall().setLayer(PGltf.Layer.PBR);

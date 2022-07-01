@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 
 public class ColorDataEmitter {
-  protected final PVec4[] colorData;
+  public final PVec4[] colorData;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final int numVColIndices;
@@ -26,9 +26,5 @@ public class ColorDataEmitter {
     for (int a = 0; a < colorData.length; a++) {
       colData.addData(colorData[a]);
     }
-  }
-
-  public void frameUpdateColorData() {
-
   }
 }
