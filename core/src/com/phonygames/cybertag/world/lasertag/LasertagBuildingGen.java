@@ -6,10 +6,13 @@ import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PIntMap3d;
 import com.phonygames.pengine.util.PList;
 
+import lombok.val;
+
 public class LasertagBuildingGen extends PBuilder {
   protected final PList<PIntAABB> aabbs = new PList<>();
   protected final LasertagBuilding building;
   protected final PList<LasertagRoomGen> roomGens = new PList<>();
+  protected final PList<LasertagDoorGen> doorGens = new PList<>();
   protected final PIntMap3d<LasertagTileGen> tilesBuilders = new PIntMap3d<LasertagTileGen>() {
     @Override protected LasertagTileGen newUnpooled(int x, int y, int z) {
       return new LasertagTileGen(LasertagBuildingGen.this.building.id + "(" + x + "," + y + "," + z + ")", x, y, z);
@@ -58,6 +61,12 @@ public class LasertagBuildingGen extends PBuilder {
     building.rooms = new LasertagRoom[roomGens.size];
     for (int a = 0; a < roomGens.size; a++) {
       building.rooms[a] = roomGens.get(a).build();
+    }
+    for (val e : tilesBuilders) {
+      e.val().build();
+    }
+    for (val e : doorGens) {
+      e.build();
     }
     buildModelInstance();
     return building;

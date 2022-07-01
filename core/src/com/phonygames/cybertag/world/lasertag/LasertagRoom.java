@@ -6,6 +6,7 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.util.PIntMap3d;
+import com.phonygames.pengine.util.PList;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,6 +33,9 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
   /** The number of vCol indices dedicated to shared base colors, as opposed to per-tile colors. */
   protected int numBaseVCols = 16;
   private transient boolean roomColorsInitialized = false;
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final PList<LasertagDoor> doors = new PList<>();
 
   protected LasertagRoom(String id) {
     this.id = id;
@@ -54,7 +58,7 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
       }
       roomColorsInitialized = true;
     }
-    for (val e : tiles().iterator3d()) {
+    for (val e : tiles()) {
       LasertagTile tile = e.val();
       tile.frameUpdate();
       if (colorDataEmitter != null) {
@@ -65,14 +69,14 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
 
   public void logicUpdate() {
     if (!initialized) {return;}
-    for (val tile : tiles().iterator3d()) {
+    for (val tile : tiles()) {
       tile.val().logicUpdate();
     }
   }
 
   public void render(PRenderContext renderContext) {
     if (!initialized) {return;}
-    for (val tile : tiles().iterator3d()) {
+    for (val tile : tiles()) {
       tile.val().render(renderContext);
     }
     if (modelInstance != null) {

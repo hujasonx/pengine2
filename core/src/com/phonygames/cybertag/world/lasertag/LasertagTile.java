@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 
 public class LasertagTile implements PRenderContext.DataBufferEmitter {
+  protected static final int PER_TILE_VCOL_INDICES = 4;
   public final String id;
   public final int x, y, z;
   @Getter(value = AccessLevel.PUBLIC)
@@ -34,9 +35,16 @@ public class LasertagTile implements PRenderContext.DataBufferEmitter {
   @Accessors(fluent = true)
   protected @Nullable
   LasertagRoom room;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  protected @Nullable
+  LasertagDoor door;
   /** The vCol index data (per-tile) for this tile. They should succeed the shared-data block in the buffer. */
   protected int tileVColIndexStart = 0;
-  protected static final int PER_TILE_VCOL_INDICES = 4;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  protected LasertagTileWall wallX, wallZ, wallMX, wallMZ;
+  protected boolean hasFloor, hasCeiling;
 
   protected LasertagTile(String id, final int x, final int y, final int z) {
     this.id = id;
@@ -90,6 +98,20 @@ public class LasertagTile implements PRenderContext.DataBufferEmitter {
     if (modelInstance != null) {
       modelInstance.setDataBufferEmitter(this);
       modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+    }
+  }
+
+  public LasertagTileWall wall(LasertagTileWall.Facing facing) {
+    switch (facing) {
+      case X:
+        return wallX;
+      case Z:
+        return wallZ;
+      case mX:
+        return wallMX;
+      case mZ:
+      default:
+        return wallMZ;
     }
   }
 }

@@ -4,6 +4,7 @@ import com.phonygames.cybertag.world.lasertag.LasertagBuildingGen;
 import com.phonygames.cybertag.world.lasertag.LasertagBuildingGenAABBPlacer;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGen;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGenRoomPlacer;
+import com.phonygames.cybertag.world.lasertag.LasertagRoomGenTileProcessor;
 import com.phonygames.cybertag.world.lasertag.LasertagWorld;
 import com.phonygames.cybertag.world.lasertag.LasertagWorldGen;
 import com.phonygames.pengine.graphics.PRenderContext;
@@ -22,6 +23,9 @@ public class World {
       PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen);
       if (roomAABB != null) {
         LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen, roomAABB);
+        LasertagRoomGenTileProcessor.processRoomWalls(roomGen);
+        LasertagRoomGenTileProcessor.processRoomFloors(roomGen);
+        LasertagRoomGenTileProcessor.processRoomCeilings(roomGen);
       }
     }
     this.lasertagWorld = worldGen.build();

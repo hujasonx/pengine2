@@ -9,18 +9,20 @@ import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.util.PBuilder;
+import com.phonygames.pengine.util.PIntMap3d;
 import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PPool;
 
 import lombok.val;
 
 public class LasertagRoomGen extends PBuilder {
-  private final LasertagBuildingGen buildingGen;
-  private final LasertagRoom lasertagRoom;
+  protected final LasertagBuildingGen buildingGen;
+  protected final LasertagRoom lasertagRoom;
   private final PIntAABB roomAABB;
+  protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<>();
+  protected final PList<LasertagRoomWallGen> roomWallGens = new PList<>();
+  protected final PList<LasertagDoorGen> doorGens = new PList<>();
 
   public LasertagRoomGen(LasertagBuildingGen buildingGen, PIntAABB aabb) {
     lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size);
@@ -35,6 +37,7 @@ public class LasertagRoomGen extends PBuilder {
           if (tileGen.tile.room == null) { // Don't overwrite existing room data.
             tileGen.tile.room = lasertagRoom;
             lasertagRoom.tiles().put(x, y, z, tileGen.tile);
+            tileGens.put(x, y, z, tileGen);
           }
         }
       }
@@ -60,24 +63,10 @@ public class LasertagRoomGen extends PBuilder {
       }
 
       @Override protected void modelMiddle() {
-        PModelGen.Part.VertexProcessor vertexProcessor = PModelGen.Part.VertexProcessor.staticPool().obtain();
-        PPool.PoolBuffer pool = PPool.getBuffer();
-        MeshTemplate meshTemplate = MeshTemplate.get("model/template/floor/basic.glb");
-        PVec3 tile000 = pool.vec3(), tile100 = pool.vec3(), tile010 = pool.vec3(), tile110 = pool.vec3(), tile001 =
-            pool.vec3(), tile101 = pool.vec3(), tile011 = pool.vec3(), tile111 = pool.vec3();
-        for (val e : lasertagRoom.tiles().iterator3d()) {
-          int tileX = e.x();
-          int tileY = e.y();
-          int tileZ = e.z();
-          LasertagTile tile = e.val();
-          tile.getCornersFloorCeiling(tile000, tile001, tile010, tile011, tile100, tile101, tile110, tile111);
-          vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
-          meshTemplate.emit(this, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
-          tile.tileVColIndexStart = tileVColIndex;
-          tileVColIndex+= LasertagTile.PER_TILE_VCOL_INDICES;
+        for (val e : lasertagRoom.tiles()) {
+          tileVColIndex = LasertagRoomGenTileEmitter.emit(e.val(), this, basePart, staticPhysicsPart, tileVColIndex,
+                                                          alphaBlendParts);
         }
-        pool.finish();
-        PModelGen.Part.VertexProcessor.staticPool().free(vertexProcessor);
       }
 
       @Override protected void modelEnd() {
@@ -97,7 +86,7 @@ public class LasertagRoomGen extends PBuilder {
         lasertagRoom.initialized = true;
         // Create the color data emitter buffer.
         int numVCols = lasertagRoom.numBaseVCols;
-        for (val e : lasertagRoom.tiles().iterator3d()) {
+        for (val e : lasertagRoom.tiles()) {
           numVCols += LasertagTile.PER_TILE_VCOL_INDICES;
         }
         lasertagRoom.colorDataEmitter = new ColorDataEmitter(numVCols);

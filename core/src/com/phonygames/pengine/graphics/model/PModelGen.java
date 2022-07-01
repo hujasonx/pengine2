@@ -541,6 +541,13 @@ public class PModelGen implements PPostableTask {
         return this;
       }
 
+      public VertexProcessor setWall(PVec3 v0, float height0, PVec3 v1, float height1) {
+        this.wallCornerA().set(v0.x(), v0.y(), v0.z(), height0);
+        this.wallCornerB().set(v1.x(), v1.y(), v1.z(), height1);
+        strategy = Strategy.Wall;
+        return this;
+      }
+
       public VertexProcessor setWall(float x0, float y0, float z0, float height0, float x1, float y1, float z1,
                                      float height1) {
         this.wallCornerA().set(x0, y0, z0, height0);

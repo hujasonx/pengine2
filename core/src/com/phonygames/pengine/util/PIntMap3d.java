@@ -6,10 +6,31 @@ import com.phonygames.pengine.exception.PAssert;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.val;
 
-public class PIntMap3d<T> extends PMap<Integer, PMap<Integer, PMap<Integer, T>>> {
-  private final Iterator<T> iterator = new Iterator<>(this);
+public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
+  private final PMap<Integer, PMap<Integer, PMap<Integer, T>>> backingMap =
+      new PMap<Integer, PMap<Integer, PMap<Integer, T>>>() {
+        @Override protected PMap<Integer, PMap<Integer, T>> newUnpooled(Integer integer) {
+          return new PMap<Integer, PMap<Integer, T>>() {
+            @Override protected PMap<Integer, T> newUnpooled(Integer integer) {
+              return new PMap<Integer, T>() {
+                @Override protected T newUnpooled(Integer integer) {
+                  PAssert.failNotImplemented("newUnpooled"); // TODO: FIXME
+                  return super.newUnpooled(integer);
+                }
+              };
+            }
+          };
+        }
+      };
+  private final PPool<PIntMap3d.Iterator<T>> iteratorPool = new PPool<Iterator<T>>() {
+    @Override protected Iterator<T> newObject() {
+      return new Iterator<>(PIntMap3d.this);
+    }
+  };
   private @Nullable
   final PPool tPool;
 
@@ -22,22 +43,42 @@ public class PIntMap3d<T> extends PMap<Integer, PMap<Integer, PMap<Integer, T>>>
   }
 
   public T genPooled(int x, int y, int z) {
-    T existing = genUnpooled(x).genUnpooled(y).get(z);
+    T existing = backingMap.genUnpooled(x).genUnpooled(y).get(z);
     if (existing == null) {
       PAssert.isNotNull(tPool);
       existing = (T) tPool.obtain();
-      genUnpooled(x).genUnpooled(y).put(z, existing);
+      backingMap.genUnpooled(x).genUnpooled(y).put(z, existing);
     }
     return existing;
   }
 
   public T genUnpooled(int x, int y, int z) {
-    T existing = genUnpooled(x).genUnpooled(y).get(z);
+    T existing = backingMap.genUnpooled(x).genUnpooled(y).get(z);
     if (existing == null) {
       existing = newUnpooled(x, y, z);
-      genUnpooled(x).genUnpooled(y).put(z, existing);
+      backingMap.genUnpooled(x).genUnpooled(y).put(z, existing);
     }
     return existing;
+  }
+
+  public T get(int x, int y, int z) {
+    val yMap = backingMap.get(x);
+    if (yMap == null) {
+      return null;
+    }
+    val zMap = yMap.get(y);
+    if (zMap == null) {
+      return null;
+    }
+    return zMap.get(z);
+  }
+
+  @Override public Iterator<T> iterator() {
+    Iterator<T> ret = iteratorPool.obtain();
+    ret.xIterable = backingMap.iterator();
+    ret.processNext();
+    return ret;
+    //    return new Iterator<>(this);
   }
 
   /**
@@ -52,30 +93,8 @@ public class PIntMap3d<T> extends PMap<Integer, PMap<Integer, PMap<Integer, T>>>
     return null;
   }
 
-  public T get(int x, int y, int z) {
-    return genUnpooled(x).genUnpooled(y).get(z);
-  }
-
-  public Iterator<T> iterator3d() {
-    PAssert.isFalse(iterator.hasNext, "Iterator is already in use!");
-    return iterator;
-  }
-
-  @Override protected PMap<Integer, PMap<Integer, T>> newUnpooled(Integer integer) {
-    return new PMap<Integer, PMap<Integer, T>>() {
-      @Override protected PMap<Integer, T> newUnpooled(Integer integer) {
-        return new PMap<Integer, T>() {
-          @Override protected T newUnpooled(Integer integer) {
-            PAssert.failNotImplemented("newUnpooled"); // TODO: FIXME
-            return super.newUnpooled(integer);
-          }
-        };
-      }
-    };
-  }
-
   public T put(int x, int y, int z, T t) {
-    genUnpooled(x).genUnpooled(y).put(z, t);
+    backingMap.genUnpooled(x).genUnpooled(y).put(z, t);
     return t;
   }
 
@@ -88,15 +107,18 @@ public class PIntMap3d<T> extends PMap<Integer, PMap<Integer, PMap<Integer, T>>>
     private int x, y, z;
   }
 
-  public static class Iterator<T> implements java.util.Iterator<Entry<T>>, Iterable<Entry<T>> {
+  public static class Iterator<T> implements java.util.Iterator<Entry<T>>, Iterable<Entry<T>>, PPool.Poolable {
     private final Entry<T> entry = new Entry();
     private final PIntMap3d<T> map;
+    @Getter
+    @Setter
+    public PPool ownerPool;
     private boolean hasNext = false;
     private T nextVal;
     private int nextX, nextY, nextZ;
-    private PMapIterator<Integer, PMap<Integer, PMap<Integer, T>>> xIterable;
-    private PMapIterator<Integer, PMap<Integer, T>> yIterable;
-    private PMapIterator<Integer, T> zIterable;
+    private PMap.PMapIterator<Integer, PMap<Integer, PMap<Integer, T>>> xIterable;
+    private PMap.PMapIterator<Integer, PMap<Integer, T>> yIterable;
+    private PMap.PMapIterator<Integer, T> zIterable;
 
     private Iterator(PIntMap3d<T> map) {
       this.map = map;
@@ -111,75 +133,63 @@ public class PIntMap3d<T> extends PMap<Integer, PMap<Integer, PMap<Integer, T>>>
       entry.x = nextX;
       entry.y = nextY;
       entry.z = nextZ;
-      if (zIterable.hasNext()) {
+      processNext();
+      return entry;
+    }
+
+    private void processNext() {
+      hasNext = true;
+      if (zIterable != null && zIterable.hasNext()) {
         PMap.Entry<Integer, T> zEntry = zIterable.next();
         nextZ = zEntry.k();
         nextVal = zEntry.v();
       } else {
-        if (yIterable.hasNext()) {
+        if (yIterable != null && yIterable.hasNext()) {
           PMap.Entry<Integer, PMap<Integer, T>> yEntry = yIterable.next();
           nextY = yEntry.k();
           zIterable = yEntry.v().iterator();
-          if (zIterable.hasNext()) {
-            PMap.Entry<Integer, T> zEntry = zIterable.next();
-            nextZ = zEntry.k();
-            nextVal = zEntry.v();
-          }
+          PAssert.isTrue(zIterable.hasNext());
+          PMap.Entry<Integer, T> zEntry = zIterable.next();
+          nextZ = zEntry.k();
+          nextVal = zEntry.v();
         } else {
           if (xIterable.hasNext()) {
             PMap.Entry<Integer, PMap<Integer, PMap<Integer, T>>> xEntry = xIterable.next();
             nextX = xEntry.k();
             yIterable = xEntry.v().iterator();
-            if (yIterable.hasNext()) {
-              PMap.Entry<Integer, PMap<Integer, T>> yEntry = yIterable.next();
-              nextY = yEntry.k();
-              zIterable = yEntry.v().iterator();
-              if (zIterable.hasNext()) {
-                PMap.Entry<Integer, T> zEntry = zIterable.next();
-                nextZ = zEntry.k();
-                nextVal = zEntry.v();
-              }
+            PAssert.isTrue(yIterable.hasNext());
+            PMap.Entry<Integer, PMap<Integer, T>> yEntry = yIterable.next();
+            nextY = yEntry.k();
+            zIterable = yEntry.v().iterator();
+            PAssert.isTrue(zIterable.hasNext());
+            PMap.Entry<Integer, T> zEntry = zIterable.next();
+            nextZ = zEntry.k();
+            nextVal = zEntry.v();
+            if (nextVal == null) {
+              System.out.println();
             }
           } else {
-            hasNext = false;
-            nextVal = null;
+            map.iteratorPool.free(this);
           }
         }
       }
-      return entry;
     }
 
     @Override public void remove() {
-      PAssert.failNotImplemented("remove"); // TODO: FIXME
+      PAssert.isNotNull(zIterable);
+      zIterable.remove();
     }
 
     @Override public java.util.Iterator<Entry<T>> iterator() {
-      reset();
       return this;
     }
 
-    private void reset() {
-      xIterable = map.iterator();
-      entry.val = null;
+    @Override public void reset() {
+      xIterable = null;
+      yIterable = null;
+      zIterable = null;
       nextVal = null;
       hasNext = false;
-      PAssert.isNotNull(xIterable);
-      if (xIterable.hasNext()) {
-        PMap.Entry<Integer, PMap<Integer, PMap<Integer, T>>> xVal = xIterable.next();
-        nextX = xVal.k();
-        yIterable = xVal.v().iterator();
-        if (yIterable.hasNext()) {
-          PMap.Entry<Integer, PMap<Integer, T>> yVal = yIterable.next();
-          nextY = yVal.k();
-          zIterable = yVal.v().iterator();
-          if (zIterable.hasNext()) {
-            PMap.Entry<Integer, T> zVal = zIterable.next();
-            nextZ = zVal.k();
-            nextVal = zVal.v();
-            hasNext = true;
-          }
-        }
-      }
     }
   }
 }

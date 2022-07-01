@@ -116,7 +116,6 @@ public class PMesh {
     out.z((indexRemaining % ratio) / ratio);
     indexRemaining = ((indexRemaining - (indexRemaining % ratio)) / ratio);
     out.w(1);
-    System.out.println("indexc" + index + ", " + out);
     return out;
   }
 

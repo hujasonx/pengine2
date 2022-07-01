@@ -1,26 +1,24 @@
 package com.phonygames.cybertag.world.lasertag;
 
-import com.phonygames.pengine.graphics.material.PMaterial;
-import com.phonygames.pengine.graphics.model.PGlNode;
-import com.phonygames.pengine.graphics.model.PGltf;
-import com.phonygames.pengine.graphics.model.PModel;
-import com.phonygames.pengine.graphics.model.PModelGen;
-import com.phonygames.pengine.graphics.model.PModelInstance;
-import com.phonygames.pengine.graphics.model.PVertexAttributes;
-import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PBuilder;
-import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PPool;
 
 public class LasertagTileGen extends PBuilder {
   public final int x, y, z;
   protected final LasertagTile tile;
+  protected final LasertagTileWallGen wallMX = new LasertagTileWallGen(LasertagTileWall.Facing.mX, this);
+  protected final LasertagTileWallGen wallMZ = new LasertagTileWallGen(LasertagTileWall.Facing.mZ, this);
+  protected final LasertagTileWallGen wallX = new LasertagTileWallGen(LasertagTileWall.Facing.X, this);
+  protected final LasertagTileWallGen wallZ = new LasertagTileWallGen(LasertagTileWall.Facing.Z, this);
 
   public LasertagTileGen(String id, int x, int y, int z) {
     this.x = x;
     this.y = y;
     this.z = z;
     tile = new LasertagTile(id, x, y, z);
+    tile.wallX = wallX.wall;
+    tile.wallZ = wallZ.wall;
+    tile.wallMX = wallMX.wall;
+    tile.wallMZ = wallMZ.wall;
   }
 
   public LasertagTile build() {

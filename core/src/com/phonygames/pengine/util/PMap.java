@@ -18,7 +18,6 @@ import lombok.val;
  * List class whose iterator() does not allocate.
  */
 public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
-  private final PMapIterator<K, V> backingIterator = new PMapIterator<K, V>();
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private final PList<V> genedValues = new PList<>();
@@ -26,6 +25,11 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
   @Getter(value = AccessLevel.PRIVATE)
   @Accessors(fluent = true)
   private final PPool genedValuesPool;
+  private final PPool<PMapIterator<K, V>> iteratorPool = new PPool<PMapIterator<K, V>>() {
+    @Override protected PMapIterator<K, V> newObject() {
+      return new PMapIterator<K, V>();
+    }
+  };
   private final MapInterface<K, V> mapInterface;
   @Getter
   @Setter
@@ -159,10 +163,12 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
   }
 
   @Override public final PMapIterator<K, V> iterator() {
-    PAssert.isTrue(backingIterator.isReadyToReuse());
-    backingIterator.backingIterator = mapInterface.iterator();
-    backingIterator.mapInterface = mapInterface;
-    return backingIterator;
+    PMapIterator<K, V> ret = iteratorPool.obtain();
+    ret.map = this;
+    ret.backingIterator = mapInterface.iterator();
+    ret.mapInterface = mapInterface;
+    PAssert.isNotNull(ret.backingIterator);
+    return ret;
   }
 
   /**
@@ -236,7 +242,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
   }
 
   protected static final class ArrayMapInterface<K, V> extends MapInterface<K, V> {
-    private final ArrayMap<K, V> backingMap = new ArrayMap<>();
+    private final PArrayMap<K, V> backingMap = new PArrayMap<>();
 
     @Override void clear() {
       backingMap.clear();
@@ -274,7 +280,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
     }
 
     @Override public Iterator iterator() {
-      return backingMap.iterator();
+      return new PArrayMap.Entries(backingMap);
     }
   }
 
@@ -308,11 +314,15 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
     abstract int size();
   }
 
-  public static class PMapIterator<K, V> implements Iterator<Entry<K, V>> {
+  public static class PMapIterator<K, V> implements Iterator<Entry<K, V>>, PPool.Poolable {
     private final PMap.Entry<K, V> entry = new PMap.Entry<>();
-    private Iterator backingIterator;
+    @Getter
+    @Setter
+    public PPool ownerPool;
+    public Iterator backingIterator;
     private int index;
     private MapInterface<K, V> mapInterface;
+    private PMap<K, V> map;
 
     private PMapIterator() {}
 
@@ -322,7 +332,7 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
       }
       boolean hasNext = backingIterator.hasNext();
       if (!hasNext) {
-        reset();
+        map.iteratorPool.free(this);
       }
       return hasNext;
     }
@@ -342,14 +352,10 @@ public class PMap<K, V> implements Iterable<PMap.Entry<K, V>>, PPool.Poolable {
       PAssert.failNotImplemented("remove"); // TODO: FIXME
     }
 
-    public void reset() {
+    @Override public void reset() {
       index = 0;
       backingIterator = null;
       mapInterface = null;
-    }
-
-    private final boolean isReadyToReuse() {
-      return backingIterator == null;
     }
   }
 }
