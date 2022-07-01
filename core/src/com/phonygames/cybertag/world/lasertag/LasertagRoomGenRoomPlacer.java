@@ -44,7 +44,11 @@ public class LasertagRoomGenRoomPlacer {
           MathUtils.random(aabb.z0() - edgeShiftBoundaryZ, aabb.z1() + edgeShiftBoundaryZ - roomSizeZ + 1), aabb.z0(),
           aabb.z1() - roomSizeZ + 1);
       ret.set(roomX, roomY, roomZ, roomX + roomSizeX, roomY + roomSizeY, roomZ + roomSizeZ);
-      if (validateAABBForRoomPlacement(ret, tileGenMap)) return ret;
+      if (validateAABBForRoomPlacement(ret, tileGenMap)) {
+        System.out.println("attempt" + attempt);
+        return ret;
+      }
+
     }
     return null;
   }
@@ -66,12 +70,14 @@ public class LasertagRoomGenRoomPlacer {
           if (tileAt.tile.room != null) {
             if (consecutiveFreeSpots > 0 && consecutiveFreeSpots < minRoomWidthInDimension) {return false;}
             consecutiveFreeSpots = 0;
+            allTiles++;
           } else {
             keptTiles++;
             allTiles++;
             consecutiveFreeSpots++;
           }
         }
+        if (consecutiveFreeSpots > 0 && consecutiveFreeSpots < minRoomWidthInDimension) {return false;}
       }
     }
     for (int y = aabb.y0(); y <= aabb.y1(); y++) {
@@ -87,6 +93,7 @@ public class LasertagRoomGenRoomPlacer {
             consecutiveFreeSpots++;
           }
         }
+        if (consecutiveFreeSpots > 0 && consecutiveFreeSpots < minRoomWidthInDimension) {return false;}
       }
     }
     if (allTiles == 0 || ((float) keptTiles) / ((float) allTiles) < minimumKeptTilesRatio) {
