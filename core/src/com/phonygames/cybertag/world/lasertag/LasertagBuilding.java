@@ -100,7 +100,7 @@ public class LasertagBuilding implements PRenderContext.DataBufferEmitter {
     return ret;
   }
 
-  public PVec3 worldPosForTile(PVec3 out, int x, int y, int z) {
+  public PVec3 worldPosForTile(PVec3 out, float x, float y, float z) {
     PMat4 temp = PMat4.obtain();
     out.set(x, y, z).mul(temp.set(tileTranslation(), tileRotation(), tileScale()), 1);
     temp.free();

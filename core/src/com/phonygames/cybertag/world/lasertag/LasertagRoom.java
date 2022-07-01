@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import com.phonygames.cybertag.world.ColorDataEmitter;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
@@ -24,16 +25,25 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  protected ColorDataEmitter colorDataEmitter;
 
   protected LasertagRoom(String id) {
     this.id = id;
   }
 
   @Override public void emitDataBuffersInto(PRenderContext renderContext) {
+    if (colorDataEmitter != null) {
+      colorDataEmitter.outputColorData(renderContext.genDataBuffer("vColIndex"));
+    }
   }
 
   public void frameUpdate() {
     if (!initialized) {return;}
+    if (colorDataEmitter != null) {
+      colorDataEmitter.frameUpdateColorData();
+    }
     for (val tile : tiles().iterator3d()) {
       tile.val().frameUpdate();
     }

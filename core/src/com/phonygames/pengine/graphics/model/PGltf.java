@@ -28,5 +28,6 @@ public class PGltf {
 
   public static final class Layer {
     public static final String PBR = "PBR";
+    public static final String AlphaBlend = "AlphaBlend";
   }
 }

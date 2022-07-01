@@ -48,6 +48,7 @@ public class LasertagRoomGen extends PBuilder {
 
   private void buildModelInstance() {
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
+      PList<Part> alphaBlendParts = new PList<>();
       Part basePart;
       StaticPhysicsPart staticPhysicsPart;
 
@@ -58,7 +59,6 @@ public class LasertagRoomGen extends PBuilder {
       @Override protected void modelMiddle() {
         PModelGen.Part.VertexProcessor vertexProcessor = PModelGen.Part.VertexProcessor.staticPool().obtain();
         PPool.PoolBuffer pool = PPool.getBuffer();
-        PMat4 emitTransform = pool.mat4();
         MeshTemplate meshTemplate = MeshTemplate.get("model/template/floor/basic.glb");
         PVec3 tile000 = pool.vec3(), tile100 = pool.vec3(), tile010 = pool.vec3(), tile110 = pool.vec3(), tile001 =
             pool.vec3(), tile101 = pool.vec3(), tile011 = pool.vec3(), tile111 = pool.vec3();
@@ -67,9 +67,9 @@ public class LasertagRoomGen extends PBuilder {
           int tileY = e.y();
           int tileZ = e.z();
           LasertagTile tile = e.val();
-          tile.getCorners(tile000, tile001, tile010, tile011, tile100, tile101, tile110, tile111);
+          tile.getCornersFloorCeiling(tile000, tile001, tile010, tile011, tile100, tile101, tile110, tile111);
           vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
-          meshTemplate.emit(this, vertexProcessor, basePart, staticPhysicsPart, 0);
+          meshTemplate.emit(this, vertexProcessor, basePart, staticPhysicsPart, 0, alphaBlendParts);
         }
         pool.finish();
         PModelGen.Part.VertexProcessor.staticPool().free(vertexProcessor);
@@ -80,9 +80,14 @@ public class LasertagRoomGen extends PBuilder {
         PModel.Builder builder = new PModel.Builder();
         chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null, PGltf.Layer.PBR,
                     true);
-        // TODO: use a different layer for alphablend parts.
         emitStaticPhysicsPartIntoModelBuilder(builder);
         builder.addNode(lasertagRoom.id, null, glNodes, PMat4.IDT);
+        for (Part part : alphaBlendParts) {
+          glNodes.clear();
+          chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null,
+                      PGltf.Layer.AlphaBlend, true);
+          builder.addNode(part.name(), null, glNodes, PMat4.IDT);
+        }
         lasertagRoom.modelInstance = new PModelInstance(builder.build());
         lasertagRoom.initialized = true;
       }

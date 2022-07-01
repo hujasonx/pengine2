@@ -54,7 +54,6 @@ public class MeshTemplate {
   }
 
   /**
-   *
    * @param modelGen
    * @param vertexProcessor
    * @param basePart
@@ -63,7 +62,8 @@ public class MeshTemplate {
    * @return the next free vColIndexOffset
    */
   public int emit(PModelGen modelGen, PModelGen.Part.VertexProcessor vertexProcessor, PModelGen.Part basePart,
-                   PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset) {
+                  PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
+                  PList<PModelGen.Part> alphaBlendParts) {
     PVec4 temp = PVec4.obtain();
     int nextVColIndexOffset = vColIndexOffset;
     for (int a = 0; a < this.meshes.size; a++) {
@@ -76,11 +76,17 @@ public class MeshTemplate {
         int vColBaseOffset = this.vColIndexBaseOffsets.get(a);
         int vColIndex = vColOffset == -1 ? (vColBaseOffset == -1 ? 0 : vColBaseOffset) : (vColIndexOffset + vColOffset);
         nextVColIndexOffset = Math.max(nextVColIndexOffset, vColOffset);
-        PModelGen.Part part = isAlphaBlend ?
-                              modelGen.addPart(basePart.name() + ".alphaBlend" + ".id" + a + "_" + vColIndexOffset + "",
-                                               basePart.vertexAttributes()) : basePart;
+        PModelGen.Part part;
+        if (isAlphaBlend) {
+          part = modelGen.addPart(basePart.name() + ".alphaBlend" + ".id" + a + "_" + vColIndexOffset + "",
+                                  basePart.vertexAttributes());
+          alphaBlendParts.add(part);
+        } else {
+          part = basePart;
+        }
         part.set(PVertexAttributes.Attribute.Keys.col[0], PMesh.vColForIndex(temp, vColIndex));
-        part.emit(mesh, emitPhysics ? staticPhysicsPart : null, vertexProcessor, PVertexAttributes.getGLTF_UNSKINNED_NOCOLOR());
+        part.emit(mesh, emitPhysics ? staticPhysicsPart : null, vertexProcessor,
+                  PVertexAttributes.getGLTF_UNSKINNED_NOCOLOR());
       } else if (emitPhysics && staticPhysicsPart != null) {
         staticPhysicsPart.emit(mesh, vertexProcessor);
       }
