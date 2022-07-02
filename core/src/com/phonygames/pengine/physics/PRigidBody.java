@@ -3,6 +3,7 @@ package com.phonygames.pengine.physics;
 import android.support.annotation.NonNull;
 
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision.ContactResultCallback;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PMat4;
@@ -22,10 +23,14 @@ public class PRigidBody implements PPool.Poolable {
       return new PRigidBody();
     }
   };
+  private static final Vector3 tempSharedVec3 = new Vector3();
   private static final Vector3 tempVec3 = new Vector3();
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 localInertia = PVec3.obtain();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final PMat4 worldTransform = PMat4.obtain();
   private PPhysicsCollisionShape collisionShape;
   private int group, mask;
   private boolean isInDynamicsWorld;
@@ -33,20 +38,11 @@ public class PRigidBody implements PPool.Poolable {
   @Setter
   private PPool ownerPool;
   private btRigidBody rigidBody;
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private RunnableOnPostLogicUpdate runnableOnPostLogicUpdate;
 
   private PRigidBody() {
-  }
-
-  public PRigidBody setWorldTransform(PMat4 mat4) {
-    PAssert.isNotNull(rigidBody);
-    rigidBody.setWorldTransform(mat4.getBackingMatrix4());
-    return this;
-  }
-
-  public PMat4 getWorldTransform(PMat4 mat4) {
-    PAssert.isNotNull(rigidBody);
-    rigidBody.getWorldTransform(mat4.getBackingMatrix4());
-    return mat4;
   }
 
   public static PRigidBody obtain(@NonNull PPhysicsCollisionShape collisionShape, float mass, int group, int mask) {
@@ -58,22 +54,67 @@ public class PRigidBody implements PPool.Poolable {
                                                                  ret.localInertia().z()));
     ret.collisionShape = collisionShape;
     ret.rigidBody = new btRigidBody(constructionInfo);
+    ret.rigidBody.userData = ret;
     ret.rigidBody.setCollisionShape(collisionShape.collisionShape);
     ret.group = group;
     ret.mask = mask;
     return ret;
   }
 
+  public PRigidBody activate() {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.activate();
+    return this;
+  }
+
   public void addToDynamicsWorld() {
     PAssert.isFalse(isInDynamicsWorld);
     isInDynamicsWorld = true;
+    PPhysicsEngine.rigidBodiesInSimulation.add(this);
     PPhysicsEngine.dynamicsWorld.addRigidBody(rigidBody, group, mask);
+  }
+
+  public void checkGhostingCollision(ContactResultCallback contactResultCallback) {
+    PAssert.isFalse(isInDynamicsWorld, "wouldCollideWith should only be used as a ghosting utility.");
+    PPhysicsEngine.dynamicsWorld.getCollisionWorld().contactTest(rigidBody, contactResultCallback);
+  }
+
+  public int getActivationState() {
+    PAssert.isNotNull(rigidBody);
+    return rigidBody.getActivationState();
+  }
+
+  public PRigidBody setActivationState(int activationState) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setActivationState(activationState);
+    return this;
+  }
+
+  public PVec3 getLinearVelocity(PVec3 out) {
+    PAssert.isNotNull(rigidBody);
+    out.set(rigidBody.getLinearVelocity());
+    return out;
+  }
+
+  public PMat4 getWorldTransform(PMat4 mat4) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.getWorldTransform(mat4.getBackingMatrix4());
+    return mat4;
+  }
+
+  protected void postLogicUpdate() {
+    if (rigidBody == null) {return;}
+    rigidBody.getWorldTransform(worldTransform().getBackingMatrix4());
+    if (runnableOnPostLogicUpdate != null) {
+      runnableOnPostLogicUpdate.afterPostLogicUpdate(this);
+    }
   }
 
   public void removeFromDynamicsWorld() {
     PAssert.isTrue(isInDynamicsWorld);
-    PPhysicsEngine.dynamicsWorld.removeRigidBody(rigidBody);
     isInDynamicsWorld = false;
+    PPhysicsEngine.rigidBodiesInSimulation.removeValue(this, true);
+    PPhysicsEngine.dynamicsWorld.removeRigidBody(rigidBody);
   }
 
   @Override public void reset() {
@@ -85,5 +126,41 @@ public class PRigidBody implements PPool.Poolable {
     rigidBody.dispose();
     rigidBody = null;
     collisionShape = null;
+    runnableOnPostLogicUpdate = null;
+  }
+
+  public PRigidBody setAngularFactor(float x, float y, float z) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setAngularFactor(tempSharedVec3.set(x, y, z));
+    return this;
+  }
+
+  public PRigidBody setFriction(float friction) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setFriction(friction);
+    return this;
+  }
+
+  public PRigidBody setLinearVelocity(float x, float y, float z) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setLinearVelocity(tempSharedVec3.set(x, y, z));
+    return this;
+  }
+
+  public PRigidBody setLinearVelocity(PVec3 vec3) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setLinearVelocity(vec3.backingVec3());
+    return this;
+  }
+
+  public PRigidBody setWorldTransform(PMat4 mat4) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setWorldTransform(mat4.getBackingMatrix4());
+    worldTransform.set(mat4);
+    return this;
+  }
+
+  public abstract static class RunnableOnPostLogicUpdate {
+    public abstract void afterPostLogicUpdate(PRigidBody rigidBody);
   }
 }

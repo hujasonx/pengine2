@@ -1,6 +1,7 @@
 package com.phonygames.pengine.math;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
 
 public class PNumberUtils {
   public static float angle(float x1, float y1, float x2, float y2) {
@@ -34,6 +35,15 @@ public class PNumberUtils {
       }
     }
     return true;
+  }
+
+  public static float moveTo(float in, float goal, float speed) {
+    if (goal > in) {
+      return Math.min(goal, in + speed);
+    } else if (goal < in) {
+      return Math.max(goal, in - speed);
+    }
+    return goal;
   }
 
   /**

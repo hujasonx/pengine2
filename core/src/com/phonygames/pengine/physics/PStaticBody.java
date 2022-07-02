@@ -53,6 +53,7 @@ public class PStaticBody implements PPool.Poolable {
     PStaticBody ret = staticPool().obtain();
     ret.collisionShape = collisionShape;
     ret.collisionObject = new btCollisionObject();
+    ret.collisionObject.userData = ret;
     ret.collisionObject.setCollisionShape(collisionShape.collisionShape);
     ret.group = group;
     ret.mask = mask;

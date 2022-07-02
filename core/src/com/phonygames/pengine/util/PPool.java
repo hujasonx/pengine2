@@ -196,6 +196,18 @@ public abstract class PPool<T extends PPool.Poolable> {
       getMat4s().clear();
     }
 
+    public final PVec1 vec1() {
+      PVec1 v = PVec1.obtain();
+      getVec1s().add(v);
+      return v;
+    }
+
+    public final PVec2 vec2() {
+      PVec2 v = PVec2.obtain();
+      getVec2s().add(v);
+      return v;
+    }
+
     public final PVec3 vec3() {
       PVec3 v = PVec3.obtain();
       getVec3s().add(v);

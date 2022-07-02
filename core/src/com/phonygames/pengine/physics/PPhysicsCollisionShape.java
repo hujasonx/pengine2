@@ -17,7 +17,7 @@ public abstract class PPhysicsCollisionShape<T extends btCollisionShape> impleme
   public PPhysicsCollisionShape(@NonNull T collisionShape) {
     this.collisionShape = collisionShape;
     PPhysicsEngine.trackShape(this);
-    disposed = true;
+    disposed = false;
   }
 
   public void calculateLocalInertia(@NonNull PVec3 out, float mass) {
@@ -27,7 +27,7 @@ public abstract class PPhysicsCollisionShape<T extends btCollisionShape> impleme
 
   @Override public void dispose() {
     PAssert.isFalse(disposed);
-    disposed = false;
+    disposed = true;
     collisionShape.dispose();
   }
 }

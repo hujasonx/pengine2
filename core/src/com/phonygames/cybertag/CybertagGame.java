@@ -92,10 +92,10 @@ public class CybertagGame implements PGame {
       // Enqueue the model instances into the buffer.
       duckModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, duckModelInstances, false);
     }
-    if (femaleModelInstance != null) {
-      femaleModelInstance.recalcTransforms();
-      femaleModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
-    }
+//    if (femaleModelInstance != null) {
+//      femaleModelInstance.recalcTransforms();
+//      femaleModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+//    }
     renderContext.glRenderQueue();
     renderContext.end();
   }
@@ -109,33 +109,33 @@ public class CybertagGame implements PGame {
     for (int a = 0; a < 10; a++) {
       duckModelInstances.add(new PModelInstance(duckModel));
     }
-    femaleModel = PAssetManager.model("model/player/female.glb", true);
-    femaleModelInstance = new PModelInstance(femaleModel);
-    final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
-    femaleModelInstance.setDataBufferEmitter(new PRenderContext.DataBufferEmitter() {
-      @Override public void emitDataBuffersInto(PRenderContext renderContext) {
-        PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
-        // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
-        // the normal or the Index with this buffer.
-        vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
-        vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
-        vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
-        vColIndexBuffer.addData(52f/255f, 136f/255f, 232f/255f, 1); // Iris diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
-        vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
-        vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveR.
-        vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveR.
-      }
-    });
-    femaleModelInstance.material("matBase").useVColIndex(true);
-    femaleModelInstance.material("matHair")
-                       .set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
+//    femaleModel = PAssetManager.model("model/player/female.glb", true);
+//    femaleModelInstance = new PModelInstance(femaleModel);
+//    final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
+//    femaleModelInstance.setDataBufferEmitter(new PRenderContext.DataBufferEmitter() {
+//      @Override public void emitDataBuffersInto(PRenderContext renderContext) {
+//        PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
+//        // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+//        // the normal or the Index with this buffer.
+//        vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
+//        vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
+//        vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
+//        vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
+//        vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
+//        vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
+//        vColIndexBuffer.addData(52f/255f, 136f/255f, 232f/255f, 1); // Iris diffuseM.
+//        vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
+//        vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
+//        vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
+//        vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
+//        vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveR.
+//        vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
+//        vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveR.
+//      }
+//    });
+//    femaleModelInstance.material("matBase").useVColIndex(true);
+//    femaleModelInstance.material("matHair")
+//                       .set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
     renderContext = new PRenderContext();
     renderContext.cameraRange().set(.1f, 1000);
     renderContext.cameraPos().set(2, 2, 2);
@@ -153,6 +153,7 @@ public class CybertagGame implements PGame {
   }
 
   @Override public void logicUpdate() {
+    world.logicUpdate();
   }
 
   @Override public void postFrameUpdate() {
@@ -173,5 +174,6 @@ public class CybertagGame implements PGame {
   }
 
   @Override public void preLogicUpdate() {
+    world.preLogicUpdate();
   }
 }

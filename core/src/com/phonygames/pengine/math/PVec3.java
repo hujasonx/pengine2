@@ -24,7 +24,7 @@ public class PVec3 extends PVec<PVec3> {
   public static PVec3 Y = new PVec3().set(0, 1, 0);
   public static PVec3 Z = new PVec3().set(0, 0, 1);
   public static PVec3 ZERO = new PVec3().set(0, 0, 0);
-  @Getter(value = AccessLevel.PROTECTED)
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final Vector3 backingVec3 = new Vector3();
 
@@ -68,6 +68,19 @@ public class PVec3 extends PVec<PVec3> {
     return backingVec3.dot(other.backingVec3);
   }
 
+  @Override public boolean isZero(float margin) {
+    if (Math.abs(x()) > margin) {
+      return false;
+    }
+    if (Math.abs(y()) > margin) {
+      return false;
+    }
+    if (Math.abs(z()) > margin) {
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Multiplies other with caller into caller.
    * @param other
@@ -80,15 +93,20 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
-  @Override public PVec3 roundComponents(float factor) {
-    this.backingVec3.x = (Math.round(this.backingVec3.x * factor) / factor);
-    this.backingVec3.y = (Math.round(this.backingVec3.y * factor) / factor);
-    this.backingVec3.z = (Math.round(this.backingVec3.z * factor) / factor);
+  @Override public PVec3 nor() {
+    backingVec3.nor();
     return this;
   }
 
   @Override public PVec3 setZero() {
     this.backingVec3.setZero();
+    return this;
+  }
+
+  @Override public PVec3 roundComponents(float factor) {
+    this.backingVec3.x = (Math.round(this.backingVec3.x * factor) / factor);
+    this.backingVec3.y = (Math.round(this.backingVec3.y * factor) / factor);
+    this.backingVec3.z = (Math.round(this.backingVec3.z * factor) / factor);
     return this;
   }
 
@@ -112,6 +130,18 @@ public class PVec3 extends PVec<PVec3> {
   @Override public PVec3 sub(PVec3 other) {
     backingVec3.sub(other.backingVec3);
     return this;
+  }
+
+  public float x() {
+    return backingVec3.x;
+  }
+
+  public float y() {
+    return backingVec3.y;
+  }
+
+  public float z() {
+    return backingVec3.z;
   }
 
   public PVec3 add(float x, float y, float z) {
@@ -177,11 +207,6 @@ public class PVec3 extends PVec<PVec3> {
     return getStaticPool().obtain();
   }
 
-  public PVec3 nor() {
-    backingVec3.nor();
-    return this;
-  }
-
   public Vector3 putInto(Vector3 in) {
     in.set(backingVec3);
     return in;
@@ -199,18 +224,6 @@ public class PVec3 extends PVec<PVec3> {
       backingVec3.mul(tempMat().setToRotation(axis.x(), axis.y(), axis.z(), angleRad).getBackingMatrix4());
     }
     return this;
-  }
-
-  public float x() {
-    return backingVec3.x;
-  }
-
-  public float y() {
-    return backingVec3.y;
-  }
-
-  public float z() {
-    return backingVec3.z;
   }
 
   public PVec3 set(Vector3 other) {
