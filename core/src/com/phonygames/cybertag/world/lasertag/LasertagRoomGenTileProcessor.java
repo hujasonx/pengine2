@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.exception.PAssert;
@@ -40,7 +41,7 @@ public class LasertagRoomGenTileProcessor {
     }
   }
 
-  private static LasertagRoom roomAtTileGen(PIntMap3d<LasertagTileGen> tiles, int x, int y, int z) {
+  public static LasertagRoom roomAtTileGen(PIntMap3d<LasertagTileGen> tiles, int x, int y, int z) {
     LasertagTileGen tile = tiles.get(x, y, z);
     if (tile == null) {
       return null;
@@ -80,14 +81,14 @@ public class LasertagRoomGenTileProcessor {
     }
     switch (facing) {
       case X:
-        return roomGen.lasertagRoom != roomAtTile(roomGen.lasertagRoom.tiles(), tileGen.x - 1, tileGen.y, tileGen.z);
+        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tilesBuilders, tileGen.x - 1, tileGen.y, tileGen.z);
       case Z:
-        return roomGen.lasertagRoom != roomAtTile(roomGen.lasertagRoom.tiles(), tileGen.x, tileGen.y, tileGen.z - 1);
+        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tilesBuilders, tileGen.x, tileGen.y, tileGen.z - 1);
       case mX:
-        return roomGen.lasertagRoom != roomAtTile(roomGen.lasertagRoom.tiles(), tileGen.x + 1, tileGen.y, tileGen.z);
+        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tilesBuilders, tileGen.x + 1, tileGen.y, tileGen.z);
       case mZ:
       default:
-        return roomGen.lasertagRoom != roomAtTile(roomGen.lasertagRoom.tiles(), tileGen.x, tileGen.y, tileGen.z + 1);
+        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tilesBuilders, tileGen.x, tileGen.y, tileGen.z + 1);
     }
   }
 
@@ -114,12 +115,12 @@ public class LasertagRoomGenTileProcessor {
     roomGen.roomWallGens.add(wallGen);
   }
 
-  private static LasertagRoom roomAtTile(PIntMap3d<LasertagTile> tiles, int x, int y, int z) {
-    LasertagTile tile = tiles.get(x, y, z);
+  private static LasertagRoom roomAtTile(@NonNull PIntMap3d<LasertagTileGen> tilesGens, int x, int y, int z) {
+    LasertagTileGen tile = tilesGens.get(x, y, z);
     if (tile == null) {
       return null;
     }
-    return tile.room;
+    return tile.tile.room;
   }
 
   private static LasertagRoomWallGen createRoomWallGen(LasertagRoomGen roomGen, LasertagTileGen tileGen,
@@ -133,7 +134,7 @@ public class LasertagRoomGenTileProcessor {
       // Stop searching if there is no tile in the next spot, or the room isn't the same, or there was already a wall
       // generated at the spot, or there does not need to be a wall generated at that spot.
       if (nextSearchTileGen == null || nextSearchTileGen.tile.wall(facing).valid ||
-          !needsWallInDirection(roomGen, tileGen, facing)) {break;}
+          !needsWallInDirection(roomGen, nextSearchTileGen, facing)) {break;}
       searchTileGen = nextSearchTileGen;
       searchY--;
     }
@@ -144,7 +145,7 @@ public class LasertagRoomGenTileProcessor {
       LasertagTileGen nextSearchTileGen =
           roomGen.tileGens.get(searchX - xChangeForAlongWall, searchY, searchZ - zChangeForAlongWall);
       if (nextSearchTileGen == null || nextSearchTileGen.tile.wall(facing).valid ||
-          !needsWallInDirection(roomGen, tileGen, facing)) {break;}
+          !needsWallInDirection(roomGen, nextSearchTileGen, facing)) {break;}
       searchTileGen = nextSearchTileGen;
       searchX -= xChangeForAlongWall;
       searchZ -= zChangeForAlongWall;

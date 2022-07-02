@@ -3,6 +3,7 @@ package com.phonygames.cybertag.world.lasertag;
 import static com.phonygames.cybertag.world.lasertag.LasertagRoomGenTileProcessor.needsWallInDirection;
 import static com.phonygames.cybertag.world.lasertag.LasertagRoomGenTileProcessor.otherTileForWall;
 
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PIntMap3d;
 import com.phonygames.pengine.util.PList;
 
@@ -23,6 +24,7 @@ public class LasertagRoomWallGen {
     this.tileGens = tileGens;
     this.facing = facing;
     this.cornerTile = cornerTile;
+    cornerTile.wallGen(facing).wall.isWindow = true;
     xChangeForAlongWall = facing == LasertagTileWall.Facing.Z ? -1 : (facing == LasertagTileWall.Facing.mZ ? 1 : 0);
     zChangeForAlongWall = facing == LasertagTileWall.Facing.X ? 1 : (facing == LasertagTileWall.Facing.mX ? -1 : 0);
     genWallHeightData();
@@ -57,6 +59,10 @@ public class LasertagRoomWallGen {
       searchTileBaseZ += zChangeForAlongWall;
       nextTileGenBase = tileGens.get(searchTileBaseX, searchTileBaseY, searchTileBaseZ);
     }
+    if (wallHeights.size == 0) {
+      needsWallInDirection(roomGen, cornerTile, facing);
+    }
+    PAssert.isTrue(wallHeights.size > 0);
   }
 
   private void genPossibleDoors() {

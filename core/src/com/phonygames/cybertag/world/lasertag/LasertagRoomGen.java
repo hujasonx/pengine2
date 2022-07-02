@@ -1,5 +1,7 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import android.support.annotation.NonNull;
+
 import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.badlogic.gdx.utils.ObjectIntMap;
 import com.phonygames.cybertag.world.ColorDataEmitter;
@@ -27,11 +29,11 @@ public class LasertagRoomGen extends PBuilder {
   protected final ObjectFloatMap<LasertagRoomGen> connectedRoomsDistances = new ObjectFloatMap<>();
   protected final PList<LasertagRoomGen> directlyConnectedRooms = new PList<>();
 
-  public LasertagRoomGen(LasertagBuildingGen buildingGen, PIntAABB aabb) {
+  public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PIntAABB aabb) {
+    this.buildingGen = buildingGen;
     lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size);
     buildingGen.roomGens.add(this);
     lasertagRoom.building = buildingGen.building;
-    this.buildingGen = buildingGen;
     this.roomAABB = aabb;
     for (int x = roomAABB.x0(); x <= roomAABB.x1(); x++) {
       for (int y = roomAABB.y0(); y <= roomAABB.y1(); y++) {
