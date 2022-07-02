@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.util.PBuilder;
@@ -17,7 +18,7 @@ public class LasertagTileWallGen extends PBuilder {
     return wall;
   }
 
-  protected LasertagTileWallGen(LasertagTileWall.Facing facing, LasertagTileGen tilegen) {
+  protected LasertagTileWallGen(LasertagTileWall.Facing facing, @NonNull LasertagTileGen tilegen) {
     wall = new LasertagTileWall(facing, tilegen.tile);
   }
 }

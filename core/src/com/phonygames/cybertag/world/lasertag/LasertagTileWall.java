@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import lombok.AccessLevel;
@@ -19,7 +20,7 @@ public class LasertagTileWall {
   protected boolean valid;
   private String wallStyle;
 
-  protected LasertagTileWall(Facing facing, LasertagTile tile) {
+  protected LasertagTileWall(@NonNull Facing facing, @NonNull LasertagTile tile) {
     this.facing = facing;
     this.tile = tile;
   }

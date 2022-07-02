@@ -37,15 +37,40 @@ public class LasertagRoomGenTileEmitter {
       vertexProcessor.setFlatQuad(tile010, tile110, tile111, tile011);
       floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
-    if (tile.wallX.valid) {
-      vertexProcessor.setWall(tile000, tile010.y() - tile000.y(), tile001, tile011.y() - tile001.y());
-      MeshTemplate wallTemplate = MeshTemplate.get("model/template/wall/basic.glb");
-      wallTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
-    }
+    emitWall(tile.wallX, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
+    emitWall(tile.wallZ, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
+    emitWall(tile.wallMX, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
+    emitWall(tile.wallMZ, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
     tile.tileVColIndexStart = tileVColIndex;
     tileVColIndex += LasertagTile.PER_TILE_VCOL_INDICES;
     pool.finish();
     PModelGen.Part.VertexProcessor.staticPool().free(vertexProcessor);
     return tileVColIndex;
+  }
+
+  private static void emitWall(LasertagTileWall wall, PModelGen modelGen, PModelGen.Part basePart,
+                               PModelGen.StaticPhysicsPart staticPhysicsPart, int tileVColIndex,
+                               PList<PModelGen.Part> alphaBlendParts, PModelGen.Part.VertexProcessor vertexProcessor,
+                               PPool.PoolBuffer pool) {
+    if (!wall.valid) {return;}
+    PVec3 tile000 = pool.vec3(), tile100 = pool.vec3(), tile010 = pool.vec3(), tile110 = pool.vec3(), tile001 =
+        pool.vec3(), tile101 = pool.vec3(), tile011 = pool.vec3(), tile111 = pool.vec3();
+    wall.tile.getCornersFloorCeiling(tile000, tile001, tile010, tile011, tile100, tile101, tile110, tile111);
+    switch (wall.facing) {
+      case X:
+        vertexProcessor.setWall(tile000, tile010.y() - tile000.y(), tile001, tile011.y() - tile001.y());
+        break;
+      case Z:
+        vertexProcessor.setWall(tile100, tile110.y() - tile100.y(), tile000, tile010.y() - tile000.y());
+        break;
+      case mX:
+        vertexProcessor.setWall(tile101, tile111.y() - tile101.y(), tile100, tile110.y() - tile100.y());
+        break;
+      case mZ:
+        vertexProcessor.setWall(tile001, tile011.y() - tile001.y(), tile101, tile111.y() - tile101.y());
+        break;
+    }
+    MeshTemplate wallTemplate = MeshTemplate.get("model/template/wall/basic.glb");
+    wallTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
   }
 }
