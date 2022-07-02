@@ -43,10 +43,10 @@ public class LasertagBuildingGen extends PBuilder {
       LasertagTileWallGen wallZ = e.val().wallZ;
       LasertagTileWallGen wallMX = e.val().wallMX;
       LasertagTileWallGen wallMZ = e.val().wallMZ;
-      wallX.copySettingsToOtherWall(true);
-      wallZ.copySettingsToOtherWall(true);
-      wallMX.copySettingsToOtherWall(true);
-      wallMZ.copySettingsToOtherWall(true);
+      wallX.copySettingsFromOrToOtherWall(true);
+      wallZ.copySettingsFromOrToOtherWall(true);
+      wallMX.copySettingsFromOrToOtherWall(true);
+      wallMZ.copySettingsFromOrToOtherWall(true);
     }
   }
 

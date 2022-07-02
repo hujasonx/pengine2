@@ -58,6 +58,12 @@ public class LasertagRoomGenTileEmitter {
     PVec3 tile000 = pool.vec3(), tile100 = pool.vec3(), tile010 = pool.vec3(), tile110 = pool.vec3(), tile001 =
         pool.vec3(), tile101 = pool.vec3(), tile011 = pool.vec3(), tile111 = pool.vec3();
     wall.tile.getCornersFloorCeiling(tile000, tile001, tile010, tile011, tile100, tile101, tile110, tile111);
+    if (wall.isWindow) { //TODO this is test code.
+      tile010.y(tile000.y() + .2f);
+      tile011.y(tile001.y() + .2f);
+      tile111.y(tile101.y() + .2f);
+      tile110.y(tile100.y() + .2f);
+    }
     switch (wall.facing) {
       case X:
         vertexProcessor.setWall(tile000, tile010.y() - tile000.y(), tile001, tile011.y() - tile001.y());
@@ -72,9 +78,9 @@ public class LasertagRoomGenTileEmitter {
         vertexProcessor.setWall(tile001, tile011.y() - tile001.y(), tile101, tile111.y() - tile101.y());
         break;
     }
-    if (wall.isSolidWall) {
+//    if (wall.isSolidWall) {
       MeshTemplate wallTemplate = MeshTemplate.get("model/template/wall/basic.glb");
       wallTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
-    }
+//    }
   }
 }

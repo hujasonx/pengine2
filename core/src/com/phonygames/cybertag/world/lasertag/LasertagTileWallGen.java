@@ -19,6 +19,21 @@ public class LasertagTileWallGen extends PBuilder {
     return wall;
   }
 
+  /** If this wallgen is not valid, try to copy from the opposite. */
+  public void copySettingsFromOrToOtherWall(boolean defaultUseSolidWall) {
+    if (!wall.hasWall) {return;}
+    LasertagTileGen otherTileGen = otherRoomWallGen == null ? null :
+                                   LasertagRoomGenTileProcessor.otherTileForWall(otherRoomWallGen.roomGen.buildingGen,
+                                                                                 tileGen, wall.facing);
+    if (!wall.isValid) {
+      if (otherTileGen != null) {
+        otherTileGen.wallGen(wall.facing.opposite()).copySettingsToOtherWall(defaultUseSolidWall);
+        return;
+      }
+    }
+    copySettingsToOtherWall(defaultUseSolidWall);
+  }
+
   /** Copies settings like window, doorframe, etc that need to be shared, from the other wall. */
   public void copySettingsToOtherWall(boolean defaultUseSolidWall) {
     if (!wall.hasWall) {return;}

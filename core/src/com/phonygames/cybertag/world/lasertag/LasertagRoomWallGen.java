@@ -24,7 +24,6 @@ public class LasertagRoomWallGen {
     this.tileGens = tileGens;
     this.facing = facing;
     this.cornerTile = cornerTile;
-    cornerTile.wallGen(facing).wall.isWindow = true;
     xChangeForAlongWall = facing == LasertagTileWall.Facing.Z ? -1 : (facing == LasertagTileWall.Facing.mZ ? 1 : 0);
     zChangeForAlongWall = facing == LasertagTileWall.Facing.X ? 1 : (facing == LasertagTileWall.Facing.mX ? -1 : 0);
     genWallHeightData();
@@ -68,17 +67,19 @@ public class LasertagRoomWallGen {
   private void genPossibleDoors() {
     for (int startX = 0; startX < wallHeights.size; startX++) {
       for (int startY = 0; startY < wallHeights.get(startX); startY++) {
+        LasertagTileGen testCornerTile =
+            tileGens.get(cornerTile.x + (startX) * xChangeForAlongWall, cornerTile.y + startY,
+                         cornerTile.z + (startX) * zChangeForAlongWall);
+        PAssert.isNotNull(testCornerTile);
+        LasertagTileGen testCornerTileOther = otherTileForWall(roomGen.buildingGen, testCornerTile, facing);
+        if (testCornerTileOther == null || testCornerTileOther.roomGen == null) {continue;} // Can't make doors if there is no tile to connect to.
+        testCornerTile.wallGen(facing).wall.isWindow = true;
         // Try all the possible door sizes.
         for (int w = 1; w <= DOOR_WIDTH_WEIGHTS.length; w++) {
           for (int h = 1; h <= DOOR_HEIGHT_WEIGHTS.length; h++) {
             // Determine if this is a valid door placement.
-            LasertagTileGen otherTileGen = otherTileForWall(roomGen.buildingGen,
-                                                            tileGens.get(cornerTile.x + startX * xChangeForAlongWall,
-                                                                         cornerTile.y + startY,
-                                                                         cornerTile.z + startX * zChangeForAlongWall),
-                                                            facing);
-            LasertagRoomGen otherRoomGen = otherTileGen == null ? null : otherTileGen.roomGen;
-            if (otherRoomGen == null) {
+            LasertagRoom otherRoom = testCornerTileOther.roomGen == null ? null : testCornerTileOther.roomGen.lasertagRoom;
+            if (otherRoom == null) {
               break;
             }
             boolean couldBeValid = false;
@@ -87,8 +88,9 @@ public class LasertagRoomWallGen {
                 LasertagTileGen lookTile =
                     tileGens.get(cornerTile.x + (testX) * xChangeForAlongWall, cornerTile.y + testY,
                                  cornerTile.z + (testX) * zChangeForAlongWall);
-                if (!needsWallInDirection(roomGen, lookTile, facing) ||
-                    otherRoomGen != otherTileForWall(roomGen.buildingGen, lookTile, facing).roomGen) {
+                LasertagTileGen otherTile = otherTileForWall(roomGen.buildingGen, lookTile, facing);
+                if (!needsWallInDirection(roomGen, lookTile, facing) || otherTile == null || otherTile.roomGen == null ||
+                    otherRoom != otherTile.roomGen.lasertagRoom) {
                   couldBeValid = false;
                   break;
                 } else {
@@ -100,7 +102,7 @@ public class LasertagRoomWallGen {
               }
             }
             if (couldBeValid) {
-              PossibleDoor possibleDoor = new PossibleDoor(this, startX, startY, w, h, roomGen, otherRoomGen);
+              PossibleDoor possibleDoor = new PossibleDoor(this, startX, startY, w, h, roomGen, testCornerTileOther.roomGen);
               roomGen.buildingGen.possibleDoors.add(possibleDoor);
             }
           }
@@ -152,8 +154,8 @@ public class LasertagRoomWallGen {
         for (int testY = 0; testY < h; testY++) {
           LasertagTileGen lookTile =
               ownerRoomGen.buildingGen.tileGens.get(ret.door.tileX + testX * ownerWall.xChangeForAlongWall,
-                                                         ret.door.tileY + testY,
-                                                         ret.door.tileZ + testX * ownerWall.zChangeForAlongWall);
+                                                    ret.door.tileY + testY,
+                                                    ret.door.tileZ + testX * ownerWall.zChangeForAlongWall);
           LasertagTileWallGen wallGen = lookTile.wallGen(ownerWall.facing);
           wallGen.wall.hasDoorframeL = testX == 0;
           wallGen.wall.hasDoorframeR = testX == w - 1;
