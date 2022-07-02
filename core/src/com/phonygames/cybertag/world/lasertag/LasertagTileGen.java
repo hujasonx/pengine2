@@ -5,6 +5,7 @@ import com.phonygames.pengine.util.PBuilder;
 public class LasertagTileGen extends PBuilder {
   public final int x, y, z;
   protected final LasertagTile tile;
+  protected LasertagRoomGen roomGen;
   protected final LasertagTileWallGen wallMX = new LasertagTileWallGen(LasertagTileWall.Facing.mX, this);
   protected final LasertagTileWallGen wallMZ = new LasertagTileWallGen(LasertagTileWall.Facing.mZ, this);
   protected final LasertagTileWallGen wallX = new LasertagTileWallGen(LasertagTileWall.Facing.X, this);
@@ -28,5 +29,19 @@ public class LasertagTileGen extends PBuilder {
   }
 
   private void buildModelInstance() {
+  }
+
+  public LasertagTileWallGen wallGen(LasertagTileWall.Facing facing) {
+    switch (facing) {
+      case X:
+        return wallX;
+      case Z:
+        return wallZ;
+      case mX:
+        return wallMX;
+      case mZ:
+      default:
+        return wallMZ;
+    }
   }
 }

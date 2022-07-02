@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world;
 
+import com.phonygames.cybertag.world.lasertag.LasertagBuildGenDoorProcessor;
 import com.phonygames.cybertag.world.lasertag.LasertagBuildingGen;
 import com.phonygames.cybertag.world.lasertag.LasertagBuildingGenAABBPlacer;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGen;
@@ -28,6 +29,7 @@ public class World {
         LasertagRoomGenTileProcessor.processRoomCeilings(roomGen);
       }
     }
+    LasertagBuildGenDoorProcessor.processPossibleDoorsIntoAcutal(buildingGen);
     this.lasertagWorld = worldGen.build();
   }
 

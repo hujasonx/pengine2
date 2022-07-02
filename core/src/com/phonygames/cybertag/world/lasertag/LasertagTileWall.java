@@ -12,7 +12,7 @@ public class LasertagTileWall {
   /** If this tile wall is or is part of a door, this field will hold a reference to that door. */
   public @Nullable
   LasertagDoor door;
-  public boolean hasLeftDoorframe, hasRightDoorframe, hasDoorframeTop;
+  public boolean hasDoorframeL, hasDoorframeR, hasDoorframeT;
   public boolean isWindow, isSolidWall;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -26,5 +26,19 @@ public class LasertagTileWall {
 
   public enum Facing {
     X, Z, mX, mZ;
+
+    public Facing opposite() {
+      switch (this) {
+        case X:
+          return mX;
+        case Z:
+          return mZ;
+        case mX:
+          return X;
+        case mZ:
+        default:
+          return Z;
+      }
+    }
   }
 }

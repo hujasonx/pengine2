@@ -13,6 +13,7 @@ public class LasertagBuildingGen extends PBuilder {
   protected final LasertagBuilding building;
   protected final PList<LasertagRoomGen> roomGens = new PList<>();
   protected final PList<LasertagDoorGen> doorGens = new PList<>();
+  protected final PList<LasertagRoomWallGen.PossibleDoor> possibleDoors = new PList<>();
   protected final PIntMap3d<LasertagTileGen> tilesBuilders = new PIntMap3d<LasertagTileGen>() {
     @Override protected LasertagTileGen newUnpooled(int x, int y, int z) {
       return new LasertagTileGen(LasertagBuildingGen.this.building.id + "(" + x + "," + y + "," + z + ")", x, y, z);

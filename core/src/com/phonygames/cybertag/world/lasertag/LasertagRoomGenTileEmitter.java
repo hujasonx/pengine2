@@ -40,7 +40,7 @@ public class LasertagRoomGenTileEmitter {
     if (tile.wallX.valid) {
       vertexProcessor.setWall(tile000, tile010.y() - tile000.y(), tile001, tile011.y() - tile001.y());
       MeshTemplate wallTemplate = MeshTemplate.get("model/template/wall/basic.glb");
-      wallTemplate.emit(modelGen,vertexProcessor,basePart,staticPhysicsPart, tileVColIndex, alphaBlendParts);
+      wallTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     tile.tileVColIndexStart = tileVColIndex;
     tileVColIndex += LasertagTile.PER_TILE_VCOL_INDICES;

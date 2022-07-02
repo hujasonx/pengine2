@@ -1,5 +1,7 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import com.badlogic.gdx.utils.ObjectFloatMap;
+import com.badlogic.gdx.utils.ObjectIntMap;
 import com.phonygames.cybertag.world.ColorDataEmitter;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
@@ -22,7 +24,8 @@ public class LasertagRoomGen extends PBuilder {
   private final PIntAABB roomAABB;
   protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<>();
   protected final PList<LasertagRoomWallGen> roomWallGens = new PList<>();
-  protected final PList<LasertagDoorGen> doorGens = new PList<>();
+  protected final ObjectFloatMap<LasertagRoomGen> connectedRoomsDistances = new ObjectFloatMap<>();
+  protected final PList<LasertagRoomGen> directlyConnectedRooms = new PList<>();
 
   public LasertagRoomGen(LasertagBuildingGen buildingGen, PIntAABB aabb) {
     lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size);
@@ -36,6 +39,7 @@ public class LasertagRoomGen extends PBuilder {
           LasertagTileGen tileGen = buildingGen.tilesBuilders.genUnpooled(x, y, z);
           if (tileGen.tile.room == null) { // Don't overwrite existing room data.
             tileGen.tile.room = lasertagRoom;
+            tileGen.roomGen = this;
             lasertagRoom.tiles().put(x, y, z, tileGen.tile);
             tileGens.put(x, y, z, tileGen);
           }

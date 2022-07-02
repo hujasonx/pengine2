@@ -10,6 +10,7 @@ import lombok.experimental.Accessors;
 
 public class LasertagTileWallGen extends PBuilder {
   protected final LasertagTileWall wall;
+  protected LasertagRoomWallGen roomWallGen;
 
   public LasertagTileWall build() {
     lockBuilder();

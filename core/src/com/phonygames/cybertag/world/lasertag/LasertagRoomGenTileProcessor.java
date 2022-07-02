@@ -1,5 +1,7 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import android.support.annotation.Nullable;
+
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PIntMap3d;
 
@@ -83,6 +85,24 @@ public class LasertagRoomGenTileProcessor {
       case mZ:
       default:
         return roomGen.lasertagRoom != roomAtTile(roomGen.lasertagRoom.tiles(), tileGen.x, tileGen.y, tileGen.z + 1);
+    }
+  }
+
+  public static LasertagTileGen otherTileForWall(LasertagBuildingGen lasertagBuildingGen, @Nullable LasertagTileGen tileGen,
+                                             LasertagTileWall.Facing facing) {
+    if (tileGen == null) {
+      return null;
+    }
+    switch (facing) {
+      case X:
+        return lasertagBuildingGen.tilesBuilders.get(tileGen.x - 1, tileGen.y, tileGen.z);
+      case Z:
+        return lasertagBuildingGen.tilesBuilders.get(tileGen.x, tileGen.y, tileGen.z - 1);
+      case mX:
+        return lasertagBuildingGen.tilesBuilders.get(tileGen.x + 1, tileGen.y, tileGen.z);
+      case mZ:
+      default:
+        return lasertagBuildingGen.tilesBuilders.get(tileGen.x, tileGen.y, tileGen.z + 1);
     }
   }
 
