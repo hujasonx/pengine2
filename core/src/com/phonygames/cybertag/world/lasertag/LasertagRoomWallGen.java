@@ -39,11 +39,15 @@ public class LasertagRoomWallGen {
       searchTileGenBase = nextTileGenBase;
       nextTileGenTop = searchTileGenBase;
       int searchTileYOffset = 0;
-      while (nextTileGenTop != null && needsWallInDirection(roomGen, nextTileGenTop, facing)) {
+      while (needsWallInDirection(roomGen, nextTileGenTop, facing)) {
         searchTileGenTop = nextTileGenTop;
         // Mark all the walls for the visited tiles as valid, since we own them now.
         searchTileGenTop.tile.wall(facing).valid = true;
         searchTileGenTop.wallGen(facing).roomWallGen = this;
+        LasertagTileGen otherTileGen = otherTileForWall(roomGen.buildingGen, searchTileGenTop, facing);
+        if (otherTileGen != null) {
+          otherTileGen.wallGen(facing.opposite()).otherRoomWallGen = this;
+        }
         searchTileYOffset++;
         nextTileGenTop = tileGens.get(searchTileBaseX, searchTileBaseY + searchTileYOffset, searchTileBaseZ);
       }
@@ -77,8 +81,8 @@ public class LasertagRoomWallGen {
                 LasertagTileGen lookTile =
                     tileGens.get(cornerTile.x + (testX) * xChangeForAlongWall, cornerTile.y + testY,
                                  cornerTile.z + (testX) * zChangeForAlongWall);
-                if (lookTile == null || !needsWallInDirection(roomGen, lookTile, facing) || otherRoomGen != otherTileForWall(
-                    roomGen.buildingGen, lookTile, facing).roomGen) {
+                if (!needsWallInDirection(roomGen, lookTile, facing) ||
+                    otherRoomGen != otherTileForWall(roomGen.buildingGen, lookTile, facing).roomGen) {
                   couldBeValid = false;
                   break;
                 } else {
@@ -115,9 +119,22 @@ public class LasertagRoomWallGen {
       this.otherRoomGen = otherRoomGen;
     }
 
+    @Override public int compareTo(PossibleDoor other) {
+      float score = score();
+      float otherScore = other.score();
+      if (score > otherScore) {return 1;}
+      if (score < otherScore) {return -1;}
+      return 0;
+    }
+
+    public float score() {
+      float scoreFromRoomConnections = 0;
+      return DOOR_HEIGHT_WEIGHTS[h - 1] + DOOR_WIDTH_WEIGHTS[w - 1] + scoreFromRoomConnections;
+    }
+
     /** Finalizes this possible door as an actual door. */
     public LasertagDoorGen toDoorGen() {
-      LasertagDoorGen ret =  new LasertagDoorGen();
+      LasertagDoorGen ret = new LasertagDoorGen();
       ret.door.w = w;
       ret.door.h = h;
       ret.door.tileX = ownerWall.xChangeForAlongWall * x + ownerWall.cornerTile.x;
@@ -138,20 +155,6 @@ public class LasertagRoomWallGen {
       }
       ownerRoomGen.buildingGen.doorGens.add(ret);
       return ret;
-    }
-
-    @Override
-    public int compareTo(PossibleDoor other) {
-      float score = score();
-      float otherScore = other.score();
-      if (score > otherScore) {return 1;}
-      if (score < otherScore) {return -1;}
-      return 0;
-    }
-
-    public float score() {
-      float scoreFromRoomConnections = 0;
-      return DOOR_HEIGHT_WEIGHTS[h - 1] + DOOR_WIDTH_WEIGHTS[w - 1] + scoreFromRoomConnections;
     }
   }
 }

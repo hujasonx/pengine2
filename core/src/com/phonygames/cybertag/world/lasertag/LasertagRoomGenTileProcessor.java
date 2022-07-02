@@ -70,8 +70,11 @@ public class LasertagRoomGenTileProcessor {
     }
   }
 
-  public static boolean needsWallInDirection(LasertagRoomGen roomGen, LasertagTileGen tileGen,
+  public static boolean needsWallInDirection(LasertagRoomGen roomGen, @Nullable LasertagTileGen tileGen,
                                              LasertagTileWall.Facing facing) {
+    if (tileGen == null) {
+      return false;
+    }
     if (tileGen.tile.room != roomGen.lasertagRoom) {
       return false;
     }
@@ -134,6 +137,7 @@ public class LasertagRoomGenTileProcessor {
       searchTileGen = nextSearchTileGen;
       searchY--;
     }
+    searchY = searchTileGen.y;
     int xChangeForAlongWall = facing == LasertagTileWall.Facing.Z ? -1 : (facing == LasertagTileWall.Facing.mZ ? 1 : 0);
     int zChangeForAlongWall = facing == LasertagTileWall.Facing.X ? 1 : (facing == LasertagTileWall.Facing.mX ? -1 : 0);
     while (true) {

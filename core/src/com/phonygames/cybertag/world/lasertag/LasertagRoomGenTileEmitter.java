@@ -34,7 +34,8 @@ public class LasertagRoomGenTileEmitter {
     }
     if (tile.hasCeiling) {
       MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/basic.glb");
-      vertexProcessor.setFlatQuad(tile010, tile110, tile111, tile011);
+      vertexProcessor.setFlatQuad(tile010.y(tile010.y() - .1f), tile110.y(tile110.y() - .1f),
+                                  tile111.y(tile111.y() - .1f), tile011.y(tile011.y() - .1f));
       floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     emitWall(tile.wallX, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
