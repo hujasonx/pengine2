@@ -23,7 +23,7 @@ public class LasertagRoomGenRoomPlacer {
 
   public static PIntAABB getValidAABBForRoomPlacement(LasertagBuildingGen buildingGen) {
     PList<PIntAABB> aabbs = buildingGen.aabbs;
-    PIntMap3d<LasertagTileGen> tilemap = buildingGen.tilesBuilders;
+    PIntMap3d<LasertagTileGen> tilemap = buildingGen.tileGens;
     return getValidAABBForRoomPlacement(aabbs, tilemap);
   }
 
@@ -43,7 +43,7 @@ public class LasertagRoomGenRoomPlacer {
       int roomZ = PNumberUtils.clamp(
           MathUtils.random(aabb.z0() - edgeShiftBoundaryZ, aabb.z1() + edgeShiftBoundaryZ - roomSizeZ + 1), aabb.z0(),
           aabb.z1() - roomSizeZ + 1);
-      ret.set(roomX, roomY, roomZ, roomX + roomSizeX, roomY + roomSizeY, roomZ + roomSizeZ);
+      ret.set(roomX, roomY, roomZ, roomX + roomSizeX - 1, roomY + roomSizeY - 1, roomZ + roomSizeZ - 1);
       if (validateAABBForRoomPlacement(ret, tileGenMap)) {
         System.out.println("attempt" + attempt);
         return ret;

@@ -3,7 +3,6 @@ package com.phonygames.cybertag.world.lasertag;
 import android.support.annotation.NonNull;
 
 import com.badlogic.gdx.utils.ObjectFloatMap;
-import com.badlogic.gdx.utils.ObjectIntMap;
 import com.phonygames.cybertag.world.ColorDataEmitter;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
@@ -38,7 +37,7 @@ public class LasertagRoomGen extends PBuilder {
     for (int x = roomAABB.x0(); x <= roomAABB.x1(); x++) {
       for (int y = roomAABB.y0(); y <= roomAABB.y1(); y++) {
         for (int z = roomAABB.z0(); z <= roomAABB.z1(); z++) {
-          LasertagTileGen tileGen = buildingGen.tilesBuilders.genUnpooled(x, y, z);
+          LasertagTileGen tileGen = buildingGen.tileGens.genUnpooled(x, y, z);
           if (tileGen.tile.room == null) { // Don't overwrite existing room data.
             tileGen.tile.room = lasertagRoom;
             tileGen.roomGen = this;

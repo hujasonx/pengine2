@@ -11,12 +11,12 @@ import com.phonygames.pengine.util.PList;
 public class LasertagRoomWallGen {
   public static final float[] DOOR_HEIGHT_WEIGHTS = new float[]{1, 1.5f, .3f};
   public static final float[] DOOR_WIDTH_WEIGHTS = new float[]{1, 1.5f, .3f};
-  private final LasertagTileGen cornerTile;
-  private final LasertagTileWall.Facing facing;
-  private final LasertagRoomGen roomGen;
-  private final PIntMap3d<LasertagTileGen> tileGens;
-  private final PList<Integer> wallHeights = new PList<>();
-  private final int xChangeForAlongWall, zChangeForAlongWall;
+  protected final LasertagTileGen cornerTile;
+  protected final LasertagTileWall.Facing facing;
+  protected final LasertagRoomGen roomGen;
+  protected final PIntMap3d<LasertagTileGen> tileGens;
+  protected final PList<Integer> wallHeights = new PList<>();
+  protected final int xChangeForAlongWall, zChangeForAlongWall;
 
   public LasertagRoomWallGen(LasertagRoomGen roomGen, PIntMap3d<LasertagTileGen> tileGens, LasertagTileGen cornerTile,
                              LasertagTileWall.Facing facing) {
@@ -44,7 +44,7 @@ public class LasertagRoomWallGen {
       while (needsWallInDirection(roomGen, nextTileGenTop, facing)) {
         searchTileGenTop = nextTileGenTop;
         // Mark all the walls for the visited tiles as valid, since we own them now.
-        searchTileGenTop.tile.wall(facing).valid = true;
+        searchTileGenTop.tile.wall(facing).hasWall = true;
         searchTileGenTop.wallGen(facing).roomWallGen = this;
         LasertagTileGen otherTileGen = otherTileForWall(roomGen.buildingGen, searchTileGenTop, facing);
         if (otherTileGen != null) {
@@ -151,12 +151,14 @@ public class LasertagRoomWallGen {
       for (int testX = 0; testX < w; testX++) {
         for (int testY = 0; testY < h; testY++) {
           LasertagTileGen lookTile =
-              ownerRoomGen.buildingGen.tilesBuilders.get(ret.door.tileX + testX * ownerWall.xChangeForAlongWall,
+              ownerRoomGen.buildingGen.tileGens.get(ret.door.tileX + testX * ownerWall.xChangeForAlongWall,
                                                          ret.door.tileY + testY,
                                                          ret.door.tileZ + testX * ownerWall.zChangeForAlongWall);
-          lookTile.wallGen(ownerWall.facing).wall.hasDoorframeL = testX == 0;
-          lookTile.wallGen(ownerWall.facing).wall.hasDoorframeR = testX == w - 1;
-          lookTile.wallGen(ownerWall.facing).wall.hasDoorframeT = testY == h - 1;
+          LasertagTileWallGen wallGen = lookTile.wallGen(ownerWall.facing);
+          wallGen.wall.hasDoorframeL = testX == 0;
+          wallGen.wall.hasDoorframeR = testX == w - 1;
+          wallGen.wall.hasDoorframeT = testY == h - 1;
+          wallGen.wall.isValid = true;
         }
       }
       ownerRoomGen.buildingGen.doorGens.add(ret);

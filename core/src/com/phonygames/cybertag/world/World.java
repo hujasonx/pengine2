@@ -30,6 +30,7 @@ public class World {
       }
     }
     LasertagBuildGenDoorProcessor.processPossibleDoorsIntoAcutal(buildingGen);
+    LasertagBuildingGen.finalPassWalls(buildingGen);
     this.lasertagWorld = worldGen.build();
   }
 

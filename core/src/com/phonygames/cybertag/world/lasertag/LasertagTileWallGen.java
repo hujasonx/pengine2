@@ -1,25 +1,46 @@
 package com.phonygames.cybertag.world.lasertag;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.util.PBuilder;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.experimental.Accessors;
-
 public class LasertagTileWallGen extends PBuilder {
+  protected final LasertagTileGen tileGen;
   protected final LasertagTileWall wall;
   protected LasertagRoomWallGen roomWallGen, otherRoomWallGen;
 
+  protected LasertagTileWallGen(LasertagTileWall.Facing facing, @NonNull LasertagTileGen tileGen) {
+    this.tileGen = tileGen;
+    wall = new LasertagTileWall(facing, tileGen.tile);
+  }
 
   public LasertagTileWall build() {
     lockBuilder();
     return wall;
   }
 
-  protected LasertagTileWallGen(LasertagTileWall.Facing facing, @NonNull LasertagTileGen tilegen) {
-    wall = new LasertagTileWall(facing, tilegen.tile);
+  /** Copies settings like window, doorframe, etc that need to be shared, from the other wall. */
+  public void copySettingsToOtherWall(boolean defaultUseSolidWall) {
+    if (!wall.hasWall) {return;}
+    if (!wall.isValid) {
+      // The wall properties were not already set, so set it from the defaults.
+      if (defaultUseSolidWall) {
+        wall.isSolidWall = true;
+      }
+      wall.isValid = true;
+    }
+    // Now, copy the data.
+    if (otherRoomWallGen == null) {return;}
+    LasertagTileGen otherTileGen =
+        LasertagRoomGenTileProcessor.otherTileForWall(otherRoomWallGen.roomGen.buildingGen, tileGen, wall.facing);
+    if (otherTileGen == null) {return;}
+    LasertagTileWallGen other = otherTileGen.wallGen(wall.facing.opposite());
+    if (!other.wall.hasWall || other.wall.isValid) {return;}
+    other.wall.isValid = true;
+    other.wall.hasDoorframeR = wall.hasDoorframeL;
+    other.wall.hasDoorframeL = wall.hasDoorframeR;
+    other.wall.hasDoorframeT = wall.hasDoorframeT;
+    other.wall.isSolidWall = wall.isSolidWall;
+    other.wall.isWindow = wall.isWindow;
   }
 }

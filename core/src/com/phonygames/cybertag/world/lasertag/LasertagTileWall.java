@@ -17,7 +17,7 @@ public class LasertagTileWall {
   public boolean isWindow, isSolidWall;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  protected boolean valid;
+  protected boolean hasWall, isValid;
   private String wallStyle;
 
   protected LasertagTileWall(@NonNull Facing facing, @NonNull LasertagTile tile) {

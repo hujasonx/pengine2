@@ -56,16 +56,16 @@ public class LasertagRoomGenTileProcessor {
       int z = e.z();
       LasertagTileGen tileGen = e.val();
       LasertagTile tile = tileGen.tile;
-      if (!tile.wallX.valid && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.X)) {
+      if (!tile.wallX.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.X)) {
         emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.X);
       }
-      if (!tile.wallZ.valid && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.Z)) {
+      if (!tile.wallZ.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.Z)) {
         emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.Z);
       }
-      if (!tile.wallMX.valid && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.mX)) {
+      if (!tile.wallMX.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.mX)) {
         emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.mX);
       }
-      if (!tile.wallMZ.valid && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.mZ)) {
+      if (!tile.wallMZ.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.mZ)) {
         emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.mZ);
       }
     }
@@ -81,14 +81,14 @@ public class LasertagRoomGenTileProcessor {
     }
     switch (facing) {
       case X:
-        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tilesBuilders, tileGen.x - 1, tileGen.y, tileGen.z);
+        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tileGens, tileGen.x - 1, tileGen.y, tileGen.z);
       case Z:
-        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tilesBuilders, tileGen.x, tileGen.y, tileGen.z - 1);
+        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tileGens, tileGen.x, tileGen.y, tileGen.z - 1);
       case mX:
-        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tilesBuilders, tileGen.x + 1, tileGen.y, tileGen.z);
+        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tileGens, tileGen.x + 1, tileGen.y, tileGen.z);
       case mZ:
       default:
-        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tilesBuilders, tileGen.x, tileGen.y, tileGen.z + 1);
+        return roomGen.lasertagRoom != roomAtTile(roomGen.buildingGen.tileGens, tileGen.x, tileGen.y, tileGen.z + 1);
     }
   }
 
@@ -99,14 +99,14 @@ public class LasertagRoomGenTileProcessor {
     }
     switch (facing) {
       case X:
-        return lasertagBuildingGen.tilesBuilders.get(tileGen.x - 1, tileGen.y, tileGen.z);
+        return lasertagBuildingGen.tileGens.get(tileGen.x - 1, tileGen.y, tileGen.z);
       case Z:
-        return lasertagBuildingGen.tilesBuilders.get(tileGen.x, tileGen.y, tileGen.z - 1);
+        return lasertagBuildingGen.tileGens.get(tileGen.x, tileGen.y, tileGen.z - 1);
       case mX:
-        return lasertagBuildingGen.tilesBuilders.get(tileGen.x + 1, tileGen.y, tileGen.z);
+        return lasertagBuildingGen.tileGens.get(tileGen.x + 1, tileGen.y, tileGen.z);
       case mZ:
       default:
-        return lasertagBuildingGen.tilesBuilders.get(tileGen.x, tileGen.y, tileGen.z + 1);
+        return lasertagBuildingGen.tileGens.get(tileGen.x, tileGen.y, tileGen.z + 1);
     }
   }
 
@@ -133,7 +133,7 @@ public class LasertagRoomGenTileProcessor {
       LasertagTileGen nextSearchTileGen = roomGen.tileGens.get(searchX, searchY - 1, searchZ);
       // Stop searching if there is no tile in the next spot, or the room isn't the same, or there was already a wall
       // generated at the spot, or there does not need to be a wall generated at that spot.
-      if (nextSearchTileGen == null || nextSearchTileGen.tile.wall(facing).valid ||
+      if (nextSearchTileGen == null || nextSearchTileGen.tile.wall(facing).hasWall ||
           !needsWallInDirection(roomGen, nextSearchTileGen, facing)) {break;}
       searchTileGen = nextSearchTileGen;
       searchY--;
@@ -144,7 +144,7 @@ public class LasertagRoomGenTileProcessor {
     while (true) {
       LasertagTileGen nextSearchTileGen =
           roomGen.tileGens.get(searchX - xChangeForAlongWall, searchY, searchZ - zChangeForAlongWall);
-      if (nextSearchTileGen == null || nextSearchTileGen.tile.wall(facing).valid ||
+      if (nextSearchTileGen == null || nextSearchTileGen.tile.wall(facing).hasWall ||
           !needsWallInDirection(roomGen, nextSearchTileGen, facing)) {break;}
       searchTileGen = nextSearchTileGen;
       searchX -= xChangeForAlongWall;

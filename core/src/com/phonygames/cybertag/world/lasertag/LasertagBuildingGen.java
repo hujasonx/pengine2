@@ -11,10 +11,10 @@ import lombok.val;
 public class LasertagBuildingGen extends PBuilder {
   protected final PList<PIntAABB> aabbs = new PList<>();
   protected final LasertagBuilding building;
-  protected final PList<LasertagRoomGen> roomGens = new PList<>();
   protected final PList<LasertagDoorGen> doorGens = new PList<>();
   protected final PList<LasertagRoomWallGen.PossibleDoor> possibleDoors = new PList<>();
-  protected final PIntMap3d<LasertagTileGen> tilesBuilders = new PIntMap3d<LasertagTileGen>() {
+  protected final PList<LasertagRoomGen> roomGens = new PList<>();
+  protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<LasertagTileGen>() {
     @Override protected LasertagTileGen newUnpooled(int x, int y, int z) {
       return new LasertagTileGen(LasertagBuildingGen.this.building.id + "(" + x + "," + y + "," + z + ")", x, y, z);
     }
@@ -25,6 +25,31 @@ public class LasertagBuildingGen extends PBuilder {
     worldGen.buildingGens.add(this);
   }
 
+  /**
+   * After doors and windows are placed on tilewalls, this method can copy those settings to the opposing walls.
+   * @param buildingGen
+   */
+  public static void finalPassWalls(LasertagBuildingGen buildingGen) {
+    for (val e : buildingGen.tileGens) {
+      LasertagTileGen otherX =
+          LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.X);
+      LasertagTileGen otherZ =
+          LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.Z);
+      LasertagTileGen otherMX =
+          LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.mX);
+      LasertagTileGen otherMZ =
+          LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.mZ);
+      LasertagTileWallGen wallX = e.val().wallX;
+      LasertagTileWallGen wallZ = e.val().wallZ;
+      LasertagTileWallGen wallMX = e.val().wallMX;
+      LasertagTileWallGen wallMZ = e.val().wallMZ;
+      wallX.copySettingsToOtherWall(true);
+      wallZ.copySettingsToOtherWall(true);
+      wallMX.copySettingsToOtherWall(true);
+      wallMZ.copySettingsToOtherWall(true);
+    }
+  }
+
   protected void addAABB(int offsetX, int offsetY, int offsetZ, int xSize, int ySize, int zSize) {
     checkLock();
     PIntAABB aabb = new PIntAABB().set(offsetX, offsetY, offsetZ, offsetX + xSize, offsetY + ySize, offsetZ + zSize);
@@ -32,25 +57,10 @@ public class LasertagBuildingGen extends PBuilder {
     for (int x = 0; x < xSize; x++) {
       for (int y = 0; y < ySize; y++) {
         for (int z = 0; z < zSize; z++) {
-          tilesBuilders.genUnpooled(offsetX + x, offsetY + y, offsetZ + z);
+          tileGens.genUnpooled(offsetX + x, offsetY + y, offsetZ + z);
         }
       }
     }
-  }
-
-  public LasertagBuildingGen setTileScale(float x, float y, float z) {
-    this.building.tileScale().set(x, y, z);
-    return this;
-  }
-
-  public LasertagBuildingGen setTileTranslation(float x, float y, float z) {
-    this.building.tileTranslation().set(x, y, z);
-    return this;
-  }
-
-  public LasertagBuildingGen setTileRotation(float rotation) {
-    this.building.tileRotation().setToRotation(0, 1, 0, rotation);
-    return this;
   }
 
   public LasertagBuilding build() {
@@ -63,7 +73,7 @@ public class LasertagBuildingGen extends PBuilder {
     for (int a = 0; a < roomGens.size; a++) {
       building.rooms[a] = roomGens.get(a).build();
     }
-    for (val e : tilesBuilders) {
+    for (val e : tileGens) {
       e.val().build();
     }
     for (val e : doorGens) {
@@ -75,5 +85,20 @@ public class LasertagBuildingGen extends PBuilder {
 
   private void buildModelInstance() {
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {});
+  }
+
+  public LasertagBuildingGen setTileRotation(float rotation) {
+    this.building.tileRotation().setToRotation(0, 1, 0, rotation);
+    return this;
+  }
+
+  public LasertagBuildingGen setTileScale(float x, float y, float z) {
+    this.building.tileScale().set(x, y, z);
+    return this;
+  }
+
+  public LasertagBuildingGen setTileTranslation(float x, float y, float z) {
+    this.building.tileTranslation().set(x, y, z);
+    return this;
   }
 }
