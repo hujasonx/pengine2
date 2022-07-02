@@ -27,6 +27,8 @@ import lombok.val;
 
 public class PPhysicsEngine {
   public static final short ALL_FLAG = -1;
+  public static final short STATIC_FLAG = 0x1 << 0;
+  public static final short CHARACTER_CONTROLLER_FLAG = 0x1 << 1;
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private static final PSet<PPhysicsCollisionShape> collisionShapes = new PSet<>();

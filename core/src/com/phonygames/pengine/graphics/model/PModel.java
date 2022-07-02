@@ -8,10 +8,10 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
-import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.physics.PPhysicsCollisionShape;
+import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PStringMap;
@@ -37,7 +37,7 @@ public class PModel {
   private final PList<String> rootNodeIds = new PList<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
-  private final PStringMap<PPhysicsCollisionShape<btBvhTriangleMeshShape>> staticCollisionShapes = new PStringMap<>();
+  private final PStringMap<PPhysicsBvhTriangleMeshShape> staticCollisionShapes = new PStringMap<>();
 
   private PModel() {
   }

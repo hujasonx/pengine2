@@ -76,7 +76,7 @@ public class PModelInstance {
   public PModelInstance createAndAddStaticBodiesFromModelWithCurrentWorldTransform() {
     for (val e : model.staticCollisionShapes()) {
       if (staticBodies().has(e.k())) {continue;}
-      PStaticBody staticBody = PStaticBody.obtain(e.v(), PPhysicsEngine.ALL_FLAG, PPhysicsEngine.ALL_FLAG);
+      PStaticBody staticBody = PStaticBody.obtain(e.v(), PPhysicsEngine.STATIC_FLAG, PPhysicsEngine.ALL_FLAG);
       staticBody.setWorldTransform(worldTransform());
       staticBodies().put(e.k(), staticBody);
       staticBody.addToDynamicsWorld();

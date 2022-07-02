@@ -20,6 +20,7 @@ import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.PPhysicsCollisionShape;
+import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PPostableTask;
@@ -110,8 +111,8 @@ public class PModelGen implements PPostableTask {
     for (val e : staticPhysicsParts) {
       if (e.v().indices().isEmpty()) {continue;}
       btBvhTriangleMeshShape triangleMeshShape = e.v().getTriangleMeshShape();
-      PPhysicsCollisionShape<btBvhTriangleMeshShape> collisionShape =
-          new PPhysicsCollisionShape<btBvhTriangleMeshShape>(triangleMeshShape) {};
+      PPhysicsBvhTriangleMeshShape collisionShape =
+          new PPhysicsBvhTriangleMeshShape(triangleMeshShape) {};
       builder.model.staticCollisionShapes().put(e.k(), collisionShape);
     }
   }

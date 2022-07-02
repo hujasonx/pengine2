@@ -7,13 +7,14 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.utils.Disposable;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.physics.PPhysicsEngine;
 
 public abstract class PPhysicsCollisionShape<T extends btCollisionShape> implements Disposable {
   private static final Vector3 tempVec3 = new Vector3();
   protected final T collisionShape;
   private boolean disposed;
 
-  protected PPhysicsCollisionShape(@NonNull T collisionShape) {
+  public PPhysicsCollisionShape(@NonNull T collisionShape) {
     this.collisionShape = collisionShape;
     PPhysicsEngine.trackShape(this);
     disposed = true;
