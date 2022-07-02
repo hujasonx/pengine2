@@ -58,10 +58,16 @@ public class PVec1 extends PVec<PVec1> {
     return x * other.x;
   }
 
+  @Override public boolean isZero(float margin) {
+    if (Math.abs(x()) > margin) {
+      return false;
+    }
+    return true;
+  }
+
   @Override public float len() {
     return Math.abs(x);
   }
-  // End static.
 
   /**
    * Multiplies other with caller into caller.
@@ -72,14 +78,20 @@ public class PVec1 extends PVec<PVec1> {
     x *= other.x;
     return this;
   }
+  // End static.
 
-  @Override public PVec1 roundComponents(float factor) {
-    this.x = (Math.round(this.x * factor) / factor);
+  @Override public PVec1 nor() {
+    if (x > 0) {x = 1;} else {x = -1;}
     return this;
   }
 
   @Override public PVec1 setZero() {
     x = 0;
+    return this;
+  }
+
+  @Override public PVec1 roundComponents(float factor) {
+    this.x = (Math.round(this.x * factor) / factor);
     return this;
   }
 
@@ -96,6 +108,10 @@ public class PVec1 extends PVec<PVec1> {
   @Override public PVec1 sub(PVec1 other) {
     x -= other.x;
     return this;
+  }
+
+  public float x() {
+    return x;
   }
 
   @Override public boolean equalsT(PVec1 pVec1) {
@@ -119,10 +135,6 @@ public class PVec1 extends PVec<PVec1> {
   @Override public PVec1 set(PVec1 other) {
     this.x = other.x;
     return this;
-  }
-
-  public float x() {
-    return x;
   }
 
   public PVec1 x(float x) {

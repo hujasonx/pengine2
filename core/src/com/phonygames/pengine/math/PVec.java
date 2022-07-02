@@ -37,25 +37,30 @@ public abstract class PVec<V extends PVec> extends PBasic<V> implements PLerpabl
 
   public abstract float dot(V other);
 
+  public final boolean isZero() {
+    return isZero(0.0001f);
+  }
+
+  public abstract boolean isZero(float margin);
+
   public float len() {
     return (float) Math.sqrt(len2());
   }
 
   public abstract V mul(V other);
+  public abstract V nor();
 
   @Override public final void reset() {
     setZero();
   }
 
-
+  public abstract V setZero();
   /**
    * Rounds the components of this vector to the reciprocal nearest factor (i.e. input 10 for nearest 10th).
    * @param factor
    * @return
    */
   public abstract V roundComponents(float factor);
-
-  public abstract V setZero();
   public abstract V scl(float scl);
   public abstract V sub(V other);
 }

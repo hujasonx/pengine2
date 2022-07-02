@@ -35,6 +35,15 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   private PMat4() {
   }
 
+  public PMat4 updateTranslation(PVec3 translation) {
+    PVec3 tempScl = getScale(PVec3.obtain());
+    PVec4 tempRot = getRotation(PVec4.obtain());
+    set(translation, tempRot, tempScl);
+    tempRot.free();
+    tempScl.free();
+    return this;
+  }
+
   public static PMat4 obtain(PMat4 copyOf) {
     return obtain().set(copyOf);
   }
@@ -62,6 +71,16 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
 
   public PVec3 getTranslation(PVec3 out) {
     backingMatrix4.getTranslation(out.backingVec3());
+    return out;
+  }
+
+  public PVec3 getScale(PVec3 out) {
+    backingMatrix4.getScale(out.backingVec3());
+    return out;
+  }
+
+  public PVec4 getRotation(PVec4 out) {
+    backingMatrix4.getRotation(out.backingQuaterion());
     return out;
   }
 

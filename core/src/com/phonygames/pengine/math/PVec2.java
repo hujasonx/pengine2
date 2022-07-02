@@ -60,6 +60,16 @@ public class PVec2 extends PVec<PVec2> {
     return x * other.x + y * other.y;
   }
 
+  @Override public boolean isZero(float margin) {
+    if (Math.abs(x()) > margin) {
+      return false;
+    }
+    if (Math.abs(y()) > margin) {
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Multiplies other with caller into caller.
    * @param other
@@ -71,15 +81,23 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
-  @Override public PVec2 roundComponents(float factor) {
-    this.x = (Math.round(this.x * factor) / factor);
-    this.y = (Math.round(this.y * factor) / factor);
+  @Override public PVec2 nor() {
+    float len = len();
+    if (len == 0) {return this;}
+    x /= len;
+    y /= len;
     return this;
   }
 
   @Override public PVec2 setZero() {
     x = 0;
     y = 0;
+    return this;
+  }
+
+  @Override public PVec2 roundComponents(float factor) {
+    this.x = (Math.round(this.x * factor) / factor);
+    this.y = (Math.round(this.y * factor) / factor);
     return this;
   }
 
@@ -93,6 +111,14 @@ public class PVec2 extends PVec<PVec2> {
     x -= other.x;
     y -= other.y;
     return this;
+  }
+
+  public float x() {
+    return x;
+  }
+
+  public float y() {
+    return y;
   }
 
   @Override public boolean equalsT(PVec2 vec2) {
@@ -139,17 +165,9 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
-  public float x() {
-    return x;
-  }
-
   public PVec2 x(float x) {
     this.x = x;
     return this;
-  }
-
-  public float y() {
-    return y;
   }
 
   public PVec2 y(float y) {

@@ -45,7 +45,6 @@ public class LasertagRoomGenRoomPlacer {
           aabb.z1() - roomSizeZ + 1);
       ret.set(roomX, roomY, roomZ, roomX + roomSizeX - 1, roomY + roomSizeY - 1, roomZ + roomSizeZ - 1);
       if (validateAABBForRoomPlacement(ret, tileGenMap)) {
-        System.out.println("attempt" + attempt);
         return ret;
       }
 

@@ -91,6 +91,7 @@ public class PEngine extends ApplicationAdapter {
     dt = uidt * timeScale;
     t += dt;
     uit += uidt;
+    frameCount++;
     processLogicUpdateForFrame();
     frameUpdate();
     // Ctrl + S + R to reload all shaders.
@@ -112,6 +113,7 @@ public class PEngine extends ApplicationAdapter {
     }
     while (logict < t) {
       logict += logictimestep;
+      logicUpdateCount++;
       PInput.preLogicUpdate();
       game.preLogicUpdate();
       game.logicUpdate();

@@ -17,6 +17,7 @@ import com.badlogic.gdx.physics.bullet.dynamics.btMultiBodyDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PSet;
 
 import lombok.AccessLevel;
@@ -48,6 +49,8 @@ public class PPhysicsEngine {
   @Accessors(fluent = true)
   private static boolean inited = false, enableDebugRender = false;
   private static btPersistentManifold sharedManifold;
+  protected static PList<PRigidBody> rigidBodiesInSimulation = new PList<>();
+  public static float gravity = 9.81f;
 
   public static void dispose() {
     for (val e : collisionShapes()) {
@@ -98,7 +101,11 @@ public class PPhysicsEngine {
     if (!inited) {
       return;
     }
+    if (PEngine.logicUpdateCount < 60) {return;}
     dynamicsWorld.stepSimulation(PEngine.logictimestep);
+    for (PRigidBody rigidBody : rigidBodiesInSimulation) {
+      rigidBody.postLogicUpdate();
+    }
   }
 
   protected static void trackShape(PPhysicsCollisionShape collisionShape) {

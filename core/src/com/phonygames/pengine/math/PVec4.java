@@ -10,6 +10,7 @@ import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public class PVec4 extends PVec<PVec4> {
   public static final PVec4 X = new PVec4().set(1, 0, 0, 0);
@@ -23,6 +24,8 @@ public class PVec4 extends PVec<PVec4> {
     }
   };
   public static PVec4 W = new PVec4().set(0, 0, 0, 1);
+  @Getter(value = AccessLevel.PROTECTED)
+  @Accessors(fluent = true)
   private final Quaternion backingQuaterion = new Quaternion().set(0, 0, 0, 0);
 
   private PVec4() {}
@@ -42,6 +45,27 @@ public class PVec4 extends PVec<PVec4> {
     backingQuaterion.z += other.backingQuaterion.z * scl;
     backingQuaterion.w += other.backingQuaterion.w * scl;
     return this;
+  }
+
+  @Override public PVec4 nor() {
+    backingQuaterion.nor();
+    return this;
+  }
+
+  @Override public boolean isZero(float margin) {
+    if (Math.abs(x()) > margin) {
+      return false;
+    }
+    if (Math.abs(y()) > margin) {
+      return false;
+    }
+    if (Math.abs(z()) > margin) {
+      return false;
+    }
+    if (Math.abs(w()) > margin) {
+      return false;
+    }
+    return true;
   }
 
   @Override public float len2() {
