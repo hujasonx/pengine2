@@ -63,7 +63,6 @@ public abstract class PPool<T extends PPool.Poolable> {
     PoolBuffer b = staticPoolBufferPool().obtain();
     return b;
   }
-
   /**
    * Returns an object from this PPool. The object may be new (from {@link #newObject()}) or reused (previously
    * {@link #free(T) freed}).

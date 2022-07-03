@@ -53,9 +53,11 @@ public class PPhysicsEngine {
   public static float gravity = 9.81f;
 
   public static void dispose() {
-    for (val e : collisionShapes()) {
-      e.dispose();
-    }
+    try (val it = collisionShapes().obtainIterator()) {
+      while (it.hasNext()) {
+        val collisionShape = it.next();
+        collisionShape.dispose();
+    }}
     collisionShapes().clear();
   }
 

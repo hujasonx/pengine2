@@ -65,7 +65,8 @@ public class PShader implements Disposable, Comparable<PShader> {
         new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
     vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR));
     fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR));
-    int oldCombinedSourceHash = (vertexShaderSource == null ? 0 : vertexShaderSource.hashCode()) + (fragmentShaderSource == null ? 0 : fragmentShaderSource.hashCode());
+    int oldCombinedSourceHash = (vertexShaderSource == null ? 0 : vertexShaderSource.hashCode()) +
+                                (fragmentShaderSource == null ? 0 : fragmentShaderSource.hashCode());
     vertexShaderSource = vertexStringBuilder.toString();
     fragmentShaderSource = fragmentStringBuilder.toString();
     int newCombinedSourceHash = vertexShaderSource.hashCode() + fragmentShaderSource.hashCode();
@@ -189,8 +190,11 @@ public class PShader implements Disposable, Comparable<PShader> {
   }
 
   public static void reloadAllFromSources() {
-    for (val shader : staticShaders) {
-      shader.reloadFromSources(true);
+    try (val it = staticShaders.obtainIterator()) {
+      while (it.hasNext()) {
+        val shader = it.next();
+        shader.reloadFromSources(true);
+      }
     }
   }
 

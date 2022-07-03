@@ -76,11 +76,14 @@ public class PEnvironment {
     renderContext.setCullFaceFront(); // The rest of the models should have cull face front.
     int numLights = 0;
     int vecsPerInstance = 0;
-    for (val pointLight : pointLights) {
-      int vecsPut = pointLight.addInstanceData(lightsFloatBuffer);
-      if (vecsPut > 0) {
-        numLights++;
-        vecsPerInstance = vecsPut;
+    try (val it = pointLights.obtainIterator()) {
+      while (it.hasNext()) {
+        val pointLight = it.next();
+        int vecsPut = pointLight.addInstanceData(lightsFloatBuffer);
+        if (vecsPut > 0) {
+          numLights++;
+          vecsPerInstance = vecsPut;
+        }
       }
     }
     if (numLights > 0) {

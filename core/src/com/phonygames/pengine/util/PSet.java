@@ -2,19 +2,27 @@ package com.phonygames.pengine.util;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PVec4;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Spliterator;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 
 /**
  * List class whose iterator() does not allocate and will always be in order.
  */
-public class PSet<E> implements Set<E> {
+public class PSet<E> extends PPooledIterable<E> {
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  private final PPool<PPoolableIterator<E>> iteratorPool = new PPool<PPoolableIterator<E>>() {
+    @Override protected PPoolableIterator<E> newObject() {
+      return new PSetIterator<>(PSet.this);
+    }
+  };
   private static final int[] SAMPLED_PRIMES =
       new int[]{23, 29, 37, 41, 47, 53, 59, 67, 79, 89, 101, 113, 127, 149, 167, 191, 211, 233, 257, 283, 313, 347, 383,
                 431, 479, 541, 599, 659, 727, 809, 907, 1009, 1117, 1229, 1361, 1499, 1657, 1823, 2011, 2213, 2437,
@@ -31,8 +39,6 @@ public class PSet<E> implements Set<E> {
                 279786131, 307764781, 338541253, 372395399, 409634959, 450598531, 495658417, 545224271, 599746691,
                 659721389, 725693587, 798262921, 878089241, 965898187, 1062488003, 1168736809, 1285610587, 1414171793,
                 1555588997, 1711147927, 1882262803, 2070489097};
-  // Shared iterator, so no allocations should occur.
-  private final PSetIterator<E> iterator = new PSetIterator<>(this);
   Object[] elements;
   boolean[] invalid;
   int numElements, numInvalid;
@@ -115,25 +121,20 @@ public class PSet<E> implements Set<E> {
     }
   }
 
-  @Override public int size() {
+  public int size() {
     return numElements;
   }
 
-  @Override public boolean isEmpty() {
+  public boolean isEmpty() {
     return numElements == 0;
   }
 
-  @Override public boolean contains(@NonNull Object o) {
+  public boolean contains(@NonNull Object o) {
     int index = indexOfElementInternal((E) o);
     return index != -1 && elements[index] != null;
   }
 
-  @Override public Iterator<E> iterator() {
-    iterator.reset();
-    return iterator;
-  }
-
-  @Override public Object[] toArray() {
+  public Object[] toArray() {
     Object[] arr = new Object[numElements];
     int index = 0;
     for (int a = 0; a < elements.length; a++) {
@@ -144,11 +145,12 @@ public class PSet<E> implements Set<E> {
     return arr;
   }
 
-  @Override public <T> T[] toArray(T[] ts) {
+  public <T> T[] toArray(T[] ts) {
+    PAssert.failNotImplemented("toArray");
     return null;
   }
 
-  @Override public boolean add(E e) {
+  public boolean add(E e) {
     regenBuffersIfNeeded();
     int index = indexOfElementInternal(e);
     if (index == -1) {
@@ -164,7 +166,7 @@ public class PSet<E> implements Set<E> {
     }
   }
 
-  @Override public boolean remove(Object o) {
+  public boolean remove(Object o) {
     int index = indexOfElementInternal((E) o);
     if (index != -1 && elements[index] != null) {
       invalid[index] = true;
@@ -176,7 +178,7 @@ public class PSet<E> implements Set<E> {
     return false;
   }
 
-  @Override public boolean containsAll(Collection<?> collection) {
+  public boolean containsAll(Collection<?> collection) {
     for (val v : collection) {
       if (!contains(v)) {
         return false;
@@ -209,38 +211,28 @@ public class PSet<E> implements Set<E> {
     return -1;
   }
 
-  @Override public boolean addAll(Collection<? extends E> collection) {
+  public boolean addAll(Collection<? extends E> collection) {
     for (val v : collection) {
       add(v);
     }
     return true;
   }
 
-  @Override public boolean retainAll(Collection<?> collection) {
-    PAssert.fail("Not Implemented");
-    return false;
-  }
-
-  @Override public boolean removeAll(Collection<?> collection) {
+  public boolean removeAll(Collection<?> collection) {
     for (val v : collection) {
       remove(v);
     }
     return true;
   }
 
-  @Override public void clear() {
+  public void clear() {
     numElements = 0;
     numInvalid = 0;
     elements = new Object[SAMPLED_PRIMES[0]];
     invalid = new boolean[SAMPLED_PRIMES[0]];
   }
 
-  @Override public Spliterator<E> spliterator() {
-    PAssert.fail("Not Implemented");
-    return null;
-  }
-
-  private class PSetIterator<E> implements Iterator<E> {
+  private class PSetIterator<E> extends PPoolableIterator<E> {
     private static final int UNSET = -1, AT_END = -2;
     private final PSet<E> set;
     private boolean active = false;
@@ -249,6 +241,7 @@ public class PSet<E> implements Set<E> {
     private int nextIndex = UNSET;
 
     public PSetIterator(PSet<E> set) {
+      super(set);
       this.set = set;
     }
 
@@ -284,7 +277,7 @@ public class PSet<E> implements Set<E> {
       set.numInvalid++;
     }
 
-    public void reset() {
+    @Override public void reset() {
       currentIndex = UNSET;
       nextIndex = UNSET;
       calcNextIndex();

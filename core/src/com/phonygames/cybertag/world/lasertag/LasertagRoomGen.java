@@ -35,8 +35,11 @@ public class LasertagRoomGen extends PBuilder {
   // Use actually placed door data, which should update directlyConnectedRooms.
   public void recalcRoomDistancesScores() {
     connectedRoomsDistances.clear();
-    for (val e : directlyConnectedRooms) {
-      connectedRoomsDistances.put(e, 1);
+    try (val it = directlyConnectedRooms.obtainIterator()) {
+      while (it.hasNext()) {
+        val roomGen = it.next();
+        connectedRoomsDistances.put(roomGen, 1);
+      }
     }
   }
 
