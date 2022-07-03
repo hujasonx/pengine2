@@ -50,6 +50,14 @@ public class LasertagBuildingGen extends PBuilder {
     }
   }
 
+  public void processTiles() {
+for (val roomGen : roomGens) {
+  LasertagRoomGenTileProcessor.processRoomWalls(roomGen);
+  LasertagRoomGenTileProcessor.processRoomFloors(roomGen);
+  LasertagRoomGenTileProcessor.processRoomCeilings(roomGen);
+}
+  }
+
   protected void addAABB(int offsetX, int offsetY, int offsetZ, int xSize, int ySize, int zSize) {
     checkLock();
     PIntAABB aabb = new PIntAABB().set(offsetX, offsetY, offsetZ, offsetX + xSize, offsetY + ySize, offsetZ + zSize);
