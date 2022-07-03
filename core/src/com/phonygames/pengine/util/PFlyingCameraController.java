@@ -23,7 +23,7 @@ public class PFlyingCameraController {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private float speed = 3, shiftSpeedFactor = 3, ySpeedFactor = 0, rotateSpeed = 1;
+  private float speed = 4, shiftSpeedFactor = 5, ySpeedFactor = 0, rotateSpeed = 2;
 
   public PFlyingCameraController(@NonNull PRenderContext renderContext) {
     this.renderContext = renderContext;
@@ -79,7 +79,7 @@ public class PFlyingCameraController {
     dir().rotate(0, -1, 0, yawRotateAmount);
     pos().set(cameraPos);
     // Use lerp to smooth the camera movement.
-    final float smoothFactor = 10;
+    final float smoothFactor = 30;
     renderContext.cameraPos().lerp(pos(), Math.min(1, PEngine.uidt * smoothFactor));
     renderContext.cameraDir().lerp(dir(), Math.min(1, PEngine.uidt * smoothFactor));
     renderContext.cameraUp().set(0, 1, 0);
