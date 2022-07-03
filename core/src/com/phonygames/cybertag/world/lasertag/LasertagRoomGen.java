@@ -1,6 +1,7 @@
 package com.phonygames.cybertag.world.lasertag;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.phonygames.cybertag.world.ColorDataEmitter;
@@ -16,17 +17,28 @@ import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PIntMap3d;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PSet;
 
 import lombok.val;
 
 public class LasertagRoomGen extends PBuilder {
   protected final LasertagBuildingGen buildingGen;
-  protected final LasertagRoom lasertagRoom;
-  private final PIntAABB roomAABB;
-  protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<>();
-  protected final PList<LasertagRoomWallGen> roomWallGens = new PList<>();
   protected final ObjectFloatMap<LasertagRoomGen> connectedRoomsDistances = new ObjectFloatMap<>();
-  protected final PList<LasertagRoomGen> directlyConnectedRooms = new PList<>();
+  protected final PSet<LasertagRoomGen> directlyConnectedRooms = new PSet<>();
+  protected final PSet<LasertagRoomGen> horizontallyAdjacentRooms = new PSet<>();
+  protected final LasertagRoom lasertagRoom;
+  protected final PList<LasertagRoomWallGen> roomWallGens = new PList<>();
+  protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<>();
+  protected final PSet<LasertagRoomGen> verticallyAdjacentRooms = new PSet<>();
+  private final PIntAABB roomAABB;
+
+  // Use actually placed door data, which should update directlyConnectedRooms.
+  public void recalcRoomDistancesScores() {
+    connectedRoomsDistances.clear();
+    for (val e : directlyConnectedRooms) {
+      connectedRoomsDistances.put(e, 1);
+    }
+  }
 
   public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PIntAABB aabb) {
     this.buildingGen = buildingGen;
@@ -39,6 +51,12 @@ public class LasertagRoomGen extends PBuilder {
         for (int z = roomAABB.z0(); z <= roomAABB.z1(); z++) {
           LasertagTileGen tileGen = buildingGen.tileGens.genUnpooled(x, y, z);
           if (tileGen.tile.room == null) { // Don't overwrite existing room data.
+            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z), false);
+            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y - 1, z), false);
+            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x + 1, y + 1, z), true);
+            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x - 1, y + 1, z), true);
+            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z + 1), true);
+            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z - 1), true);
             tileGen.tile.room = lasertagRoom;
             tileGen.roomGen = this;
             lasertagRoom.tiles().put(x, y, z, tileGen.tile);
@@ -47,6 +65,13 @@ public class LasertagRoomGen extends PBuilder {
         }
       }
     }
+  }
+
+  private void markTileGenRoomAsAdjacent(@Nullable LasertagTileGen otherTileGen, boolean horizontal) {
+    if (otherTileGen == null || otherTileGen.roomGen == null || otherTileGen.roomGen == this) {return;}
+    (horizontal ? otherTileGen.roomGen.horizontallyAdjacentRooms : otherTileGen.roomGen.verticallyAdjacentRooms).add(
+        this);
+    (horizontal ? horizontallyAdjacentRooms : verticallyAdjacentRooms).add(otherTileGen.roomGen);
   }
 
   public LasertagRoom build() {

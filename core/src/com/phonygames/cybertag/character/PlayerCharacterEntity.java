@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.character;
 
+import com.badlogic.gdx.Input;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -7,13 +8,14 @@ import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
+import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
 
 public class PlayerCharacterEntity extends CharacterEntity {
-  private PModelInstance modelInstance;
   private final PPhysicsCharacterController characterController;
+  private PModelInstance modelInstance;
 
   public PlayerCharacterEntity() {
     super();
@@ -31,7 +33,7 @@ public class PlayerCharacterEntity extends CharacterEntity {
         vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
         vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
         vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
-        vColIndexBuffer.addData(52f/255f, 136f/255f, 232f/255f, 1); // Iris diffuseM.
+        vColIndexBuffer.addData(52f / 255f, 136f / 255f, 232f / 255f, 1); // Iris diffuseM.
         vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
         vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
         vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
@@ -42,20 +44,22 @@ public class PlayerCharacterEntity extends CharacterEntity {
       }
     });
     modelInstance.material("matBase").useVColIndex(true);
-    modelInstance.material("matHair")
-                       .set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
+    modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
     characterController = new PPhysicsCharacterController(1, .3f, 1.8f, .5f, .2f);
     characterController.pos(10, 10, 10);
   }
 
-  @Override
-  public void preLogicUpdate() {
+  @Override public void preLogicUpdate() {
     characterController.preLogicUpdate();
   }
 
   @Override public void logicUpdate() {
     PVec3 curPos = characterController.pos();
-//    characterController.velXZ(1, 0);
+    if (PKeyboard.isDown(Input.Keys.UP)) {
+      characterController.velXZ(1, 0);
+    } else {
+      characterController.velXZ(0, 0);
+    }
   }
 
   @Override public void frameUpdate() {

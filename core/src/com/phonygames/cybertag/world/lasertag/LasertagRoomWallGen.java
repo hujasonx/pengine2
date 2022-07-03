@@ -142,7 +142,7 @@ public class LasertagRoomWallGen {
 
     /** Finalizes this possible door as an actual door. */
     public LasertagDoorGen toDoorGen() {
-      LasertagDoorGen ret = new LasertagDoorGen();
+      LasertagDoorGen ret = new LasertagDoorGen(ownerRoomGen, otherRoomGen);
       ret.door.w = w;
       ret.door.h = h;
       ret.door.tileX = ownerWall.xChangeForAlongWall * x + ownerWall.cornerTile.x;
@@ -163,6 +163,7 @@ public class LasertagRoomWallGen {
           wallGen.wall.isValid = true;
         }
       }
+
       ownerRoomGen.buildingGen.doorGens.add(ret);
       return ret;
     }
