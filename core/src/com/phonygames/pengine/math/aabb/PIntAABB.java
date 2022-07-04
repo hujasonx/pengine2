@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
 public class PIntAABB implements PPool.Poolable {
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private int x0, y0, z0, x1, y1, z1;

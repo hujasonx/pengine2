@@ -63,6 +63,7 @@ public abstract class PPool<T extends PPool.Poolable> {
     PoolBuffer b = staticPoolBufferPool().obtain();
     return b;
   }
+
   /**
    * Returns an object from this PPool. The object may be new (from {@link #newObject()}) or reused (previously
    * {@link #free(T) freed}).
@@ -73,6 +74,7 @@ public abstract class PPool<T extends PPool.Poolable> {
       t = freeObjects.size == 0 ? newObject() : freeObjects.pop();
     }
     t.setOwnerPool(null);
+    t.setSourcePool(this);
     return t;
   }
 
@@ -132,11 +134,21 @@ public abstract class PPool<T extends PPool.Poolable> {
 
   public interface Poolable {
     /* Usage:
-     @Getter @Setter private PPool ownerPool;
+     @Getter @Setter private PPool ownerPool, sourcePool;
      */
     @Nullable PPool getOwnerPool();
     void setOwnerPool(PPool pool);
+    @Nullable PPool getSourcePool();
+    void setSourcePool(PPool pool);
     void reset();
+
+    default void free() {
+      if (getSourcePool() != null) {
+        getSourcePool().free(this);
+      } else {
+        PAssert.warn("Attempted to free a poolable with no source pool!");
+      }
+    }
   }
 
   public final static class PoolBuffer implements Poolable {
@@ -152,13 +164,9 @@ public abstract class PPool<T extends PPool.Poolable> {
     private final PList<PVec4> vec4s = new PList<>();
     @Getter
     @Setter
-    private PPool ownerPool;
+    private PPool ownerPool, sourcePool;
 
     private PoolBuffer() {
-    }
-
-    public void finish() {
-      staticPoolBufferPool().free(this);
     }
 
     public boolean isValid() {

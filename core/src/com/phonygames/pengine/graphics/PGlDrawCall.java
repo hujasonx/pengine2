@@ -58,7 +58,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
       boneTransformsVecsPerInstance;
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private PShader shader;

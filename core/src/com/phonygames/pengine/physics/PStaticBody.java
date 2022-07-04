@@ -32,7 +32,7 @@ public class PStaticBody implements PPool.Poolable {
   private boolean isInDynamicsWorld;
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
 
   private PStaticBody() {
   }

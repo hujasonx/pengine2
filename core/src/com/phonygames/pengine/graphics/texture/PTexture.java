@@ -21,7 +21,7 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
   private Texture backingTexture;
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
 
   public PTexture() {
   }

@@ -44,7 +44,7 @@ public class LasertagRoomGenTileEmitter {
     emitWall(tile.wallMZ, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
     tile.tileVColIndexStart = tileVColIndex;
     tileVColIndex += LasertagTile.PER_TILE_VCOL_INDICES;
-    pool.finish();
+    pool.free();
     PModelGen.Part.VertexProcessor.staticPool().free(vertexProcessor);
     return tileVColIndex;
   }

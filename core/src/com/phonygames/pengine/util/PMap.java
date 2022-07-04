@@ -35,7 +35,7 @@ public class PMap<K, V> extends PPooledIterable<PMap.Entry<K, V>> implements PPo
   private final MapInterface<K, V> mapInterface;
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
 
   public PMap() {
     this.genedValuesPool = null;
@@ -348,7 +348,7 @@ public class PMap<K, V> extends PPooledIterable<PMap.Entry<K, V>> implements PPo
     public Iterator backingIterator;
     @Getter
     @Setter
-    public PPool ownerPool;
+    private PPool ownerPool, sourcePool;
     private int index;
     private PMap<K, V> map;
     private MapInterface<K, V> mapInterface;

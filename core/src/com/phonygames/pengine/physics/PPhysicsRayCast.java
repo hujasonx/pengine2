@@ -26,7 +26,7 @@ public class PPhysicsRayCast implements PPool.Poolable {
   private final PVec3 rayFromWorld = PVec3.obtain(), rayToWorld = PVec3.obtain();
   @Getter
   @Setter
-  public PPool ownerPool;
+  private PPool ownerPool, sourcePool;
   private boolean hasHit = false;
   private float hitDistance, hitFraction;
   @Getter(value = AccessLevel.PUBLIC)
@@ -67,7 +67,7 @@ public class PPhysicsRayCast implements PPool.Poolable {
     return this;
   }
 
-  public void free() {
+  @Override public void free() {
     staticPool().free(this);
   }
 

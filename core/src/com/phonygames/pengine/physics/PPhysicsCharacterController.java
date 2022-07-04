@@ -120,7 +120,7 @@ public class PPhysicsCharacterController implements Disposable {
       timeSinceLastTouchingGround += PEngine.logictimestep;
       jumpVerticalVelocity -= PPhysicsEngine.gravity * PEngine.logictimestep;
     }
-    pool.finish();
+    pool.free();
   }
 
   @Override public void dispose() {

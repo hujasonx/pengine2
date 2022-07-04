@@ -13,7 +13,7 @@ public abstract class PPooledIterable<T> {
   public static abstract class PPoolableIterator<T> implements Iterator<T>, PPool.Poolable, AutoCloseable {
     @Getter
     @Setter
-    public PPool ownerPool;
+    private PPool ownerPool, sourcePool;
     protected PPool<PPoolableIterator<T>> returnPool;
 
     protected PPoolableIterator() {}

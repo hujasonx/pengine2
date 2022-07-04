@@ -9,7 +9,7 @@ import lombok.Setter;
 public abstract class PVec<V extends PVec> extends PBasic<V> implements PLerpable<V> {
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
 
   public PVec() {}
 

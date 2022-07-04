@@ -83,6 +83,6 @@ public class PFlyingCameraController {
     renderContext.cameraPos().lerp(pos(), Math.min(1, PEngine.uidt * smoothFactor));
     renderContext.cameraDir().lerp(dir(), Math.min(1, PEngine.uidt * smoothFactor));
     renderContext.cameraUp().set(0, 1, 0);
-    pool.finish();
+    pool.free();
   }
 }

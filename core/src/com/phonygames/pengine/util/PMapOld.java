@@ -33,7 +33,7 @@ public class PMapOld<K, V> implements Iterable<PMapOld.Entry<K, V>>, PPool.Poola
   private final MapInterface<K, V> mapInterface;
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
 
   public PMapOld() {
     this.genedValuesPool = null;
@@ -317,7 +317,7 @@ public class PMapOld<K, V> implements Iterable<PMapOld.Entry<K, V>>, PPool.Poola
     private final PMapOld.Entry<K, V> entry = new PMapOld.Entry<>();
     @Getter
     @Setter
-    public PPool ownerPool;
+    private PPool ownerPool, sourcePool;
     private Iterator backingIterator;
     private int index;
     private MapInterface<K, V> mapInterface;

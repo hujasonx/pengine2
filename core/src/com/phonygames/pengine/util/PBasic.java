@@ -11,7 +11,7 @@ public abstract class PBasic<T extends PBasic>
     implements PDeepCopyable<T>, PPool.Poolable, Comparable<T>, PImplementsEquals<T> {
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
 
   @Override public T deepCopy() {
     return (T) staticPool().obtain().deepCopyFrom(this);
@@ -27,7 +27,7 @@ public abstract class PBasic<T extends PBasic>
   /**
    * Frees the object into the given static pool.
    */
-  public final void free() {
+  @Override public final void free() {
     staticPool().free((T) this);
   }
 }

@@ -12,7 +12,7 @@ import lombok.Setter;
 public class PList<E> extends Array<E> implements PPool.Poolable {
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
 
   public PList() {
   }

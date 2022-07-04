@@ -78,7 +78,7 @@ public abstract class PUVSphereGen implements Pool.Poolable {
         part.quad(true);
       }
     }
-    pool.finish();
+    pool.free();
   }
 
   public abstract void perVertex(PVec3 pos, PVec3 nor, float theta, float phi, float rho, float u, float v);

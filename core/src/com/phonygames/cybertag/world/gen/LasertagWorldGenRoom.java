@@ -165,7 +165,7 @@ public class LasertagWorldGenRoom {
         }
       }
     }
-    pool.finish();
+    pool.free();
     PModelGen.Part.VertexProcessor.staticPool().free(vertexProcessor);
   }
 

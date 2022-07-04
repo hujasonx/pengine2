@@ -73,7 +73,7 @@ public class PPointLight extends PLight implements Pool.Poolable {
     buffer.addData(color());
     // 6. Attenuation.
     buffer.addData(attenuation());
-    pool.finish();
+    pool.free();
     // Total: 7;
     return 7;
   }

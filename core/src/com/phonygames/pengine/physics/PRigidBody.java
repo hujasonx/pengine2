@@ -36,7 +36,7 @@ public class PRigidBody implements PPool.Poolable {
   private boolean isInDynamicsWorld;
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
   private btRigidBody rigidBody;
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)

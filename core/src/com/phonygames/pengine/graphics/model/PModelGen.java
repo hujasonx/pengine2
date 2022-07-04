@@ -396,7 +396,7 @@ public class PModelGen implements PPostableTask {
       private final PVec4 wallCornerA = PVec4.obtain(), wallCornerB = PVec4.obtain();
       @Getter
       @Setter
-      private PPool ownerPool;
+      private PPool ownerPool, sourcePool;
       private Strategy strategy = Strategy.Transform;
 
       /**
@@ -452,7 +452,7 @@ public class PModelGen implements PPostableTask {
         float lengthAlongLine = pool.vec3().set(x, 0, z).progressAlongLineSegment(wallCornerFlatA, wallCornerFlatB);
         float y = out.y() * ((wallCornerB().w() - wallCornerA().w()) * lengthAlongLine + wallCornerA().w()) +
                   ((wallCornerB().y() - wallCornerA().y()) * lengthAlongLine + wallCornerA().y());
-        pool.finish();
+        pool.free();
         return out.set(x, y, z);
       }
 
@@ -479,7 +479,7 @@ public class PModelGen implements PPostableTask {
         float x = xNor.x() * out.x() + yNor.x() * out.y() + zNor.x() * out.z();
         float y = xNor.y() * out.x() + yNor.y() * out.y() + zNor.y() * out.z();
         float z = xNor.z() * out.x() + yNor.z() * out.y() + zNor.z() * out.z();
-        pool.finish();
+        pool.free();
         return out.set(x, y, z).nor();
       }
 
@@ -491,7 +491,7 @@ public class PModelGen implements PPostableTask {
         PVec3 lerpPosXZ = pool.vec3().set(lerpPosX0).lerp(lerpPosX1, out.x());
         float outY = lerpPosXZ.y() + out.y();
         out.set(lerpPosXZ.x(), outY, lerpPosXZ.z());
-        pool.finish();
+        pool.free();
         return out;
       }
 
@@ -512,7 +512,7 @@ public class PModelGen implements PPostableTask {
         float x = xNor.x() * out.x() + yNor.x() * out.y() + zNor.x() * out.z();
         float y = xNor.y() * out.x() + yNor.y() * out.y() + zNor.y() * out.z();
         float z = xNor.z() * out.x() + yNor.z() * out.y() + zNor.z() * out.z();
-        pool.finish();
+        pool.free();
         return out.set(x, y, z).nor();
       }
 
@@ -655,7 +655,7 @@ public class PModelGen implements PPostableTask {
         processor.process(pos2.x(), pos2.y(), pos2.z(),
                           PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos), pos2);
         addTri(pos0, pos1, pos2);
-        pool.finish();
+        pool.free();
       }
       return this;
     }

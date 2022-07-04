@@ -30,7 +30,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   private final Matrix4 backingMatrix4 = new Matrix4();
   @Getter
   @Setter
-  private PPool ownerPool;
+  private PPool ownerPool, sourcePool;
 
   private PMat4() {
   }

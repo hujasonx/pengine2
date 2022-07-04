@@ -112,7 +112,7 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
     private final PIntMap3d<T> map;
     @Getter
     @Setter
-    public PPool ownerPool;
+    private PPool ownerPool, sourcePool;
     private boolean hasNext = false;
     private T nextVal;
     private int nextX, nextY, nextZ;
