@@ -137,6 +137,9 @@ public class PSet<E> extends PPooledIterable<E> {
   }
 
   public boolean contains(@NonNull Object o) {
+    if (elements == null) {
+      return false;
+    }
     int index = indexOfElementInternal((E) o);
     return index != -1 && elements[index] != null;
   }

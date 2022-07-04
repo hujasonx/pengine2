@@ -6,14 +6,17 @@ import java.util.Collections;
 
 public class LasertagBuildGenDoorProcessor {
   public static void processPossibleDoorsIntoAcutal(LasertagBuildingGen buildingGen) {
-    PList<LasertagRoomWallGen.PossibleDoor> possibleDoors = buildingGen.possibleDoors;
+    PList<LasertagDoorGen.PossibleDoor> possibleDoors = buildingGen.possibleDoors;
     if (possibleDoors == null) {
       return;
     }
 
     while (!possibleDoors.isEmpty()) {
       possibleDoors.sort();
-      LasertagRoomWallGen.PossibleDoor nextDoor = possibleDoors.removeLast();
+      LasertagDoorGen.PossibleDoor nextDoor = possibleDoors.removeLast();
+      if (!nextDoor.checkStillValid()) {
+        continue;
+      }
       if (nextDoor.score() < 0) {
         return; // Stop emitting doors once no good doors remain.
       }

@@ -78,9 +78,21 @@ public class LasertagRoomGenTileEmitter {
         vertexProcessor.setWall(tile001, tile011.y() - tile001.y(), tile101, tile111.y() - tile101.y());
         break;
     }
-//    if (wall.isSolidWall) {
+    if (wall.isSolidWall) {
       MeshTemplate wallTemplate = MeshTemplate.get("model/template/wall/basic.glb");
       wallTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
-//    }
+    }
+    if (wall.hasDoorframeR) {
+      MeshTemplate doorframeRTemplate = MeshTemplate.get("model/template/doorframe/right/basic.glb");
+      doorframeRTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
+    }
+    if (wall.hasDoorframeL) {
+      MeshTemplate doorframeLTemplate = MeshTemplate.get("model/template/doorframe/left/basic.glb");
+      doorframeLTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
+    }
+    if (wall.hasDoorframeT) {
+      MeshTemplate doorframeTTemplate = MeshTemplate.get("model/template/doorframe/top/basic.glb");
+      doorframeTTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
+    }
   }
 }

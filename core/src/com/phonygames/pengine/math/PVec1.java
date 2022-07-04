@@ -114,6 +114,11 @@ public class PVec1 extends PVec<PVec1> {
     return x;
   }
 
+  public PVec1 add(float x) {
+    this.x += x;
+    return this;
+  }
+
   @Override public boolean equalsT(PVec1 pVec1) {
     return x == pVec1.x;
   }

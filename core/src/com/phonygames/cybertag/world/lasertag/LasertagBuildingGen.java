@@ -12,7 +12,7 @@ public class LasertagBuildingGen extends PBuilder {
   protected final PList<PIntAABB> aabbs = new PList<>();
   protected final LasertagBuilding building;
   protected final PList<LasertagDoorGen> doorGens = new PList<>();
-  protected final PList<LasertagRoomWallGen.PossibleDoor> possibleDoors = new PList<>();
+  protected final PList<LasertagDoorGen.PossibleDoor> possibleDoors = new PList<>();
   protected final PList<LasertagRoomGen> roomGens = new PList<>();
   protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<LasertagTileGen>() {
     @Override protected LasertagTileGen newUnpooled(int x, int y, int z) {
@@ -50,14 +50,6 @@ public class LasertagBuildingGen extends PBuilder {
     }
   }
 
-  public void processTiles() {
-for (val roomGen : roomGens) {
-  LasertagRoomGenTileProcessor.processRoomWalls(roomGen);
-  LasertagRoomGenTileProcessor.processRoomFloors(roomGen);
-  LasertagRoomGenTileProcessor.processRoomCeilings(roomGen);
-}
-  }
-
   protected void addAABB(int offsetX, int offsetY, int offsetZ, int xSize, int ySize, int zSize) {
     checkLock();
     PIntAABB aabb = new PIntAABB().set(offsetX, offsetY, offsetZ, offsetX + xSize, offsetY + ySize, offsetZ + zSize);
@@ -93,6 +85,14 @@ for (val roomGen : roomGens) {
 
   private void buildModelInstance() {
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {});
+  }
+
+  public void processTiles() {
+    for (val roomGen : roomGens) {
+      LasertagRoomGenTileProcessor.processRoomWalls(roomGen);
+      LasertagRoomGenTileProcessor.processRoomFloors(roomGen);
+      LasertagRoomGenTileProcessor.processRoomCeilings(roomGen);
+    }
   }
 
   public LasertagBuildingGen setTileRotation(float rotation) {

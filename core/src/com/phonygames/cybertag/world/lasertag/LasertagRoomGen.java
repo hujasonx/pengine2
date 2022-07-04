@@ -3,8 +3,8 @@ package com.phonygames.cybertag.world.lasertag;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.phonygames.cybertag.world.ColorDataEmitter;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -13,17 +13,19 @@ import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PIntMap3d;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PSet;
 
 import lombok.val;
 
 public class LasertagRoomGen extends PBuilder {
   protected final LasertagBuildingGen buildingGen;
-  protected final ObjectFloatMap<LasertagRoomGen> connectedRoomsDistances = new ObjectFloatMap<>();
+  protected final PMap<LasertagRoomGen, PVec1> connectedRoomConnectionSizes = new PMap<>(PVec1.getStaticPool());
   protected final PSet<LasertagRoomGen> directlyConnectedRooms = new PSet<>();
   protected final PSet<LasertagRoomGen> horizontallyAdjacentRooms = new PSet<>();
   protected final LasertagRoom lasertagRoom;
@@ -31,17 +33,6 @@ public class LasertagRoomGen extends PBuilder {
   protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<>();
   protected final PSet<LasertagRoomGen> verticallyAdjacentRooms = new PSet<>();
   private final PIntAABB roomAABB;
-
-  // Use actually placed door data, which should update directlyConnectedRooms.
-  public void recalcRoomDistancesScores() {
-    connectedRoomsDistances.clear();
-    try (val it = directlyConnectedRooms.obtainIterator()) {
-      while (it.hasNext()) {
-        val roomGen = it.next();
-        connectedRoomsDistances.put(roomGen, 1);
-      }
-    }
-  }
 
   public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PIntAABB aabb) {
     this.buildingGen = buildingGen;
@@ -126,5 +117,17 @@ public class LasertagRoomGen extends PBuilder {
         lasertagRoom.modelInstance.createAndAddStaticBodiesFromModelWithCurrentWorldTransform();
       }
     });
+  }
+
+  // Use actually placed door data, which should update directlyConnectedRooms.
+  public void recalcRoomDistancesScores() {
+    PAssert.failNotImplemented("recalcRoomDistnacesScores");
+    connectedRoomConnectionSizes.clear();
+    try (val it = directlyConnectedRooms.obtainIterator()) {
+      while (it.hasNext()) {
+        val roomGen = it.next();
+        connectedRoomConnectionSizes.genPooled(roomGen).x(1);
+      }
+    }
   }
 }
