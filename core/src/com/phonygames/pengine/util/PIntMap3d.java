@@ -75,7 +75,7 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
 
   @Override public Iterator<T> iterator() {
     Iterator<T> ret = iteratorPool.obtain();
-    ret.xIterable = backingMap.iterator();
+    ret.xIterable = (PMap.PMapIterator<Integer, PMap<Integer, PMap<Integer, T>>>) backingMap.obtainIterator();
     ret.processNext();
     return ret;
     //    return new Iterator<>(this);
@@ -147,7 +147,8 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
         if (yIterable != null && yIterable.hasNext()) {
           PMap.Entry<Integer, PMap<Integer, T>> yEntry = yIterable.next();
           nextY = yEntry.k();
-          zIterable = yEntry.v().iterator();
+          if (zIterable != null) {zIterable.close();}
+          zIterable = (PMap.PMapIterator<Integer, T>) yEntry.v().obtainIterator();
           PAssert.isTrue(zIterable.hasNext());
           PMap.Entry<Integer, T> zEntry = zIterable.next();
           nextZ = zEntry.k();
@@ -156,11 +157,13 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
           if (xIterable.hasNext()) {
             PMap.Entry<Integer, PMap<Integer, PMap<Integer, T>>> xEntry = xIterable.next();
             nextX = xEntry.k();
-            yIterable = xEntry.v().iterator();
+            if (yIterable != null) {yIterable.close();}
+            yIterable = (PMap.PMapIterator<Integer, PMap<Integer, T>>) xEntry.v().obtainIterator();
             PAssert.isTrue(yIterable.hasNext());
             PMap.Entry<Integer, PMap<Integer, T>> yEntry = yIterable.next();
             nextY = yEntry.k();
-            zIterable = yEntry.v().iterator();
+            if (zIterable != null) {zIterable.close();}
+            zIterable = (PMap.PMapIterator<Integer, T>) yEntry.v().obtainIterator();
             PAssert.isTrue(zIterable.hasNext());
             PMap.Entry<Integer, T> zEntry = zIterable.next();
             nextZ = zEntry.k();
@@ -185,6 +188,9 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
     }
 
     @Override public void reset() {
+      if (xIterable != null) {xIterable.close();}
+      if (yIterable != null) {yIterable.close();}
+      if (zIterable != null) {zIterable.close();}
       xIterable = null;
       yIterable = null;
       zIterable = null;

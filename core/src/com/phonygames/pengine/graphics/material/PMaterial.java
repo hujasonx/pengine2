@@ -75,20 +75,35 @@ public class PMaterial {
   }
 
   public void applyUniforms(PShader shader) {
-    for (val e : vec1s) {
-      shader.set(e.k(), e.v());
+    try (val it = vec1s.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        shader.set(e.k(), e.v());
+      }
     }
-    for (val e : vec2s) {
-      shader.set(e.k(), e.v());
+    try (val it = vec2s.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        shader.set(e.k(), e.v());
+      }
     }
-    for (val e : vec3s) {
-      shader.set(e.k(), e.v());
+    try (val it = vec3s.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        shader.set(e.k(), e.v());
+      }
     }
-    for (val e : vec4s) {
-      shader.set(e.k(), e.v());
+    try (val it = vec4s.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        shader.set(e.k(), e.v());
+      }
     }
-    for (val e : textures) {
-      e.v().applyShaderWithUniform(e.k(), shader);
+    try (val it = textures.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        e.v().applyShaderWithUniform(e.k(), shader);
+      }
     }
   }
 

@@ -3,17 +3,16 @@ package com.phonygames.pengine.graphics.model;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PGlDrawCall;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PStringMap;
 
 import lombok.AccessLevel;
@@ -28,10 +27,10 @@ public class PModel {
   private final PStringMap<PAnimation> animations = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
-  private final PStringMap<Node> nodes = new PStringMap<>();
+  private final PStringMap<PGlNode> glNodes = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
-  private final PStringMap<PGlNode> glNodes = new PStringMap<>();
+  private final PStringMap<Node> nodes = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PList<String> rootNodeIds = new PList<>();
@@ -54,26 +53,29 @@ public class PModel {
       }
     }
     // Next, enqueue the model instance glNodes, filling up the boneTransform buffer for each drawCall/glNode.
-    for (val v : nodes()) {
-      Node node = v.v();
-      for (val glNode : v.v().glNodes()) {
-        // Fill the bone transforms buffer.
-        PModelInstance firstInstance = null;
-        int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
-        for (PModelInstance modelInstance : instances) {
-          PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
-          modelInstance.outputBoneTransformsToBuffer(renderContext, glNode.id());
-          if (firstInstance == null) {
-            firstInstance = modelInstance;
+    try (val it = nodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val v = it.next();
+        Node node = v.v();
+        for (val glNode : v.v().glNodes()) {
+          // Fill the bone transforms buffer.
+          PModelInstance firstInstance = null;
+          int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
+          for (PModelInstance modelInstance : instances) {
+            PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
+            modelInstance.outputBoneTransformsToBuffer(renderContext, glNode.id());
+            if (firstInstance == null) {
+              firstInstance = modelInstance;
+            }
           }
+          PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).setNumInstances(instances.size);
+          if (useMaterialOfFirstInstance && firstInstance != null) {
+            drawCall.material(firstInstance.glNodes().get(glNode.id()).drawCall().material());
+          }
+          renderContext.enqueue(shaderProvider, drawCall, currentBoneTransformsOffset,
+                                Math.max(1 /* If no bones, we still output the world transform. */,
+                                         glNode.invBoneTransforms().size) * 4, false);
         }
-        PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).setNumInstances(instances.size);
-        if (useMaterialOfFirstInstance && firstInstance != null) {
-          drawCall.material(firstInstance.glNodes().get(glNode.id()).drawCall().material());
-        }
-        renderContext.enqueue(shaderProvider, drawCall, currentBoneTransformsOffset,
-                              Math.max(1 /* If no bones, we still output the world transform. */,
-                                       glNode.invBoneTransforms().size) * 4, false);
       }
     }
     // Finally, snapshot the data buffers so that new drawcalls arent reusing the data emitted by this enqueueing.

@@ -23,28 +23,31 @@ public class MeshTemplate {
 
   private MeshTemplate(String name) {
     PModel model = PAssetManager.model(name, true);
-    for (val e : model.glNodes()) {
-      meshes.add(e.v().drawCall().mesh());
-      String materialId = e.v().drawCall().material().id();
-      // Determine the vCol index from the material.
-      String vColIBaseString = PStringUtils.extract(materialId, ".vColBase", ".", true);
-      vColIndexBaseOffsets.add(vColIBaseString == null ? -1 : Integer.parseInt(vColIBaseString));
-      if (vColIBaseString == null) {
-        String vColIString = PStringUtils.extract(materialId, ".vCol", ".", true);
-        vColIndexOffsets.add(vColIString == null ? -1 : Integer.parseInt(vColIString));
-      } else {
-        vColIndexOffsets.add(-1);
-      }
-      isAlphaBlend.add(materialId.contains(".alphaBlend"));
-      if (materialId.contains(".alsoStaticBody")) {
-        emitPhysics.add(true);
-        emitMesh.add(true);
-      } else if (materialId.contains(".onlyStaticBody")) {
-        emitPhysics.add(true);
-        emitMesh.add(false);
-      } else {
-        emitPhysics.add(false);
-        emitMesh.add(true);
+    try (val it = model.glNodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        meshes.add(e.v().drawCall().mesh());
+        String materialId = e.v().drawCall().material().id();
+        // Determine the vCol index from the material.
+        String vColIBaseString = PStringUtils.extract(materialId, ".vColBase", ".", true);
+        vColIndexBaseOffsets.add(vColIBaseString == null ? -1 : Integer.parseInt(vColIBaseString));
+        if (vColIBaseString == null) {
+          String vColIString = PStringUtils.extract(materialId, ".vCol", ".", true);
+          vColIndexOffsets.add(vColIString == null ? -1 : Integer.parseInt(vColIString));
+        } else {
+          vColIndexOffsets.add(-1);
+        }
+        isAlphaBlend.add(materialId.contains(".alphaBlend"));
+        if (materialId.contains(".alsoStaticBody")) {
+          emitPhysics.add(true);
+          emitMesh.add(true);
+        } else if (materialId.contains(".onlyStaticBody")) {
+          emitPhysics.add(true);
+          emitMesh.add(false);
+        } else {
+          emitPhysics.add(false);
+          emitMesh.add(true);
+        }
       }
     }
   }
@@ -66,8 +69,8 @@ public class MeshTemplate {
    * @param vColIndexOffset
    */
   public void emit(PModelGen modelGen, PModelGen.Part.VertexProcessor vertexProcessor, PModelGen.Part basePart,
-                  PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
-                  PList<PModelGen.Part> alphaBlendParts) {
+                   PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
+                   PList<PModelGen.Part> alphaBlendParts) {
     PVec4 temp = PVec4.obtain();
     for (int a = 0; a < this.meshes.size; a++) {
       PMesh mesh = this.meshes.get(a);

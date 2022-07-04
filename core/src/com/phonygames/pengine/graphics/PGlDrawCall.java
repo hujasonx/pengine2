@@ -135,9 +135,12 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     PAssert.isFalse(renderingDisabled, "Cannot glDraw() a renderingDisabled PGlDrawCall");
     prepRenderContext(renderContext);
     if (shader.checkValid() && mesh != null) {
-      for (val e : dataBufferLookupOffsets()) {
-        renderContext.genDataBuffer(e.k()).applyShader(shader, e.k(), dataBufferLookupOffsets().get(e.k()),
-                                                       dataBufferLookupVecsPerInstance().get(e.k()));
+      try (val it = dataBufferLookupOffsets().obtainIterator()) {
+        while (it.hasNext()) {
+          val e = it.next();
+          renderContext.genDataBuffer(e.k()).applyShader(shader, e.k(), dataBufferLookupOffsets().get(e.k()),
+                                                         dataBufferLookupVecsPerInstance().get(e.k()));
+        }
       }
       if (material != null) {
         material.applyUniforms(shader);

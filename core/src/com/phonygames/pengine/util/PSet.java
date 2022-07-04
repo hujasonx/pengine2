@@ -2,27 +2,19 @@ package com.phonygames.pengine.util;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PNumberUtils;
-import com.phonygames.pengine.math.PVec4;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 /**
  * List class whose iterator() does not allocate and will always be in order.
  */
 public class PSet<E> extends PPooledIterable<E> {
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
-  private final PPool<PPoolableIterator<E>> iteratorPool = new PPool<PPoolableIterator<E>>() {
-    @Override protected PPoolableIterator<E> newObject() {
-      return new PSetIterator<>(PSet.this);
-    }
-  };
   private static final int[] SAMPLED_PRIMES =
       new int[]{23, 29, 37, 41, 47, 53, 59, 67, 79, 89, 101, 113, 127, 149, 167, 191, 211, 233, 257, 283, 313, 347, 383,
                 431, 479, 541, 599, 659, 727, 809, 907, 1009, 1117, 1229, 1361, 1499, 1657, 1823, 2011, 2213, 2437,
@@ -39,6 +31,14 @@ public class PSet<E> extends PPooledIterable<E> {
                 279786131, 307764781, 338541253, 372395399, 409634959, 450598531, 495658417, 545224271, 599746691,
                 659721389, 725693587, 798262921, 878089241, 965898187, 1062488003, 1168736809, 1285610587, 1414171793,
                 1555588997, 1711147927, 1882262803, 2070489097};
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
+  private final PPool<PPooledIterable.PPoolableIterator<E>> iteratorPool =
+      new PPool<PPooledIterable.PPoolableIterator<E>>() {
+        @Override protected PPooledIterable.PPoolableIterator<E> newObject() {
+          return new PSetIterator<>();
+        }
+      };
   Object[] elements;
   boolean[] invalid;
   int numElements, numInvalid;
@@ -79,6 +79,29 @@ public class PSet<E> extends PPooledIterable<E> {
     return bestGuess;
   }
 
+  public boolean add(E e) {
+    regenBuffersIfNeeded();
+    int index = indexOfElementInternal(e);
+    if (index == -1) {
+      regenBuffers();
+      return add(e);
+    } else {
+      if (elements[index] != null) {
+        return false;
+      }
+      numElements++;
+      elements[index] = e;
+      return true;
+    }
+  }
+
+  public boolean addAll(Collection<? extends E> collection) {
+    for (val v : collection) {
+      add(v);
+    }
+    return true;
+  }
+
   private boolean addNeverRegen(E e) {
     if (e == null) {
       return false;
@@ -97,85 +120,11 @@ public class PSet<E> extends PPooledIterable<E> {
     }
   }
 
-  private void regenBuffers() {
+  public void clear() {
+    numElements = 0;
     numInvalid = 0;
-    int bufferSize = sampledHigherPrime(numElements / desiredDensity);
-    Object[] elementsPrev = elements;
-    boolean[] invalidPrev = invalid;
-    numTaintedCellsToRegen = Math.min((int) (bufferSize * (desiredDensity + densityTolerance)), bufferSize - 2);
-    invalid = new boolean[bufferSize];
-    elements = new Object[bufferSize];
-    if (elementsPrev != null) {
-      for (int a = 0; a < elementsPrev.length; a++) {
-        if (!invalidPrev[a]) {
-          addNeverRegen((E) elementsPrev[a]);
-        }
-      }
-    }
-  }
-
-  private void regenBuffersIfNeeded() {
-    int numTaintedCells = numInvalid + numElements;
-    if (numTaintedCells >= numTaintedCellsToRegen) {
-      regenBuffers();
-    }
-  }
-
-  public int size() {
-    return numElements;
-  }
-
-  public boolean isEmpty() {
-    return numElements == 0;
-  }
-
-  public boolean contains(@NonNull Object o) {
-    int index = indexOfElementInternal((E) o);
-    return index != -1 && elements[index] != null;
-  }
-
-  public Object[] toArray() {
-    Object[] arr = new Object[numElements];
-    int index = 0;
-    for (int a = 0; a < elements.length; a++) {
-      if (!invalid[a]) {
-        arr[index++] = elements[a];
-      }
-    }
-    return arr;
-  }
-
-  public <T> T[] toArray(T[] ts) {
-    PAssert.failNotImplemented("toArray");
-    return null;
-  }
-
-  public boolean add(E e) {
-    regenBuffersIfNeeded();
-    int index = indexOfElementInternal(e);
-    if (index == -1) {
-      regenBuffers();
-      return add(e);
-    } else {
-      if (elements[index] != null) {
-        return false;
-      }
-      numElements++;
-      elements[index] = e;
-      return true;
-    }
-  }
-
-  public boolean remove(Object o) {
-    int index = indexOfElementInternal((E) o);
-    if (index != -1 && elements[index] != null) {
-      invalid[index] = true;
-      elements[index] = null;
-      numInvalid++;
-      numElements--;
-      return true;
-    }
-    return false;
+    elements = new Object[SAMPLED_PRIMES[0]];
+    invalid = new boolean[SAMPLED_PRIMES[0]];
   }
 
   public boolean containsAll(Collection<?> collection) {
@@ -185,6 +134,11 @@ public class PSet<E> extends PPooledIterable<E> {
       }
     }
     return true;
+  }
+
+  public boolean contains(@NonNull Object o) {
+    int index = indexOfElementInternal((E) o);
+    return index != -1 && elements[index] != null;
   }
 
   /**
@@ -211,11 +165,39 @@ public class PSet<E> extends PPooledIterable<E> {
     return -1;
   }
 
-  public boolean addAll(Collection<? extends E> collection) {
-    for (val v : collection) {
-      add(v);
+  public boolean isEmpty() {
+    return numElements == 0;
+  }
+
+  @Override public final PPooledIterable.PPoolableIterator<E> obtainIterator() {
+    PSetIterator<E> ret = (PSetIterator<E>) iteratorPool().obtain();
+    ret.returnPool = iteratorPool();
+    ret.set = this;
+    return ret;
+  }
+
+  private void regenBuffers() {
+    numInvalid = 0;
+    int bufferSize = sampledHigherPrime(numElements / desiredDensity);
+    Object[] elementsPrev = elements;
+    boolean[] invalidPrev = invalid;
+    numTaintedCellsToRegen = Math.min((int) (bufferSize * (desiredDensity + densityTolerance)), bufferSize - 2);
+    invalid = new boolean[bufferSize];
+    elements = new Object[bufferSize];
+    if (elementsPrev != null) {
+      for (int a = 0; a < elementsPrev.length; a++) {
+        if (!invalidPrev[a]) {
+          addNeverRegen((E) elementsPrev[a]);
+        }
+      }
     }
-    return true;
+  }
+
+  private void regenBuffersIfNeeded() {
+    int numTaintedCells = numInvalid + numElements;
+    if (numTaintedCells >= numTaintedCellsToRegen) {
+      regenBuffers();
+    }
   }
 
   public boolean removeAll(Collection<?> collection) {
@@ -225,24 +207,47 @@ public class PSet<E> extends PPooledIterable<E> {
     return true;
   }
 
-  public void clear() {
-    numElements = 0;
-    numInvalid = 0;
-    elements = new Object[SAMPLED_PRIMES[0]];
-    invalid = new boolean[SAMPLED_PRIMES[0]];
+  public boolean remove(Object o) {
+    int index = indexOfElementInternal((E) o);
+    if (index != -1 && elements[index] != null) {
+      invalid[index] = true;
+      elements[index] = null;
+      numInvalid++;
+      numElements--;
+      return true;
+    }
+    return false;
   }
 
-  private class PSetIterator<E> extends PPoolableIterator<E> {
+  public int size() {
+    return numElements;
+  }
+
+  public Object[] toArray() {
+    Object[] arr = new Object[numElements];
+    int index = 0;
+    for (int a = 0; a < elements.length; a++) {
+      if (!invalid[a]) {
+        arr[index++] = elements[a];
+      }
+    }
+    return arr;
+  }
+
+  public <T> T[] toArray(T[] ts) {
+    PAssert.failNotImplemented("toArray");
+    return null;
+  }
+
+  private class PSetIterator<E> extends PPooledIterable.PPoolableIterator<E> {
     private static final int UNSET = -1, AT_END = -2;
-    private final PSet<E> set;
     private boolean active = false;
     private int currentIndex = -1;
     // -1 if not found/unset, -2 if at end.
     private int nextIndex = UNSET;
+    private PSet<E> set;
 
-    public PSetIterator(PSet<E> set) {
-      super(set);
-      this.set = set;
+    public PSetIterator() {
     }
 
     @Override public boolean hasNext() {

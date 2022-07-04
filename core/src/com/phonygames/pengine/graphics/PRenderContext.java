@@ -109,10 +109,6 @@ public class PRenderContext {
     return this;
   }
 
-  public void setPhysicsDebugDrawerCameraFromSelf() {
-    PPhysicsEngine.debugDrawerCamera(perspectiveCamera());
-  }
-
   public boolean isActive() {
     return activeContext() == this;
   }
@@ -131,8 +127,10 @@ public class PRenderContext {
   }
 
   private void clear() {
-    for (val e : dataBuffers()) {
-      e.v().freeTemp();
+    try (val it = dataBuffers().obtainIterator()) {
+      while (it.hasNext()) {
+        it.next().v().freeTemp();
+      }
     }
     boneTransformsBuffer().reset();
     dataBuffers().clearRecursive();
@@ -178,11 +176,14 @@ public class PRenderContext {
                       boolean snapshotBufferOffsets) {
     // Calculate the stored vecs per instance using the buffer offsets and the buffer fill amounts. This assumes that
     // you enqueue a draw call immediately after writing stuff to buffers.
-    for (val e : storedBufferOffsets()) {
-      val buffer = genDataBuffer(e.k());
-      int vecsWrittenToThisBuffer = buffer.vecsWritten() - storedBufferOffsets().get(e.k());
-      int vecsWrittenPerInstance = vecsWrittenToThisBuffer / Math.max(1, drawCall.numInstances());
-      storedVecsPerInstance().put(e.k(), vecsWrittenPerInstance);
+    try (val it = storedBufferOffsets().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        val buffer = genDataBuffer(e.k());
+        int vecsWrittenToThisBuffer = buffer.vecsWritten() - storedBufferOffsets().get(e.k());
+        int vecsWrittenPerInstance = vecsWrittenToThisBuffer / Math.max(1, drawCall.numInstances());
+        storedVecsPerInstance().put(e.k(), vecsWrittenPerInstance);
+      }
     }
     addRenderContextDataBufferOffsetsToDrawCall(drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance);
     enqueuedDrawCalls().genPooled(layer).genPooled(shader).add(drawCall);
@@ -217,8 +218,11 @@ public class PRenderContext {
    * Stores the buffer sizes. Call this before filling the buffers and rendering with stuff!
    */
   public void snapshotBufferOffsets() {
-    for (val e : dataBuffers()) {
-      storedBufferOffsets().put(e.k(), e.v().vecsWritten());
+    try (val it = dataBuffers().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        storedBufferOffsets().put(e.k(), e.v().vecsWritten());
+      }
     }
   }
 
@@ -247,15 +251,18 @@ public class PRenderContext {
       phaseHandler.begin();
       val queueMap = enqueuedDrawCalls().get(phaseHandler.layer());
       if (queueMap != null) {
-        for (val e : queueMap) {
-          val shader = e.k();
-          shader.start(this);
-          val queue = queueMap.get(shader);
-          queue.sort();
-          for (PGlDrawCall drawCall : queue) {
-            drawCall.glDraw(this, shader, true);
+        try (val it = queueMap.obtainIterator()) {
+          while (it.hasNext()) {
+            val e = it.next();
+            val shader = e.k();
+            shader.start(this);
+            val queue = queueMap.get(shader);
+            queue.sort();
+            for (PGlDrawCall drawCall : queue) {
+              drawCall.glDraw(this, shader, true);
+            }
+            shader.end();
           }
-          shader.end();
         }
       }
       phaseHandler.end();
@@ -369,6 +376,10 @@ public class PRenderContext {
   public PRenderContext clearPhaseHandlers() {
     phaseHandlers().clear();
     return this;
+  }
+
+  public void setPhysicsDebugDrawerCameraFromSelf() {
+    PPhysicsEngine.debugDrawerCamera(perspectiveCamera());
   }
 
   public void start() {

@@ -74,12 +74,15 @@ public class PModelInstance {
   }
 
   public PModelInstance createAndAddStaticBodiesFromModelWithCurrentWorldTransform() {
-    for (val e : model.staticCollisionShapes()) {
-      if (staticBodies().has(e.k())) {continue;}
-      PStaticBody staticBody = PStaticBody.obtain(e.v(), PPhysicsEngine.STATIC_FLAG, PPhysicsEngine.ALL_FLAG);
-      staticBody.setWorldTransform(worldTransform());
-      staticBodies().put(e.k(), staticBody);
-      staticBody.addToDynamicsWorld();
+    try (val it = model.staticCollisionShapes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        if (staticBodies().has(e.k())) {continue;}
+        PStaticBody staticBody = PStaticBody.obtain(e.v(), PPhysicsEngine.STATIC_FLAG, PPhysicsEngine.ALL_FLAG);
+        staticBody.setWorldTransform(worldTransform());
+        staticBodies().put(e.k(), staticBody);
+        staticBody.addToDynamicsWorld();
+      }
     }
     return this;
   }
@@ -128,15 +131,18 @@ public class PModelInstance {
    * @return
    */
   public PStringMap<PMat4> outputNodeTransformsToMap(final PStringMap<PMat4> map, boolean useBindPose, float alpha) {
-    for (val e : nodes()) {
-      if (map.has(e.k())) {
-        // There was already a maxtrix in the map for this node.
-        PMat4 mat4 = map.get(e.k());
-        mat4.lerp(useBindPose ? e.v().templateNode().transform() : e.v().transform(), alpha);
-      } else {
-        // Put in a new matrix into the map for this node, ignoring alpha.
-        PMat4 mat4 = map.genPooled(e.k());
-        mat4.set(useBindPose ? e.v().templateNode().transform() : e.v().transform());
+    try (val it = nodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        if (map.has(e.k())) {
+          // There was already a maxtrix in the map for this node.
+          PMat4 mat4 = map.get(e.k());
+          mat4.lerp(useBindPose ? e.v().templateNode().transform() : e.v().transform(), alpha);
+        } else {
+          // Put in a new matrix into the map for this node, ignoring alpha.
+          PMat4 mat4 = map.genPooled(e.k());
+          mat4.set(useBindPose ? e.v().templateNode().transform() : e.v().transform());
+        }
       }
     }
     return map;
@@ -155,9 +161,12 @@ public class PModelInstance {
    * @return
    */
   public PStringMap<PMat4> setNodeTransformsFromMap(PStringMap<PMat4> map, float alpha) {
-    for (val e : map) {
-      if (nodes().has(e.k())) {
-        nodes().get(e.k()).transform().scl(1 - alpha).mulAdd(e.v(), alpha);
+    try (val it = map.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        if (nodes().has(e.k())) {
+          nodes().get(e.k()).transform().scl(1 - alpha).mulAdd(e.v(), alpha);
+        }
       }
     }
     return map;

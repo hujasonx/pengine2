@@ -19,7 +19,6 @@ import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
@@ -89,7 +88,8 @@ public class PModelGen implements PPostableTask {
    * Creates or appends to a list of GLNodes, generating a new node using the given part.
    */
   protected PModelGen chainGlNode(@Nullable PList<PGlNode> list, @NonNull Part part, @NonNull PMaterial defaultMaterial,
-                                  @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer, boolean setOriginToMeshCenter) {
+                                  @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer,
+                                  boolean setOriginToMeshCenter) {
     if (list == null) {
       list = new PList<>();
     }
@@ -108,12 +108,14 @@ public class PModelGen implements PPostableTask {
   }
 
   public void emitStaticPhysicsPartIntoModelBuilder(PModel.Builder builder) {
-    for (val e : staticPhysicsParts) {
-      if (e.v().indices().isEmpty()) {continue;}
-      btBvhTriangleMeshShape triangleMeshShape = e.v().getTriangleMeshShape();
-      PPhysicsBvhTriangleMeshShape collisionShape =
-          new PPhysicsBvhTriangleMeshShape(triangleMeshShape) {};
-      builder.model.staticCollisionShapes().put(e.k(), collisionShape);
+    try (val it = staticPhysicsParts.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        if (e.v().indices().isEmpty()) {continue;}
+        btBvhTriangleMeshShape triangleMeshShape = e.v().getTriangleMeshShape();
+        PPhysicsBvhTriangleMeshShape collisionShape = new PPhysicsBvhTriangleMeshShape(triangleMeshShape) {};
+        builder.model.staticCollisionShapes().put(e.k(), collisionShape);
+      }
     }
   }
 

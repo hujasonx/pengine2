@@ -6,6 +6,7 @@ import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
+import lombok.val;
 
 public class PAnimation {
   @Getter
@@ -26,12 +27,15 @@ public class PAnimation {
    * @param alpha
    */
   public void apply(PStringMap<PMat4> transforms, float t, float alpha) {
-    for (PMap.Entry<String, PMat4> e : transforms) {
-      PNodeAnimation nodeAnimation = getNodeAnimations().get(e.k());
-      if (nodeAnimation == null) {
-        continue;
+    try (val it = transforms.obtainIterator()) {
+      while (it.hasNext()) {
+        PMap.Entry<String, PMat4> e = it.next();
+        PNodeAnimation nodeAnimation = getNodeAnimations().get(e.k());
+        if (nodeAnimation == null) {
+          continue;
+        }
+        nodeAnimation.apply(e.v(), t, alpha);
       }
-      nodeAnimation.apply(e.v(), t, alpha);
     }
     return;
   }

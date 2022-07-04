@@ -136,20 +136,23 @@ public class LasertagWorldGenOld {
     }
 
     public MeshTemplate(PModel model) {
-      for (val e : model.glNodes()) {
-        meshes.add(e.v().drawCall().mesh());
-        String materialId = e.v().drawCall().material().id();
-        String vColIString = PStringUtils.extract(materialId, ".vCol", ".");
-        vColIndexOffsets.add(vColIString == null ? 0 : Integer.parseInt(vColIString));
-        if (materialId.contains(".alsoStaticBody")) {
-          emitPhysics.add(true);
-          emitMesh.add(true);
-        } else if (materialId.contains(".onlyStaticBody")) {
-          emitPhysics.add(true);
-          emitMesh.add(false);
-        } else {
-          emitPhysics.add(false);
-          emitMesh.add(true);
+      try (val it = model.glNodes().obtainIterator()) {
+        while (it.hasNext()) {
+          val e = it.next();
+          meshes.add(e.v().drawCall().mesh());
+          String materialId = e.v().drawCall().material().id();
+          String vColIString = PStringUtils.extract(materialId, ".vCol", ".");
+          vColIndexOffsets.add(vColIString == null ? 0 : Integer.parseInt(vColIString));
+          if (materialId.contains(".alsoStaticBody")) {
+            emitPhysics.add(true);
+            emitMesh.add(true);
+          } else if (materialId.contains(".onlyStaticBody")) {
+            emitPhysics.add(true);
+            emitMesh.add(false);
+          } else {
+            emitPhysics.add(false);
+            emitMesh.add(true);
+          }
         }
       }
     }
