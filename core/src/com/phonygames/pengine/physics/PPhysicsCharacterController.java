@@ -99,8 +99,6 @@ public class PPhysicsCharacterController implements Disposable {
         rigidBody.setWorldTransform(rigidBodyTransform);
         System.out.println("Yes raycast " + rayCast.hitDistance());
       }
-    } else {
-      System.out.println("No raycast ");
     }
     rayCast.free();
     // Nudge the new linear velocity in the manual velocity direction we want.
@@ -142,7 +140,7 @@ public class PPhysicsCharacterController implements Disposable {
     //        PLog.i("Activating character controller rigidbody due to movement").pEngine();
     //      }
     //    }
-    if (PKeyboard.isLogicJustDown(Input.Keys.Y)) { // TODO: Remove test code.
+    if (PKeyboard.isLogicJustDown(Input.Keys.Y)) {
       pos(MathUtils.random(10f), MathUtils.random(10f), MathUtils.random(10f));
       newLinVel().setZero();
     }
