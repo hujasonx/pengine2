@@ -9,6 +9,7 @@ import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PPbrPipeline;
+import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
@@ -41,6 +42,8 @@ public class CybertagGame implements PGame {
   private PRenderContext renderContext;
   private PModel testBoxModel;
   private World world;
+  private PRenderBuffer gbufferPreviewRenderBuffer;
+  private PShader gbufferPreviewShader;
 
   @Override public void frameUpdate() {
     if (PKeyboard.isFrameJustDown(Input.Keys.ESCAPE)) {
@@ -150,6 +153,8 @@ public class CybertagGame implements PGame {
     }
     flyingCameraController = new PFlyingCameraController(renderContext);
     world = new World();
+    gbufferPreviewRenderBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse").build();
+    gbufferPreviewShader = gbufferPreviewRenderBuffer.getQuadShader(Gdx.files.local("shader/previewgbuffer.quad.glsl"));
   }
 
   @Override public void logicUpdate() {
@@ -161,8 +166,16 @@ public class CybertagGame implements PGame {
     PApplicationWindow.drawTextureToScreen(pPbrPipeline.lightedBuffer().texture());
     for (int a = 0; a < pPbrPipeline.gBuffer().numTextures(); a++) {
       if (Gdx.input.isKeyPressed(Input.Keys.NUM_1 + a)) {
-        PGLUtils.clearScreen(0, 0, 0, 1);
-        PApplicationWindow.drawTextureToScreen(pPbrPipeline.gBuffer().texture(a));
+        renderContext.start();
+        gbufferPreviewRenderBuffer.begin();
+        gbufferPreviewShader.start(renderContext);
+        gbufferPreviewShader.setWithUniform("u_dataTex", pPbrPipeline.gBuffer().texture(a));
+        gbufferPreviewShader.set("u_useAlpha", 0);
+        gbufferPreviewRenderBuffer.renderQuad(gbufferPreviewShader);
+        gbufferPreviewShader.end();
+        gbufferPreviewRenderBuffer.end();
+        renderContext.end();
+        PApplicationWindow.drawTextureToScreen(gbufferPreviewRenderBuffer.texture());
       }
     }
   }

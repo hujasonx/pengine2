@@ -69,12 +69,16 @@ public class LasertagRoomWallGen {
                          cornerTile.z + (startX) * zChangeForAlongWall);
         PAssert.isNotNull(testCornerTile);
         LasertagTileGen testCornerTileOther = otherTileForWall(roomGen.buildingGen, testCornerTile, facing);
-        if (testCornerTileOther == null || testCornerTileOther.roomGen == null) {continue;} // Can't make doors if there is no tile to connect to.
+        if (testCornerTileOther == null || testCornerTileOther.roomGen == null) {
+          continue;
+        } // Can't make doors if there is no tile to connect to.
         // Try all the possible door sizes.
         for (int w = 1; w <= DOOR_WIDTH_WEIGHTS.length; w++) {
-          for (int h = 1; h <= DOOR_HEIGHT_WEIGHTS.length; h++) {
+          for (int h = 1; h <= Math.min(w, DOOR_HEIGHT_WEIGHTS.length);
+               h++) { // Doors can't be higher than they are wide.
             // Determine if this is a valid door placement.
-            LasertagRoom otherRoom = testCornerTileOther.roomGen == null ? null : testCornerTileOther.roomGen.lasertagRoom;
+            LasertagRoom otherRoom =
+                testCornerTileOther.roomGen == null ? null : testCornerTileOther.roomGen.lasertagRoom;
             if (otherRoom == null) {
               break;
             }
@@ -85,8 +89,8 @@ public class LasertagRoomWallGen {
                     tileGens.get(cornerTile.x + (testX) * xChangeForAlongWall, cornerTile.y + testY,
                                  cornerTile.z + (testX) * zChangeForAlongWall);
                 LasertagTileGen otherTile = otherTileForWall(roomGen.buildingGen, lookTile, facing);
-                if (!needsWallInDirection(roomGen, lookTile, facing) || otherTile == null || otherTile.roomGen == null ||
-                    otherRoom != otherTile.roomGen.lasertagRoom) {
+                if (!needsWallInDirection(roomGen, lookTile, facing) || otherTile == null ||
+                    otherTile.roomGen == null || otherRoom != otherTile.roomGen.lasertagRoom) {
                   couldBeValid = false;
                   break;
                 } else {
@@ -98,8 +102,8 @@ public class LasertagRoomWallGen {
               }
             }
             if (couldBeValid) {
-              LasertagDoorGen.PossibleDoor
-                  possibleDoor = new LasertagDoorGen.PossibleDoor(this, startX, startY, w, h, roomGen, testCornerTileOther.roomGen);
+              LasertagDoorGen.PossibleDoor possibleDoor =
+                  new LasertagDoorGen.PossibleDoor(this, startX, startY, w, h, roomGen, testCornerTileOther.roomGen);
               roomGen.buildingGen.possibleDoors.add(possibleDoor);
             }
           }

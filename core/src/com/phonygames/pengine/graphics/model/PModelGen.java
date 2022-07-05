@@ -165,7 +165,7 @@ public class PModelGen implements PPostableTask {
       for (int meshVIndex = 0; meshVIndex < meshShorts.length; meshVIndex++) { // Loop through all vertices in the mesh.
         // Get the raw position.
         int posLookupI = meshShorts[meshVIndex] * meshFloatsPerVert +
-                         vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+                         mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
         float rawPosX = meshVerts[posLookupI + 0];
         float rawPosY = meshVerts[posLookupI + 1];
         float rawPosZ = meshVerts[posLookupI + 2];
