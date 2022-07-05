@@ -62,7 +62,8 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
       LasertagTile tile = e.val();
       tile.frameUpdate();
       if (colorDataEmitter != null) {
-        colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 0].set((tile.x * .2f) % 1, (tile.y * .2f) % 1, (tile.z * .2f) % 1, 1);
+        colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 0].set(0, 0, 0, 1);
+        colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].set((tile.x * .2f) % 1, (tile.y * .2f) % 1, (tile.z * .2f) % 1, 1);
       }
     }
   }

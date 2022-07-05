@@ -28,6 +28,10 @@ public class LasertagTile implements PRenderContext.DataBufferEmitter {
   protected float floorTile01OffsetY = 0;
   protected float floorTile10OffsetY = 0;
   protected float floorTile11OffsetY = 0;
+  protected float walkwayTile00OffsetY = 0;
+  protected float walkwayTile01OffsetY = 0;
+  protected float walkwayTile11OffsetY = 0;
+  protected float walkwayTile10OffsetY = 0;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
@@ -44,7 +48,7 @@ public class LasertagTile implements PRenderContext.DataBufferEmitter {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected LasertagTileWall wallX, wallZ, wallMX, wallMZ;
-  protected boolean hasFloor, hasCeiling;
+  protected boolean hasFloor, hasCeiling, hasWalkway;
 
   protected LasertagTile(String id, final int x, final int y, final int z) {
     this.id = id;
@@ -89,6 +93,17 @@ public class LasertagTile implements PRenderContext.DataBufferEmitter {
     room.building.worldPosForTile(v101, x + 1, y + floorTile11OffsetY, z + 1);
     room.building.worldPosForTile(v110, x + 1, y + ceilTile10OffsetY, z + 0);
     room.building.worldPosForTile(v111, x + 1, y + ceilTile11OffsetY, z + 1);
+  }
+
+  public void getCornersWalkway(PVec3 v00, PVec3 v10, PVec3 v11, PVec3 v01) {
+    if (room == null || room.building == null) {
+      PAssert.failNotImplemented("tiles that are not part of a room or building");
+      return;
+    }
+    room.building.worldPosForTile(v00, x + 0, y + walkwayTile00OffsetY, z + 0);
+    room.building.worldPosForTile(v10, x + 1, y + walkwayTile10OffsetY, z + 0);
+    room.building.worldPosForTile(v11, x + 1, y + walkwayTile11OffsetY, z + 1);
+    room.building.worldPosForTile(v01, x + 0, y + walkwayTile01OffsetY, z + 1);
   }
 
   public void logicUpdate() {

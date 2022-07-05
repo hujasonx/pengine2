@@ -38,6 +38,12 @@ public class LasertagRoomGenTileEmitter {
                                   tile111.y(tile111.y() - .1f), tile011.y(tile011.y() - .1f));
       floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
+    if (tile.hasWalkway) {
+      tile.getCornersWalkway(tile000, tile100, tile101, tile001);
+      MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/basic.glb");
+      vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
+      floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
+    }
     emitWall(tile.wallX, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
     emitWall(tile.wallZ, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
     emitWall(tile.wallMX, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
