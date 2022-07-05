@@ -30,23 +30,22 @@ public class LasertagBuildingGen extends PBuilder {
    * @param buildingGen
    */
   public static void finalPassWalls(LasertagBuildingGen buildingGen) {
-    for (val e : buildingGen.tileGens) {
-      LasertagTileGen otherX =
-          LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.X);
-      LasertagTileGen otherZ =
-          LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.Z);
-      LasertagTileGen otherMX =
-          LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.mX);
-      LasertagTileGen otherMZ =
-          LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.mZ);
-      LasertagTileWallGen wallX = e.val().wallX;
-      LasertagTileWallGen wallZ = e.val().wallZ;
-      LasertagTileWallGen wallMX = e.val().wallMX;
-      LasertagTileWallGen wallMZ = e.val().wallMZ;
-      wallX.copySettingsFromOrToOtherWall(true);
-      wallZ.copySettingsFromOrToOtherWall(true);
-      wallMX.copySettingsFromOrToOtherWall(true);
-      wallMZ.copySettingsFromOrToOtherWall(true);
+    try (val it = buildingGen.tileGens.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        LasertagTileGen otherX = LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.X);
+        LasertagTileGen otherZ = LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.Z);
+        LasertagTileGen otherMX = LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.mX);
+        LasertagTileGen otherMZ = LasertagRoomGenTileProcessor.otherTileForWall(buildingGen, e.val(), LasertagTileWall.Facing.mZ);
+        LasertagTileWallGen wallX = e.val().wallX;
+        LasertagTileWallGen wallZ = e.val().wallZ;
+        LasertagTileWallGen wallMX = e.val().wallMX;
+        LasertagTileWallGen wallMZ = e.val().wallMZ;
+        wallX.copySettingsFromOrToOtherWall(true);
+        wallZ.copySettingsFromOrToOtherWall(true);
+        wallMX.copySettingsFromOrToOtherWall(true);
+        wallMZ.copySettingsFromOrToOtherWall(true);
+      }
     }
   }
 
@@ -73,8 +72,11 @@ public class LasertagBuildingGen extends PBuilder {
     for (int a = 0; a < roomGens.size; a++) {
       building.rooms[a] = roomGens.get(a).build();
     }
-    for (val e : tileGens) {
-      e.val().build();
+    try (val it = tileGens.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        e.val().build();
+      }
     }
     for (val e : doorGens) {
       e.build();
@@ -89,11 +91,21 @@ public class LasertagBuildingGen extends PBuilder {
 
   public void processTiles() {
     for (val roomGen : roomGens) {
+
       LasertagRoomGenTileProcessor.processRoomWalls(roomGen);
       LasertagRoomGenTileProcessor.processRoomFloors(roomGen);
       LasertagRoomGenTileProcessor.processRoomCeilings(roomGen);
       LasertagRoomGenWalkwayProcessor.processRoomWalkways(roomGen);
     }
+//    try (val it = roomGens.obtainIterator()) {
+//      while (it.hasNext()) {
+//        val roomGen = it.next();
+//        LasertagRoomGenTileProcessor.processRoomWalls(roomGen);
+//        LasertagRoomGenTileProcessor.processRoomFloors(roomGen);
+//        LasertagRoomGenTileProcessor.processRoomCeilings(roomGen);
+//        LasertagRoomGenWalkwayProcessor.processRoomWalkways(roomGen);
+//      }
+//    }
   }
 
   public LasertagBuildingGen setTileRotation(float rotation) {

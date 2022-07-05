@@ -17,25 +17,25 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
   public final String id;
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
+  private final PList<LasertagDoor> doors = new PList<>();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
   private final PIntMap3d<LasertagTile> tiles = new PIntMap3d<>();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected LasertagBuilding building;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
+  protected ColorDataEmitter colorDataEmitter;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   protected boolean initialized = false;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  protected ColorDataEmitter colorDataEmitter;
   /** The number of vCol indices dedicated to shared base colors, as opposed to per-tile colors. */
   protected int numBaseVCols = 16;
   private transient boolean roomColorsInitialized = false;
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
-  @Accessors(fluent = true)
-  private final PList<LasertagDoor> doors = new PList<>();
 
   protected LasertagRoom(String id) {
     this.id = id;
@@ -53,32 +53,43 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
       for (int a = 0; a < numBaseVCols; a++) {
         // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
         // the normal or the index with this buffer.
-        colorDataEmitter.colorData[a * 2 + 0].setHSVA(MathUtils.random(), MathUtils.random(.1f, .3f), MathUtils.random(.2f, .5f), 1); // DiffuseM;
+        colorDataEmitter.colorData[a * 2 + 0].setHSVA(MathUtils.random(), MathUtils.random(.1f, .3f),
+                                                      MathUtils.random(.2f, .5f), 1); // DiffuseM;
         colorDataEmitter.colorData[a * 2 + 1].set(0, 0, 0, 1); // EmissiveR;
       }
       roomColorsInitialized = true;
     }
-    for (val e : tiles()) {
-      LasertagTile tile = e.val();
-      tile.frameUpdate();
-      if (colorDataEmitter != null) {
-        colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 0].set(0, 0, 0, 1);
-        colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].set((tile.x * .2f) % 1, (tile.y * .2f) % 1, (tile.z * .2f) % 1, 1);
+    try (val it = tiles().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        LasertagTile tile = e.val();
+        tile.frameUpdate();
+        if (colorDataEmitter != null) {
+          colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 0].set(0, 0, 0, 1);
+          colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].set((tile.x * .2f) % 1, (tile.y * .2f) % 1,
+                                                                          (tile.z * .2f) % 1, 1);
+        }
       }
     }
   }
 
   public void logicUpdate() {
     if (!initialized) {return;}
-    for (val tile : tiles()) {
-      tile.val().logicUpdate();
+    try (val it = tiles().obtainIterator()) {
+      while (it.hasNext()) {
+        val tile = it.next();
+        tile.val().logicUpdate();
+      }
     }
   }
 
   public void render(PRenderContext renderContext) {
     if (!initialized) {return;}
-    for (val tile : tiles()) {
-      tile.val().render(renderContext);
+    try (val it = tiles().obtainIterator()) {
+      while (it.hasNext()) {
+        val tile = it.next();
+        tile.val().render(renderContext);
+      }
     }
     if (modelInstance != null) {
       modelInstance.setDataBufferEmitter(this);

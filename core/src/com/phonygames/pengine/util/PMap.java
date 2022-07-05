@@ -73,7 +73,7 @@ public class PMap<K, V> extends PPooledIterable<PMap.Entry<K, V>> implements PPo
     mapInterface.clear();
   }
 
-  @Override public final PPooledIterable.PPoolableIterator<Entry<K, V>> obtainIterator() {
+  @Override public PPooledIterable.PPoolableIterator<Entry<K, V>> obtainIterator() {
     PMapIterator<K, V> ret = (PMapIterator<K, V>) iteratorPool().obtain();
     ret.returnPool = iteratorPool();
     ret.map = this;

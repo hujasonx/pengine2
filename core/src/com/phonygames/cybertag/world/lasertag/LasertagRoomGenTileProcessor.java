@@ -10,33 +10,40 @@ import lombok.val;
 
 public class LasertagRoomGenTileProcessor {
   public static void processRoomFloors(LasertagRoomGen roomGen) {
-    for (val e : roomGen.tileGens) {
-      int x = e.x();
-      int y = e.y();
-      int z = e.z();
-      LasertagTileGen tileGen = e.val();
-      try {
-        PAssert.isTrue(x == tileGen.x);
-        PAssert.isTrue(y == tileGen.y);
-        PAssert.isTrue(z == tileGen.z);
-      } catch (Exception er) {
-        er.printStackTrace();;
-      }
-      LasertagTile tile = tileGen.tile;
-      if (roomAtTileGen(roomGen.tileGens, x, y - 1, z) != roomGen.lasertagRoom) {
-        tile.hasFloor = true;
+    try (val it = roomGen.tileGens.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        int x = e.x();
+        int y = e.y();
+        int z = e.z();
+        LasertagTileGen tileGen = e.val();
+        try {
+          PAssert.isTrue(x == tileGen.x);
+          PAssert.isTrue(y == tileGen.y);
+          PAssert.isTrue(z == tileGen.z);
+        } catch (Exception er) {
+          er.printStackTrace();
+          ;
+        }
+        LasertagTile tile = tileGen.tile;
+        if (roomAtTileGen(roomGen.tileGens, x, y - 1, z) != roomGen.lasertagRoom) {
+          tile.hasFloor = true;
+        }
       }
     }
   }
   public static void processRoomCeilings(LasertagRoomGen roomGen) {
-    for (val e : roomGen.tileGens) {
-      int x = e.x();
-      int y = e.y();
-      int z = e.z();
-      LasertagTileGen tileGen = e.val();
-      LasertagTile tile = tileGen.tile;
-      if (roomAtTileGen(roomGen.tileGens, x, y + 1, z) != roomGen.lasertagRoom) {
-        tile.hasCeiling = true;
+    try (val it = roomGen.tileGens.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        int x = e.x();
+        int y = e.y();
+        int z = e.z();
+        LasertagTileGen tileGen = e.val();
+        LasertagTile tile = tileGen.tile;
+        if (roomAtTileGen(roomGen.tileGens, x, y + 1, z) != roomGen.lasertagRoom) {
+          tile.hasCeiling = true;
+        }
       }
     }
   }
@@ -50,23 +57,26 @@ public class LasertagRoomGenTileProcessor {
   }
 
   public static void processRoomWalls(LasertagRoomGen roomGen) {
-    for (val e : roomGen.tileGens) {
-      int x = e.x();
-      int y = e.y();
-      int z = e.z();
-      LasertagTileGen tileGen = e.val();
-      LasertagTile tile = tileGen.tile;
-      if (!tile.wallX.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.X)) {
-        emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.X);
-      }
-      if (!tile.wallZ.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.Z)) {
-        emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.Z);
-      }
-      if (!tile.wallMX.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.mX)) {
-        emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.mX);
-      }
-      if (!tile.wallMZ.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.mZ)) {
-        emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.mZ);
+    try (val it = roomGen.tileGens.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        int x = e.x();
+        int y = e.y();
+        int z = e.z();
+        LasertagTileGen tileGen = e.val();
+        LasertagTile tile = tileGen.tile;
+        if (!tile.wallX.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.X)) {
+          emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.X);
+        }
+        if (!tile.wallZ.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.Z)) {
+          emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.Z);
+        }
+        if (!tile.wallMX.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.mX)) {
+          emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.mX);
+        }
+        if (!tile.wallMZ.hasWall && needsWallInDirection(roomGen, tileGen, LasertagTileWall.Facing.mZ)) {
+          emitWallGen(roomGen, tileGen, LasertagTileWall.Facing.mZ);
+        }
       }
     }
   }

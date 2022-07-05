@@ -10,7 +10,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
 
-public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
+public class PIntMap3d<T> extends PPooledIterable<PIntMap3d.Entry<T>> {
   private final PMap<Integer, PMap<Integer, PMap<Integer, T>>> backingMap =
       new PMap<Integer, PMap<Integer, PMap<Integer, T>>>() {
         @Override protected PMap<Integer, PMap<Integer, T>> newUnpooled(Integer integer) {
@@ -26,11 +26,14 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
           };
         }
       };
-  private final PPool<PIntMap3d.Iterator<T>> iteratorPool = new PPool<Iterator<T>>() {
-    @Override protected Iterator<T> newObject() {
-      return new Iterator<>(PIntMap3d.this);
-    }
-  };
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
+  private final PPool<PPooledIterable.PPoolableIterator<PIntMap3d.Entry<T>>> iteratorPool =
+      new PPool<PPooledIterable.PPoolableIterator<PIntMap3d.Entry<T>>>() {
+        @Override protected Iterator<T> newObject() {
+          return new Iterator<>();
+        }
+      };
   private @Nullable
   final PPool tPool;
 
@@ -61,6 +64,18 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
     return existing;
   }
 
+  /**
+   * Override this to generate values with keys.
+   * @param x
+   * @param y
+   * @param z
+   * @return the new object
+   */
+  protected T newUnpooled(int x, int y, int z) {
+    PAssert.failNotImplemented("newUnpooledObject");
+    return null;
+  }
+
   public T get(int x, int y, int z) {
     val yMap = backingMap.get(x);
     if (yMap == null) {
@@ -73,24 +88,13 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
     return zMap.get(z);
   }
 
-  @Override public Iterator<T> iterator() {
-    Iterator<T> ret = iteratorPool.obtain();
+  @Override public final PPooledIterable.PPoolableIterator<PIntMap3d.Entry<T>> obtainIterator() {
+    PIntMap3d.Iterator<T> ret = (PIntMap3d.Iterator<T>) iteratorPool().obtain();
+    ret.returnPool = iteratorPool();
+    ret.map = this;
     ret.xIterable = (PMap.PMapIterator<Integer, PMap<Integer, PMap<Integer, T>>>) backingMap.obtainIterator();
     ret.processNext();
     return ret;
-    //    return new Iterator<>(this);
-  }
-
-  /**
-   * Override this to generate values with keys.
-   * @param x
-   * @param y
-   * @param z
-   * @return the new object
-   */
-  protected T newUnpooled(int x, int y, int z) {
-    PAssert.failNotImplemented("newUnpooledObject");
-    return null;
   }
 
   public T put(int x, int y, int z, T t) {
@@ -107,21 +111,20 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
     private int x, y, z;
   }
 
-  public static class Iterator<T> implements java.util.Iterator<Entry<T>>, Iterable<Entry<T>>, PPool.Poolable {
+  public static class Iterator<T> extends PPooledIterable.PPoolableIterator<PIntMap3d.Entry<T>> {
     private final Entry<T> entry = new Entry();
-    private final PIntMap3d<T> map;
+    private boolean hasNext = false;
+    private PIntMap3d<T> map;
+    private T nextVal;
+    private int nextX, nextY, nextZ;
     @Getter
     @Setter
     private PPool ownerPool, sourcePool;
-    private boolean hasNext = false;
-    private T nextVal;
-    private int nextX, nextY, nextZ;
     private PMap.PMapIterator<Integer, PMap<Integer, PMap<Integer, T>>> xIterable;
     private PMap.PMapIterator<Integer, PMap<Integer, T>> yIterable;
     private PMap.PMapIterator<Integer, T> zIterable;
 
-    private Iterator(PIntMap3d<T> map) {
-      this.map = map;
+    private Iterator() {
     }
 
     @Override public boolean hasNext() {
@@ -172,7 +175,7 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
               System.out.println();
             }
           } else {
-            map.iteratorPool.free(this);
+            reset();
           }
         }
       }
@@ -181,10 +184,6 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
     @Override public void remove() {
       PAssert.isNotNull(zIterable);
       zIterable.remove();
-    }
-
-    @Override public java.util.Iterator<Entry<T>> iterator() {
-      return this;
     }
 
     @Override public void reset() {
@@ -196,6 +195,7 @@ public class PIntMap3d<T> implements Iterable<PIntMap3d.Entry<T>> {
       zIterable = null;
       nextVal = null;
       hasNext = false;
+      map = null;
     }
   }
 }

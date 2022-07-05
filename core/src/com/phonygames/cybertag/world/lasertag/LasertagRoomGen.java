@@ -87,9 +87,12 @@ public class LasertagRoomGen extends PBuilder {
       }
 
       @Override protected void modelMiddle() {
-        for (val e : lasertagRoom.tiles()) {
-          tileVColIndex = LasertagRoomGenTileEmitter.emit(e.val(), this, basePart, staticPhysicsPart, tileVColIndex,
-                                                          alphaBlendParts);
+        try (val it = lasertagRoom.tiles().obtainIterator()) {
+          while (it.hasNext()) {
+            val e = it.next();
+            tileVColIndex = LasertagRoomGenTileEmitter.emit(e.val(), this, basePart, staticPhysicsPart, tileVColIndex,
+                                                            alphaBlendParts);
+          }
         }
       }
 
@@ -110,8 +113,11 @@ public class LasertagRoomGen extends PBuilder {
         lasertagRoom.initialized = true;
         // Create the color data emitter buffer.
         int numVCols = lasertagRoom.numBaseVCols;
-        for (val e : lasertagRoom.tiles()) {
-          numVCols += LasertagTile.PER_TILE_VCOL_INDICES;
+        try (val it = lasertagRoom.tiles().obtainIterator()) {
+          while (it.hasNext()) {
+            val e = it.next();
+            numVCols += LasertagTile.PER_TILE_VCOL_INDICES;
+          }
         }
         lasertagRoom.colorDataEmitter = new ColorDataEmitter(numVCols);
         lasertagRoom.modelInstance.createAndAddStaticBodiesFromModelWithCurrentWorldTransform();
