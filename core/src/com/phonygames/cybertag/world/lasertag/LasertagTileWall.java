@@ -25,6 +25,10 @@ public class LasertagTileWall {
     this.tile = tile;
   }
 
+  public boolean isDoor() {
+    return door != null;
+  }
+
   public enum Facing {
     X, Z, mX, mZ;
 

@@ -1,5 +1,7 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import android.support.annotation.Nullable;
+
 import com.phonygames.pengine.util.PBuilder;
 
 public class LasertagTileGen extends PBuilder {
@@ -30,6 +32,10 @@ public class LasertagTileGen extends PBuilder {
   }
 
   private void buildModelInstance() {
+  }
+
+  public @Nullable LasertagTileGen tileGenInRoomWithLocationOffset(int x, int y, int z) {
+    return roomGen.tileGens.get(this.x + x, this.y + y, this.z + z);
   }
 
   public LasertagTileWallGen wallGen(LasertagTileWall.Facing facing) {

@@ -8,6 +8,7 @@ import com.phonygames.cybertag.world.lasertag.LasertagBuildingGenAABBPlacer;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGen;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGenRoomPlacer;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGenTileProcessor;
+import com.phonygames.cybertag.world.lasertag.LasertagRoomGenWalkwayProcessor;
 import com.phonygames.cybertag.world.lasertag.LasertagWorld;
 import com.phonygames.cybertag.world.lasertag.LasertagWorldGen;
 import com.phonygames.pengine.graphics.PRenderContext;
@@ -46,6 +47,10 @@ public class World {
     // Hallway Pass.
     LasertagBuildingGen.finalPassWalls(buildingGen);
     LasertagBuildingGen.finalPassWalls(buildingGen2);
+    // Walkway Pass.
+
+    LasertagRoomGenWalkwayProcessor.processRoomWalkways(buildingGen);
+    LasertagRoomGenWalkwayProcessor.processRoomWalkways(buildingGen2);
     this.lasertagWorld = worldGen.build();
     playerCharacter = new PlayerCharacterEntity();
   }

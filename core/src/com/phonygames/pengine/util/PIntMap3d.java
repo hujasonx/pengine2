@@ -3,6 +3,7 @@ package com.phonygames.pengine.util;
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.math.aabb.PIntAABB;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -86,6 +87,33 @@ public class PIntMap3d<T> extends PPooledIterable<PIntMap3d.Entry<T>> {
       return null;
     }
     return zMap.get(z);
+  }
+
+  public PIntAABB keyBounds(PIntAABB out) {
+    boolean setData = false;
+    int minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
+    try (val it = obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        if (setData) {
+          minX = Math.min(minX, e.x());
+          maxX = Math.max(maxX, e.x());
+          minY = Math.min(minY, e.y());
+          maxY = Math.max(maxY, e.y());
+          minZ = Math.min(minZ, e.z());
+          maxZ = Math.max(maxZ, e.z());
+        } else {
+          minX = e.x();
+          maxX = e.x();
+          minY = e.y();
+          maxY = e.y();
+          minZ = e.z();
+          maxZ = e.z();
+        }
+        setData = true;
+      }
+    }
+    return out.set(minX, minY, minZ, maxX, maxY, maxZ);
   }
 
   @Override public final PPooledIterable.PPoolableIterator<PIntMap3d.Entry<T>> obtainIterator() {
@@ -181,11 +209,6 @@ public class PIntMap3d<T> extends PPooledIterable<PIntMap3d.Entry<T>> {
       }
     }
 
-    @Override public void remove() {
-      PAssert.isNotNull(zIterable);
-      zIterable.remove();
-    }
-
     @Override public void reset() {
       if (xIterable != null) {xIterable.close();}
       if (yIterable != null) {yIterable.close();}
@@ -196,6 +219,11 @@ public class PIntMap3d<T> extends PPooledIterable<PIntMap3d.Entry<T>> {
       nextVal = null;
       hasNext = false;
       map = null;
+    }
+
+    @Override public void remove() {
+      PAssert.isNotNull(zIterable);
+      zIterable.remove();
     }
   }
 }

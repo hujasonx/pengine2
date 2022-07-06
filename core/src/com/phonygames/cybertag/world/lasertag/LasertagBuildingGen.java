@@ -95,7 +95,6 @@ public class LasertagBuildingGen extends PBuilder {
       LasertagRoomGenTileProcessor.processRoomWalls(roomGen);
       LasertagRoomGenTileProcessor.processRoomFloors(roomGen);
       LasertagRoomGenTileProcessor.processRoomCeilings(roomGen);
-      LasertagRoomGenWalkwayProcessor.processRoomWalkways(roomGen);
     }
 //    try (val it = roomGens.obtainIterator()) {
 //      while (it.hasNext()) {

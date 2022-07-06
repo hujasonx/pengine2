@@ -57,5 +57,6 @@ public class LasertagTileWallGen extends PBuilder {
     other.wall.hasDoorframeT = wall.hasDoorframeT;
     other.wall.isSolidWall = wall.isSolidWall;
     other.wall.isWindow = wall.isWindow;
+    other.wall.door = wall.door;
   }
 }

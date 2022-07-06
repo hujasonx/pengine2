@@ -100,6 +100,7 @@ public class LasertagDoorGen extends PBuilder {
           wallGen.wall.hasDoorframeL = testX == w - 1;
           wallGen.wall.hasDoorframeT = testY == h - 1;
           wallGen.wall.isValid = true;
+          wallGen.wall.door = ret.door;
         }
       }
 

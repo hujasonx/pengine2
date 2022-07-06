@@ -116,6 +116,10 @@ public class LasertagTile implements PRenderContext.DataBufferEmitter {
     }
   }
 
+  public @Nullable LasertagTile tileInRoomWithLocationOffset(int x, int y, int z) {
+    return room().tiles().get(this.x + x, this.y + y, this.z + z);
+  }
+
   public LasertagTileWall wall(LasertagTileWall.Facing facing) {
     switch (facing) {
       case X:
