@@ -74,7 +74,6 @@ public class LasertagRoomGenWalkwayProcessor {
       if (higherWalkway != null && sloped) {return false;}
       PossibleWalkway hereWalkway = connectedGroups.get(a).walkways.get(tileGen.x, tileGen.y, tileGen.z);
       if (hereWalkway != null) {return false;}
-
     }
     if (sloped) {
       // Count the number of doors on the tile and the tile above.
@@ -420,14 +419,14 @@ public class LasertagRoomGenWalkwayProcessor {
       System.out.println("\tconnectedNodes: " + connectedGroups.size);
       // Add random connections until there is only one group.
       while (connectedGroups.size > 1) {
-        PList<WalkwayNode> walkwayNodes  = ret.getWalkwayNodes(connectedGroups);
-          for (int a = 0; a < walkwayNodes.size; a++) {
-            LasertagTileGen tileGen = walkwayNodes.get(a).tileGen;
-            tileGen.wallGen(walkwayNodes.get(a).facing).wall.hasWall = true;
-            tileGen.wallGen(walkwayNodes.get(a).facing).wall.isWindow = true;
-            tileGen.wallGen(walkwayNodes.get(a).facing).wall.isValid = true;
-            tileGen.wallGen(walkwayNodes.get(a).facing).wall.isSolidWall = true;
-          }
+        PList<WalkwayNode> walkwayNodes = ret.getWalkwayNodes(connectedGroups);
+        for (int a = 0; a < walkwayNodes.size; a++) {
+          LasertagTileGen tileGen = walkwayNodes.get(a).tileGen;
+          tileGen.wallGen(walkwayNodes.get(a).facing).wall.hasWall = true;
+          tileGen.wallGen(walkwayNodes.get(a).facing).wall.isWindow = true;
+          tileGen.wallGen(walkwayNodes.get(a).facing).wall.isValid = true;
+          tileGen.wallGen(walkwayNodes.get(a).facing).wall.isSolidWall = true;
+        }
         if (walkwayNodes.size == 0) {
           System.out.println("\tStopping island connections since there were no nodes");
           break;
@@ -623,31 +622,18 @@ public class LasertagRoomGenWalkwayProcessor {
 
       void gen(PList<ConnectedGroup> connectedGroups, PList<Tuple3<RecursionStep, Boolean, Boolean>> recurseOrder) {
         LasertagTileWall.Facing curFacing = startingNode.facing;
-        boolean forwardDownFirst = false;
-        boolean hasStraightForward = false;
-        boolean hasDownForward = false;
-        for (int a = recurseOrder.size - 1; a >= 0; a--) {
+        for (int a = 0; a < recurseOrder.size; a++) {
+          boolean down = recurseOrder.get(a).b();
           if (recurseOrder.get(a).c() && recurseOrder.get(a).a() == RecursionStep.Forward) {
-            forwardDownFirst = recurseOrder.get(a).b();
-            if (!forwardDownFirst) {
-              hasStraightForward = true;
+            if (down) {
+              secondConnectedGroup = pushForward(connectedGroups, curFacing, -1,
+                                                 startingNode.tileGen.tileGenInRoomWithLocationOffset(0, -1, 0), 10,
+                                                 recurseOrder);
             } else {
-              hasDownForward = true;
+              secondConnectedGroup = pushForward(connectedGroups, curFacing, 0, startingNode.tileGen, 10, recurseOrder);
             }
           }
-        }
-        if (forwardDownFirst) {
-          secondConnectedGroup = pushForward(connectedGroups, curFacing, -1,
-                                             startingNode.tileGen.tileGenInRoomWithLocationOffset(0, -1, 0), 10,
-                                             recurseOrder);
-        }
-        if (hasStraightForward && secondConnectedGroup == null) {
-          secondConnectedGroup = pushForward(connectedGroups, curFacing, 0, startingNode.tileGen, 10, recurseOrder);
-        }
-        if (!forwardDownFirst && hasDownForward && secondConnectedGroup == null) {
-          secondConnectedGroup = pushForward(connectedGroups, curFacing, -1,
-                                             startingNode.tileGen.tileGenInRoomWithLocationOffset(0, -1, 0), 10,
-                                             recurseOrder);
+          if (secondConnectedGroup != null) {break;}
         }
       }
 
@@ -686,7 +672,6 @@ public class LasertagRoomGenWalkwayProcessor {
             couldGenWalkway(tileGen, facing, yChangePerForward != 0, endRampYI, connectedGroups);
         if (!couldGenWalkwayResult) {
           System.out.println("Stop search due to invalid position: " + searchX + "," + searchY + "," + searchZ);
-          couldGenWalkwayResult = couldGenWalkway(tileGen, facing, yChangePerForward != 0, endRampYI, connectedGroups);
           return null;
         }
         tileGens.add(tileGen);

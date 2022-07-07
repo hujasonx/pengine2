@@ -22,32 +22,42 @@ public class LasertagRoomGenRoomPlacer {
   public static float[] roomHeightWeights = null;
 
   public static PIntAABB getValidAABBForRoomPlacement(LasertagBuildingGen buildingGen) {
-    PList<PIntAABB> aabbs = buildingGen.aabbs;
     PIntMap3d<LasertagTileGen> tilemap = buildingGen.tileGens;
-    return getValidAABBForRoomPlacement(aabbs, tilemap);
+    return getValidAABBForRoomPlacement(buildingGen.aabb, buildingGen.outsideAabbs, tilemap);
   }
 
-  public static @Nullable PIntAABB getValidAABBForRoomPlacement(PList<PIntAABB> aabbs, PIntMap3d<LasertagTileGen> tileGenMap) {
+  public static @Nullable PIntAABB getValidAABBForRoomPlacement(PIntAABB aabb, PList<PIntAABB> outsideAabbs,
+                                                                PIntMap3d<LasertagTileGen> tileGenMap) {
     PIntAABB ret = new PIntAABB();
-    for (int attempt = 0; attempt < 100; attempt++) {
-      PIntAABB aabb = aabbs.get(MathUtils.random(aabbs.size - 1));
+    for (int attempt = 0; attempt < 250; attempt++) {
       int roomSizeX = MathUtils.random(minRoomSize, maxRoomSize);
       int roomSizeY = PArrayUtils.randomIndexWithWeights(roomHeightWeights) + 1;
       int roomSizeZ = MathUtils.random(minRoomSize, maxRoomSize);
-      int roomX = PNumberUtils.clamp(
-          MathUtils.random(aabb.x0() - edgeShiftBoundaryX, aabb.x1() + edgeShiftBoundaryX - roomSizeX + 1), aabb.x0(),
-          aabb.x1() - roomSizeX + 1);
-      int roomY =
-          PNumberUtils.clamp(MathUtils.random(aabb.y0() - edgeShiftLowerY, aabb.y1() - roomSizeY + 1), aabb.y0(),
-                             aabb.y1() - roomSizeY + 1);
-      int roomZ = PNumberUtils.clamp(
-          MathUtils.random(aabb.z0() - edgeShiftBoundaryZ, aabb.z1() + edgeShiftBoundaryZ - roomSizeZ + 1), aabb.z0(),
-          aabb.z1() - roomSizeZ + 1);
+      //      int roomX = PNumberUtils.clamp(
+      //          MathUtils.random(aabb.x0() - edgeShiftBoundaryX, aabb.x1() + edgeShiftBoundaryX - roomSizeX + 1),
+      //          aabb.x0(),
+      //          aabb.x1() - roomSizeX + 1);
+      //      int roomY =
+      //          PNumberUtils.clamp(MathUtils.random(aabb.y0() - edgeShiftLowerY, aabb.y1() - roomSizeY + 1), aabb
+      //          .y0(),
+      //                             aabb.y1() - roomSizeY + 1);
+      //      int roomZ = PNumberUtils.clamp(
+      //          MathUtils.random(aabb.z0() - edgeShiftBoundaryZ, aabb.z1() + edgeShiftBoundaryZ - roomSizeZ + 1),
+      //          aabb.z0(),
+      //          aabb.z1() - roomSizeZ + 1);
+      int roomX = MathUtils.random(aabb.x0() - edgeShiftBoundaryX, aabb.x1() + edgeShiftBoundaryX - roomSizeX + 1);
+      roomX = MathUtils.clamp(roomX, aabb.x0(), aabb.x1() - roomSizeX + 1);
+      int roomY = MathUtils.random(aabb.y0() - edgeShiftLowerY, aabb.y1() - roomSizeY + 1);
+      roomY = PNumberUtils.clamp(roomY, aabb.y0(), aabb.y1() - roomSizeY + 1);
+      int roomZ = MathUtils.random(aabb.z0() - edgeShiftBoundaryZ, aabb.z1() + edgeShiftBoundaryZ - roomSizeZ + 1);
+      roomZ = PNumberUtils.clamp(roomZ, aabb.z0(), aabb.z1() - roomSizeZ + 1);
       ret.set(roomX, roomY, roomZ, roomX + roomSizeX - 1, roomY + roomSizeY - 1, roomZ + roomSizeZ - 1);
+      for (int b = 0; b < outsideAabbs.size; b++) { // Check that the tile does not intersect.
+        if (outsideAabbs.get(b).intersects(ret)) {continue;}
+      }
       if (validateAABBForRoomPlacement(ret, tileGenMap)) {
         return ret;
       }
-
     }
     return null;
   }

@@ -24,7 +24,7 @@ public class World {
     buildingGen.setTileTranslation(0, 0, 0).setTileRotation(.2f).setTileScale(3, 3, 3);
     LasertagBuildingGenAABBPlacer.addAABBs(buildingGen);
     LasertagRoomGenRoomPlacer.reset();
-    for (int a = 0; a < 10; a++) {
+    for (int a = 0; a < 30; a++) {
       PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen);
       if (roomAABB != null) {
         LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen, roomAABB);

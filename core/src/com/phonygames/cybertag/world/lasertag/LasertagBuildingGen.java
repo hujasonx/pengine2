@@ -9,7 +9,8 @@ import com.phonygames.pengine.util.PList;
 import lombok.val;
 
 public class LasertagBuildingGen extends PBuilder {
-  protected final PList<PIntAABB> aabbs = new PList<>();
+  protected final PIntAABB aabb = new PIntAABB();
+  protected final PList<PIntAABB> outsideAabbs = new PList<>();
   protected final LasertagBuilding building;
   protected final PList<LasertagDoorGen> doorGens = new PList<>();
   protected final PList<LasertagDoorGen.PossibleDoor> possibleDoors = new PList<>();
@@ -49,24 +50,17 @@ public class LasertagBuildingGen extends PBuilder {
     }
   }
 
-  protected void addAABB(int offsetX, int offsetY, int offsetZ, int xSize, int ySize, int zSize) {
+  protected void addOutsideAABB(int x0, int y0, int z0, int x1, int y1, int z1) {
     checkLock();
-    PIntAABB aabb = new PIntAABB().set(offsetX, offsetY, offsetZ, offsetX + xSize, offsetY + ySize, offsetZ + zSize);
-    aabbs.add(aabb);
-    for (int x = 0; x < xSize; x++) {
-      for (int y = 0; y < ySize; y++) {
-        for (int z = 0; z < zSize; z++) {
-          tileGens.genUnpooled(offsetX + x, offsetY + y, offsetZ + z);
-        }
-      }
-    }
+    PIntAABB aabb = new PIntAABB().set(x0, y0, z0, x1, y1, z1);
+    outsideAabbs.add(aabb);
   }
 
   public LasertagBuilding build() {
     lockBuilder();
-    building.aabbs = new PIntAABB[aabbs.size];
-    for (int a = 0; a < aabbs.size; a++) {
-      building.aabbs[a] = aabbs.get(a);
+    building.outsideAabbs = new PIntAABB[outsideAabbs.size];
+    for (int a = 0; a < outsideAabbs.size; a++) {
+      building.outsideAabbs[a] = outsideAabbs.get(a);
     }
     building.rooms = new LasertagRoom[roomGens.size];
     for (int a = 0; a < roomGens.size; a++) {

@@ -8,6 +8,7 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.util.PIntMap3d;
+import com.phonygames.pengine.util.PList;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -31,7 +32,10 @@ public class LasertagBuilding implements PRenderContext.DataBufferEmitter {
   private final PMat4 worldTransform = PMat4.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  protected PIntAABB[] aabbs;
+  protected final PIntAABB aabb = new PIntAABB();
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  protected PIntAABB[] outsideAabbs;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
