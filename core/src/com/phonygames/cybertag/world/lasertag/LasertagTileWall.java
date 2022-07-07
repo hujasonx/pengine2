@@ -29,6 +29,8 @@ public class LasertagTileWall {
     return door != null;
   }
 
+  public static final Facing[] FACINGS = new Facing[] {Facing.X, Facing.Z, Facing.mX, Facing.mZ};
+
   public enum Facing {
     X, Z, mX, mZ;
 
@@ -43,6 +45,53 @@ public class LasertagTileWall {
         case mZ:
         default:
           return Z;
+      }
+    }
+
+    /**
+     *
+     * @return The facing that adjoins this facing if looking at a wall corner from the inside, and the caller is on
+     * the left.
+     */
+    public Facing leftCorner() {
+      switch (this) {
+        case X:
+          return Z;
+        case Z:
+          return mX;
+        case mX:
+          return mZ;
+        case mZ:
+        default:
+          return X;
+      }
+    }
+
+    public int normalX() {
+      switch (this) {
+        case X:
+          return 1;
+        case Z:
+          return 0;
+        case mX:
+          return -1;
+        case mZ:
+        default:
+          return 0;
+      }
+    }
+
+    public int normalZ() {
+      switch (this) {
+        case X:
+          return 0;
+        case Z:
+          return 1;
+        case mX:
+          return 0;
+        case mZ:
+        default:
+          return -1;
       }
     }
   }

@@ -97,7 +97,6 @@ public class PPhysicsCharacterController implements Disposable {
         rigidBodyTransform.translate(0, pushUp, 0);
         pos().set(rigidBodyPos.x(), rigidBodyPos.y() - capsuleOffsetYFromOrigin + pushUp, rigidBodyPos.z());
         rigidBody.setWorldTransform(rigidBodyTransform);
-        System.out.println("Yes raycast " + rayCast.hitDistance());
       }
     }
     rayCast.free();

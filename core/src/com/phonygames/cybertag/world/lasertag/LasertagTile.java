@@ -57,6 +57,10 @@ public class LasertagTile implements PRenderContext.DataBufferEmitter {
     this.z = z;
   }
 
+  public boolean hasFloorWalkway() {
+    return hasWalkway && walkwayTile00OffsetY == 0 && walkwayTile01OffsetY == 0 && walkwayTile10OffsetY == 0 && walkwayTile11OffsetY == 0;
+  }
+
   @Override public void emitDataBuffersInto(PRenderContext renderContext) {
   }
 

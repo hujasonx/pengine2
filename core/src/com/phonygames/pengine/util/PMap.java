@@ -37,6 +37,10 @@ public class PMap<K, V> extends PPooledIterable<PMap.Entry<K, V>> implements PPo
   @Setter
   private PPool ownerPool, sourcePool;
 
+  public int size() {
+    return mapInterface.size();
+  }
+
   public PMap() {
     this.genedValuesPool = null;
     mapInterface = new ArrayMapInterface<>();

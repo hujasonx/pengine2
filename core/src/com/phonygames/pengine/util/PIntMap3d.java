@@ -65,6 +65,15 @@ public class PIntMap3d<T> extends PPooledIterable<PIntMap3d.Entry<T>> {
     return existing;
   }
 
+  public void putAll3d(PIntMap3d<T> other) {
+    try (val it = other.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        put(e.x, e.y, e.z,e.val);
+      }
+    }
+  }
+
   /**
    * Override this to generate values with keys.
    * @param x
