@@ -3,6 +3,7 @@ package com.phonygames.cybertag.world.lasertag;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.util.PBuilder;
+import com.phonygames.pengine.util.PSortableByScore;
 
 public class LasertagDoorGen extends PBuilder {
   protected final LasertagDoor door;
@@ -23,7 +24,7 @@ public class LasertagDoorGen extends PBuilder {
     return door;
   }
 
-  public static class PossibleDoor implements Comparable<PossibleDoor> {
+  public static class PossibleDoor implements PSortableByScore<PossibleDoor> {
     private final LasertagRoomGen ownerRoomGen, otherRoomGen;
     private final LasertagRoomWallGen ownerWall;
     private final int x, y, w, h;
@@ -38,14 +39,6 @@ public class LasertagDoorGen extends PBuilder {
       this.h = h;
       this.ownerRoomGen = ownerRoomGen;
       this.otherRoomGen = otherRoomGen;
-    }
-
-    @Override public int compareTo(PossibleDoor other) {
-      float score = score();
-      float otherScore = other.score();
-      if (score > otherScore) {return 1;}
-      if (score < otherScore) {return -1;}
-      return 0;
     }
 
     /** Checks to see if the tiles that would be affected can still have this door emitted to them. */
@@ -69,7 +62,7 @@ public class LasertagDoorGen extends PBuilder {
       return true;
     }
 
-    public float score() {
+    @Override public float score() {
       float scoreFromRoomConnections = 0;
       // If the rooms that will be connected are already connected, reduce the score.
       PVec1 connectionScore = ownerRoomGen.connectedRoomConnectionSizes.get(otherRoomGen);

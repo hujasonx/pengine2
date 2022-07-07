@@ -10,11 +10,58 @@ import com.phonygames.pengine.util.PIntMap3d;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PPooledIterable;
+import com.phonygames.pengine.util.Tuple3;
 
 import lombok.val;
 
 public class LasertagRoomGenWalkwayProcessor {
   public static final int rampTiles = 2; // The number of tiles hor. it takes to move up or down one tile vertically.
+
+  /**
+   *
+   */
+  private static boolean couldGenWalkway(LasertagTileGen tileGen, LasertagTileWall.Facing facing, boolean sloped,
+                                         int endHeightOffset, PList<ConnectedGroup> connectedGroups) {
+    int ret = 0;
+    if (tileGen == null || tileGen.tile.hasWalkway) {return false;}
+    if (!sloped && endHeightOffset == 0) {
+      return true;
+    }
+    // Check to make sure the tiles below and above do not conflicting walkways.
+    for (int a = 0; a < connectedGroups.size; a++) {
+      PossibleWalkway lowerWalkway = connectedGroups.get(a).walkways.get(tileGen.x, tileGen.y - 1, tileGen.z);
+      if (lowerWalkway != null && !lowerWalkway.isAtFloorLevel()) {return false;}
+      PossibleWalkway higherWalkway = connectedGroups.get(a).walkways.get(tileGen.x, tileGen.y + 1, tileGen.z);
+      if (higherWalkway != null) {return false;}
+    }
+    // Count the number of doors on the tile and the tile above.
+    int wallGensWithDoors = 0;
+    int wallGensWithDoorsAbove = 0;
+    boolean tileAboveValid = true;
+    LasertagTileGen aboveTile = tileGen.tileGenInRoomWithLocationOffset(0, 1, 0);
+    for (int a = 0; a < FACINGS.length; a++) {
+      LasertagTileWall.Facing f = FACINGS[a];
+      if (tileGen.wallGen(f).wall.isDoor()) {
+        wallGensWithDoors++;
+      }
+      if (aboveTile != null && aboveTile.wallGen(f).wall.isDoor()) {
+        wallGensWithDoorsAbove++;
+        // Slopes must be compatible with all doors in the above tile.
+        if (f == facing && endHeightOffset != rampTiles - 1) {return false;}
+      }
+      // Check to make sure there isn't a walkway that would try to dump players at this spot.
+      for (int b = 0; b < connectedGroups.size; b++) {
+        PossibleWalkway neighborWalkway =
+            connectedGroups.get(b).walkways.get(tileGen.x + f.normalX(), tileGen.y, tileGen.z + f.normalZ());
+        if (neighborWalkway != null && neighborWalkway.slopedWalkwayAtTileWouldBlock(tileGen)) {return false;}
+      }
+    }
+    // Check to make sure the slope won't block any doors.
+    if (wallGensWithDoors != 0) {return false;}
+    // If the above tile has two doors, don't allow sloped walkways.
+    if (wallGensWithDoorsAbove > 1) {return false;}
+    return true;
+  }
 
   /**
    * Gets a list of all possible walkway nodes, where a node is an attachment point to an island or walkway.
@@ -29,63 +76,12 @@ public class LasertagRoomGenWalkwayProcessor {
       for (int c = 0; c < FACINGS.length; c++) {
         LasertagTileWall.Facing facing = FACINGS[c];
         LasertagTileGen otherTileGen = tileGen.tileGenInRoomWithLocationOffset(-facing.normalX(), 0, -facing.normalZ());
-        if (couldGenWalkway(otherTileGen, connectedGroups) != 3) {
-          continue;
-        } // Only get nodes that can go forward or down.
+        // Do some basic prefiltering.
+        if (otherTileGen == null || otherTileGen.tile.hasFloor) {continue;}
         ConnectedGroup connectedGroup = connectedGroupForTile(tileGen, connectedGroups);
         if (connectedGroup == null) {continue;}
         ret.add(new WalkwayNode(otherTileGen, facing, connectedGroup));
       }
-    }
-    return ret;
-  }
-
-  /**
-   * @param tileGen
-   * @param connectedGroups
-   * @return 0 if none, 1 if flat, 2 if sloped, 3 if sloped or flat.
-   */
-  private static int couldGenWalkway(LasertagTileGen tileGen, PList<ConnectedGroup> connectedGroups) {
-    int ret = 0;
-    if (tileGen == null || tileGen.tile.hasWalkway) {return 0;}
-    if (tileGen.tile.hasFloor) {ret = 2;} // Tiles with floors can have sloped walkways.
-    else {
-      boolean valid = true;
-      // Check to make sure the tile below does not have a non-floor walkway.
-      for (int a = 0; a < connectedGroups.size; a++) {
-        PossibleWalkway lowerWalkway = connectedGroups.get(a).walkways.get(tileGen.x, tileGen.y - 1, tileGen.z);
-        if (lowerWalkway != null && !lowerWalkway.isAtFloorLevel()) {
-          valid = false;
-          break;
-        }
-      }
-      if (valid) {
-        ret = 3;
-      }
-    }
-    int wallGensWithDoors = 0;
-    for (int a = 0; a < FACINGS.length; a++) {
-      LasertagTileWall.Facing facing = FACINGS[a];
-      if (tileGen.wallGen(facing).wall.isDoor()) {
-        wallGensWithDoors++;
-      }
-    }
-    if (wallGensWithDoors > 0) { // If the tile has a door next to it, we should not block it with a sloped walkway.
-      ret &= 0xFD;
-    }
-    // Next, count how many door tiles are above us. If there are more than two, we should not emit sloped.
-    wallGensWithDoors = 0;
-    tileGen = tileGen.roomGen.tileGens.get(tileGen.x, tileGen.y + 1, tileGen.z);
-    if (tileGen != null) {
-      for (int a = 0; a < FACINGS.length; a++) {
-        LasertagTileWall.Facing facing = FACINGS[a];
-        if (tileGen.wallGen(facing).wall.isDoor()) {
-          wallGensWithDoors++;
-        }
-      }
-    }
-    if (wallGensWithDoors > 1) {
-      ret &= 0xFD;
     }
     return ret;
   }
@@ -264,6 +260,24 @@ public class LasertagRoomGenWalkwayProcessor {
       tileGen.tile.walkwayTile01OffsetY = ((float) height01) / rampTiles;
     }
 
+    public boolean slopedWalkwayAtTileWouldBlock(LasertagTileGen otherTileGen) {
+      PAssert.isTrue(tileGen.y == otherTileGen.y);
+      if (otherTileGen.x == tileGen.x && otherTileGen.z == tileGen.z - 1) {
+        return height00 == 0 && height10 == 0;
+      }
+      if (otherTileGen.x == tileGen.x - 1 && otherTileGen.z == tileGen.z) {
+        return height00 == 0 && height01 == 0;
+      }
+      if (otherTileGen.x == tileGen.x && otherTileGen.z == tileGen.z + 1) {
+        return height01 == 0 && height11 == 0;
+      }
+      if (otherTileGen.x == tileGen.x + 1 && otherTileGen.z == tileGen.z) {
+        return height10 == 0 && height11 == 0;
+      }
+      PAssert.fail("Tiles were not adjacent.");
+      return false;
+    }
+
     public boolean isAtFloorLevel() {
       return height00 == 0 && height01 == 0 && height11 == 0 && height10 == 0;
     }
@@ -325,8 +339,14 @@ public class LasertagRoomGenWalkwayProcessor {
               }
             } else {
               System.out.println("Door too big");
+              ConnectedGroup newGroup = new ConnectedGroup();
               for (int a = 0; a < affectedTiles.size; a++) {
+                PossibleWalkway possibleWalkway = new PossibleWalkway();
+                possibleWalkway.tileGen = affectedTiles.get(a);
+                newGroup.walkways.put(affectedTiles.get(a).x, affectedTiles.get(a).y, affectedTiles.get(a).z,
+                                      possibleWalkway);
               }
+              connectedGroups.add(newGroup);
               break;
             }
           }
@@ -334,7 +354,7 @@ public class LasertagRoomGenWalkwayProcessor {
       }
       // Again, add random connections until there is only one group. (Process the new groups generated by the floorless
       // door phase.)
-      for (int attempt = 0; attempt < 100; attempt++) {
+      for (int attempt = 0; attempt < 1000; attempt++) {
         if (connectedGroups.size == 1) {
           break;
         }
@@ -388,18 +408,10 @@ public class LasertagRoomGenWalkwayProcessor {
       final WalkwayNode startingNode;
       final PList<LasertagTileGen> tileGens = new PList<>();
       final PList<Integer> walkwayHeightOffsets = new PList<>(); // Length should be 2xtileGens.length.
-      private PList<SearchStrategy> searchStrategies = new PList<>();
       private ConnectedGroup secondConnectedGroup;
 
       public PossibleWalkwayPath(WalkwayNode startingNode) {
         this.startingNode = startingNode;
-        if (Math.random() < .5) {
-          searchStrategies.add(SearchStrategy.Forward);
-          searchStrategies.add(SearchStrategy.Down);
-        } else {
-          searchStrategies.add(SearchStrategy.Down);
-          searchStrategies.add(SearchStrategy.Forward);
-        }
       }
 
       /**
@@ -490,92 +502,154 @@ public class LasertagRoomGenWalkwayProcessor {
 
       void gen(PList<ConnectedGroup> connectedGroups) {
         LasertagTileWall.Facing curFacing = startingNode.facing;
-        secondConnectedGroup = pushForward(connectedGroups, curFacing, 0, startingNode.tileGen, 10, true);
+        PList<Tuple3<RecursionStep, Boolean, Boolean>> recurseOrder =
+            new PList<>(); // A list of tuples: Step, down, enabled.
+        recurseOrder.add(new Tuple3<>(RecursionStep.Forward, false, true));
+        recurseOrder.add(new Tuple3<>(RecursionStep.Forward, true, true));
+        recurseOrder.add(new Tuple3<>(RecursionStep.Left, false, true));
+        recurseOrder.add(new Tuple3<>(RecursionStep.Left, true, true));
+        recurseOrder.add(new Tuple3<>(RecursionStep.Right, false, true));
+        recurseOrder.add(new Tuple3<>(RecursionStep.Right, true, true));
+        recurseOrder.shuffle();
+        boolean forwardDownFirst = false;
+        for (int a = recurseOrder.size - 1; a >= 0; a--) {
+          if (recurseOrder.get(a).c() && recurseOrder.get(a).a() == RecursionStep.Forward) {
+            forwardDownFirst = recurseOrder.get(a).b();
+          }
+        }
+        if (forwardDownFirst) {
+          secondConnectedGroup = pushForward(connectedGroups, curFacing, -1,
+                                             startingNode.tileGen.tileGenInRoomWithLocationOffset(0, -1, 0), 10,
+                                             recurseOrder);
+        }
         if (secondConnectedGroup == null) {
-          secondConnectedGroup = pushForward(connectedGroups, curFacing, -1, startingNode.tileGen, 10, true);
+          secondConnectedGroup = pushForward(connectedGroups, curFacing, 0, startingNode.tileGen, 10, recurseOrder);
         }
       }
 
+      private void printSearchPath() {
+        if (walkwayHeightOffsets.isEmpty()) {return;}
+        for (int a = 0; a < tileGens.size; a++) {
+          LasertagTileGen t = tileGens.get(a);
+          System.out.print(walkwayHeightOffsets.get(a * 2 + 0) + ":" + t.x + "," + t.y + "," + t.z + ":" +
+                           walkwayHeightOffsets.get(a * 2 + 0) + "  ");
+        }
+        System.out.println();
+      }
+
       /**
-       * Pushes the search forward, returning a connected group if one is connected by the search.
+       * Pushes the search forward by one tile, returning a connected group if one is connected by the search.
+       * recurseMask: 0 is no recursion, 1 is flat, 2 is sloped, 3 is both flat and sloped.
        * @return
        */
       private ConnectedGroup pushForward(PList<ConnectedGroup> connectedGroups, LasertagTileWall.Facing facing,
-                                         int yChangePerForward, LasertagTileGen startTile, int maxSearchDist,
-                                         boolean recurse) {
-        if (startTile == null) {return null;}
+                                         int yChangePerForward, LasertagTileGen tileGen, int maxSearchDist,
+                                         PList<Tuple3<RecursionStep, Boolean, Boolean>> recurseOrder) {
+        if (tileGen == null || maxSearchDist <= tileGens.size) {
+          System.out.print("Dead end search ");
+          printSearchPath();
+          return null;
+        }
         ConnectedGroup ret = null;
         PAssert.isFalse(yChangePerForward > 0, "Pushforward can only go down!");
-        int curTilesLength = tileGens.size;
-        int searchX = startTile.x;
-        int searchY = startTile.y;
-        int searchZ = startTile.z;
-        int searchWalkwayYOffset = 0;
-        LasertagRoomGen roomGen = startTile.roomGen;
-        for (int searchDist = 0; searchDist < maxSearchDist; searchDist++) {
-          searchX = startTile.x + facing.normalX() * searchDist;
-          searchY = startTile.y + (int) Math.floor((searchDist + 1f) * yChangePerForward / rampTiles);
-          searchZ = startTile.z + facing.normalZ() * searchDist;
-          int endRampYI = PNumberUtils.mod((searchDist + 1) * yChangePerForward, rampTiles);
-          int startRampYI = endRampYI - yChangePerForward;
-          LasertagTileGen searchTileGen = roomGen.tileGens.get(searchX, searchY, searchZ);
-          int couldGenWalkwayResult = couldGenWalkway(searchTileGen, connectedGroups);
-          if (searchTileGen == null) {
-            break;
+        int searchX = tileGen.x;
+        int searchY = tileGen.y;
+        int searchZ = tileGen.z;
+        LasertagRoomGen roomGen = tileGen.roomGen;
+        int endRampYI =
+            PNumberUtils.mod((walkwayHeightOffsets.isEmpty() ? 0 : walkwayHeightOffsets.peek()) + yChangePerForward,
+                             rampTiles);
+        int startRampYI = endRampYI - yChangePerForward;
+        boolean couldGenWalkwayResult =
+            couldGenWalkway(tileGen, facing, yChangePerForward != 0, endRampYI, connectedGroups);
+        if (!couldGenWalkwayResult) {
+          System.out.print("Dead end search ");
+          printSearchPath();
+          return null;
+        }
+        tileGens.add(tileGen);
+        walkwayHeightOffsets.add(startRampYI);
+        walkwayHeightOffsets.add(endRampYI);
+        facings.add(facing);
+        // Check to see if the end tile, facing forward, is a valid end position.
+        if (endRampYI == 0 && (ret = checkIsEndLoc(searchX, searchY, searchZ, facing, connectedGroups)) != null) {
+          System.out.print("Successful search ");
+          printSearchPath();
+          return ret;
+        }
+        // Check to see if the end tile, facing the left, is a valid position.
+        if (endRampYI == 0 && startRampYI == 0 &&
+            (ret = checkIsEndLoc(searchX, searchY, searchZ, facing.leftCorner(), connectedGroups)) != null) {
+          System.out.print("Successful search ");
+          printSearchPath();
+          return ret;
+        }
+        // Check to see if the end tile, facing the right, is a valid position.
+        if (endRampYI == 0 && startRampYI == 0 &&
+            (ret = checkIsEndLoc(searchX, searchY, searchZ, facing.leftCorner().opposite(), connectedGroups)) != null) {
+          System.out.print("Successful search ");
+          printSearchPath();
+          return ret;
+        }
+        // Recurse using the steps in the recurseorder param.
+        for (int a = 0; a < recurseOrder.size; a++) {
+          // Skip this step if it is disabled.
+          if (!recurseOrder.get(a).c()) {continue;}
+          LasertagTileWall.Facing nextFacing;
+          LasertagTileGen nextTileGen;
+          boolean nextGoingDown = recurseOrder.get(a).b();
+          int nextYChangePerForward = nextGoingDown ? -1 : 0;
+          int nextTileGenY = (nextGoingDown && endRampYI == 0) ? tileGen.y - 1 : tileGen.y;
+          boolean isValid = false;
+          RecursionStep recursionStep = recurseOrder.get(a).a();
+          switch (recursionStep) {
+            case Forward:
+            default:
+              nextFacing = facing;
+              isValid = true;
+              break;
+            case Left:
+              nextFacing = facing.leftCorner();
+              isValid = endRampYI == 0 && startRampYI == 0;
+              break;
+            case Right:
+              nextFacing = facing.leftCorner().opposite();
+              isValid = endRampYI == 0 && startRampYI == 0;
+              break;
           }
-          if (yChangePerForward == 0 && (couldGenWalkwayResult & 1) == 0) {break;} // 1 means the result can be flat.
-          if (yChangePerForward != 0 && (couldGenWalkwayResult & 2) == 0) {break;} // 2 means the result can be sloped.
-          tileGens.add(searchTileGen);
-          walkwayHeightOffsets.add(startRampYI);
-          walkwayHeightOffsets.add(endRampYI);
-          facings.add(facing);
-          // Check to see if the end tile, facing forward, is a valid end position.
-          if (endRampYI == 0 && (ret = checkIsEndLoc(searchX, searchY, searchZ, facing, connectedGroups)) != null) {
-            return ret;
-          }
-          // Recurse based on the following: If going down, recurse when at an integer floor height. If going forward,
-          // recurse, always, but stop the cycle.
-          if (!recurse) {continue;}
-          if (yChangePerForward < 0) {
-            // Recurse forward if we are going down and we're at an integer height.
-            if (endRampYI == 0) {
-              if ((ret = pushForward(connectedGroups, facing, 0,
-                                     roomGen.tileGens.get(searchX + facing.normalX(), searchY,
-                                                          searchZ + facing.normalZ()), maxSearchDist, true)) != null) {
-                return ret;
+          nextTileGen = tileGen.roomGen.tileGens.get(tileGen.x + nextFacing.normalX(), nextTileGenY,
+                                                     tileGen.z + nextFacing.normalZ());
+          if (isValid) {
+            if (recursionStep.disableAfterUsing()) {
+              for (int c = 0; c < recurseOrder.size; c++) {
+                if (recurseOrder.get(c).a().disableAfterUsing()) {
+                  recurseOrder.get(c).c(false);
+                }
               }
             }
-          } else {
-            // Recurse down and sideways if we are going forward.
-            if ((ret = pushForward(connectedGroups, facing, -1,
-                                   roomGen.tileGens.get(searchX + facing.normalX(), searchY,
-                                                        searchZ + facing.normalZ()), maxSearchDist, true)) != null) {
-              return ret;
+            if ((ret = pushForward(connectedGroups, nextFacing, nextYChangePerForward, nextTileGen, maxSearchDist - 1,
+                                   recurseOrder)) != null) {return ret;}
+            if (recursionStep.disableAfterUsing()) {
+              for (int c = 0; c < recurseOrder.size; c++) {
+                if (recurseOrder.get(c).a().disableAfterUsing()) {
+                  recurseOrder.get(c).c(true);
+                }
+              }
             }
-            if ((ret = pushForward(connectedGroups, facing.leftCorner(), -1,
-                                   roomGen.tileGens.get(searchX + facing.leftCorner().normalX(), searchY,
-                                                        searchZ + facing.leftCorner().normalZ()), maxSearchDist,
-                                   true)) != null) {return ret;}
-            if ((ret = pushForward(connectedGroups, facing.leftCorner().opposite(), -1,
-                                   roomGen.tileGens.get(searchX + facing.leftCorner().opposite().normalX(), searchY,
-                                                        searchZ + facing.leftCorner().opposite().normalZ()),
-                                   maxSearchDist, true)) != null) {return ret;}
           }
         }
-        // Undo any changes if this is a dead end.
-        while (tileGens.size > curTilesLength) {
-          tileGens.removeLast();
-        }
-        while (facings.size > curTilesLength) {
-          facings.removeLast();
-        }
-        if (tileGens.size == 0) {
-          walkwayHeightOffsets.clear();
-        }
-        while (walkwayHeightOffsets.size > curTilesLength * 2) {
-          walkwayHeightOffsets.removeLast();
-        }
-        return ret;
+        // Undo adding the buffer data.
+        tileGens.removeLast();
+        walkwayHeightOffsets.removeLast();
+        walkwayHeightOffsets.removeLast();
+        facings.removeLast();
+        return null;
+      }
+
+      enum RecursionStep {
+        Forward, Left, Right;
+
+        boolean disableAfterUsing() {return this != Forward;}
       }
 
       enum SearchStrategy {
