@@ -419,37 +419,35 @@ public class LasertagRoomGenWalkwayProcessor {
       }
       System.out.println("\tconnectedNodes: " + connectedGroups.size);
       // Add random connections until there is only one group.
-      for (int attempt = 0; attempt < 1000; attempt++) {
-        if (connectedGroups.size == 1) {
-          if (attempt > 0) {
-            System.out.println("\tStopping island connections since there is only 1 group remaining.");
+      while (connectedGroups.size > 1) {
+        PList<WalkwayNode> walkwayNodes  = ret.getWalkwayNodes(connectedGroups);
+          for (int a = 0; a < walkwayNodes.size; a++) {
+            LasertagTileGen tileGen = walkwayNodes.get(a).tileGen;
+            tileGen.wallGen(walkwayNodes.get(a).facing).wall.hasWall = true;
+            tileGen.wallGen(walkwayNodes.get(a).facing).wall.isWindow = true;
+            tileGen.wallGen(walkwayNodes.get(a).facing).wall.isValid = true;
+            tileGen.wallGen(walkwayNodes.get(a).facing).wall.isSolidWall = true;
           }
-          break;
-        }
-        PList<WalkwayNode> walkwayNodes = ret.getWalkwayNodes(connectedGroups);
-        for (int a = 0; a < walkwayNodes.size; a++) {
-          LasertagTileGen tileGen = walkwayNodes.get(a).tileGen;
-          tileGen.wallGen(walkwayNodes.get(a).facing).wall.hasWall = true;
-          tileGen.wallGen(walkwayNodes.get(a).facing).wall.isWindow = true;
-          tileGen.wallGen(walkwayNodes.get(a).facing).wall.isValid = true;
-          ;
-          tileGen.wallGen(walkwayNodes.get(a).facing).wall.isSolidWall = true;
-        }
         if (walkwayNodes.size == 0) {
           System.out.println("\tStopping island connections since there were no nodes");
           break;
         }
-        // Take a random starting tile from the first group.
-        WalkwayNode startingNode = walkwayNodes.get(attempt % walkwayNodes.size);
-        PAssert.isNotNull(startingNode);
-        PossibleWalkwayPath possibleWalkwayPath = new PossibleWalkwayPath(startingNode);
-        System.out.println("\tAttempt island connect " + attempt + "; connectedNodes: " + connectedGroups.size);
-        if (attempt == 500) {
-          System.out.println("\tThis seems to not be going well huh");
+        walkwayNodes.shuffle();
+        boolean addedWalkway = false;
+        for (int a = 0; a < walkwayNodes.size; a++) {
+          WalkwayNode startingNode = walkwayNodes.get(a);
+          PAssert.isNotNull(startingNode);
+          PossibleWalkwayPath possibleWalkwayPath = new PossibleWalkwayPath(startingNode);
+          possibleWalkwayPath.gen(connectedGroups);
+          if (possibleWalkwayPath.isValid()) {
+            addedWalkway = true;
+            possibleWalkwayPath.emit(ret, connectedGroups);
+            break;
+          }
         }
-        possibleWalkwayPath.gen(connectedGroups);
-        if (possibleWalkwayPath.isValid()) {
-          possibleWalkwayPath.emit(ret, connectedGroups);
+        if (!addedWalkway) {
+          System.out.println("\tStopping island connections since we were unable to make a connection");
+          break;
         }
       }
       // Add ramps from floorless doors.
