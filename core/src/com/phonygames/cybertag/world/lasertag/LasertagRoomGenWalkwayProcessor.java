@@ -72,6 +72,9 @@ public class LasertagRoomGenWalkwayProcessor {
       if (lowerWalkway != null && !lowerWalkway.isAtFloorLevel()) {return false;}
       PossibleWalkway higherWalkway = connectedGroups.get(a).walkways.get(tileGen.x, tileGen.y + 1, tileGen.z);
       if (higherWalkway != null && sloped) {return false;}
+      PossibleWalkway hereWalkway = connectedGroups.get(a).walkways.get(tileGen.x, tileGen.y, tileGen.z);
+      if (hereWalkway != null) {return false;}
+
     }
     if (sloped) {
       // Count the number of doors on the tile and the tile above.
