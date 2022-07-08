@@ -2,6 +2,7 @@ package com.phonygames.cybertag.world.lasertag;
 
 import static com.phonygames.cybertag.world.lasertag.LasertagTileWall.FACINGS;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.util.PList;
@@ -29,6 +30,17 @@ public class LasertagRoomGenWalkwayProcessor {
   // Doors should already be applied for walls.
   public static void processRoomWalkways(LasertagRoomGen roomGen) {
     Context context = new Context(roomGen);
+    if (context.fullyJoined()) {
+      return;
+    }
+    PList<WalkwayStartNode> walkwayStartNodes = context.genWalkwayStartNodes();
+    for (int a = 0; a < walkwayStartNodes.size; a++) {
+      WalkwayStartNode node = walkwayStartNodes.get(a);
+      node.tileGen.wallGen(node.facing).wall.isWindow = true;
+      node.tileGen.wallGen(node.facing).wall.isSolidWall = true;
+      node.tileGen.wallGen(node.facing).wall.isValid = true;
+      node.tileGen.wallGen(node.facing).wall.hasWall = true;
+    }
   }
 
   /**
@@ -54,7 +66,7 @@ public class LasertagRoomGenWalkwayProcessor {
         if (blockedTiles != null && blockedTiles.contains(searchBufferTile, true)) {continue;}
         // Remove the search tile from the ungrouped tiles. If this returns true, that means the tile was originally
         // in the ungrouped tilegens buffer, which means we can add it to the island.
-        if (unGroupedTileGens.removeValue(searchBufferTile, true)) {
+        if (islandStartTile == searchBufferTile || unGroupedTileGens.removeValue(searchBufferTile, true)) {
           island.tiles.add(searchBufferTile);
           // Add neighbors to the search buffer.
           islandSearchBuffer.add(searchBufferTile.tileGenInRoomWithLocationOffset(1, 0, 0));
@@ -157,6 +169,10 @@ public class LasertagRoomGenWalkwayProcessor {
     final PList<ProcessorDoorGen> processorDoorGens;
     final LasertagRoomGen roomGen;
 
+    public boolean fullyJoined() {
+      return connectedGroups.size == 1;
+    }
+
     public Context(LasertagRoomGen roomGen) {
       this.roomGen = roomGen;
       this.processorDoorGens = getProcessorDoorGens(roomGen);
@@ -185,6 +201,9 @@ public class LasertagRoomGenWalkwayProcessor {
           connectedGroup.walkways.add(new Walkway(tileGen, 0));
         }
       }
+      if (connectedGroups.size >= 2) {
+        System.out.println();
+      }
       prepassJoinConnectedGroups();
     }
 
@@ -207,6 +226,94 @@ public class LasertagRoomGenWalkwayProcessor {
           }
         }
       }
+    }
+
+    private Walkway walkwayAt(@Nullable LasertagTileGen tileGen) {
+      if (tileGen == null) { return null; }
+      for (int a = 0; a < connectedGroups.size; a++) {
+        ConnectedGroup connectedGroup = connectedGroups.get(a);
+        for (int b = 0; b < connectedGroup.walkways.size; b++) {
+          Walkway walkway = connectedGroup.walkways.get(b);
+          if (walkway.tileGen == tileGen) { return walkway; }
+        }
+      }
+      return null;
+    }
+
+    private boolean isFloorTile(@Nullable LasertagTileGen tileGen) {
+      if (tileGen == null) { return false; }
+      for (int a = 0; a < connectedGroups.size; a++) {
+        ConnectedGroup connectedGroup = connectedGroups.get(a);
+        for (int b = 0; b < connectedGroup.floorTileIslands.size; b++) {
+          FloorTileIsland island = connectedGroup.floorTileIslands.get(b);
+          if (island.tiles.contains(tileGen, true)) { return true;}
+        }
+      }
+      return false;
+    }
+
+    private PList<WalkwayStartNode> genWalkwayStartNodes() {
+      PList<WalkwayStartNode> ret = new PList<>();
+      for (int a = 0; a < connectedGroups.size; a++) {
+        ConnectedGroup connectedGroup = connectedGroups.get(a);
+        for (int b = 0; b < connectedGroup.walkways.size; b++) {
+          Walkway walkway = connectedGroup.walkways.get(b);
+          for (int f = 0; f < FACINGS.length; f++) {
+            LasertagTileWall.Facing facing = FACINGS[f];
+            LasertagTileGen checkTileGen =
+                walkway.tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ());
+            // Sloped walkway allowance is a subset of flat-floor allowance, so no need to also check sloped.
+            if (couldGenWalkway(checkTileGen, false, 0, LasertagTileWall.Facing.X)) {
+              ret.add(new WalkwayStartNode(checkTileGen, facing));
+            }
+          }
+        }
+        for (int b = 0; b < connectedGroup.floorTileIslands.size; b++) {
+          FloorTileIsland island = connectedGroup.floorTileIslands.get(b);
+          for (int c = 0; c < island.tiles.size; c++) {
+            LasertagTileGen tileGen = island.tiles.get(c);
+            for (int f = 0; f < FACINGS.length; f++) {
+              LasertagTileWall.Facing facing = FACINGS[f];
+              LasertagTileGen checkTileGen =
+                  tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ());
+              // Sloped walkway allowance is a subset of flat-floor allowance, so no need to also check sloped.
+              if (couldGenWalkway(checkTileGen, false, 0, LasertagTileWall.Facing.X)) {
+                ret.add(new WalkwayStartNode(checkTileGen, facing));
+              }
+            }
+          }
+        }
+      }
+      return ret;
+    }
+
+    private boolean couldGenWalkway(@Nullable LasertagTileGen tileGen, boolean sloped, int endOffsetY,
+                                    @NonNull LasertagTileWall.Facing facing) {
+      if (tileGen == null) { return false; }
+      boolean isFloorWalkway = !sloped && endOffsetY == 0;
+      // Cannot place a floor walkway on a floor tile.
+      if (isFloorTile(tileGen) && isFloorWalkway) { return false; }
+      // Cant place a walkway where the already is a walkway.
+      if (walkwayAt(tileGen) != null) { return false; }
+      LasertagTileGen aboveTileGen = tileGen.tileGenInRoomWithLocationOffset(0, 1, 0);
+      if (!isFloorWalkway) {
+        // If there is a walkway above this tile, we cannot emit a nonfloor walkway here.
+        if (walkwayAt(tileGen.tileGenInRoomWithLocationOffset(0,1, 0)) != null) { return false; }
+        for (int f = 0; f < FACINGS.length; f++) {
+          LasertagTileWall.Facing testFacing = FACINGS[f];
+          // Non-floor walkways cannot be generated in front of doors.
+          if (tileGen.wallGen(testFacing).wall.isDoor()) {return false;}
+          if (aboveTileGen != null && aboveTileGen.wallGen(testFacing).wall.isDoor()) {
+            // If there is a door above, the only way this is valid is if this walkway is coming from it.
+            if (endOffsetY == rampTiles - 1 && sloped && facing == testFacing) { continue; }
+            return false;
+          }
+        }
+      }
+      Walkway walkwayBelow = walkwayAt(tileGen.tileGenInRoomWithLocationOffset(0,-1, 0));
+      // If there is a walkway below, it must be a floor walkway.
+      if (walkwayBelow != null && (walkwayBelow.sloped || walkwayBelow.bottomYOffset != 0)) { return false; }
+      return true;
     }
   }
 
@@ -279,6 +386,16 @@ public class LasertagRoomGenWalkwayProcessor {
       this.bottomYOffset = bottomYOffset;
       this.sloped = false;
       this.facing = LasertagTileWall.Facing.X;
+    }
+  }
+
+  private static class WalkwayStartNode {
+    final LasertagTileWall.Facing facing;
+    final LasertagTileGen tileGen;
+
+    public WalkwayStartNode(LasertagTileGen tileGen, LasertagTileWall.Facing facing) {
+      this.tileGen = tileGen;
+      this.facing = facing;
     }
   }
 }
