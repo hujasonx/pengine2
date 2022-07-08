@@ -21,7 +21,7 @@ public class World {
   public World() {
     LasertagWorldGen worldGen = new LasertagWorldGen(this);
     LasertagBuildingGen buildingGen = new LasertagBuildingGen(worldGen);
-    buildingGen.setTileTranslation(0, 0, 0).setTileRotation(.2f).setTileScale(3, 3, 3);
+    buildingGen.setTileTranslation(0, 0, 0).setTileRotation(.2f).setTileScale(4, 4, 4);
     LasertagBuildingGenAABBPlacer.addAABBs(buildingGen);
     LasertagRoomGenRoomPlacer.reset();
     for (int a = 0; a < 30; a++) {
@@ -32,7 +32,7 @@ public class World {
     }
     buildingGen.processTiles();
     LasertagBuildingGen buildingGen2 = new LasertagBuildingGen(worldGen);
-    buildingGen2.setTileTranslation(MathUtils.random(50f, 100f), MathUtils.random(-10f, 10f), MathUtils.random(50f, 100f)).setTileRotation(MathUtils.random(MathUtils.PI2)).setTileScale(3, 3, 3);
+    buildingGen2.setTileTranslation(MathUtils.random(50f, 100f), MathUtils.random(-10f, 10f), MathUtils.random(50f, 100f)).setTileRotation(MathUtils.random(MathUtils.PI2)).setTileScale(4, 4, 4);
     LasertagBuildingGenAABBPlacer.addAABBs(buildingGen2);
     for (int a = 0; a < 10; a++) {
       PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen2);
@@ -45,6 +45,7 @@ public class World {
     LasertagBuildGenDoorProcessor.processPossibleDoorsIntoAcutal(buildingGen);
     LasertagBuildGenDoorProcessor.processPossibleDoorsIntoAcutal(buildingGen2);
     // Hallway Pass.
+    // Final wall pass.
     LasertagBuildingGen.finalPassWalls(buildingGen);
     LasertagBuildingGen.finalPassWalls(buildingGen2);
     // Walkway Pass.

@@ -266,8 +266,21 @@ public class LasertagRoomGenWalkwayProcessor {
     }
 
     public ConnectedGroup addAll(ConnectedGroup other) {
+      for (int a = 0; a < other.tileGens.size; a++) {
+        if (tileGens.contains(other.tileGens.get(a), true)) {
+          PAssert.fail("Already contained this tilegen: " + tileGens.get(a).x +","+tileGens.get(a).y+","+tileGens.get(a).z);
+        }
+      }
       tileGens.addAll(other.tileGens);
-      walkways.putAll3d(walkways);
+      try (val it = other.walkways.obtainIterator()) {
+        while (it.hasNext()) {
+          val e = it.next();
+          if (walkways.get(e.x(), e.y(), e.z()) != null) {
+            PAssert.fail("There is already a walkway here!" + e.x() +","+e.y()+","+e.z());
+          }
+          walkways.put(e.x(), e.y(), e.z(), e.val());
+        }
+      }
       return this;
     }
 
@@ -608,6 +621,7 @@ public class LasertagRoomGenWalkwayProcessor {
               possibleWalkway.height01 = walkwayHeightOffsets.get(a * 2 + 0);
               break;
           }
+          PAssert.isNull(group.walkways.get(tileGen.x, tileGen.y, tileGen.z));
           group.walkways.put(tileGen.x, tileGen.y, tileGen.z, possibleWalkway);
         }
       }

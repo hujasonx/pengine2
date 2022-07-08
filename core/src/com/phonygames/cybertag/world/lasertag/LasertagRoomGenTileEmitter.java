@@ -65,10 +65,10 @@ public class LasertagRoomGenTileEmitter {
         pool.vec3(), tile101 = pool.vec3(), tile011 = pool.vec3(), tile111 = pool.vec3();
     wall.tile.getCornersFloorCeiling(tile000, tile001, tile010, tile011, tile100, tile101, tile110, tile111);
     if (wall.isWindow) { //TODO this is test code.
-      tile010.y(tile000.y() + .2f);
-      tile011.y(tile001.y() + .2f);
-      tile111.y(tile101.y() + .2f);
-      tile110.y(tile100.y() + .2f);
+      tile010.y(tile000.y() + 1);
+      tile011.y(tile001.y() + 1);
+      tile111.y(tile101.y() + 1);
+      tile110.y(tile100.y() + 1);
     }
     switch (wall.facing) {
       case X:

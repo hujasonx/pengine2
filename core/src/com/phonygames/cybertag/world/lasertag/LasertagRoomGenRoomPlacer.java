@@ -117,7 +117,7 @@ public class LasertagRoomGenRoomPlacer {
     edgeShiftBoundaryX = 3;
     edgeShiftBoundaryZ = 3;
     edgeShiftLowerY = 1;
-    roomHeightWeights = new float[]{.5f, .2f};
+    roomHeightWeights = new float[]{.5f, .4f};
     minRoomWidthInDimension = 3;
     minimumKeptTilesRatio = .5f;
   }
