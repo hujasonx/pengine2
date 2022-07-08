@@ -41,6 +41,7 @@ public class LasertagRoomGenWalkwayProcessor {
       node.tileGen.wallGen(node.facing).wall.isValid = true;
       node.tileGen.wallGen(node.facing).wall.hasWall = true;
     }
+    context.emitWalkways();
   }
 
   /**
@@ -252,6 +253,16 @@ public class LasertagRoomGenWalkwayProcessor {
       return false;
     }
 
+    private void emitWalkways() {
+      for (int a = 0; a < connectedGroups.size; a++) {
+        ConnectedGroup connectedGroup = connectedGroups.get(a);
+        for (int b = 0; b < connectedGroup.walkways.size; b++) {
+          Walkway walkway = connectedGroup.walkways.get(b);
+          walkway.emitToTile();
+        }
+      }
+    }
+
     private PList<WalkwayStartNode> genWalkwayStartNodes() {
       PList<WalkwayStartNode> ret = new PList<>();
       for (int a = 0; a < connectedGroups.size; a++) {
@@ -386,6 +397,34 @@ public class LasertagRoomGenWalkwayProcessor {
       this.bottomYOffset = bottomYOffset;
       this.sloped = false;
       this.facing = LasertagTileWall.Facing.X;
+    }
+
+    private void emitToTile() {
+      tileGen.tile.hasWalkway = true;
+      tileGen.tile.walkwayTile00OffsetY = ((float)bottomYOffset) / rampTiles;
+      tileGen.tile.walkwayTile10OffsetY = ((float)bottomYOffset) / rampTiles;
+      tileGen.tile.walkwayTile11OffsetY = ((float)bottomYOffset) / rampTiles;
+      tileGen.tile.walkwayTile01OffsetY = ((float)bottomYOffset) / rampTiles;
+      if (sloped) {
+        switch (facing) {
+          case X:
+            tileGen.tile.walkwayTile10OffsetY -= 1f / rampTiles;
+            tileGen.tile.walkwayTile11OffsetY -= 1f / rampTiles;
+            break;
+          case Z:
+            tileGen.tile.walkwayTile01OffsetY -= 1f / rampTiles;
+            tileGen.tile.walkwayTile11OffsetY -= 1f / rampTiles;
+            break;
+          case mX:
+            tileGen.tile.walkwayTile00OffsetY -= 1f / rampTiles;
+            tileGen.tile.walkwayTile01OffsetY -= 1f / rampTiles;
+            break;
+          case mZ:
+            tileGen.tile.walkwayTile00OffsetY -= 1f / rampTiles;
+            tileGen.tile.walkwayTile10OffsetY -= 1f / rampTiles;
+            break;
+        }
+      }
     }
   }
 
