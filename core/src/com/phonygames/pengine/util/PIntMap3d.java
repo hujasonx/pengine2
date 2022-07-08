@@ -65,6 +65,16 @@ public class PIntMap3d<T> extends PPooledIterable<PIntMap3d.Entry<T>> {
     return existing;
   }
 
+  public PList<T> genValuesList() {
+    PList<T> ret = new PList<>();
+    try (val it = obtainIterator()) {
+      while (it.hasNext()) {
+        ret.add(it.next().val());
+      }
+    }
+    return ret;
+  }
+
   public void putAll3d(PIntMap3d<T> other) {
     try (val it = other.obtainIterator()) {
       while (it.hasNext()) {
