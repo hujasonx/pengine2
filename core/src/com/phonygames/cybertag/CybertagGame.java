@@ -26,6 +26,7 @@ import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
+import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PFlyingCameraController;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PStringMap;
@@ -53,6 +54,10 @@ public class CybertagGame implements PGame {
       PMouse.setCatched(true);
     }
     flyingCameraController.frameUpdate();
+    if (PCharacterCameraController.activeCharacterCameraController() != null) {
+      PCharacterCameraController.activeCharacterCameraController().frameUpdate();
+      PCharacterCameraController.activeCharacterCameraController().applyToRenderContext(renderContext);
+    }
     renderContext.start();
     renderContext.setPhysicsDebugDrawerCameraFromSelf();
     pPbrPipeline.attach(renderContext);

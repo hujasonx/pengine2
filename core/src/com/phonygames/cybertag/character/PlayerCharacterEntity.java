@@ -12,13 +12,17 @@ import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
+import com.phonygames.pengine.util.PCharacterCameraController;
 
-public class PlayerCharacterEntity extends CharacterEntity {
+public class PlayerCharacterEntity extends CharacterEntity implements PCharacterCameraController.Delegate {
   private final PPhysicsCharacterController characterController;
   private PModelInstance modelInstance;
+  private PCharacterCameraController cameraController;
 
   public PlayerCharacterEntity() {
     super();
+    cameraController = new PCharacterCameraController(this);
+    cameraController.setActive();
     PModel model = PAssetManager.model("model/player/female.glb", true);
     modelInstance = new PModelInstance(model);
     final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
@@ -47,6 +51,11 @@ public class PlayerCharacterEntity extends CharacterEntity {
     modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
     characterController = new PPhysicsCharacterController(1, .3f, 1.8f, .5f, .2f);
     characterController.pos(10, 10, 10);
+  }
+
+  @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
+    if (characterController == null) { return; }
+    out.set(characterController.pos()).add(0, 1.5f, 0);
   }
 
   @Override public void preLogicUpdate() {
