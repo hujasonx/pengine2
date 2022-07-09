@@ -78,10 +78,10 @@ public class PCharacterCameraController {
     }
     dir().rotate(flatLeft, -pitchRotateAmount);
     dir().rotate(0, -1, 0, yawRotateAmount);
-    delegate.getFirstPersonCameraPosition(pos(), dir());
     // Use lerp to smooth the camera movement.
     final float smoothFactor = 90;
     smoothDir().lerp(dir(), Math.min(1, PEngine.uidt * smoothFactor));
+    delegate.getFirstPersonCameraPosition(pos(), smoothDir());
     pool.free();
   }
 }

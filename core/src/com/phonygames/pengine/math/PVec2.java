@@ -43,6 +43,12 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
+  public PVec2 add(float x, float y) {
+    this.x += x;
+    this.y += y;
+    return this;
+  }
+
   @Override public float len2() {
     return x * x + y * y;
   }

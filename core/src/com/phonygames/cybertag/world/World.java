@@ -68,7 +68,7 @@ public class World {
 
   public void frameUpdate() {
     lasertagWorld.frameUpdate();
-    playerCharacter.logicUpdate();
+    playerCharacter.frameUpdate();
   }
 
   public void render(PRenderContext renderContext) {

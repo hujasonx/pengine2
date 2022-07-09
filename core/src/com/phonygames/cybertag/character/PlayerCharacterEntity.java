@@ -1,6 +1,7 @@
 package com.phonygames.cybertag.character;
 
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -9,15 +10,20 @@ import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
+import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
 import com.phonygames.pengine.util.PCharacterCameraController;
+import com.phonygames.pengine.util.PPool;
 
 public class PlayerCharacterEntity extends CharacterEntity implements PCharacterCameraController.Delegate {
   private final PPhysicsCharacterController characterController;
   private PModelInstance modelInstance;
   private PCharacterCameraController cameraController;
+  private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
+  private final PVec3 facingDir = PVec3.obtain().set(1, 0, 0);
 
   public PlayerCharacterEntity() {
     super();
@@ -56,6 +62,10 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
     if (characterController == null) { return; }
     out.set(characterController.pos()).add(0, 1.5f, 0);
+    facingDir.set(dir);
+    if (!PNumberUtils.epsilonEquals(0,dir.x()) || !PNumberUtils.epsilonEquals(0,dir.z()))
+    facingDirFlat.set(dir.x(), dir.z()).nor();
+    facingLeftFlat.set(facingDirFlat.y(), -facingDirFlat.x());
   }
 
   @Override public void preLogicUpdate() {
@@ -63,21 +73,39 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   }
 
   @Override public void logicUpdate() {
-    PVec3 curPos = characterController.pos();
-    if (PKeyboard.isDown(Input.Keys.UP)) {
-      characterController.velXZ(1, 0);
-    } else {
-      characterController.velXZ(0, 0);
+    PPool.PoolBuffer pool = PPool.getBuffer();
+    PVec2 inputVelocity = pool.vec2();
+    PVec2 outputVelocity = pool.vec2();
+    characterController.velXZ(0, 0);
+    float forwardSpeed = 8;
+    if (PKeyboard.isDown(Input.Keys.W)) {
+      inputVelocity.add(0, 1);
+    } if (PKeyboard.isDown(Input.Keys.S)) {
+      inputVelocity.add(0, -1);
     }
+    if (PKeyboard.isDown(Input.Keys.A)) {
+      inputVelocity.add(1,0 );
+    }
+    if (PKeyboard.isDown(Input.Keys.D)) {
+      inputVelocity.add(-1, 0);
+    }
+
+    outputVelocity.add(facingDirFlat, forwardSpeed * inputVelocity.y());
+    outputVelocity.add(facingLeftFlat, forwardSpeed * inputVelocity.x());
+
+    characterController.velXZ(outputVelocity.x(), outputVelocity.y());
+    pool.free();
   }
 
   @Override public void frameUpdate() {
+    if (modelInstance == null) {return;}
+    float facingDirAng = PNumberUtils.angle(0 ,0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
+    modelInstance.worldTransform().setToTranslation(characterController.pos()).rot(0, -1, 0,facingDirAng);
+    modelInstance.recalcTransforms();
   }
 
   @Override public void render(PRenderContext renderContext) {
     if (modelInstance == null) {return;}
-    modelInstance.worldTransform().updateTranslation(characterController.pos());
-    modelInstance.recalcTransforms();
     modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
   }
 }
