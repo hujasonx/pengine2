@@ -28,7 +28,7 @@ public class PEngine extends ApplicationAdapter {
   // #pragma end
   public static final String LIBRARY_NAME = "penginelib";
   public static int frameCount = 0, logicUpdateCount = 1;
-  public static float logictimestep = 1f / 30f;
+  public static float logictimestep = 1f / 60f;
   public static float logicupdateframeratio = .1f;
   // The ratio between the prev and next logic updates that the current frame is at, temporally.public static
   // float uit = 0;

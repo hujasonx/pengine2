@@ -100,6 +100,12 @@ public class PRigidBody implements PPool.Poolable {
     return out;
   }
 
+  public PMat4 getLogicWorldTransform(PMat4 mat4) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.getWorldTransform(mat4.getBackingMatrix4());
+    return mat4;
+  }
+
   public PMat4 getWorldTransform(PMat4 mat4) {
     PAssert.isNotNull(rigidBody);
     if (prevFrameT != PEngine.t) {

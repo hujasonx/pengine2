@@ -41,6 +41,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   private final Matrix4 backingMatrix4 = new Matrix4();
 
   private PMat4() {
+    backingMatrix4.idt();
   }
 
   public static PMat4 obtain(PMat4 copyOf) {

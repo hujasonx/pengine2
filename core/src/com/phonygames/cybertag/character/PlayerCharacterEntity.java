@@ -57,12 +57,12 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     modelInstance.material("matBase").useVColIndex(true);
     modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
     characterController = new PPhysicsCharacterController(1, .3f, 1.8f, .5f, .2f);
-    characterController.pos(10, 10, 10);
+    characterController.setPos(10, 10, 10);
   }
 
   @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
     if (characterController == null) {return;}
-    characterController.pos(out).add(0, 1.5f, 0);
+    characterController.getPos(out).add(0, 1.5f, 0);
     facingDir.set(dir);
     if (!PNumberUtils.epsilonEquals(0, dir.x()) || !PNumberUtils.epsilonEquals(0, dir.z())) {
       facingDirFlat.set(dir.x(), dir.z()).nor();
@@ -102,7 +102,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (modelInstance == null) {return;}
     PPool.PoolBuffer pool = PPool.getBuffer();
     float facingDirAng = PNumberUtils.angle(0, 0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
-    modelInstance.worldTransform().setToTranslation(characterController.pos(pool.vec3())).rot(0, -1, 0, facingDirAng);
+    modelInstance.worldTransform().setToTranslation(characterController.getPos(pool.vec3())).rot(0, -1, 0, facingDirAng);
     modelInstance.resetTransformsFromTemplates();
     modelInstance.recalcTransforms();
     if (PKeyboard.isDown(Input.Keys.SPACE)) {

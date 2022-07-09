@@ -21,7 +21,7 @@ public class PPhysicsCharacterController implements Disposable {
   public final float radius, height, crouchHeight, stepHeight, mass;
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
-  private final PVec3 logicPosCurrent = PVec3.obtain(), logicPosPrev = PVec3.obtain(), manualVelocity = PVec3.obtain();
+  private final PVec3 manualVelocity = PVec3.obtain();
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   /** The newly calculated velocity calculated in postLogicUpdate
@@ -62,7 +62,6 @@ public class PPhysicsCharacterController implements Disposable {
   }
 
   private void processRigidBodyAfterLogicUpdate(PRigidBody rigidBody) {
-    logicPosPrev().set(logicPosCurrent());
     PPool.PoolBuffer pool = PPool.getBuffer();
     PAssert.isTrue(rigidBody == capsuleRigidBody);
     if (timeSinceLastJump != -1) {
@@ -74,10 +73,9 @@ public class PPhysicsCharacterController implements Disposable {
     PVec3 rawLinVelocity = rigidBody.getLinearVelocity(pool.vec3());
     // Perform raycasting to determine if we are on the ground.
     PMat4 rigidBodyTransform = pool.mat4();
-    PVec3 rigidBodyPos = rigidBody.getWorldTransform(rigidBodyTransform).getTranslation(pool.vec3());
+    PVec3 rigidBodyPos = rigidBody.getLogicWorldTransform(rigidBodyTransform).getTranslation(pool.vec3());
     PPhysicsRayCast rayCast = PPhysicsRayCast.obtain();
     rayCast.rayFromWorld().set(rigidBodyPos);
-    logicPosCurrent().set(rigidBodyPos.x(), rigidBodyPos.y() - capsuleOffsetYFromOrigin, rigidBodyPos.z());
     // TODO: perhaps search further based on the vertical velocity?
     rayCast.rayToWorld()
            .set(rigidBodyPos.x(), rigidBodyPos.y() - capsuleOffsetYFromOrigin - rayCastFloorExtra, rigidBodyPos.z());
@@ -96,7 +94,6 @@ public class PPhysicsCharacterController implements Disposable {
                                 30); // However, being pushed down to stay on the ground should be almost instantaneous.
         }
         rigidBodyTransform.translate(0, pushUp, 0);
-        logicPosCurrent().set(rigidBodyPos.x(), rigidBodyPos.y() - capsuleOffsetYFromOrigin + pushUp, rigidBodyPos.z());
         rigidBody.setWorldTransform(rigidBodyTransform);
       }
     }
@@ -126,8 +123,11 @@ public class PPhysicsCharacterController implements Disposable {
   @Override public void dispose() {
   }
 
-  public PVec3 pos(PVec3 out) {
-    return out.set(logicPosPrev()).lerp(logicPosCurrent(), PEngine.logicupdateframeratio);
+  public PVec3 getPos(PVec3 out) {
+    PMat4 temp = PMat4.obtain();
+    capsuleRigidBody.getWorldTransform(temp).getTranslation(out).add(0, -capsuleOffsetYFromOrigin, 0);
+    temp.free();
+    return out;
   }
 
   public void preLogicUpdate() {
@@ -145,7 +145,7 @@ public class PPhysicsCharacterController implements Disposable {
     //      }
     //    }
     if (PKeyboard.isLogicJustDown(Input.Keys.Y)) {
-      pos(MathUtils.random(10f), MathUtils.random(10f), MathUtils.random(10f));
+      setPos(MathUtils.random(10f), MathUtils.random(10f), MathUtils.random(10f));
       newLinVel().setZero();
     }
     capsuleRigidBody.activate();
@@ -153,11 +153,9 @@ public class PPhysicsCharacterController implements Disposable {
     capsuleRigidBody.setLinearVelocity(newLinVel());
   }
 
-  public PPhysicsCharacterController pos(float x, float y, float z) {
+  public PPhysicsCharacterController setPos(float x, float y, float z) {
     PVec3 rigidBodyPos = PVec3.obtain();
     PMat4 tempMat = PMat4.obtain();
-    logicPosCurrent().set(x, y, z);
-    logicPosPrev().set(x, y, z);
     rigidBodyPos.set(x, y + capsuleOffsetYFromOrigin, z);
     tempMat.setToTranslation(rigidBodyPos);
     capsuleRigidBody.setWorldTransform(tempMat);
