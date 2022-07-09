@@ -81,6 +81,18 @@ public class PPhysicsRayCast implements PPool.Poolable {
     return hitDistance;
   }
 
+  public PVec3 hitLocation(PVec3 out) {
+    PAssert.isTrue(valid && hasHit);
+    backingCallback.getHitPointWorld(out.backingVec3());
+    return out;
+  }
+
+  public PVec3 hitNormal(PVec3 out) {
+    PAssert.isTrue(valid && hasHit);
+    backingCallback.getHitNormalWorld(out.backingVec3());
+    return out;
+  }
+
   @Override public void reset() {
     rayFromWorld().setZero();
     rayToWorld().setZero();
