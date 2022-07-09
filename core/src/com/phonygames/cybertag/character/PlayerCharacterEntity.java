@@ -116,9 +116,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PModelInstance.Node armLowerR = modelInstance.getNode("ArmLower.R");
     PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
     PVec3 goalR = PVec3.obtain().set(10, 1.5f, 10);
-//    PVec3 poleR = PVec3.obtain().set(-facingDirFlat.x(), -.5f, -facingDirFlat.y())
-//                       .add(-facingLeftFlat.x(), 0, -facingLeftFlat.y());
-    PVec3 poleR = PVec3.obtain().set(0,-1, 0);
+    PVec3 poleR = PVec3.obtain().set(0,0, -1);
     PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, goalR, .01f, poleR);
     PVec3 realR = wristR.worldTransform().getTranslation(PVec3.obtain());
     PVec3 realBaseR = armUpperR.worldTransform().getTranslation(PVec3.obtain());
