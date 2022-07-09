@@ -43,22 +43,28 @@ public class LasertagRoomGen extends PBuilder {
     for (int x = roomAABB.x0(); x <= roomAABB.x1(); x++) {
       for (int y = roomAABB.y0(); y <= roomAABB.y1(); y++) {
         for (int z = roomAABB.z0(); z <= roomAABB.z1(); z++) {
-          LasertagTileGen tileGen = buildingGen.tileGens.genUnpooled(x, y, z);
-          if (tileGen.tile.room == null) { // Don't overwrite existing room data.
-            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z), false);
-            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y - 1, z), false);
-            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x + 1, y + 1, z), true);
-            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x - 1, y + 1, z), true);
-            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z + 1), true);
-            markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z - 1), true);
-            tileGen.tile.room = lasertagRoom;
-            tileGen.roomGen = this;
-            lasertagRoom.tiles().put(x, y, z, tileGen.tile);
-            tileGens.put(x, y, z, tileGen);
-          }
+          LasertagTileGen tileGen = buildingGen.tileGens.get(x, y, z);
+          markTileWithSelf(tileGen);
         }
       }
     }
+  }
+
+  private void markTileWithSelf(@Nullable LasertagTileGen tileGen) {
+    if (tileGen == null || tileGen.tile.room != null) {return;}
+    tileGen.tile.room = lasertagRoom;
+    tileGen.roomGen = this;
+    int x = tileGen.x;
+    int y = tileGen.y;
+    int z = tileGen.z;
+    lasertagRoom.tiles().put(x, y, z, tileGen.tile);
+    tileGens.put(x, y, z, tileGen);
+    markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z), false);
+    markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y - 1, z), false);
+    markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x + 1, y + 1, z), true);
+    markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x - 1, y + 1, z), true);
+    markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z + 1), true);
+    markTileGenRoomAsAdjacent(buildingGen.tileGens.get(x, y + 1, z - 1), true);
   }
 
   private void markTileGenRoomAsAdjacent(@Nullable LasertagTileGen otherTileGen, boolean horizontal) {
