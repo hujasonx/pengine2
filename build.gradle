@@ -131,6 +131,12 @@ project(":core") {
         api "com.kotcrab.vis:vis-ui:1.3.0"
         api "com.github.czyzby:gdx-lml-vis:1.9.1.9.6"
         api "com.github.czyzby:gdx-lml:1.9.1.9.6"
+        api group: 'org.recast4j', name: 'recast', version: "$recastVersion"
+        api group: 'org.recast4j', name: 'detour', version: "$recastVersion"
+        api group: 'org.recast4j', name: 'detour-crowd', version: "$recastVersion"
+        api group: 'org.recast4j', name: 'detour-tile-cache', version: "$recastVersion"
+        api group: 'org.recast4j', name: 'detour-extras', version: "$recastVersion"
+        api group: 'org.recast4j', name: 'detour-dynamic', version: "$recastVersion"
         implementation fileTree(dir: "../libs", include: "*.jar")
         api "com.github.mgsx-dev.gdx-gltf:gltf:$gltfVersion"
         implementation 'com.android.support:support-annotations:27.1.0'

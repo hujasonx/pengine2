@@ -3,6 +3,7 @@ package com.phonygames.pengine.math;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
 
@@ -38,6 +39,14 @@ public class PVec3 extends PVec<PVec3> {
   @Override public PVec3 add(PVec3 other) {
     backingVec3.add(other.backingVec3);
     return this;
+  }
+
+  public float[] emit(float[] out) {
+    PAssert.isTrue(out.length == 3);
+    out[0] = backingVec3.x;
+    out[1] = backingVec3.y;
+    out[2] = backingVec3.z;
+    return out;
   }
 
   /**
