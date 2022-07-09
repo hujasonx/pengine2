@@ -105,8 +105,10 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     modelInstance.worldTransform().setToTranslation(characterController.pos()).rot(0, -1, 0, facingDirAng);
     modelInstance.resetTransformsFromTemplates();
     modelInstance.recalcTransforms();
-    ikArms();
-    modelInstance.recalcTransforms();
+    if (PKeyboard.isDown(Input.Keys.SPACE)) {
+      ikArms();
+      modelInstance.recalcTransforms();
+    }
   }
 
   private void ikArms() {
@@ -114,7 +116,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PModelInstance.Node armUpperR = modelInstance.getNode("ArmUpper.R");
     PModelInstance.Node armLowerR = modelInstance.getNode("ArmLower.R");
     PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
-    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, PVec3.obtain().set(10, 10, 10),.01f);
+    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, PVec3.obtain().set(10, 10, 10),.01f, facingDir);
 
   }
 

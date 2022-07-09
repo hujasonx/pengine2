@@ -115,6 +115,11 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     return this;
   }
 
+  public PMat4 rotate(PVec4 rotation) {
+    backingMatrix4.rotate(rotation.backingQuaterion());
+    return this;
+  }
+
   public PMat4 scl(float scl) {
     for (int a = 0; a < 16; a++) {
       backingMatrix4.val[a] *= scl;
@@ -192,18 +197,16 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     return this;
   }
 
+  /**
+   * @param rotation - Must be normalized.
+   * @return
+   */
   public PMat4 updateRotation(PVec4 rotation) {
-    PAssert.fail("This shit doesnt work");
     PVec3 tempTra = getTranslation(PVec3.obtain());
     PVec3 tempScl = getScale(PVec3.obtain());
     set(tempTra, rotation, tempScl);
     tempScl.free();
     tempTra.free();
-    return this;
-  }
-
-  public PMat4 rotate(PVec4 rotation) {
-    backingMatrix4.rotate(rotation.backingQuaterion());
     return this;
   }
 
@@ -222,9 +225,8 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PMat4 updateTranslation(PVec3 translation) {
-    PAssert.fail("This shit doesnt work");
     PVec3 tempScl = getScale(PVec3.obtain());
-    PVec4 tempRot = getRotation(PVec4.obtain());
+    PVec4 tempRot = getRotation(PVec4.obtain()).nor();
     set(translation, tempRot, tempScl);
     tempRot.free();
     tempScl.free();

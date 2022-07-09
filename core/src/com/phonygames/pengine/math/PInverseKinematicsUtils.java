@@ -1,12 +1,38 @@
 package com.phonygames.pengine.math;
 
+import android.support.annotation.Nullable;
+
 import com.badlogic.gdx.math.MathUtils;
-import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.util.PPool;
 
 public class PInverseKinematicsUtils {
-  /*
+  /**
+   * Applies two joint IK.
+   * @param a
+   * @param b
+   * @param c
+   * @param t
+   * @param epsilon
+   */
+  public static void twoJointIk(PModelInstance.Node a, PModelInstance.Node b, PModelInstance.Node c, PVec3 t,
+                                float epsilon, @Nullable PVec3 pole) {
+    PPool.PoolBuffer pool = PPool.getBuffer();
+    PVec3 aPos = a.worldTransform().getTranslation(pool.vec3());
+    PVec3 bPos = b.worldTransform().getTranslation(pool.vec3());
+    PVec3 cPos = c.worldTransform().getTranslation(pool.vec3());
+    PVec4 aGRot = a.worldTransform().getRotation(pool.vec4());
+    PVec4 bGRot = b.worldTransform().getRotation(pool.vec4());
+    PVec4 aLRot = a.transform().getRotation(pool.vec4());
+    PVec4 bLRot = b.transform().getRotation(pool.vec4());
+    PVec4 outALRotChange = pool.vec4();
+    PVec4 outBLRotChange = pool.vec4();
+    twoJointIK(aPos, bPos, cPos, t, epsilon, aGRot, bGRot, pole, outALRotChange, outBLRotChange);
+    a.transform().rotate(outALRotChange);
+    b.transform().rotate(outBLRotChange);
+    pool.free();
+  }
+  /**
   void two_joint_ik(
       vec3 a, vec3 b, vec3 c, vec3 t, float eps,
       quat a_gr, quat b_gr,
@@ -34,34 +60,8 @@ public class PInverseKinematicsUtils {
     b_lr = quat_mul(b_lr, r1);
   }
   */
-
-  /**
-   * Applies two joint IK.
-   * @param a
-   * @param b
-   * @param c
-   * @param t
-   * @param epsilon
-   */
-  public static void twoJointIk(PModelInstance.Node a, PModelInstance.Node b, PModelInstance.Node c, PVec3 t,
-                                float epsilon) {
-    PPool.PoolBuffer pool = PPool.getBuffer();
-    PVec3 aPos = a.worldTransform().getTranslation(pool.vec3());
-    PVec3 bPos = b.worldTransform().getTranslation(pool.vec3());
-    PVec3 cPos = c.worldTransform().getTranslation(pool.vec3());
-    PVec4 aGRot = a.worldTransform().getRotation(pool.vec4());
-    PVec4 bGRot = b.worldTransform().getRotation(pool.vec4());
-    PVec4 aLRot = a.transform().getRotation(pool.vec4());
-    PVec4 bLRot = b.transform().getRotation(pool.vec4());
-    PVec4 outALRotChange = pool.vec4();
-    PVec4 outBLRotChange = pool.vec4();
-    twoJointIK(aPos, bPos, cPos, t, epsilon, aGRot, bGRot, outALRotChange, outBLRotChange);
-    a.transform().rotate(outALRotChange);
-    b.transform().rotate(outBLRotChange);
-    pool.free();
-  }
-
-  public static void twoJointIK(PVec3 a, PVec3 b, PVec3 c, PVec3 t, float epsilon, PVec4 aGRot, PVec4 bGRot, PVec4 outALRotChange, PVec4 outBLRotChange) {
+  public static void twoJointIK(PVec3 a, PVec3 b, PVec3 c, PVec3 t, float epsilon, PVec4 aGRot, PVec4 bGRot,
+                                @Nullable PVec3 pole, PVec4 outALRotChange, PVec4 outBLRotChange) {
     PPool.PoolBuffer pool = PPool.getBuffer();
     PVec3 ab = pool.vec3().set(b).sub(a);
     PVec3 abN = pool.vec3().set(ab).nor();
@@ -76,12 +76,12 @@ public class PInverseKinematicsUtils {
     float lcb = c.dst(b);
     float lat = PNumberUtils.clamp(t.dst(a), epsilon, lab + lcb - epsilon);
     // Math magic.
-    float acAB0 = MathUtils.acos(PNumberUtils.clamp(acN.dot(abN), -1, 1));
-    float baBC0 = MathUtils.acos(PNumberUtils.clamp(-acN.dot(bcN), -1, 1));
-    float acAT0 = MathUtils.acos(PNumberUtils.clamp(acN.dot(atN), -1, 1));
-    float acAB1 = MathUtils.acos(PNumberUtils.clamp((lcb * lcb - lab * lab - lat * lat) / (-2 * lab * lat), -1, 1));
-    float baBC1 = MathUtils.acos(PNumberUtils.clamp((lat * lat - lab * lab - lcb * lcb) / (-2 * lab * lcb), -1, 1));
-    PVec3 axis0 = pool.vec3().set(ac).crs(ab).nor();
+    float acAB0 = PNumberUtils.acos(acN.dot(abN));
+    float baBC0 = PNumberUtils.acos(-abN.dot(bcN));
+    float acAT0 = PNumberUtils.acos(acN.dot(atN));
+    float acAB1 = PNumberUtils.acos((lcb * lcb - lab * lab - lat * lat) / (-2 * lab * lat));
+    float baBC1 = PNumberUtils.acos((lat * lat - lab * lab - lcb * lcb) / (-2 * lab * lcb));
+    PVec3 axis0 = pool.vec3().set(ac).crs(pole == null ? ab : bGRot.applyAsQuat(pool.vec3().set(pole))).nor();
     PVec3 axis1 = pool.vec3().set(ac).crs(at).nor();
     PVec3 r0Axis = pool.vec4().set(aGRot).invQuat().applyAsQuat(pool.vec3().set(axis0));
     PVec3 r1Axis = pool.vec4().set(bGRot).invQuat().applyAsQuat(pool.vec3().set(axis0));
@@ -96,7 +96,6 @@ public class PInverseKinematicsUtils {
 
   public static void test() {
     PPool.PoolBuffer pool = PPool.getBuffer();
-
     pool.free();
   }
 }

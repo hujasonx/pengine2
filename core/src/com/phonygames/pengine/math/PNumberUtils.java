@@ -24,6 +24,10 @@ public class PNumberUtils {
     return Math.abs(x - y) < epsilon;
   }
 
+  public static float acos(float x) {
+    return MathUtils.acos(clamp(x, -1, 1));
+  }
+
   public static boolean epsilonEquals(float x, float y) {
     return Math.abs(x - y) < 0.001f;
   }
