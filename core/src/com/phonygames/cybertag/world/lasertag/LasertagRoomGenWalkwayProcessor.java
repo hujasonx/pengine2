@@ -5,6 +5,7 @@ import static com.phonygames.cybertag.world.lasertag.LasertagTileWall.FACINGS;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.util.PList;
@@ -33,14 +34,6 @@ public class LasertagRoomGenWalkwayProcessor {
     Context context = new Context(roomGen);
     if (context.fullyJoined()) {
       return;
-    }
-    PList<WalkwayStartNode> walkwayStartNodes = context.genWalkwayStartNodes();
-    for (int a = 0; a < walkwayStartNodes.size; a++) {
-      WalkwayStartNode node = walkwayStartNodes.get(a);
-      node.tileGen.wallGen(node.facing).wall.isWindow = true;
-      node.tileGen.wallGen(node.facing).wall.isSolidWall = true;
-      node.tileGen.wallGen(node.facing).wall.isValid = true;
-      node.tileGen.wallGen(node.facing).wall.hasWall = true;
     }
     while (!context.fullyJoined()) {
       if (!context.attemptGenWalkway()) {break;}
@@ -92,6 +85,7 @@ public class LasertagRoomGenWalkwayProcessor {
     final PList<Walkway> walkways = new PList<>();
 
     ConnectedGroup addAllFrom(ConnectedGroup other) {
+      PAssert.isTrue(this != other);
       for (int a = 0; a < other.floorTileIslands.size; a++) {
         FloorTileIsland island = other.floorTileIslands.get(a);
         if (!floorTileIslands.contains(island, true)) {
@@ -101,16 +95,12 @@ public class LasertagRoomGenWalkwayProcessor {
       for (int a = 0; a < other.walkways.size; a++) {
         Walkway walkway = other.walkways.get(a);
         // Check to make sure there isnt already a walkway at this tile.
-        boolean canAdd = true;
         for (int b = 0; b < walkways.size; b++) {
           if (walkways.get(b).tileGen == walkway.tileGen) {
-            canAdd = false;
-            break;
+            PAssert.fail("Competing walkways at tile " + walkway.tileGen);
           }
         }
-        if (canAdd) {
-          walkways.add(walkway);
-        }
+        walkways.add(walkway);
       }
       return this;
     }
@@ -243,7 +233,7 @@ public class LasertagRoomGenWalkwayProcessor {
       }
       possibleWalkwayPaths.sort();
       while (possibleWalkwayPaths.size > 0) {
-        if (possibleWalkwayPaths.removeIndex(0).applyToContext()) {return true;}
+        if (possibleWalkwayPaths.removeLast().applyToContext()) {return true;}
       }
       return false;
     }
@@ -280,6 +270,10 @@ public class LasertagRoomGenWalkwayProcessor {
             }
           }
         }
+      }
+      for (int a = 0; a < oneTileFloorlessProcessorDoorGens.size; a++) {
+        ProcessorDoorGen doorGen = oneTileFloorlessProcessorDoorGens.get(a);
+        ret.add(new WalkwayStartNode(this, doorGen.floorlessTilesGens.get(0), 0, doorGen, doorGen.facing));
       }
       return ret;
     }
@@ -348,7 +342,7 @@ public class LasertagRoomGenWalkwayProcessor {
     }
 
     public boolean fullyJoined() {
-      return connectedGroups.size == 1;
+      return connectedGroups.size == 1 && oneTileFloorlessProcessorDoorGens.size == 0;
     }
   }
 
@@ -362,12 +356,39 @@ public class LasertagRoomGenWalkwayProcessor {
   }
 
   private static class PossibleWalkwayPath implements PSortableByScore<PossibleWalkwayPath> {
-    final PList<ConnectedGroup> otherConnectedGroups = new PList<>();
+    final PList<ProcessorDoorGen> allOneTileDoorGens = new PList<>();
+    final PList<ConnectedGroup> allConnectedGroups = new PList<>();
     final WalkwayStartNode walkwayStartNode;
     final PList<Walkway> walkways = new PList<>();
 
-    public PossibleWalkwayPath(WalkwayStartNode startNode) {
+    public PossibleWalkwayPath(WalkwayStartNode startNode, PList<Walkway> walkways) {
       this.walkwayStartNode = startNode;
+      Context context = startNode.context;
+      if (startNode.oneTileDoorGen != null) {
+        allOneTileDoorGens.add(startNode.oneTileDoorGen);
+      }
+      if (startNode.connectedGroup != null) {
+        allConnectedGroups.add(startNode.connectedGroup);
+      }
+      for (int a = 0; a < walkways.size; a++) {
+        Walkway walkway = walkways.get(a);
+        this.walkways.add(walkway);
+        for (int b = 0; b < context.connectedGroups.size; b++) {
+          ConnectedGroup connectedGroup = context.connectedGroups.get(b);
+          if (connectedGroup == walkwayStartNode.connectedGroup) {continue;}
+          if (walkway.connectsWithConnectedGroup(connectedGroup) &&
+              !allConnectedGroups.contains(connectedGroup, true)) {
+            allConnectedGroups.add(connectedGroup);
+          }
+        }
+        for (int b = 0; b < context.oneTileFloorlessProcessorDoorGens.size; b++) {
+          ProcessorDoorGen oneTileDoorGen = context.oneTileFloorlessProcessorDoorGens.get(b);
+          if (walkway.flatConnectsWithOneTileFloorlessDoorgen(oneTileDoorGen) &&
+              !allOneTileDoorGens.contains(oneTileDoorGen, true)) {
+            allOneTileDoorGens.add(oneTileDoorGen);
+          }
+        }
+      }
     }
 
     /**
@@ -375,18 +396,35 @@ public class LasertagRoomGenWalkwayProcessor {
      */
     public boolean applyToContext() {
       Context context = walkwayStartNode.context;
-      walkwayStartNode.connectedGroup.walkways.addAll(walkways);
-      for (int a = 0; a < otherConnectedGroups.size; a++) {
-        ConnectedGroup otherConnectedGroup = otherConnectedGroups.get(a);
-        if (context.connectedGroups.removeValue(otherConnectedGroup, true)) {
-          walkwayStartNode.connectedGroup.addAllFrom(otherConnectedGroup);
+      // The start connected group will be null for floorless doors.
+      ConnectedGroup firstGroupSeen = null;
+      for (int a = 0; a < allConnectedGroups.size; a++) {
+        ConnectedGroup otherConnectedGroup = allConnectedGroups.get(a);
+        if (firstGroupSeen != null) {
+          if (context.connectedGroups.removeValue(otherConnectedGroup, true)) {
+            firstGroupSeen.addAllFrom(otherConnectedGroup);
+          }
+        } else {
+          firstGroupSeen = allConnectedGroups.get(a);
         }
       }
+      for (int a = 0; a < allOneTileDoorGens.size; a++) {
+        ProcessorDoorGen doorGen = allOneTileDoorGens.get(a);
+        context.oneTileFloorlessProcessorDoorGens.removeValue(doorGen, true);
+      }
+      firstGroupSeen.walkways.addAll(walkways);
       return true;
     }
 
     @Override public float score() {
-      return 0;
+      int score = 0;
+      int scorePerConnection = 10;
+      score += allOneTileDoorGens.size;
+      score += allConnectedGroups.size;
+      score *= scorePerConnection;
+      score -= walkways.size;
+
+      return score;
     }
   }
 
@@ -509,6 +547,11 @@ public class LasertagRoomGenWalkwayProcessor {
       }
     }
 
+    public boolean flatConnectsWithOneTileFloorlessDoorgen(ProcessorDoorGen doorGen) {
+      PAssert.isTrue(doorGen.floorlessTilesGens.size == 1);
+      return !sloped && endOffsetY == 0 && tileGen == doorGen.floorlessTilesGens.get(0);
+    }
+
     public String toString() {
       if (sloped) {
         return "{" + tileGen.x + "," + tileGen.y + "," + tileGen.z + "F: " + facing + " [" +
@@ -524,6 +567,7 @@ public class LasertagRoomGenWalkwayProcessor {
     final Context context;
     final LasertagTileWall.Facing facing;
     final int maxSearchDepth = 10;
+    final ProcessorDoorGen oneTileDoorGen;
     final PList<PossibleWalkwayPath> possibleWalkwayPaths = new PList<>();
     final int startOffsetY;
     final LasertagTileGen tileGen;
@@ -535,9 +579,20 @@ public class LasertagRoomGenWalkwayProcessor {
       this.facing = facing;
       this.startOffsetY = startOffsetY;
       this.connectedGroup = connectedGroup;
+      this.oneTileDoorGen = null;
     }
 
-    void __searchRecursive(PList<Walkway> currentWalkwayBuffer, Walkway tryAdding) {
+    public WalkwayStartNode(Context context, LasertagTileGen tileGen, int startOffsetY, ProcessorDoorGen oneTileDoorGen,
+                            LasertagTileWall.Facing facing) {
+      this.context = context;
+      this.tileGen = tileGen;
+      this.facing = facing;
+      this.startOffsetY = startOffsetY;
+      this.connectedGroup = null;
+      this.oneTileDoorGen = oneTileDoorGen;
+    }
+
+    void __searchRecursive(PList<Walkway> currentWalkwayBuffer, Walkway tryAdding, int turnsLeft) {
       // Check for walkway validity.
       if (!tryAdding.couldBePlaced()) {return;}
       // Can't add a walkway where there already is one, or where there would be one on top (if sloped).
@@ -553,7 +608,6 @@ public class LasertagRoomGenWalkwayProcessor {
         ConnectedGroup connectedGroup = context.connectedGroups.get(a);
         if (connectedGroup == this.connectedGroup) {continue;}
         if (tryAdding.connectsWithConnectedGroup(connectedGroup)) {
-          PLog.i("Emitting: " + currentWalkwayBuffer);
           emitPossibleWalkwayPath(currentWalkwayBuffer);
           break;
         }
@@ -565,11 +619,13 @@ public class LasertagRoomGenWalkwayProcessor {
           LasertagTileGen nextTileGen =
               tryAdding.tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ());
           // Add downward ramps in all directions if this tile is flat, or forward if not.
-          if (!tryAdding.sloped || facing == this.facing) {
+          if (!tryAdding.sloped || facing == tryAdding.facing) {
+            if (facing != tryAdding.facing && turnsLeft <= 0) { continue; }
+            int nextTurnLeft = tryAdding.facing == facing ? turnsLeft : turnsLeft - 1;
             __searchRecursive(currentWalkwayBuffer,
-                              new Walkway(context, nextTileGen, tryAdding.endOffsetY - 1, true, facing));
+                              new Walkway(context, nextTileGen, tryAdding.endOffsetY - 1, true, facing), nextTurnLeft);
             __searchRecursive(currentWalkwayBuffer,
-                              new Walkway(context, nextTileGen, tryAdding.endOffsetY, false, facing));
+                              new Walkway(context, nextTileGen, tryAdding.endOffsetY, false, facing), nextTurnLeft);
           }
         }
       }
@@ -578,26 +634,14 @@ public class LasertagRoomGenWalkwayProcessor {
     }
 
     void emitPossibleWalkwayPath(PList<Walkway> walkways) {
-      PossibleWalkwayPath possibleWalkwayPath = new PossibleWalkwayPath(this);
+      PossibleWalkwayPath possibleWalkwayPath = new PossibleWalkwayPath(this, walkways);
       possibleWalkwayPaths.add(possibleWalkwayPath);
-      for (int a = 0; a < walkways.size; a++) {
-        Walkway walkway = walkways.get(a);
-        possibleWalkwayPath.walkways.add(walkway);
-        for (int b = 0; b < context.connectedGroups.size; b++) {
-          ConnectedGroup connectedGroup = context.connectedGroups.get(b);
-          if (connectedGroup == this.connectedGroup) {continue;}
-          if (walkway.connectsWithConnectedGroup(connectedGroup) &&
-              !possibleWalkwayPath.otherConnectedGroups.contains(connectedGroup, true)) {
-            possibleWalkwayPath.otherConnectedGroups.add(connectedGroup);
-          }
-        }
-      }
     }
 
     void search() {
       PList<Walkway> currentWalkwayBuffer = new PList<>();
-      __searchRecursive(currentWalkwayBuffer, new Walkway(context, tileGen, startOffsetY, false, facing));
-      __searchRecursive(currentWalkwayBuffer, new Walkway(context, tileGen, startOffsetY - 1, true, facing));
+      __searchRecursive(currentWalkwayBuffer, new Walkway(context, tileGen, startOffsetY, false, facing), 3);
+      __searchRecursive(currentWalkwayBuffer, new Walkway(context, tileGen, startOffsetY - 1, true, facing), 3);
     }
   }
 }
