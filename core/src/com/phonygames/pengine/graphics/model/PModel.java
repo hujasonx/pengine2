@@ -120,7 +120,7 @@ public class PModel {
     public Node addNode(String id, Node parent, PList<PGlNode> glNodes, PMat4 transform) {
       checkLock();
       Node node = new Node(id, parent, glNodes);
-      node.transform().set(transform);
+      node.transform().set(transform).lockWriting();
       if (parent == null) {
         model.rootNodeIds().add(id);
       }

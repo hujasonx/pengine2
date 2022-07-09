@@ -12,7 +12,6 @@ import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.math.PInverseKinematicsUtils;
 import com.phonygames.pengine.math.PNumberUtils;
-import com.phonygames.pengine.math.PVec;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -80,7 +79,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PVec2 inputVelocity = pool.vec2();
     PVec2 outputVelocity = pool.vec2();
     characterController.velXZ(0, 0);
-    float forwardSpeed = 8;
+    float forwardSpeed = PKeyboard.isDown(Input.Keys.SHIFT_LEFT) ? 10 : 3;
     if (PKeyboard.isDown(Input.Keys.W)) {
       inputVelocity.add(0, 1);
     }
@@ -107,17 +106,33 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     modelInstance.recalcTransforms();
     if (PKeyboard.isDown(Input.Keys.SPACE)) {
       ikArms();
-      modelInstance.recalcTransforms();
     }
   }
 
   private void ikArms() {
     if (modelInstance == null) {return;}
+    PPool.PoolBuffer pool = PPool.getBuffer();
     PModelInstance.Node armUpperR = modelInstance.getNode("ArmUpper.R");
     PModelInstance.Node armLowerR = modelInstance.getNode("ArmLower.R");
     PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
-    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, PVec3.obtain().set(10, 10, 10),.01f, facingDir);
-
+    PVec3 goalR = PVec3.obtain().set(10, 1.5f, 10);
+//    PVec3 poleR = PVec3.obtain().set(-facingDirFlat.x(), -.5f, -facingDirFlat.y())
+//                       .add(-facingLeftFlat.x(), 0, -facingLeftFlat.y());
+    PVec3 poleR = PVec3.obtain().set(0,-1, 0);
+    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, goalR, .01f, poleR);
+    PVec3 realR = wristR.worldTransform().getTranslation(PVec3.obtain());
+    PVec3 realBaseR = armUpperR.worldTransform().getTranslation(PVec3.obtain());
+    PModelInstance.Node armUpperL = modelInstance.getNode("ArmUpper.L");
+    PModelInstance.Node armLowerL = modelInstance.getNode("ArmLower.L");
+    PInverseKinematicsUtils.oneJointIK(armUpperL, armLowerL, PVec3.obtain().set(5, 1.5f, 10));
+    // Right leg.
+    PVec3 goalLegR = pool.vec3().set(10, .5f, 10);
+    PVec3 poleLegR = pool.vec3().set(0, 0, -1);
+    PModelInstance.Node legUpperR = modelInstance.getNode("LegUpper.R");
+    PModelInstance.Node legLowerR = modelInstance.getNode("LegLower.R");
+    PModelInstance.Node footR = modelInstance.getNode("Foot.R");
+    PInverseKinematicsUtils.twoJointIk(legUpperR, legLowerR, footR, goalLegR, .01f, poleLegR);
+    pool.free();
   }
 
   @Override public void render(PRenderContext renderContext) {

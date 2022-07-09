@@ -7,12 +7,22 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PBasic;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.PWriteLockable;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PMat4> {
+public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PMat4>, PWriteLockable<PMat4> {
+  // #pragma mark - PWriteLockable
+  @Getter
+  @Setter
+  private boolean lockWriting = false;
+  // #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
+  // #pragma end
   public static final PMat4 IDT = new PMat4();
   public static final PMat4 ZERO = new PMat4().set(new float[16]);
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
@@ -29,9 +39,6 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   };
   @Getter
   private final Matrix4 backingMatrix4 = new Matrix4();
-  @Getter
-  @Setter
-  private PPool ownerPool, sourcePool;
 
   private PMat4() {
   }
@@ -49,7 +56,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PMat4 set(float[] values) {
-    this.backingMatrix4.set(values);
+    this.forWriting().backingMatrix4.set(values);
     return this;
   }
 
@@ -63,19 +70,21 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PMat4 inv() {
-    this.backingMatrix4.inv();
+    this.forWriting().backingMatrix4.inv();
     return this;
   }
 
   public PMat4 invTra() {
-    this.backingMatrix4.inv().tra();
+    this.forWriting().backingMatrix4.inv().tra();
     return this;
   }
 
   @Override public PMat4 lerp(PMat4 other, float mix) {
-    this.backingMatrix4.lerp(other.backingMatrix4, mix);
+    this.forWriting().backingMatrix4.lerp(other.backingMatrix4, mix);
     return this;
   }
+
+  @Override public void lockWriting() {this.lockWriting = true;}
 
   public PMat4 mul(PMat4 mat4, float a) {
     mat4.mul(this, a);
@@ -88,7 +97,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PMat4 mul(PMat4 other) {
-    this.backingMatrix4.mul(other.backingMatrix4);
+    this.forWriting().backingMatrix4.mul(other.backingMatrix4);
     return this;
   }
 
@@ -100,7 +109,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PMat4 mulLeft(PMat4 other) {
-    this.backingMatrix4.mulLeft(other.backingMatrix4);
+    this.forWriting().backingMatrix4.mulLeft(other.backingMatrix4);
     return this;
   }
 
@@ -137,22 +146,27 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PMat4 set(float tx, float ty, float tz, float rx, float ry, float rz, float rw, float sx, float sy, float sz) {
-    this.backingMatrix4.set(tx, ty, tz, rx, ry, rz, rw, sx, sy, sz);
+    this.forWriting().backingMatrix4.set(tx, ty, tz, rx, ry, rz, rw, sx, sy, sz);
     return this;
   }
 
   public PMat4 set(PVec3 xAxis, PVec3 yAxis, PVec3 zAxis, PVec3 pos) {
-    this.backingMatrix4.set(xAxis.backingVec3(), yAxis.backingVec3(), zAxis.backingVec3(), pos.backingVec3());
+    this.forWriting().backingMatrix4.set(xAxis.backingVec3(), yAxis.backingVec3(), zAxis.backingVec3(), pos.backingVec3());
     return this;
   }
 
   public PMat4 setToRotation(float axisX, float axisY, float axisZ, float angleRad) {
-    this.backingMatrix4.setToRotationRad(axisX, axisY, axisZ, angleRad);
+    this.forWriting().backingMatrix4.setToRotationRad(axisX, axisY, axisZ, angleRad);
     return this;
   }
 
   public PMat4 setToScl(float x, float y, float z) {
-    this.backingMatrix4.setToScaling(x, y, z);
+    this.forWriting().backingMatrix4.setToScaling(x, y, z);
+    return this;
+  }
+
+  public PMat4 setToScl(float scale) {
+    this.forWriting().backingMatrix4.setToScaling(scale, scale, scale);
     return this;
   }
 
@@ -188,12 +202,12 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   @Override public PMat4 set(PMat4 other) {
-    this.backingMatrix4.set(other.backingMatrix4);
+    this.forWriting().backingMatrix4.set(other.backingMatrix4);
     return this;
   }
 
   public PMat4 tra() {
-    this.backingMatrix4.tra();
+    this.forWriting().backingMatrix4.tra();
     return this;
   }
 

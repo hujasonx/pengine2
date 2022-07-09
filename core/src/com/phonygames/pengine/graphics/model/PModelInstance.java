@@ -218,7 +218,7 @@ public class PModelInstance {
       this.owner = owner;
       this.templateNode = templateNode;
       this.parent = parent;
-      this.transform.set(templateNode.transform());
+      transform().set(templateNode.transform());
       for (PGlNode node : templateNode.glNodes()) {
         PGlNode newNode = node.deepCopy();
         newNode.ownerModelInstanceNode(this);

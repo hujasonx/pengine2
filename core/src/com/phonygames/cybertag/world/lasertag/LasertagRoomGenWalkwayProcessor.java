@@ -6,8 +6,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.util.PImplementsEquals;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PSortableByScore;
 
@@ -96,7 +96,7 @@ public class LasertagRoomGenWalkwayProcessor {
         Walkway walkway = other.walkways.get(a);
         // Check to make sure there isnt already a walkway at this tile.
         for (int b = 0; b < walkways.size; b++) {
-          if (walkways.get(b).tileGen == walkway.tileGen) {
+          if (walkways.get(b).tileGen == walkway.tileGen && !walkway.equalsT(walkways.get(b))) {
             PAssert.fail("Competing walkways at tile " + walkway.tileGen);
           }
         }
@@ -356,8 +356,8 @@ public class LasertagRoomGenWalkwayProcessor {
   }
 
   private static class PossibleWalkwayPath implements PSortableByScore<PossibleWalkwayPath> {
-    final PList<ProcessorDoorGen> allOneTileDoorGens = new PList<>();
     final PList<ConnectedGroup> allConnectedGroups = new PList<>();
+    final PList<ProcessorDoorGen> allOneTileDoorGens = new PList<>();
     final WalkwayStartNode walkwayStartNode;
     final PList<Walkway> walkways = new PList<>();
 
@@ -423,7 +423,6 @@ public class LasertagRoomGenWalkwayProcessor {
       score += allConnectedGroups.size;
       score *= scorePerConnection;
       score -= walkways.size;
-
       return score;
     }
   }
@@ -470,7 +469,7 @@ public class LasertagRoomGenWalkwayProcessor {
     }
   }
 
-  private static class Walkway {
+  private static class Walkway implements PImplementsEquals<Walkway> {
     final Context context;
     final int endOffsetY;
     final LasertagTileWall.Facing facing;
@@ -547,6 +546,14 @@ public class LasertagRoomGenWalkwayProcessor {
       }
     }
 
+    @Override public boolean equalsT(Walkway other) {
+      if (tileGen != other.tileGen) {return false;}
+      if (endOffsetY != other.endOffsetY) return false;
+      if (sloped != other.sloped) return false;
+      if (facing != other.facing) return false;
+      return true;
+    }
+
     public boolean flatConnectsWithOneTileFloorlessDoorgen(ProcessorDoorGen doorGen) {
       PAssert.isTrue(doorGen.floorlessTilesGens.size == 1);
       return !sloped && endOffsetY == 0 && tileGen == doorGen.floorlessTilesGens.get(0);
@@ -620,7 +627,7 @@ public class LasertagRoomGenWalkwayProcessor {
               tryAdding.tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ());
           // Add downward ramps in all directions if this tile is flat, or forward if not.
           if (!tryAdding.sloped || facing == tryAdding.facing) {
-            if (facing != tryAdding.facing && turnsLeft <= 0) { continue; }
+            if (facing != tryAdding.facing && turnsLeft <= 0) {continue;}
             int nextTurnLeft = tryAdding.facing == facing ? turnsLeft : turnsLeft - 1;
             __searchRecursive(currentWalkwayBuffer,
                               new Walkway(context, nextTileGen, tryAdding.endOffsetY - 1, true, facing), nextTurnLeft);

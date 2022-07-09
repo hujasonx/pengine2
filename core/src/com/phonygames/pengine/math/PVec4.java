@@ -16,6 +16,7 @@ public class PVec4 extends PVec<PVec4> {
   public static final PVec4 X = new PVec4().set(1, 0, 0, 0);
   public static final PVec4 Y = new PVec4().set(0, 1, 0, 0);
   public static final PVec4 Z = new PVec4().set(0, 0, 1, 0);
+  public static final PVec4 REAL = new PVec4().set(0, 0, 0, 1);
   public static final PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PVec4> staticPool = new PPool<PVec4>() {
@@ -197,10 +198,10 @@ public class PVec4 extends PVec<PVec4> {
 
   public PVec4 invQuat() {
     float d = this.dot(this);
-    backingQuaterion.x /= d;
+    backingQuaterion.x /= -d;
     backingQuaterion.y /= -d;
     backingQuaterion.z /= -d;
-    backingQuaterion.w /= -d;
+    backingQuaterion.w /= d;
     return this;
   }
 
@@ -225,11 +226,6 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   public PVec4 mulQuat(PVec4 other) {
-    backingQuaterion.mul(other.backingQuaterion);
-    return this;
-  }
-
-  public PVec4 mulQuaternion(@NonNull PVec4 other) {
     backingQuaterion.mul(other.backingQuaterion);
     return this;
   }
