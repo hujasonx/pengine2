@@ -20,10 +20,10 @@ import com.phonygames.pengine.util.PPool;
 
 public class PlayerCharacterEntity extends CharacterEntity implements PCharacterCameraController.Delegate {
   private final PPhysicsCharacterController characterController;
-  private PModelInstance modelInstance;
-  private PCharacterCameraController cameraController;
-  private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
   private final PVec3 facingDir = PVec3.obtain().set(1, 0, 0);
+  private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
+  private PCharacterCameraController cameraController;
+  private PModelInstance modelInstance;
 
   public PlayerCharacterEntity() {
     super();
@@ -60,11 +60,12 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   }
 
   @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
-    if (characterController == null) { return; }
+    if (characterController == null) {return;}
     out.set(characterController.pos()).add(0, 1.5f, 0);
     facingDir.set(dir);
-    if (!PNumberUtils.epsilonEquals(0,dir.x()) || !PNumberUtils.epsilonEquals(0,dir.z()))
-    facingDirFlat.set(dir.x(), dir.z()).nor();
+    if (!PNumberUtils.epsilonEquals(0, dir.x()) || !PNumberUtils.epsilonEquals(0, dir.z())) {
+      facingDirFlat.set(dir.x(), dir.z()).nor();
+    }
     facingLeftFlat.set(facingDirFlat.y(), -facingDirFlat.x());
   }
 
@@ -80,27 +81,26 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     float forwardSpeed = 8;
     if (PKeyboard.isDown(Input.Keys.W)) {
       inputVelocity.add(0, 1);
-    } if (PKeyboard.isDown(Input.Keys.S)) {
+    }
+    if (PKeyboard.isDown(Input.Keys.S)) {
       inputVelocity.add(0, -1);
     }
     if (PKeyboard.isDown(Input.Keys.A)) {
-      inputVelocity.add(1,0 );
+      inputVelocity.add(1, 0);
     }
     if (PKeyboard.isDown(Input.Keys.D)) {
       inputVelocity.add(-1, 0);
     }
-
     outputVelocity.add(facingDirFlat, forwardSpeed * inputVelocity.y());
     outputVelocity.add(facingLeftFlat, forwardSpeed * inputVelocity.x());
-
     characterController.velXZ(outputVelocity.x(), outputVelocity.y());
     pool.free();
   }
 
   @Override public void frameUpdate() {
     if (modelInstance == null) {return;}
-    float facingDirAng = PNumberUtils.angle(0 ,0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
-    modelInstance.worldTransform().setToTranslation(characterController.pos()).rot(0, -1, 0,facingDirAng);
+    float facingDirAng = PNumberUtils.angle(0, 0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
+    modelInstance.worldTransform().setToTranslation(characterController.pos()).rot(0, -1, 0, facingDirAng);
     modelInstance.recalcTransforms();
   }
 
