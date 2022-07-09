@@ -25,9 +25,10 @@ import com.phonygames.pengine.util.PStringUtils;
 import lombok.Getter;
 
 public class PEngine extends ApplicationAdapter {
+  // #pragma end
   public static final String LIBRARY_NAME = "penginelib";
   public static int frameCount = 0, logicUpdateCount = 1;
-  public static float logictimestep = 1f / 60f;
+  public static float logictimestep = 1f / 30f;
   public static float logicupdateframeratio = .1f;
   // The ratio between the prev and next logic updates that the current frame is at, temporally.public static
   // float uit = 0;
@@ -111,6 +112,8 @@ public class PEngine extends ApplicationAdapter {
     if (logict < t - 1) { // After a large lag spike, don't process the logic update too quickly.
       logict = t;
     }
+    // Run the game loop. Logict will always end up being >= t, so t can be used to interpolate between the game
+    // state at logict - logictimestep and that at logict.
     while (logict < t) {
       logict += logictimestep;
       logicUpdateCount++;
@@ -120,6 +123,7 @@ public class PEngine extends ApplicationAdapter {
       game.postLogicUpdate();
       postLogicUpdateStatic();
     }
+    logicupdateframeratio = ((t - (logict - logictimestep)) / logictimestep);
   }
 
   private void frameUpdate() {
@@ -142,7 +146,6 @@ public class PEngine extends ApplicationAdapter {
   private static void postFrameUpdateStatic() {
     PPhysicsEngine.postFrameUpdate();
     glProfiler.reset();
-
     if (PKeyboard.isDown(Input.Keys.ALT_RIGHT) && PKeyboard.isFrameJustDown(Input.Keys.ENTER)) {
       if (Gdx.graphics.isFullscreen()) {
         Gdx.graphics.setWindowedMode(1600, 900);

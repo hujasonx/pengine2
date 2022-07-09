@@ -62,7 +62,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
 
   @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
     if (characterController == null) {return;}
-    out.set(characterController.pos()).add(0, 1.5f, 0);
+    characterController.pos(out).add(0, 1.5f, 0);
     facingDir.set(dir);
     if (!PNumberUtils.epsilonEquals(0, dir.x()) || !PNumberUtils.epsilonEquals(0, dir.z())) {
       facingDirFlat.set(dir.x(), dir.z()).nor();
@@ -100,23 +100,24 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
 
   @Override public void frameUpdate() {
     if (modelInstance == null) {return;}
+    PPool.PoolBuffer pool = PPool.getBuffer();
     float facingDirAng = PNumberUtils.angle(0, 0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
-    modelInstance.worldTransform().setToTranslation(characterController.pos()).rot(0, -1, 0, facingDirAng);
+    modelInstance.worldTransform().setToTranslation(characterController.pos(pool.vec3())).rot(0, -1, 0, facingDirAng);
     modelInstance.resetTransformsFromTemplates();
     modelInstance.recalcTransforms();
     if (PKeyboard.isDown(Input.Keys.SPACE)) {
-      ikArms();
+      ikArms(pool);
     }
+    pool.free();
   }
 
-  private void ikArms() {
+  private void ikArms(PPool.PoolBuffer pool) {
     if (modelInstance == null) {return;}
-    PPool.PoolBuffer pool = PPool.getBuffer();
     PModelInstance.Node armUpperR = modelInstance.getNode("ArmUpper.R");
     PModelInstance.Node armLowerR = modelInstance.getNode("ArmLower.R");
     PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
     PVec3 goalR = PVec3.obtain().set(10, 1.5f, 10);
-    PVec3 poleR = PVec3.obtain().set(0,0, -1);
+    PVec3 poleR = PVec3.obtain().set(0, 0, -1);
     PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, goalR, .01f, poleR);
     PVec3 realR = wristR.worldTransform().getTranslation(PVec3.obtain());
     PVec3 realBaseR = armUpperR.worldTransform().getTranslation(PVec3.obtain());
@@ -130,7 +131,6 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PModelInstance.Node legLowerR = modelInstance.getNode("LegLower.R");
     PModelInstance.Node footR = modelInstance.getNode("Foot.R");
     PInverseKinematicsUtils.twoJointIk(legUpperR, legLowerR, footR, goalLegR, .01f, poleLegR);
-    pool.free();
   }
 
   @Override public void render(PRenderContext renderContext) {

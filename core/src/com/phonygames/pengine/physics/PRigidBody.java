@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.ContactResultCallback;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
@@ -16,6 +17,10 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 public class PRigidBody implements PPool.Poolable {
+  // #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private static final PPool<PRigidBody> staticPool = new PPool<PRigidBody>() {
@@ -28,15 +33,14 @@ public class PRigidBody implements PPool.Poolable {
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 localInertia = PVec3.obtain();
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
-  private final PMat4 worldTransform = PMat4.obtain();
+  private final PMat4 worldTransformLogicPrev = PMat4.obtain(), worldTransformLogicCurrent = PMat4.obtain(),
+      frameWorldTransform = PMat4.obtain();
   private PPhysicsCollisionShape collisionShape;
   private int group, mask;
   private boolean isInDynamicsWorld;
-  @Getter
-  @Setter
-  private PPool ownerPool, sourcePool;
+  private float prevLogicT = -1, prevFrameT = -1;
   private btRigidBody rigidBody;
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -98,16 +102,28 @@ public class PRigidBody implements PPool.Poolable {
 
   public PMat4 getWorldTransform(PMat4 mat4) {
     PAssert.isNotNull(rigidBody);
-    rigidBody.getWorldTransform(mat4.getBackingMatrix4());
+    if (prevFrameT != PEngine.t) {
+      // Recalculate the frame transform.
+      frameWorldTransform().set(worldTransformLogicPrev())
+                           .lerp(worldTransformLogicCurrent(), PEngine.logicupdateframeratio);
+      prevFrameT = PEngine.t;
+    }
+    mat4.set(frameWorldTransform());
     return mat4;
   }
 
   protected void postLogicUpdate() {
     if (rigidBody == null) {return;}
-    rigidBody.getWorldTransform(worldTransform().getBackingMatrix4());
+    worldTransformLogicPrev().set(worldTransformLogicCurrent());
+    rigidBody.getWorldTransform(worldTransformLogicCurrent().getBackingMatrix4());
     if (runnableOnPostLogicUpdate != null) {
       runnableOnPostLogicUpdate.afterPostLogicUpdate(this);
     }
+    prevLogicT = PEngine.logict;
+  }
+
+  public void preFrameUpdate() {
+    if (rigidBody == null) {return;}
   }
 
   public void removeFromDynamicsWorld() {
@@ -118,13 +134,19 @@ public class PRigidBody implements PPool.Poolable {
   }
 
   @Override public void reset() {
-    PAssert.isNotNull(rigidBody);
-    if (isInDynamicsWorld) {
-      PPhysicsEngine.dynamicsWorld.removeRigidBody(rigidBody);
-      isInDynamicsWorld = false;
+    if (rigidBody != null) {
+      PAssert.isNotNull(rigidBody);
+      if (isInDynamicsWorld) {
+        PPhysicsEngine.dynamicsWorld.removeRigidBody(rigidBody);
+        isInDynamicsWorld = false;
+      }
+      rigidBody.dispose();
+      rigidBody = null;
     }
-    rigidBody.dispose();
-    rigidBody = null;
+    prevLogicT = -1;
+    prevFrameT = -1;
+    worldTransformLogicCurrent().idt();
+    worldTransformLogicPrev().idt();
     collisionShape = null;
     runnableOnPostLogicUpdate = null;
   }
@@ -156,7 +178,7 @@ public class PRigidBody implements PPool.Poolable {
   public PRigidBody setWorldTransform(PMat4 mat4) {
     PAssert.isNotNull(rigidBody);
     rigidBody.setWorldTransform(mat4.getBackingMatrix4());
-    worldTransform.set(mat4);
+    worldTransformLogicCurrent().set(mat4);
     return this;
   }
 

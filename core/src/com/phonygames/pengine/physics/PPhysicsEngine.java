@@ -89,6 +89,12 @@ public class PPhysicsEngine {
     inited = true;
   }
 
+  public static void preFrameUpdate() {
+    for (PRigidBody rigidBody : rigidBodiesInSimulation) {
+      rigidBody.preFrameUpdate();
+    }
+  }
+
   public static void postFrameUpdate() {
     if (!enableDebugRender || !inited) {
       return;
@@ -103,7 +109,7 @@ public class PPhysicsEngine {
     if (!inited) {
       return;
     }
-    if (PEngine.logicUpdateCount < 60) {return;}
+    if (PEngine.t < 5) {return;}
     dynamicsWorld.stepSimulation(PEngine.logictimestep);
     for (PRigidBody rigidBody : rigidBodiesInSimulation) {
       rigidBody.postLogicUpdate();
