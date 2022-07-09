@@ -3,6 +3,7 @@ package com.phonygames.pengine.math;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PBasic;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
@@ -35,15 +36,6 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   private PMat4() {
   }
 
-  public PMat4 updateTranslation(PVec3 translation) {
-    PVec3 tempScl = getScale(PVec3.obtain());
-    PVec4 tempRot = getRotation(PVec4.obtain());
-    set(translation, tempRot, tempScl);
-    tempRot.free();
-    tempScl.free();
-    return this;
-  }
-
   public static PMat4 obtain(PMat4 copyOf) {
     return obtain().set(copyOf);
   }
@@ -66,22 +58,8 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   @Override public boolean equalsT(PMat4 mat4) {
+    PAssert.failNotImplemented("equalsT");
     return false;
-  }
-
-  public PVec3 getTranslation(PVec3 out) {
-    backingMatrix4.getTranslation(out.backingVec3());
-    return out;
-  }
-
-  public PVec3 getScale(PVec3 out) {
-    backingMatrix4.getScale(out.backingVec3());
-    return out;
-  }
-
-  public PVec4 getRotation(PVec4 out) {
-    backingMatrix4.getRotation(out.backingQuaterion());
-    return out;
   }
 
   public PMat4 inv() {
@@ -144,12 +122,8 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     return this;
   }
 
-  public PMat4 set(PVec3 t, PVec4 r, PVec3 s) {
-    return set(t.x(), t.y(), t.z(), r.x(), r.y(), r.z(), r.w(), s.x(), s.y(), s.z());
-  }
-
-  public PMat4 set(float tx, float ty, float tz, float rx, float ry, float rz, float rw, float sx, float sy, float sz) {
-    this.backingMatrix4.set(tx, ty, tz, rx, ry, rz, rw, sx, sy, sz);
+  public PMat4 scl(float x, float y, float z) {
+    backingMatrix4.scale(x, y, z);
     return this;
   }
 
@@ -157,16 +131,23 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     return set(t.x, t.y, t.z, r.x, r.y, r.z, r.w, s.x, s.y, s.z);
   }
 
+  public PMat4 set(float tx, float ty, float tz, float rx, float ry, float rz, float rw, float sx, float sy, float sz) {
+    this.backingMatrix4.set(tx, ty, tz, rx, ry, rz, rw, sx, sy, sz);
+    return this;
+  }
+
   public PMat4 set(PVec3 xAxis, PVec3 yAxis, PVec3 zAxis, PVec3 pos) {
     this.backingMatrix4.set(xAxis.backingVec3(), yAxis.backingVec3(), zAxis.backingVec3(), pos.backingVec3());
     return this;
   }
-  //  public PMat4 setToRotation(float axisX, float axisY, float axisZ, float rad) {
-  //    return idt().rot(axisX, axisY, axisZ, rad);
-  //  }
 
   public PMat4 setToRotation(float axisX, float axisY, float axisZ, float angleRad) {
     this.backingMatrix4.setToRotationRad(axisX, axisY, axisZ, angleRad);
+    return this;
+  }
+
+  public PMat4 setToScl(float x, float y, float z) {
+    this.backingMatrix4.setToScaling(x, y, z);
     return this;
   }
 
@@ -193,15 +174,6 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     return this;
   }
 
-  public PMat4 setTpScl(float x, float y, float z) {
-    return idt().scl(x, y, z);
-  }
-
-  public PMat4 scl(float x, float y, float z) {
-    backingMatrix4.scale(x, y, z);
-    return this;
-  }
-
   public PMat4 setZero() {
     return set(ZERO);
   }
@@ -218,6 +190,50 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   public PMat4 tra() {
     this.backingMatrix4.tra();
     return this;
+  }
+
+  public PMat4 updateRotation(PVec4 rotation) {
+    PAssert.fail("This shit doesnt work");
+    PVec3 tempTra = getTranslation(PVec3.obtain());
+    PVec3 tempScl = getScale(PVec3.obtain());
+    set(tempTra, rotation, tempScl);
+    tempScl.free();
+    tempTra.free();
+    return this;
+  }
+
+  public PMat4 rotate(PVec4 rotation) {
+    backingMatrix4.rotate(rotation.backingQuaterion());
+    return this;
+  }
+
+  public PVec3 getTranslation(PVec3 out) {
+    backingMatrix4.getTranslation(out.backingVec3());
+    return out;
+  }
+
+  public PVec3 getScale(PVec3 out) {
+    backingMatrix4.getScale(out.backingVec3());
+    return out;
+  }
+
+  public PMat4 set(PVec3 t, PVec4 r, PVec3 s) {
+    return set(t.x(), t.y(), t.z(), r.x(), r.y(), r.z(), r.w(), s.x(), s.y(), s.z());
+  }
+
+  public PMat4 updateTranslation(PVec3 translation) {
+    PAssert.fail("This shit doesnt work");
+    PVec3 tempScl = getScale(PVec3.obtain());
+    PVec4 tempRot = getRotation(PVec4.obtain());
+    set(translation, tempRot, tempScl);
+    tempRot.free();
+    tempScl.free();
+    return this;
+  }
+
+  public PVec4 getRotation(PVec4 out) {
+    backingMatrix4.getRotation(out.backingQuaterion());
+    return out;
   }
 
   public float[] values() {

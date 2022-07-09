@@ -150,7 +150,16 @@ public class PModelInstance {
 
   public void recalcTransforms() {
     for (PModelInstance.Node node : rootNodes()) {
-      node.recalcNodeWorldTransformsRecursive(worldTransform());
+      node.recalcNodeWorldTransformsRecursive(worldTransform(), false);
+    }
+  }
+
+  public void resetTransformsFromTemplates() {
+    try (val it = nodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        e.v().resetTransformFromTemplate();
+      }
     }
   }
 
@@ -199,6 +208,11 @@ public class PModelInstance {
     private final PMat4 worldTransformInvTra = PMat4.obtain();
     @Getter
     boolean inheritTransform = true, enabled = true;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Setter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    // If Set, this node will not recurse on its children when recalculating world transforms.
+    boolean stopWorldTransformRecursionAt = false;
 
     private Node(PModelInstance owner, PModel.Node templateNode, Node parent) {
       this.owner = owner;
@@ -220,7 +234,7 @@ public class PModelInstance {
       return templateNode.id();
     }
 
-    private void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform) {
+    public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform, boolean forceRecursionIfFIrst) {
       if (inheritTransform) {
         worldTransform().set(parentWorldTransform).mul(transform());
       } else {
@@ -230,8 +244,9 @@ public class PModelInstance {
       for (PGlNode node : glNodes()) {
         node.setWorldTransform(worldTransform(), worldTransformInvTra());
       }
+      if (stopWorldTransformRecursionAt && !forceRecursionIfFIrst) { return; }
       for (Node child : children()) {
-        child.recalcNodeWorldTransformsRecursive(worldTransform());
+        child.recalcNodeWorldTransformsRecursive(worldTransform(), false);
       }
     }
 

@@ -47,27 +47,6 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
-  @Override public PVec4 nor() {
-    backingQuaterion.nor();
-    return this;
-  }
-
-  @Override public boolean isZero(float margin) {
-    if (Math.abs(x()) > margin) {
-      return false;
-    }
-    if (Math.abs(y()) > margin) {
-      return false;
-    }
-    if (Math.abs(z()) > margin) {
-      return false;
-    }
-    if (Math.abs(w()) > margin) {
-      return false;
-    }
-    return true;
-  }
-
   @Override public float len2() {
     return backingQuaterion.len2();
   }
@@ -119,6 +98,22 @@ public class PVec4 extends PVec<PVec4> {
     return backingQuaterion.dot(other.backingQuaterion);
   }
 
+  @Override public boolean isZero(float margin) {
+    if (Math.abs(x()) > margin) {
+      return false;
+    }
+    if (Math.abs(y()) > margin) {
+      return false;
+    }
+    if (Math.abs(z()) > margin) {
+      return false;
+    }
+    if (Math.abs(w()) > margin) {
+      return false;
+    }
+    return true;
+  }
+
   @Override public PVec4 mul(@NonNull PVec4 other) {
     backingQuaterion.x *= other.backingQuaterion.x;
     backingQuaterion.y *= other.backingQuaterion.y;
@@ -127,16 +122,21 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  @Override public PVec4 nor() {
+    backingQuaterion.nor();
+    return this;
+  }
+
+  @Override public PVec4 setZero() {
+    return set(0, 0, 0, 0);
+  }
+
   @Override public PVec4 roundComponents(float factor) {
     this.backingQuaterion.x = (Math.round(this.backingQuaterion.x * factor) / factor);
     this.backingQuaterion.y = (Math.round(this.backingQuaterion.y * factor) / factor);
     this.backingQuaterion.z = (Math.round(this.backingQuaterion.z * factor) / factor);
     this.backingQuaterion.w = (Math.round(this.backingQuaterion.w * factor) / factor);
     return this;
-  }
-
-  @Override public PVec4 setZero() {
-    return set(0, 0, 0, 0);
   }
 
   @Override public PVec4 scl(float scl) {
@@ -165,12 +165,42 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  public float x() {
+    return backingQuaterion.x;
+  }
+
+  public float y() {
+    return backingQuaterion.y;
+  }
+
+  public float z() {
+    return backingQuaterion.z;
+  }
+
+  public float w() {
+    return backingQuaterion.w;
+  }
+
+  public PVec3 applyAsQuat(PVec3 out) {
+    backingQuaterion.transform(out.backingVec3());
+    return out;
+  }
+
   @Override public boolean equalsT(@NonNull PVec4 vec4) {
     return backingQuaterion.equals(vec4.backingQuaterion);
   }
 
   public PVec4 fromColor(@NonNull Color color) {
     this.backingQuaterion.set(color.r, color.g, color.b, color.a);
+    return this;
+  }
+
+  public PVec4 invQuat() {
+    float d = this.dot(this);
+    backingQuaterion.x /= d;
+    backingQuaterion.y /= -d;
+    backingQuaterion.z /= -d;
+    backingQuaterion.w /= -d;
     return this;
   }
 
@@ -192,6 +222,11 @@ public class PVec4 extends PVec<PVec4> {
                     backingQuaterion.z * l_mat[Matrix4.M22] + backingQuaterion.w * l_mat[Matrix4.M23],
                     backingQuaterion.x * l_mat[Matrix4.M30] + backingQuaterion.y * l_mat[Matrix4.M31] +
                     backingQuaterion.z * l_mat[Matrix4.M32] + backingQuaterion.w * l_mat[Matrix4.M33]);
+  }
+
+  public PVec4 mulQuat(PVec4 other) {
+    backingQuaterion.mul(other.backingQuaterion);
+    return this;
   }
 
   public PVec4 mulQuaternion(@NonNull PVec4 other) {
@@ -243,6 +278,10 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  public PVec4 setToRotation(PVec3 axis, float rad) {
+    return this.setToRotation(axis.x(), axis.y(), axis.z(), rad);
+  }
+
   public PVec4 setToRotation(float axisX, float axisY, float axisZ, float rad) {
     PMat4 temp = PMat4.obtain().setToRotation(axisX, axisY, axisZ, rad);
     backingQuaterion.setFromMatrix(temp.getBackingMatrix4());
@@ -272,17 +311,9 @@ public class PVec4 extends PVec<PVec4> {
            PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingQuaterion.w), 7) + ">";
   }
 
-  public float w() {
-    return backingQuaterion.w;
-  }
-
   public PVec4 w(float w) {
     this.backingQuaterion.w = w;
     return this;
-  }
-
-  public float x() {
-    return backingQuaterion.x;
   }
 
   public PVec4 x(float x) {
@@ -290,17 +321,9 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
-  public float y() {
-    return backingQuaterion.y;
-  }
-
   public PVec4 y(float y) {
     this.backingQuaterion.y = y;
     return this;
-  }
-
-  public float z() {
-    return backingQuaterion.z;
   }
 
   public PVec4 z(float z) {

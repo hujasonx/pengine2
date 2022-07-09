@@ -10,7 +10,9 @@ import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
+import com.phonygames.pengine.math.PInverseKinematicsUtils;
 import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PVec;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -101,7 +103,19 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (modelInstance == null) {return;}
     float facingDirAng = PNumberUtils.angle(0, 0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
     modelInstance.worldTransform().setToTranslation(characterController.pos()).rot(0, -1, 0, facingDirAng);
+    modelInstance.resetTransformsFromTemplates();
     modelInstance.recalcTransforms();
+    ikArms();
+    modelInstance.recalcTransforms();
+  }
+
+  private void ikArms() {
+    if (modelInstance == null) {return;}
+    PModelInstance.Node armUpperR = modelInstance.getNode("ArmUpper.R");
+    PModelInstance.Node armLowerR = modelInstance.getNode("ArmLower.R");
+    PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
+    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, PVec3.obtain().set(10, 10, 10),.01f);
+
   }
 
   @Override public void render(PRenderContext renderContext) {
