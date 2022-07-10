@@ -45,6 +45,14 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
     return this;
   }
 
+  public E peek() {
+    return backingArray.peek();
+  }
+
+  public E pop() {
+    return backingArray.pop();
+  }
+
   public PList<E> clearAndFreePooled() {
     if (genedValuesPool != null) {
       for (int a = 0; a < size(); a++) {

@@ -6,6 +6,7 @@ import com.phonygames.cybertag.character.CharacterEntity;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.PRenderable;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
@@ -19,7 +20,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
-public abstract class Gun {
+public abstract class Gun implements PRenderable {
   protected final CharacterEntity characterEntity;
   // Guns are placed based on their offset from the camera eyes.
   protected final PVec3 standardOffsetFromCamera = PVec3.obtain();
@@ -78,7 +79,7 @@ public abstract class Gun {
     reloadAnimationT = 0;
   }
 
-  public void render(PRenderContext renderContext) {
+  @Override public void render(PRenderContext renderContext) {
     if (this.modelInstance != null) {
       this.modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
     }

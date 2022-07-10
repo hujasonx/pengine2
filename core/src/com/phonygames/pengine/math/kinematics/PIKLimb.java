@@ -41,7 +41,7 @@ public class PIKLimb implements PPool.Poolable {
   private final PVec3 pole = PVec3.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final PMat4 endTransformFromLastNode = PMat4.obtain();
+  private final PVec3 endLocalTranslationFromLastNode = PVec3.obtain();
 
   private PIKLimb() {
   }
@@ -70,10 +70,43 @@ public class PIKLimb implements PPool.Poolable {
     return this;
   }
 
-  public PIKLimb setEndTransformFromLastNode(PMat4 transform) {
+  public PIKLimb setEndLocalTranslationFromLastNode(PVec3 translation) {
     PAssert.isTrue(nodes.size() > 0);
-    endTransformFromLastNode.set(transform);
+    endLocalTranslationFromLastNode().set(translation);
     return this;
+  }
+
+  public void performIkToReach(PVec3 vec3) {
+    performIkToReach(vec3.x(), vec3.y(), vec3.z());
+  }
+
+  public void performIkToReach(float x, float y, float z) {
+    PAssert.isTrue(nodes.size() > 0);
+    PModelInstance.Node baseNode = nodes.get(0);
+    PPool.PoolBuffer pool = PPool.getBuffer();
+    PVec3 t = pool.vec3().set(x, y, z);
+    PVec3 basePos = baseNode.worldTransform().getTranslation(pool.vec3());
+    PVec3 currentEndPos = nodes.peek().worldTransform().translate(endLocalTranslationFromLastNode()).getTranslation(pool.vec3());
+    PVec4 aGRot = baseNode.worldTransform().getRotation(pool.vec4());
+    PVec4 aLRotChange = pool.vec4();
+    if (nodes.size() == 1) {
+      PInverseKinematicsUtils.oneJointRotationToPointTo(aLRotChange, basePos, currentEndPos, t,aGRot);
+      baseNode.transform().rotate(aLRotChange);
+      baseNode.recalcNodeWorldTransformsRecursive(true);
+      pool.free();
+      return;
+    }
+    PModelInstance.Node kneeNode = this.kneeNode;
+    if (kneeNode == null) {
+      if (nodes.size() == 2) {
+        // Use the second node as the knee node if there are two nodes.
+        kneeNode = nodes.get(1);
+      } else {
+        PAssert.fail("No valid knee was found for ik.");
+      }
+    }
+    PVec4 bLRotChange = pool.vec4();
+    pool.free();
   }
 
   @Override public void reset() {

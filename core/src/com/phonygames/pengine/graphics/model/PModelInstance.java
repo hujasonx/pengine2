@@ -52,7 +52,7 @@ public class PModelInstance {
     this.model = model;
     PMap<PModel.Node, Node> childToParentNodeMap = new PMap<>();
     PList<PModel.Node> modelNodesToProcess = new PList<>();
-    for (int a = 0 ; a < model.rootNodeIds().size(); a++) {
+    for (int a = 0; a < model.rootNodeIds().size(); a++) {
       String rootName = model.rootNodeIds().get(a);
       modelNodesToProcess.add(model.nodes().get(rootName));
     }
@@ -284,7 +284,12 @@ public class PModelInstance {
       return templateNode.id();
     }
 
-    public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform, boolean forceRecursionIfFIrst) {
+    public void recalcNodeWorldTransformsRecursive(boolean forceRecursionIfFirst) {
+      recalcNodeWorldTransformsRecursive(parent() == null ? PMat4.IDT : parent().worldTransform(),
+                                         forceRecursionIfFirst);
+    }
+
+    public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform, boolean forceRecursionIfFirst) {
       if (inheritTransform) {
         worldTransform().set(parentWorldTransform).mul(transform());
       } else {
@@ -295,7 +300,7 @@ public class PModelInstance {
         PGlNode node = glNodes().get(a);
         node.setWorldTransform(worldTransform(), worldTransformInvTra());
       }
-      if (stopWorldTransformRecursionAt && !forceRecursionIfFIrst) {return;}
+      if (stopWorldTransformRecursionAt && !forceRecursionIfFirst) {return;}
       for (int a = 0; a < children().size(); a++) {
         Node child = children().get(a);
         child.recalcNodeWorldTransformsRecursive(worldTransform(), false);
