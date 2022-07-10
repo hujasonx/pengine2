@@ -70,7 +70,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (!PNumberUtils.epsilonEquals(0, dir.x()) || !PNumberUtils.epsilonEquals(0, dir.z())) {
       facingDirFlat.set(dir.x(), dir.z()).nor();
     }
-    characterController.getPos(out).add(0, 1.5f, 0).add(facingDirFlat.x() * .2f, 0, facingDirFlat.y() * .2f);
+    characterController.getPos(out).add(0, 1.5f, 0).add(facingDirFlat.x() * .1f, 0, facingDirFlat.y() * .1f);
     facingLeftFlat.set(facingDirFlat.y(), -facingDirFlat.x());
   }
 

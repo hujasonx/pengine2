@@ -252,11 +252,6 @@ public class PModelInstance {
         Node otherNode = other.nodes().get(templateNode().id());
         otherNode.worldTransform().set(worldTransform());
         other.nodes().get(templateNode().id()).worldTransformInvTra().set(worldTransformInvTra());
-        if (isRoot) {
-          System.out.println("Root Copying: " + templateNode().id());
-        } else {
-          System.out.println("\tCopying: " + templateNode().id());
-        }
         if (!otherNode.inheritTransform) {
           // If the other node does not inherit transforms, set the transform directly from the world transform.
           otherNode.transform().set(worldTransform());
