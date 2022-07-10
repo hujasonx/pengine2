@@ -25,6 +25,7 @@ public class PVec3 extends PVec<PVec3> {
   public static PVec3 Y = new PVec3().set(0, 1, 0);
   public static PVec3 Z = new PVec3().set(0, 0, 1);
   public static PVec3 ZERO = new PVec3().set(0, 0, 0);
+  public static PVec3 ONE = new PVec3().set(1, 1, 1);
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final Vector3 backingVec3 = new Vector3();
@@ -169,6 +170,11 @@ public class PVec3 extends PVec<PVec3> {
 
   public PVec3 crs(PVec3 other) {
     backingVec3.crs(other.backingVec3);
+    return this;
+  }
+
+  public PVec3 crs(float x, float y, float z) {
+    backingVec3.crs(x, y, z);
     return this;
   }
 

@@ -1,5 +1,7 @@
 package com.phonygames.cybertag.gun;
 
+import android.support.annotation.Nullable;
+
 import com.phonygames.cybertag.character.CharacterEntity;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PEngine;
@@ -19,7 +21,8 @@ import lombok.experimental.Accessors;
 
 public abstract class Gun {
   protected final CharacterEntity characterEntity;
-  protected final PVec3 standardOffsetFromPlayer = PVec3.obtain();
+  // Guns are placed based on their offset from the camera eyes.
+  protected final PVec3 standardOffsetFromCamera = PVec3.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
@@ -39,11 +42,11 @@ public abstract class Gun {
     modelInstance.material("matBase").useVColIndex(true);
   }
 
-  public void frameUpdate(PPool.PoolBuffer pool) {
+  public void frameUpdate(PPool.PoolBuffer pool, @Nullable PMat4 cameraTransform) {
     if (modelInstance != null) {
-      PVec3 worldOffsetFromPlayer =
-          pool.vec3().set(standardOffsetFromPlayer);
-      modelInstance.worldTransform().set(characterEntity.worldTransform()).translate(worldOffsetFromPlayer);
+      PVec3 worldOffsetFromCamera =
+          pool.vec3().set(standardOffsetFromCamera);
+      modelInstance.worldTransform().set(cameraTransform).translate(worldOffsetFromCamera);
       modelInstance.recalcTransforms();
 
       if (reloadAnimationT != -1 && reloadAnimation != null) {

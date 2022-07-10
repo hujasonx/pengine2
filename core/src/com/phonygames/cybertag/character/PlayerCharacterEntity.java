@@ -120,7 +120,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
       gun.reload();
     }
-    gun.frameUpdate(pool);
+    gun.frameUpdate(pool, cameraController.worldTransform());
     // Ik arms.
     PVec3 wristLGoalPos = gun.getBoneWorldTransform("Wrist.L").getTranslation(pool.vec3());
     PVec3 wristRGoalPos = gun.getBoneWorldTransform("Wrist.R").getTranslation(pool.vec3());

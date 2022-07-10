@@ -75,7 +75,11 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PVec3 getTransformedDirection(PVec3 inout) {
-    return inout.mul(this, 0).nor();
+    inout.mul(this, 1);
+    float endX = inout.x();
+    float endY = inout.y();
+    float endZ = inout.z();
+    return inout.setZero().mul(this, 1).sub(endX, endY, endZ).scl(-1).nor();
   }
 
   public PVec3 getYAxis(PVec3 out) {
@@ -168,8 +172,23 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PMat4 set(PVec3 xAxis, PVec3 yAxis, PVec3 zAxis, PVec3 pos) {
-    this.forWriting().backingMatrix4.set(xAxis.backingVec3(), yAxis.backingVec3(), zAxis.backingVec3(),
-                                         pos.backingVec3());
+    float[] val = backingMatrix4.val;
+    val[Matrix4.M00] = xAxis.x();
+    val[Matrix4.M01] = yAxis.x();
+    val[Matrix4.M02] = zAxis.x();
+    val[Matrix4.M03] = pos.x();
+    val[Matrix4.M10] = xAxis.y();
+    val[Matrix4.M11] = yAxis.y();
+    val[Matrix4.M12] = zAxis.y();
+    val[Matrix4.M13] = pos.y();
+    val[Matrix4.M20] = xAxis.z();
+    val[Matrix4.M21] = yAxis.z();
+    val[Matrix4.M22] = zAxis.z();
+    val[Matrix4.M23] = pos.z();
+    val[Matrix4.M30] = 0f;
+    val[Matrix4.M31] = 0f;
+    val[Matrix4.M32] = 0f;
+    val[Matrix4.M33] = 1f;
     return this;
   }
 

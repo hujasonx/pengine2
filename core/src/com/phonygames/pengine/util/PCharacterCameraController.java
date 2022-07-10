@@ -8,7 +8,9 @@ import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.input.PMouse;
+import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 
 import java.awt.image.renderable.RenderContext;
 
@@ -32,6 +34,10 @@ public class PCharacterCameraController {
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private float rotateSpeed = 2;
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final PMat4 worldTransform = PMat4.obtain();
+
 
   public interface Delegate {
     void getFirstPersonCameraPosition(PVec3 out, PVec3 dir);
@@ -80,8 +86,13 @@ public class PCharacterCameraController {
     dir().rotate(0, -1, 0, yawRotateAmount);
     // Use lerp to smooth the camera movement.
     final float smoothFactor = 90;
-    smoothDir().lerp(dir(), Math.min(1, PEngine.uidt * smoothFactor));
+    smoothDir().lerp(dir(), Math.min(1, PEngine.uidt * smoothFactor)).nor();
     delegate.getFirstPersonCameraPosition(pos(), smoothDir());
+    PVec3 smoothLeft = pool.vec3().set(smoothDir()).crs(0, -1, 0).nor();
+    PVec3 smoothUp = pool.vec3().set(smoothDir()).crs(smoothLeft).nor();
+    worldTransform().set(smoothLeft, smoothUp, smoothDir(), pos());
+    System.out.println(worldTransform().getXAxis(PVec3.obtain()) + ", " + smoothLeft);
+//    System.out.println(worldTransform().getXAxis(PVec3.obtain()).dst(smoothLeft) + ", " + worldTransform().getYAxis(PVec3.obtain()).dst(smoothUp) + ", " + worldTransform().getZAxis(PVec3.obtain()).dst(smoothDir()));
     pool.free();
   }
 }
