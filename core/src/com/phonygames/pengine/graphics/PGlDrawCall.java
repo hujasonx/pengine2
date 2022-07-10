@@ -20,12 +20,24 @@ import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDeepCopyable<PGlDrawCall> {
+  // #pragma mark - PWriteLockable
+  // #pragma end - PWriteLockable
+  // #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
+  // #pragma end - PPool.Poolable
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private static final PGlDrawCall DEFAULT = new PGlDrawCall(true);
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private static final PPool<PGlDrawCall> staticPool = new PPool<PGlDrawCall>() {
+    // #pragma mark - PWriteLockable
+    // #pragma end - PWriteLockable
+    // #pragma mark - PPool.Poolable
+    // #pragma end - PPool.Poolable
+
     @Override protected PGlDrawCall newObject() {
       return new PGlDrawCall(false);
     }
@@ -36,6 +48,9 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PMap<String, Integer> dataBufferLookupVecsPerInstance = new PMap<String, Integer>();
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final PVec3 origin = PVec3.obtain();
   @Getter
   @Accessors(fluent = true)
   private final boolean renderingDisabled;
@@ -56,15 +71,9 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Accessors(fluent = true)
   private int numInstances, dstFactor, srcFactor, dptTest, cullFace, boneTransformsLookupOffset,
       boneTransformsVecsPerInstance;
-  @Getter
-  @Setter
-  private PPool ownerPool, sourcePool;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private PShader shader;
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
-  @Accessors(fluent = true)
-  private final PVec3 origin = PVec3.obtain();
 
   private PGlDrawCall(boolean renderingDisabled) {
     reset();
@@ -230,6 +239,11 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     return this;
   }
 
+  public PGlDrawCall setOrigin(PVec3 origin) {
+    origin().set(origin);
+    return this;
+  }
+
   public PGlDrawCall setShader(PShader shader) {
     this.shader = shader;
     return this;
@@ -237,11 +251,6 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
 
   public PGlDrawCall setSrcFactor(int srcFactor) {
     this.srcFactor = srcFactor;
-    return this;
-  }
-
-  public PGlDrawCall setOrigin(PVec3 origin) {
-    origin().set(origin);
     return this;
   }
 }

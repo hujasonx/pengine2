@@ -1,8 +1,11 @@
-package com.phonygames.pengine.math;
+package com.phonygames.pengine.math.kinematics;
 
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PPool;
 
 public class PInverseKinematicsUtils {
