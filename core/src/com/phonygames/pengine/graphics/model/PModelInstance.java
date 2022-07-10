@@ -73,6 +73,14 @@ public class PModelInstance {
     }
   }
 
+  public PModelInstance copySameNameBoneTransformsToWithRoot(PModelInstance modelInstance, String rootName) {
+    Node node = nodes().get(rootName);
+    Node otherNode = modelInstance.nodes().get(rootName);
+    if (node == null || otherNode == null) {return this;}
+    node.copySameNameBoneTransformsToRecursive(modelInstance, true);
+    return this;
+  }
+
   public PModelInstance createAndAddStaticBodiesFromModelWithCurrentWorldTransform() {
     try (val it = model.staticCollisionShapes().obtainIterator()) {
       while (it.hasNext()) {
@@ -174,7 +182,11 @@ public class PModelInstance {
       while (it.hasNext()) {
         val e = it.next();
         if (nodes().has(e.k())) {
-          nodes().get(e.k()).transform().scl(1 - alpha).mulAdd(e.v(), alpha);
+          if (alpha == 1) {
+            nodes().get(e.k()).transform().set(e.v());
+          } else {
+            nodes().get(e.k()).transform().scl(1 - alpha).mulAdd(e.v(), alpha);
+          }
         }
       }
     }
@@ -230,6 +242,43 @@ public class PModelInstance {
       }
     }
 
+    /**
+     * @param other
+     * @param isRoot If set, this will calculate the transform of the other node necessary to reach the desired
+     *               transform.
+     */
+    public void copySameNameBoneTransformsToRecursive(PModelInstance other, boolean isRoot) {
+      if (other.nodes().has(templateNode().id())) {
+        Node otherNode = other.nodes().get(templateNode().id());
+        otherNode.worldTransform().set(worldTransform());
+        other.nodes().get(templateNode().id()).worldTransformInvTra().set(worldTransformInvTra());
+        if (isRoot) {
+          System.out.println("Root Copying: " + templateNode().id());
+        } else {
+          System.out.println("\tCopying: " + templateNode().id());
+        }
+        if (!otherNode.inheritTransform) {
+          // If the other node does not inherit transforms, set the transform directly from the world transform.
+          otherNode.transform().set(worldTransform());
+        } else if (isRoot && otherNode.inheritTransform) {
+          // If this is a root node in the model, then recalc the transform given the other model's parent.
+          PMat4 invOtherNodeParentTransform = PMat4.obtain();
+          if (otherNode.parent() != null) {
+            invOtherNodeParentTransform.set(otherNode.parent().worldTransform());
+          } else {
+            invOtherNodeParentTransform.set(other.worldTransform());
+          }
+          otherNode.transform().set(worldTransform()).mulLeft(invOtherNodeParentTransform.inv());
+        } else {
+          otherNode.transform().set(transform());
+        }
+        // Recurse.
+        for (int a = 0; a < children().size; a++) {
+          children().get(a).copySameNameBoneTransformsToRecursive(other, false);
+        }
+      }
+    }
+
     public String id() {
       return templateNode.id();
     }
@@ -244,7 +293,7 @@ public class PModelInstance {
       for (PGlNode node : glNodes()) {
         node.setWorldTransform(worldTransform(), worldTransformInvTra());
       }
-      if (stopWorldTransformRecursionAt && !forceRecursionIfFIrst) { return; }
+      if (stopWorldTransformRecursionAt && !forceRecursionIfFIrst) {return;}
       for (Node child : children()) {
         child.recalcNodeWorldTransformsRecursive(worldTransform(), false);
       }
