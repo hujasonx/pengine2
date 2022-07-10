@@ -64,6 +64,9 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
   }
 
   public PList<E> clear() {
+    if (genedValuesPool != null) {
+      PAssert.warn("Called clear() on a PList with a gened values pool, consider using clearAndFreePooled() instead.");
+    }
     backingArray.clear();
     return this;
   }

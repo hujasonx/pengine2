@@ -142,7 +142,28 @@ public class PModel {
 
     public PModel build() {
       lockBuilder();
+      processNodes();
       return model;
+    }
+
+    private void processNodeRecursive(Node node, @Nullable PMat4 parentTransform) {
+      node.modelSpaceTransform().unlockWriting();
+      if (parentTransform == null) {
+        node.modelSpaceTransform().set(node.transform());
+      } else {
+        node.modelSpaceTransform().set(parentTransform).mul(node.transform());
+      }
+      node.modelSpaceTransform().lockWriting();
+      for (int a = 0; a < node.children().size(); a++) {
+        processNodeRecursive(node.children().get(a), node.modelSpaceTransform());
+      }
+    }
+
+    private void processNodes() {
+      for (int a = 0; a < model.rootNodeIds().size(); a++) {
+        Node node = model.nodes().get(model.rootNodeIds().get(a));
+        processNodeRecursive(node, null);
+      }
     }
   }
 
@@ -161,7 +182,7 @@ public class PModel {
     private final Node parent;
     @Getter(value = AccessLevel.PUBLIC, lazy = true)
     @Accessors(fluent = true)
-    private final PMat4 transform = PMat4.obtain();
+    private final PMat4 transform = PMat4.obtain(), modelSpaceTransform = PMat4.obtain();
     @Getter(value = AccessLevel.PUBLIC)
     @Setter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
@@ -174,6 +195,8 @@ public class PModel {
       if (parent != null) {
         parent.children().add(this);
       }
+      // Dont let the user write to the model space transform; the model builder will set it.
+      modelSpaceTransform().lockWriting();
     }
 
     private boolean hasParent() {

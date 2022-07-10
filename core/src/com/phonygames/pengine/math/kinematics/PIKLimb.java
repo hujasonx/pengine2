@@ -2,7 +2,10 @@ package com.phonygames.pengine.math.kinematics;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 
@@ -25,13 +28,20 @@ public class PIKLimb implements PPool.Poolable {
       return new PIKLimb();
     }
   };
-  private final PList<PVec3> bindSpaceRotationAxes = new PList<>();
+  private final PList<PVec3> modelSpaceRotationAxes = new PList<>(PVec3.getStaticPool());
+  private final PList<PVec3> localSpaceRotationAxes = new PList<>(PVec3.getStaticPool());
   @Getter(value = AccessLevel.PUBLIC)
   private final PList<PModelInstance.Node> nodes = new PList<>();
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   private PModelInstance.Node kneeNode = null;
   private PModelInstance modelInstance;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PVec3 pole = PVec3.obtain();
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PMat4 endTransformFromLastNode = PMat4.obtain();
 
   private PIKLimb() {
   }
@@ -43,16 +53,34 @@ public class PIKLimb implements PPool.Poolable {
     return ret;
   }
 
-  public PIKLimb addNode(String nodeName, float bindAxisX, float bindAxisY, float bindAxisZ) {
+  public PIKLimb addNode(String nodeName, float modelSpaceAxisX, float modelSpaceAxisY, float modelSpaceAxisZ) {
     PAssert.isNotNull(modelInstance);
-    nodes.add(modelInstance.getNode(nodeName));
+    PModelInstance.Node node = modelInstance.getNode(nodeName);
+    nodes.add(node);
+    PVec4 temp4 = node.templateNode().modelSpaceTransform().getRotation(PVec4.obtain());
+    modelSpaceRotationAxes.genPooledAndAdd().set(modelSpaceAxisX, modelSpaceAxisY, modelSpaceAxisZ);
+    temp4.applyAsQuat(localSpaceRotationAxes.genPooledAndAdd().set(modelSpaceAxisX, modelSpaceAxisY, modelSpaceAxisZ));
+    temp4.free();
+    return this;
+  }
+
+  public PIKLimb setPole(PVec3 pole) {
+    PAssert.isNotNull(kneeNode, "Cant set a pole if there is no knee node set.");
+    this.pole().set(pole);
+    return this;
+  }
+
+  public PIKLimb setEndTransformFromLastNode(PMat4 transform) {
+    PAssert.isTrue(nodes.size() > 0);
+    endTransformFromLastNode.set(transform);
     return this;
   }
 
   @Override public void reset() {
     nodes.clear();
     kneeNode = null;
-    bindSpaceRotationAxes.clear();
+    modelSpaceRotationAxes.clearAndFreePooled();
+    localSpaceRotationAxes.clearAndFreePooled();
     modelInstance = null;
   }
 }
