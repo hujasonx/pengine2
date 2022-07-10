@@ -34,7 +34,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PStringMap<PMat4>> mat4StringMapsPool = new PPool<PStringMap<PMat4>>() {
     @Override protected PStringMap<PMat4> newObject() {
-      return new PStringMap<>(PMat4.getStaticPool());
+      return new PStringMap<PMat4>(PMat4.getStaticPool());
     }
   };
   @Getter

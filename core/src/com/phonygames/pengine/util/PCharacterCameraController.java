@@ -91,8 +91,6 @@ public class PCharacterCameraController {
     PVec3 smoothLeft = pool.vec3().set(smoothDir()).crs(0, -1, 0).nor();
     PVec3 smoothUp = pool.vec3().set(smoothDir()).crs(smoothLeft).nor();
     worldTransform().set(smoothLeft, smoothUp, smoothDir(), pos());
-    System.out.println(worldTransform().getXAxis(PVec3.obtain()) + ", " + smoothLeft);
-//    System.out.println(worldTransform().getXAxis(PVec3.obtain()).dst(smoothLeft) + ", " + worldTransform().getYAxis(PVec3.obtain()).dst(smoothUp) + ", " + worldTransform().getZAxis(PVec3.obtain()).dst(smoothDir()));
     pool.free();
   }
 }

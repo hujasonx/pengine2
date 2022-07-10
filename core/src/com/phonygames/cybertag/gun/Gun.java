@@ -42,21 +42,25 @@ public abstract class Gun {
     modelInstance.material("matBase").useVColIndex(true);
   }
 
+  public void applyTransformsToCharacterModelInstance(PModelInstance modelInstance) {
+    if (this.modelInstance != null) {
+      this.modelInstance.copySameNameBoneTransformsToWithRoot(modelInstance, "Wrist.L");
+      this.modelInstance.copySameNameBoneTransformsToWithRoot(modelInstance, "Wrist.R");
+    }
+  }
+
   public void frameUpdate(PPool.PoolBuffer pool, @Nullable PMat4 cameraTransform) {
     if (modelInstance != null) {
-      PVec3 worldOffsetFromCamera =
-          pool.vec3().set(standardOffsetFromCamera);
+      PVec3 worldOffsetFromCamera = pool.vec3().set(standardOffsetFromCamera);
       modelInstance.worldTransform().set(cameraTransform).translate(worldOffsetFromCamera);
       modelInstance.recalcTransforms();
-
       if (reloadAnimationT != -1 && reloadAnimation != null) {
         PAnimation reloadPAnimation = modelInstance.model().animations().get(reloadAnimation);
         PStringMap<PMat4> transformMap =
             modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true, 1);
         reloadPAnimation.apply(transformMap, reloadAnimationT % reloadPAnimation.getLength(), 1f);
         modelInstance.setNodeTransformsFromMap(transformMap, 1f);
-        transformMap.clearRecursive();
-        PMat4.getMat4StringMapsPool().free(transformMap);
+        transformMap.free();
         modelInstance.recalcTransforms();
         reloadAnimationT += PEngine.dt;
         if (reloadAnimationT > reloadPAnimation.getLength()) {reloadAnimationT = -1;}
@@ -64,22 +68,15 @@ public abstract class Gun {
     }
   }
 
-  public void applyTransformsToCharacterModelInstance(PModelInstance modelInstance) {
-    if (this.modelInstance != null) {
-      this.modelInstance.copySameNameBoneTransformsToWithRoot(modelInstance,"Wrist.L");
-      this.modelInstance.copySameNameBoneTransformsToWithRoot(modelInstance,"Wrist.R");
-    }
-  }
-
   public PMat4 getBoneWorldTransform(String name) {
     return modelInstance.nodes().get(name).worldTransform();
   }
 
+  public abstract String name();
+
   public void reload() {
     reloadAnimationT = 0;
   }
-
-  public abstract String name();
 
   public void render(PRenderContext renderContext) {
     if (this.modelInstance != null) {

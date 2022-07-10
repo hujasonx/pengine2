@@ -33,6 +33,12 @@ public abstract class PPool<T extends PPool.Poolable> {
    * The highest number of free objects. Can be reset any time.
    */
   public int peak;
+  /**
+   * A counter that goes up for every obtain and down for every free.
+   */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private int obtainFreeCounter = 0;
 
   /**
    * Creates a PPool with an initial capacity of 16 and no maximum.
@@ -75,6 +81,7 @@ public abstract class PPool<T extends PPool.Poolable> {
     }
     t.setOwnerPool(null);
     t.setSourcePool(this);
+    obtainFreeCounter++;
     return t;
   }
 
@@ -102,6 +109,7 @@ public abstract class PPool<T extends PPool.Poolable> {
     t.reset();
     PAssert.isNull(t.getOwnerPool(), "Freeing an object that is already held in a pool!");
     t.setOwnerPool(this);
+    obtainFreeCounter--;
     synchronized (freeObjects) {
       if (freeObjects.size < max) {
         freeObjects.add(t);
@@ -133,15 +141,6 @@ public abstract class PPool<T extends PPool.Poolable> {
   }
 
   public interface Poolable {
-    /* Usage:
-     @Getter @Setter private PPool ownerPool, sourcePool;
-     */
-    @Nullable PPool getOwnerPool();
-    void setOwnerPool(PPool pool);
-    @Nullable PPool getSourcePool();
-    void setSourcePool(PPool pool);
-    void reset();
-
     default void free() {
       if (getSourcePool() != null) {
         getSourcePool().free(this);
@@ -149,9 +148,22 @@ public abstract class PPool<T extends PPool.Poolable> {
         PAssert.warn("Attempted to free a poolable with no source pool!");
       }
     }
+    @Nullable PPool getSourcePool();
+    void setSourcePool(PPool pool);
+    /* Usage:
+     @Getter @Setter private PPool ownerPool, sourcePool;
+     */
+    @Nullable PPool getOwnerPool();
+    void setOwnerPool(PPool pool);
+    void reset();
   }
 
   public final static class PoolBuffer implements Poolable {
+    // #pragma mark - PPool.Poolable
+    @Getter
+    @Setter
+    private PPool ownerPool, sourcePool;
+    // #pragma end - PPool.Poolable
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     private final PList<PMat4> mat4s = new PList<>(PMat4.getStaticPool());
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
@@ -162,9 +174,6 @@ public abstract class PPool<T extends PPool.Poolable> {
     private final PList<PVec3> vec3s = new PList<>(PVec3.getStaticPool());
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     private final PList<PVec4> vec4s = new PList<>(PVec4.getStaticPool());
-    @Getter
-    @Setter
-    private PPool ownerPool, sourcePool;
 
     private PoolBuffer() {
     }
@@ -175,7 +184,7 @@ public abstract class PPool<T extends PPool.Poolable> {
     }
 
     public PMat4 mat4() {
-      return getMat4s().genAndAddPooled();
+      return getMat4s().genPooledAndAdd();
     }
 
     @Override public void reset() {
@@ -187,17 +196,17 @@ public abstract class PPool<T extends PPool.Poolable> {
     }
 
     public PVec1 vec1() {
-      return getVec1s().genAndAddPooled();
+      return getVec1s().genPooledAndAdd();
     }
 
-    public PVec2 vec2() { return getVec2s().genAndAddPooled(); }
+    public PVec2 vec2() {return getVec2s().genPooledAndAdd();}
 
     public PVec3 vec3() {
-      return getVec3s().genAndAddPooled();
+      return getVec3s().genPooledAndAdd();
     }
 
     public PVec4 vec4() {
-      return getVec4s().genAndAddPooled();
+      return getVec4s().genPooledAndAdd();
     }
   }
 }

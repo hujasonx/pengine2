@@ -27,6 +27,7 @@ import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PFlyingCameraController;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
 
 public class CybertagGame implements PGame {
@@ -45,6 +46,7 @@ public class CybertagGame implements PGame {
   private World world;
 
   @Override public void frameUpdate() {
+    PPool.PoolBuffer pool = PPool.getBuffer();
     if (PKeyboard.isFrameJustDown(Input.Keys.ESCAPE)) {
       PMouse.setCatched(!PMouse.isCatched());
     }
@@ -63,10 +65,9 @@ public class CybertagGame implements PGame {
     world.render(renderContext);
     // Set environment.
     environment.setAmbientLightCol(.1f, .1f, .1f);
-    PVec3 tempV3 = PVec3.obtain().set(1, -1, -1).nor();
+    PVec3 tempV3 = pool.vec3().set(1, -1, -1).nor();
     environment.setDirectionalLightDir(0, tempV3.x(), tempV3.y(), tempV3.z());
     environment.setDirectionalLightColor(0, .3f, .3f, .3f);
-    tempV3.free();
     for (int a = 0; a < testLights.length; a++) {
       testLights[a].transform().setToTranslation(MathUtils.sin(PEngine.t * .5f + a) * 2,
                                                  MathUtils.sin(PEngine.t * .6f + 1f + 2 * a) * 2,
@@ -83,7 +84,7 @@ public class CybertagGame implements PGame {
         animation.apply(transformMap, (PEngine.t + a) % animation.getLength(), 1f);
         modelInstance.setNodeTransformsFromMap(transformMap, 1f);
         transformMap.clearRecursive();
-        PMat4.getMat4StringMapsPool().free(transformMap);
+        transformMap.free();
         modelInstance.recalcTransforms();
       }
       // Enqueue the model instances into the buffer.
@@ -93,8 +94,8 @@ public class CybertagGame implements PGame {
       for (int a = 0; a < duckModelInstances.size(); a++) {
         PModelInstance modelInstance = duckModelInstances.get(a);
         modelInstance.worldTransform().idt()
-                     .set(PVec3.obtain().set(5 * a, 1.5f, 10), PVec4.obtain().setToRotation(0, 1, 0, a),
-                          PVec3.obtain().set(.1f, .1f, .1f));
+                     .set(pool.vec3().set(5 * a, 1.5f, 10), pool.vec4().setToRotation(0, 1, 0, a),
+                          pool.vec3().set(.1f, .1f, .1f));
         modelInstance.recalcTransforms();
       }
       // Enqueue the model instances into the buffer.
@@ -106,6 +107,7 @@ public class CybertagGame implements PGame {
     //    }
     renderContext.glRenderQueue();
     renderContext.end();
+    pool.free();
   }
 
   @Override public void init() {

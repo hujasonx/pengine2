@@ -65,6 +65,9 @@ public class PMap<K, V> extends PPooledIterable<PMap.Entry<K, V>> implements PPo
    * Clears the contents of the map.
    */
   public void clear() {
+    if (genedValues().size() > 0) {
+      PAssert.warn("Called clear() on a PMap with pooled values, consider using clearRecursive() instead");
+    }
     try (val it = obtainIterator()) {
       while (it.hasNext()) {
         val e = it.next();

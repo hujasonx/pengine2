@@ -23,11 +23,4 @@ public abstract class PBasic<T extends PBasic>
 
   protected abstract PPool<T> staticPool();
   public abstract T set(T other);
-
-  /**
-   * Frees the object into the given static pool.
-   */
-  @Override public final void free() {
-    staticPool().free((T) this);
-  }
 }

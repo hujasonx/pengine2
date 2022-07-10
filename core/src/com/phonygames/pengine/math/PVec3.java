@@ -21,16 +21,17 @@ public class PVec3 extends PVec<PVec3> {
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private static final PMat4 tempMat = PMat4.obtain();
+  public static PVec3 ONE = new PVec3().set(1, 1, 1);
   public static PVec3 X = new PVec3().set(1, 0, 0);
   public static PVec3 Y = new PVec3().set(0, 1, 0);
   public static PVec3 Z = new PVec3().set(0, 0, 1);
   public static PVec3 ZERO = new PVec3().set(0, 0, 0);
-  public static PVec3 ONE = new PVec3().set(1, 1, 1);
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final Vector3 backingVec3 = new Vector3();
 
-  private PVec3() {}
+  private PVec3() {
+  }
 
   /**
    * Adds other to caller into caller.
@@ -40,19 +41,6 @@ public class PVec3 extends PVec<PVec3> {
   @Override public PVec3 add(PVec3 other) {
     backingVec3.add(other.backingVec3);
     return this;
-  }
-
-  public PVec3 sub(float x, float y, float z) {
-    backingVec3.sub(x, y, z);
-    return this;
-  }
-
-  public float[] emit(float[] out) {
-    PAssert.isTrue(out.length == 3);
-    out[0] = backingVec3.x;
-    out[1] = backingVec3.y;
-    out[2] = backingVec3.z;
-    return out;
   }
 
   /**
@@ -186,6 +174,14 @@ public class PVec3 extends PVec<PVec3> {
     return backingVec3.dst2(other.backingVec3);
   }
 
+  public float[] emit(float[] out) {
+    PAssert.isTrue(out.length == 3);
+    out[0] = backingVec3.x;
+    out[1] = backingVec3.y;
+    out[2] = backingVec3.z;
+    return out;
+  }
+
   @Override public boolean equalsT(PVec3 vec3) {
     return this.backingVec3.equals(vec3);
   }
@@ -279,6 +275,11 @@ public class PVec3 extends PVec<PVec3> {
 
   @Override public PVec3 set(PVec3 other) {
     backingVec3.set(other.backingVec3);
+    return this;
+  }
+
+  public PVec3 sub(float x, float y, float z) {
+    backingVec3.sub(x, y, z);
     return this;
   }
 

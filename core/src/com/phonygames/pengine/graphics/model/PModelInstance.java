@@ -145,7 +145,7 @@ public class PModelInstance {
     try (val it = nodes().obtainIterator()) {
       while (it.hasNext()) {
         val e = it.next();
-        if (map.has(e.k())) {
+        if (map.has(e.k()) && alpha != 1) {
           // There was already a maxtrix in the map for this node.
           PMat4 mat4 = map.get(e.k());
           mat4.lerp(useBindPose ? e.v().templateNode().transform() : e.v().transform(), alpha);
@@ -269,6 +269,7 @@ public class PModelInstance {
             invOtherNodeParentTransform.set(other.worldTransform());
           }
           otherNode.transform().set(worldTransform()).mulLeft(invOtherNodeParentTransform.inv());
+          invOtherNodeParentTransform.free();
         } else {
           otherNode.transform().set(transform());
         }

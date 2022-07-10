@@ -24,13 +24,13 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
           return new PListIterator<>();
         }
       };
-  private PPool newItemPool;
+  private PPool genedValuesPool;
 
   public PList() {
   }
 
-  public PList(PPool newItemPool) {
-    this.newItemPool = newItemPool;
+  public PList(PPool genedValuesPool) {
+    this.genedValuesPool = genedValuesPool;
   }
 
   public PList<E> addAll(PList<E> es) {
@@ -46,12 +46,13 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
   }
 
   public PList<E> clearAndFreePooled() {
-    if (newItemPool != null) {
+    if (genedValuesPool != null) {
       for (int a = 0; a < size(); a++) {
-        newItemPool.free((PPool.Poolable) get(a));
+        genedValuesPool.free((PPool.Poolable) get(a));
       }
     }
-    return clear();
+    backingArray.clear();
+    return this;
   }
 
   public int size() {
@@ -80,15 +81,15 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
   }
 
   public PList<E> fillToCapacityWithPooledValues(int capacity) {
-    PAssert.isNotNull(newItemPool, "The new item pool wasn't set.");
+    PAssert.isNotNull(genedValuesPool, "The new item pool wasn't set.");
     while (size() < capacity) {
-      genAndAddPooled();
+      genPooledAndAdd();
     }
     return this;
   }
 
-  public E genAndAddPooled() {
-    E ret = (E) newItemPool.obtain();
+  public E genPooledAndAdd() {
+    E ret = (E) genedValuesPool.obtain();
     add(ret);
     return ret;
   }
