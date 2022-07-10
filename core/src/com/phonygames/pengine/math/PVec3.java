@@ -41,6 +41,11 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  public PVec3 sub(float x, float y, float z) {
+    backingVec3.sub(x, y, z);
+    return this;
+  }
+
   public float[] emit(float[] out) {
     PAssert.isTrue(out.length == 3);
     out[0] = backingVec3.x;

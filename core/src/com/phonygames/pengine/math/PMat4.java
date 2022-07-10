@@ -70,6 +70,22 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     return false;
   }
 
+  public PVec3 getXAxis(PVec3 out) {
+    return getTransformedDirection(out.set(1, 0, 0));
+  }
+
+  public PVec3 getTransformedDirection(PVec3 inout) {
+    return inout.mul(this, 0).nor();
+  }
+
+  public PVec3 getYAxis(PVec3 out) {
+    return getTransformedDirection(out.set(0, 1, 0));
+  }
+
+  public PVec3 getZAxis(PVec3 out) {
+    return getTransformedDirection(out.set(0, 0, 1));
+  }
+
   public PMat4 inv() {
     this.forWriting().backingMatrix4.inv();
     return this;
@@ -152,7 +168,8 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   }
 
   public PMat4 set(PVec3 xAxis, PVec3 yAxis, PVec3 zAxis, PVec3 pos) {
-    this.forWriting().backingMatrix4.set(xAxis.backingVec3(), yAxis.backingVec3(), zAxis.backingVec3(), pos.backingVec3());
+    this.forWriting().backingMatrix4.set(xAxis.backingVec3(), yAxis.backingVec3(), zAxis.backingVec3(),
+                                         pos.backingVec3());
     return this;
   }
 

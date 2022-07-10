@@ -2,11 +2,12 @@ package com.phonygames.cybertag.character;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.MathUtils;
+import com.phonygames.cybertag.gun.Gun;
+import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
-import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
@@ -25,39 +26,42 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
   private PCharacterCameraController cameraController;
   private PModelInstance modelInstance;
+  private Gun gun;
 
   public PlayerCharacterEntity() {
     super();
     cameraController = new PCharacterCameraController(this);
     cameraController.setActive();
-    PModel model = PAssetManager.model("model/player/female.glb", true);
-    modelInstance = new PModelInstance(model);
+    characterController = new PPhysicsCharacterController(1, .3f, 1.8f, .5f, .2f);
+    characterController.setPos(10, 10, 10);
+    initModelInstance();
+    gun = new Pistol0(this);
+  }
+
+  private void initModelInstance() {
+    modelInstance = new PModelInstance(PAssetManager.model("model/player/female.glb", true));
     final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
-    modelInstance.setDataBufferEmitter(new PRenderContext.DataBufferEmitter() {
-      @Override public void emitDataBuffersInto(PRenderContext renderContext) {
-        PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
-        // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
-        // the normal or the Index with this buffer.
-        vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
-        vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
-        vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
-        vColIndexBuffer.addData(52f / 255f, 136f / 255f, 232f / 255f, 1); // Iris diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
-        vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
-        vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveR.
-        vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveR.
-      }
+    modelInstance.setDataBufferEmitter(renderContext -> {
+      PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
+      // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+      // the normal or the Index with this buffer.
+      vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
+      vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
+      vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
+      vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
+      vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
+      vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
+      vColIndexBuffer.addData(52f / 255f, 136f / 255f, 232f / 255f, 1); // Iris diffuseM.
+      vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
+      vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
+      vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
+      vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
+      vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveR.
+      vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
+      vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveR.
     });
     modelInstance.material("matBase").useVColIndex(true);
     modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
-    characterController = new PPhysicsCharacterController(1, .3f, 1.8f, .5f, .2f);
-    characterController.setPos(10, 10, 10);
   }
 
   @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
@@ -102,12 +106,12 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (modelInstance == null) {return;}
     PPool.PoolBuffer pool = PPool.getBuffer();
     float facingDirAng = PNumberUtils.angle(0, 0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
-    modelInstance.worldTransform().setToTranslation(characterController.getPos(pool.vec3())).rot(0, -1, 0, facingDirAng);
+    worldTransform().setToTranslation(characterController.getPos(pool.vec3()))
+                    .rot(0, -1, 0, facingDirAng);
+    modelInstance.worldTransform().set(worldTransform());
     modelInstance.resetTransformsFromTemplates();
     modelInstance.recalcTransforms();
-    if (PKeyboard.isDown(Input.Keys.SPACE)) {
-      ikArms(pool);
-    }
+    gun.frameUpdate(pool);
     pool.free();
   }
 
@@ -134,7 +138,9 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   }
 
   @Override public void render(PRenderContext renderContext) {
-    if (modelInstance == null) {return;}
-    modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+    if (modelInstance != null) {
+      modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+    }
+    gun.render(renderContext);
   }
 }
