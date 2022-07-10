@@ -607,7 +607,7 @@ public class PModelGen implements PPostableTask {
     private short getIndexOrAdd(final float x, final float y, final float z, final int maxSearchDepth) {
       if (!vertices().isEmpty()) {
         for (int a = 0; a < maxSearchDepth; a++) {
-          int lookupIndex = vertices().size - 3 * (1 + a);
+          int lookupIndex = vertices().size() - 3 * (1 + a);
           if (!PNumberUtils.epsilonEquals(vertices().get(lookupIndex + 0), x)) {
             continue;
           }
@@ -621,7 +621,7 @@ public class PModelGen implements PPostableTask {
         }
       }
       // We reached the max search depth (or bottom) without finding a match for the position, so add new position.
-      short ret = (short) (vertices().size / 3);
+      short ret = (short) (vertices().size() / 3);
       vertices().add(x);
       vertices().add(y);
       vertices().add(z);

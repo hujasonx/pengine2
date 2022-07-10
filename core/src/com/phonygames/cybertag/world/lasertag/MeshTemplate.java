@@ -72,7 +72,7 @@ public class MeshTemplate {
                    PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
                    PList<PModelGen.Part> alphaBlendParts) {
     PVec4 temp = PVec4.obtain();
-    for (int a = 0; a < this.meshes.size; a++) {
+    for (int a = 0; a < this.meshes.size(); a++) {
       PMesh mesh = this.meshes.get(a);
       boolean emitMesh = this.emitMesh.get(a);
       boolean emitPhysics = this.emitPhysics.get(a);

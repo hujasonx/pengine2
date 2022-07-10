@@ -12,7 +12,6 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PStringMap;
 
 import lombok.AccessLevel;
@@ -43,11 +42,12 @@ public class PModel {
 
   public void enqueue(@NonNull PRenderContext renderContext, @NonNull PShaderProvider shaderProvider,
                       @NonNull PList<PModelInstance> instances, boolean useMaterialOfFirstInstance) {
-    if (instances.size == 0) {
+    if (instances.size() == 0) {
       return;
     }
     // First, fill up the data buffers.
-    for (PModelInstance modelInstance : instances) {
+    for (int a = 0; a < instances.size(); a++) {
+      PModelInstance modelInstance = instances.get(a);
       if (modelInstance.getDataBufferEmitter() != null) {
         modelInstance.getDataBufferEmitter().emitDataBuffersInto(renderContext);
       }
@@ -57,18 +57,20 @@ public class PModel {
       while (it.hasNext()) {
         val v = it.next();
         Node node = v.v();
-        for (val glNode : v.v().glNodes()) {
+        for (int a = 0; a < v.v().glNodes().size(); a++) {
+          PGlNode glNode = v.v().glNodes().get(a);
           // Fill the bone transforms buffer.
           PModelInstance firstInstance = null;
           int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
-          for (PModelInstance modelInstance : instances) {
+          for (int b = 0; b < instances.size(); b++) {
+            PModelInstance modelInstance = instances.get(a);
             PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
             modelInstance.outputBoneTransformsToBuffer(renderContext, glNode.id());
             if (firstInstance == null) {
               firstInstance = modelInstance;
             }
           }
-          PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).setNumInstances(instances.size);
+          PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).setNumInstances(instances.size());
           if (useMaterialOfFirstInstance && firstInstance != null) {
             drawCall.material(firstInstance.glNodes().get(glNode.id()).drawCall().material());
           }
@@ -83,9 +85,11 @@ public class PModel {
   }
 
   public @Nullable PGlNode getFirstNode() {
-    for (String nodeId : rootNodeIds()) {
+    for (int a = 0; a < rootNodeIds().size(); a++) {
+      String nodeId = rootNodeIds().get(a);
       val node = nodes().get(nodeId);
-      for (PGlNode glNode : node.glNodes()) {
+      for (int b = 0; b < node.glNodes().size(); b++) {
+        PGlNode glNode = node.glNodes().get(b);
         return glNode;
       }
     }
@@ -93,9 +97,11 @@ public class PModel {
   }
 
   public @Nullable PGlNode glNodeWithId(String id) {
-    for (String nodeId : rootNodeIds()) {
+    for (int a = 0; a < rootNodeIds().size(); a++) {
+      String nodeId = rootNodeIds().get(a);
       val node = nodes().get(nodeId);
-      for (PGlNode glNode : node.glNodes()) {
+      for (int b = 0; b < node.glNodes().size(); b++) {
+        PGlNode glNode = node.glNodes().get(b);
         if (glNode.id().equals(id)) {return glNode;}
       }
     }
@@ -104,12 +110,14 @@ public class PModel {
 
   // Will use the material of the first instance. So make sure all buffers point to the same source!
   public void render(PList<PModelInstance> instances) {
-    for (PModelInstance instance : instances) {
+    for (int a = 0; a < instances.size(); a++) {
+      PModelInstance instance = instances.get(a);
       if (instance.model() != this) {
         continue;
       }
     }
-    for (String rootNodeId : rootNodeIds()) {
+    for (int a = 0; a < rootNodeIds().size(); a++) {
+      String rootNodeId = rootNodeIds().get(a);
       PModel.Node node = nodes().get(rootNodeId);
     }
   }
@@ -125,7 +133,8 @@ public class PModel {
         model.rootNodeIds().add(id);
       }
       model.nodes().put(id, node);
-      for (PGlNode glNode : glNodes) {
+      for (int a = 0; a < glNodes.size(); a++) {
+        PGlNode glNode = glNodes.get(a);
         model.glNodes().put(glNode.id(), glNode);
       }
       return node;

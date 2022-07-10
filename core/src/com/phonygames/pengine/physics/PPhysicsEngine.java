@@ -90,7 +90,8 @@ public class PPhysicsEngine {
   }
 
   public static void preFrameUpdate() {
-    for (PRigidBody rigidBody : rigidBodiesInSimulation) {
+    for (int a = 0; a < rigidBodiesInSimulation.size(); a++) {
+      PRigidBody rigidBody = rigidBodiesInSimulation.get(a);
       rigidBody.preFrameUpdate();
     }
   }
@@ -111,7 +112,8 @@ public class PPhysicsEngine {
     }
     if (PEngine.t < 5) {return;}
     dynamicsWorld.stepSimulation(PEngine.logictimestep);
-    for (PRigidBody rigidBody : rigidBodiesInSimulation) {
+    for (int a = 0; a < rigidBodiesInSimulation.size(); a++) {
+      PRigidBody rigidBody = rigidBodiesInSimulation.get(a);
       rigidBody.postLogicUpdate();
     }
   }

@@ -38,7 +38,7 @@ public class PVertexAttributes {
     for (VertexAttribute va : backingVertexAttributes) {
       vaList.add(va);
     }
-    VertexAttribute[] vaArray = new VertexAttribute[vaList.size];
+    VertexAttribute[] vaArray = new VertexAttribute[vaList.size()];
     for (int a = 0; a < vaArray.length; a++) {
       vaArray[a] = vaList.get(a);
     }

@@ -128,7 +128,7 @@ public class LasertagWorldGenOld {
 
     public int numVColIndicesUsed() {
       int max = 0;
-      for (int a = 0; a < vColIndexOffsets.size; a++) {
+      for (int a = 0; a < vColIndexOffsets.size(); a++) {
         max = Math.max(vColIndexOffsets.get(a), max);
       }
 

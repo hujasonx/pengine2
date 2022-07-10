@@ -52,21 +52,24 @@ public class PModelInstance {
     this.model = model;
     PMap<PModel.Node, Node> childToParentNodeMap = new PMap<>();
     PList<PModel.Node> modelNodesToProcess = new PList<>();
-    for (val rootName : model.rootNodeIds()) {
+    for (int a = 0 ; a < model.rootNodeIds().size(); a++) {
+      String rootName = model.rootNodeIds().get(a);
       modelNodesToProcess.add(model.nodes().get(rootName));
     }
-    while (modelNodesToProcess.size > 0) {
+    while (modelNodesToProcess.size() > 0) {
       PModel.Node modelNode = modelNodesToProcess.removeLast();
       Node parent = childToParentNodeMap.get(modelNode);
       Node node = new Node(this, modelNode, parent);
-      for (PGlNode glNode : node.glNodes()) {
+      for (int a = 0; a < node.glNodes().size(); a++) {
+        PGlNode glNode = node.glNodes().get(a);
         glNodes().put(glNode.id(), glNode);
       }
       nodes().put(modelNode.id(), node);
       if (parent == null) {
         rootNodes().add(node);
       }
-      for (val child : modelNode.children()) {
+      for (int a = 0; a < modelNode.children().size(); a++) {
+        PModel.Node child = modelNode.children().get(a);
         modelNodesToProcess.add(child);
         childToParentNodeMap.put(child, node);
       }
@@ -157,7 +160,8 @@ public class PModelInstance {
   }
 
   public void recalcTransforms() {
-    for (PModelInstance.Node node : rootNodes()) {
+    for (int a = 0; a < rootNodes().size(); a++) {
+      Node node = rootNodes().get(a);
       node.recalcNodeWorldTransformsRecursive(worldTransform(), false);
     }
   }
@@ -231,7 +235,8 @@ public class PModelInstance {
       this.templateNode = templateNode;
       this.parent = parent;
       transform().set(templateNode.transform());
-      for (PGlNode node : templateNode.glNodes()) {
+      for (int a = 0; a < templateNode.glNodes().size(); a++) {
+        PGlNode node = templateNode.glNodes().get(a);
         PGlNode newNode = node.deepCopy();
         newNode.ownerModelInstanceNode(this);
         materials().put(newNode.drawCall().material().id(), newNode.drawCall().material());
@@ -268,7 +273,7 @@ public class PModelInstance {
           otherNode.transform().set(transform());
         }
         // Recurse.
-        for (int a = 0; a < children().size; a++) {
+        for (int a = 0; a < children().size(); a++) {
           children().get(a).copySameNameBoneTransformsToRecursive(other, false);
         }
       }
@@ -285,11 +290,13 @@ public class PModelInstance {
         worldTransform().set(transform());
       }
       worldTransformInvTra().set(worldTransform()).invTra();
-      for (PGlNode node : glNodes()) {
+      for (int a = 0; a < glNodes().size(); a++) {
+        PGlNode node = glNodes().get(a);
         node.setWorldTransform(worldTransform(), worldTransformInvTra());
       }
       if (stopWorldTransformRecursionAt && !forceRecursionIfFIrst) {return;}
-      for (Node child : children()) {
+      for (int a = 0; a < children().size(); a++) {
+        Node child = children().get(a);
         child.recalcNodeWorldTransformsRecursive(worldTransform(), false);
       }
     }

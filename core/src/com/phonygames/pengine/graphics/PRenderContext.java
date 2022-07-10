@@ -258,7 +258,8 @@ public class PRenderContext {
             shader.start(this);
             val queue = queueMap.get(shader);
             queue.sort();
-            for (PGlDrawCall drawCall : queue) {
+            for (int a = 0; a < queue.size(); a++) {
+              PGlDrawCall drawCall = queue.get(a);
               drawCall.glDraw(this, shader, true);
             }
             shader.end();

@@ -176,7 +176,7 @@ public class PMapOld<K, V> implements Iterable<PMapOld.Entry<K, V>>, PPool.Poola
    * @return if the value is pooled by this map
    */
   public final boolean owns(V v) {
-    return genedValues().contains(v, true);
+    return genedValues().has(v, true);
   }
 
   public final void putAll(@NonNull Iterable<Entry<K, V>> other) {

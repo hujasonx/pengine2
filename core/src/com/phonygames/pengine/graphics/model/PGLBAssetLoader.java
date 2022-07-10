@@ -57,14 +57,14 @@ public class PGLBAssetLoader extends AsynchronousAssetLoader<PModel, PGLBAssetLo
       nodesToProcess.add(nodePlus);
     }
     PList<PGlNode> glNodes = new PList<>();
-    while (nodesToProcess.size > 0) {
+    while (nodesToProcess.size() > 0) {
       glNodes.clear();
       NodePlus nodePlus = nodesToProcess.removeLast();
       // Generate meshes if needed.
       if (!nodePlus.parts.isEmpty()) {
         for (val gdxNodePart : nodePlus.parts) {
           PMesh mesh = new PMesh(gdxNodePart.meshPart.mesh);
-          PGlNode node = new PGlNode(gdxNodePart.meshPart.id+"["+glNodes.size+"]");
+          PGlNode node = new PGlNode(gdxNodePart.meshPart.id+"["+glNodes.size()+"]");
           node.drawCall().setMesh(mesh);
           node.drawCall().setMaterial(genMaterial(gdxNodePart.material));
           node.drawCall().setLayer(PGltf.Layer.PBR);

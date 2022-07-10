@@ -52,7 +52,7 @@ public class LasertagRoomGenRoomPlacer {
       int roomZ = MathUtils.random(aabb.z0() - edgeShiftBoundaryZ, aabb.z1() + edgeShiftBoundaryZ - roomSizeZ + 1);
       roomZ = PNumberUtils.clamp(roomZ, aabb.z0(), aabb.z1() - roomSizeZ + 1);
       ret.set(roomX, roomY, roomZ, roomX + roomSizeX - 1, roomY + roomSizeY - 1, roomZ + roomSizeZ - 1);
-      for (int b = 0; b < outsideAabbs.size; b++) { // Check that the tile does not intersect.
+      for (int b = 0; b < outsideAabbs.size(); b++) { // Check that the tile does not intersect.
         if (outsideAabbs.get(b).intersects(ret)) {continue;}
       }
       if (validateAABBForRoomPlacement(ret, tileGenMap)) {

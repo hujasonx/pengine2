@@ -14,7 +14,7 @@ import com.phonygames.pengine.util.PSortableByScore;
 public class LasertagRoomGenWalkwayProcessor {
   private static PList<ProcessorDoorGen> getProcessorDoorGens(LasertagRoomGen roomGen) {
     PList<ProcessorDoorGen> doorGens = new PList<>();
-    for (int a = 0; a < roomGen.buildingGen.doorGens.size; a++) {
+    for (int a = 0; a < roomGen.buildingGen.doorGens.size(); a++) {
       ProcessorDoorGen doorGen = new ProcessorDoorGen(roomGen.buildingGen.doorGens.get(a), roomGen);
       if (doorGen.isValid) {
         doorGens.add(doorGen);
@@ -24,7 +24,7 @@ public class LasertagRoomGenWalkwayProcessor {
   }
 
   public static void processRoomWalkways(LasertagBuildingGen buildingGen) {
-    for (int a = 0; a < buildingGen.roomGens.size; a++) {
+    for (int a = 0; a < buildingGen.roomGens.size(); a++) {
       processRoomWalkways(buildingGen.roomGens.get(a));
     }
   }
@@ -61,7 +61,7 @@ public class LasertagRoomGenWalkwayProcessor {
         LasertagTileGen searchBufferTile = islandSearchBuffer.removeLast();
         if (searchBufferTile == null) {continue;}
         if (!searchBufferTile.tile.hasFloor) {continue;}
-        if (blockedTiles != null && blockedTiles.contains(searchBufferTile, true)) {continue;}
+        if (blockedTiles != null && blockedTiles.has(searchBufferTile, true)) {continue;}
         // Remove the search tile from the ungrouped tiles. If this returns true, that means the tile was originally
         // in the ungrouped tilegens buffer, which means we can add it to the island.
         if (islandStartTile == searchBufferTile || unGroupedTileGens.removeValue(searchBufferTile, true)) {
@@ -86,16 +86,16 @@ public class LasertagRoomGenWalkwayProcessor {
 
     ConnectedGroup addAllFrom(ConnectedGroup other) {
       PAssert.isTrue(this != other);
-      for (int a = 0; a < other.floorTileIslands.size; a++) {
+      for (int a = 0; a < other.floorTileIslands.size(); a++) {
         FloorTileIsland island = other.floorTileIslands.get(a);
-        if (!floorTileIslands.contains(island, true)) {
+        if (!floorTileIslands.has(island, true)) {
           floorTileIslands.add(island);
         }
       }
-      for (int a = 0; a < other.walkways.size; a++) {
+      for (int a = 0; a < other.walkways.size(); a++) {
         Walkway walkway = other.walkways.get(a);
         // Check to make sure there isnt already a walkway at this tile.
-        for (int b = 0; b < walkways.size; b++) {
+        for (int b = 0; b < walkways.size(); b++) {
           if (walkways.get(b).tileGen == walkway.tileGen && !walkway.equalsT(walkways.get(b))) {
             PAssert.fail("Competing walkways at tile " + walkway.tileGen);
           }
@@ -113,9 +113,9 @@ public class LasertagRoomGenWalkwayProcessor {
      */
     boolean flatWalkwaysAndFloorTileIslandsCanJoinInto(ConnectedGroup other) {
       // Check to see that at least one walkway or island tile has a neighbor relation.
-      for (int a = 0; a < floorTileIslands.size; a++) {
+      for (int a = 0; a < floorTileIslands.size(); a++) {
         FloorTileIsland island = floorTileIslands.get(a);
-        for (int b = 0; b < island.tiles.size; b++) {
+        for (int b = 0; b < island.tiles.size(); b++) {
           LasertagTileGen tileGen = island.tiles.get(b);
           for (int f = 0; f < FACINGS.length; f++) {
             LasertagTileWall.Facing facing = FACINGS[f];
@@ -124,7 +124,7 @@ public class LasertagRoomGenWalkwayProcessor {
           }
         }
       }
-      for (int a = 0; a < walkways.size; a++) {
+      for (int a = 0; a < walkways.size(); a++) {
         if (walkways.get(a).sloped) {continue;}
         LasertagTileGen tileGen = walkways.get(a).tileGen;
         for (int f = 0; f < FACINGS.length; f++) {
@@ -143,10 +143,10 @@ public class LasertagRoomGenWalkwayProcessor {
      */
     boolean hasFloorOrFlatWalkwayAt(@Nullable LasertagTileGen tileGen) {
       if (tileGen == null) {return false;}
-      for (int a = 0; a < floorTileIslands.size; a++) {
-        if (floorTileIslands.get(a).tiles.contains(tileGen, true)) {return true;}
+      for (int a = 0; a < floorTileIslands.size(); a++) {
+        if (floorTileIslands.get(a).tiles.has(tileGen, true)) {return true;}
       }
-      for (int a = 0; a < walkways.size; a++) {
+      for (int a = 0; a < walkways.size(); a++) {
         Walkway walkway = walkways.get(a);
         if (!walkway.sloped && walkway.tileGen == tileGen) {return true;}
       }
@@ -170,30 +170,30 @@ public class LasertagRoomGenWalkwayProcessor {
       this.processorDoorGens = getProcessorDoorGens(roomGen);
       this.floorTileIslands = separateFloorTilesIntoIslands(roomGen.tileGens.genValuesList(), null);
       // Generate connected groups.
-      for (int a = 0; a < floorTileIslands.size; a++) {
+      for (int a = 0; a < floorTileIslands.size(); a++) {
         FloorTileIsland island = floorTileIslands.get(a);
         ConnectedGroup connectedGroup = new ConnectedGroup();
         connectedGroups.add(connectedGroup);
         connectedGroup.floorTileIslands.add(island);
       }
-      for (int a = 0; a < processorDoorGens.size; a++) {
+      for (int a = 0; a < processorDoorGens.size(); a++) {
         ProcessorDoorGen doorGen = processorDoorGens.get(a);
         // Door gens that have no floorless tiles don't need to be added to a connected group.
-        if (doorGen.floorlessTilesGens.size == 0) {continue;}
+        if (doorGen.floorlessTilesGens.size() == 0) {continue;}
         // Door gens that have one floorless tile will be used to spawn walkway nodes.
-        if (doorGen.floorlessTilesGens.size == 1) {
+        if (doorGen.floorlessTilesGens.size() == 1) {
           oneTileFloorlessProcessorDoorGens.add(doorGen);
           continue;
         }
         // If the door has 2 or more floorless tiles, generate a connected group for it with walkways placed underneath.
         ConnectedGroup connectedGroup = new ConnectedGroup();
         connectedGroups.add(connectedGroup);
-        for (int b = 0; b < doorGen.floorlessTilesGens.size; b++) {
+        for (int b = 0; b < doorGen.floorlessTilesGens.size(); b++) {
           LasertagTileGen tileGen = doorGen.floorlessTilesGens.get(b);
           connectedGroup.walkways.add(new Walkway(this, tileGen, 0));
         }
       }
-      if (connectedGroups.size >= 2) {
+      if (connectedGroups.size() >= 2) {
         System.out.println();
       }
       prepassJoinConnectedGroups();
@@ -205,8 +205,8 @@ public class LasertagRoomGenWalkwayProcessor {
       while (!connectedGroupsToProcess.isEmpty()) {
         ConnectedGroup connectedGroup = connectedGroupsToProcess.removeLast();
         // If the connectedGroups list does not contain this group, it might have already been merged.
-        if (!connectedGroups.contains(connectedGroup, true)) {continue;}
-        for (int a = 0; a < connectedGroups.size; a++) {
+        if (!connectedGroups.has(connectedGroup, true)) {continue;}
+        for (int a = 0; a < connectedGroups.size(); a++) {
           ConnectedGroup otherGroup = connectedGroups.get(a);
           if (otherGroup == connectedGroup) {continue;}
           // Merge groups if they can be merged.
@@ -226,13 +226,13 @@ public class LasertagRoomGenWalkwayProcessor {
     private boolean attemptGenWalkway() {
       PList<WalkwayStartNode> startNodes = genWalkwayStartNodes();
       PList<PossibleWalkwayPath> possibleWalkwayPaths = new PList<>();
-      for (int a = 0; a < startNodes.size; a++) {
+      for (int a = 0; a < startNodes.size(); a++) {
         WalkwayStartNode walkwayStartNode = startNodes.get(a);
         walkwayStartNode.search();
         possibleWalkwayPaths.addAll(walkwayStartNode.possibleWalkwayPaths);
       }
       possibleWalkwayPaths.sort();
-      while (possibleWalkwayPaths.size > 0) {
+      while (possibleWalkwayPaths.size() > 0) {
         if (possibleWalkwayPaths.removeLast().applyToContext()) {return true;}
       }
       return false;
@@ -240,9 +240,9 @@ public class LasertagRoomGenWalkwayProcessor {
 
     private PList<WalkwayStartNode> genWalkwayStartNodes() {
       PList<WalkwayStartNode> ret = new PList<>();
-      for (int a = 0; a < connectedGroups.size; a++) {
+      for (int a = 0; a < connectedGroups.size(); a++) {
         ConnectedGroup connectedGroup = connectedGroups.get(a);
-        for (int b = 0; b < connectedGroup.walkways.size; b++) {
+        for (int b = 0; b < connectedGroup.walkways.size(); b++) {
           Walkway walkway = connectedGroup.walkways.get(b);
           if (walkway.sloped) {continue;}
           for (int f = 0; f < FACINGS.length; f++) {
@@ -255,9 +255,9 @@ public class LasertagRoomGenWalkwayProcessor {
             }
           }
         }
-        for (int b = 0; b < connectedGroup.floorTileIslands.size; b++) {
+        for (int b = 0; b < connectedGroup.floorTileIslands.size(); b++) {
           FloorTileIsland island = connectedGroup.floorTileIslands.get(b);
-          for (int c = 0; c < island.tiles.size; c++) {
+          for (int c = 0; c < island.tiles.size(); c++) {
             LasertagTileGen tileGen = island.tiles.get(c);
             for (int f = 0; f < FACINGS.length; f++) {
               LasertagTileWall.Facing facing = FACINGS[f];
@@ -271,7 +271,7 @@ public class LasertagRoomGenWalkwayProcessor {
           }
         }
       }
-      for (int a = 0; a < oneTileFloorlessProcessorDoorGens.size; a++) {
+      for (int a = 0; a < oneTileFloorlessProcessorDoorGens.size(); a++) {
         ProcessorDoorGen doorGen = oneTileFloorlessProcessorDoorGens.get(a);
         ret.add(new WalkwayStartNode(this, doorGen.floorlessTilesGens.get(0), 0, doorGen, doorGen.facing));
       }
@@ -309,11 +309,11 @@ public class LasertagRoomGenWalkwayProcessor {
 
     private boolean isFloorTile(@Nullable LasertagTileGen tileGen) {
       if (tileGen == null) {return false;}
-      for (int a = 0; a < connectedGroups.size; a++) {
+      for (int a = 0; a < connectedGroups.size(); a++) {
         ConnectedGroup connectedGroup = connectedGroups.get(a);
-        for (int b = 0; b < connectedGroup.floorTileIslands.size; b++) {
+        for (int b = 0; b < connectedGroup.floorTileIslands.size(); b++) {
           FloorTileIsland island = connectedGroup.floorTileIslands.get(b);
-          if (island.tiles.contains(tileGen, true)) {return true;}
+          if (island.tiles.has(tileGen, true)) {return true;}
         }
       }
       return false;
@@ -321,9 +321,9 @@ public class LasertagRoomGenWalkwayProcessor {
 
     private Walkway walkwayAt(@Nullable LasertagTileGen tileGen) {
       if (tileGen == null) {return null;}
-      for (int a = 0; a < connectedGroups.size; a++) {
+      for (int a = 0; a < connectedGroups.size(); a++) {
         ConnectedGroup connectedGroup = connectedGroups.get(a);
-        for (int b = 0; b < connectedGroup.walkways.size; b++) {
+        for (int b = 0; b < connectedGroup.walkways.size(); b++) {
           Walkway walkway = connectedGroup.walkways.get(b);
           if (walkway.tileGen == tileGen) {return walkway;}
         }
@@ -332,9 +332,9 @@ public class LasertagRoomGenWalkwayProcessor {
     }
 
     private void emitWalkways() {
-      for (int a = 0; a < connectedGroups.size; a++) {
+      for (int a = 0; a < connectedGroups.size(); a++) {
         ConnectedGroup connectedGroup = connectedGroups.get(a);
-        for (int b = 0; b < connectedGroup.walkways.size; b++) {
+        for (int b = 0; b < connectedGroup.walkways.size(); b++) {
           Walkway walkway = connectedGroup.walkways.get(b);
           walkway.emitToTile();
         }
@@ -342,7 +342,7 @@ public class LasertagRoomGenWalkwayProcessor {
     }
 
     public boolean fullyJoined() {
-      return connectedGroups.size == 1 && oneTileFloorlessProcessorDoorGens.size == 0;
+      return connectedGroups.size() == 1 && oneTileFloorlessProcessorDoorGens.size() == 0;
     }
   }
 
@@ -370,21 +370,21 @@ public class LasertagRoomGenWalkwayProcessor {
       if (startNode.connectedGroup != null) {
         allConnectedGroups.add(startNode.connectedGroup);
       }
-      for (int a = 0; a < walkways.size; a++) {
+      for (int a = 0; a < walkways.size(); a++) {
         Walkway walkway = walkways.get(a);
         this.walkways.add(walkway);
-        for (int b = 0; b < context.connectedGroups.size; b++) {
+        for (int b = 0; b < context.connectedGroups.size(); b++) {
           ConnectedGroup connectedGroup = context.connectedGroups.get(b);
           if (connectedGroup == walkwayStartNode.connectedGroup) {continue;}
           if (walkway.connectsWithConnectedGroup(connectedGroup) &&
-              !allConnectedGroups.contains(connectedGroup, true)) {
+              !allConnectedGroups.has(connectedGroup, true)) {
             allConnectedGroups.add(connectedGroup);
           }
         }
-        for (int b = 0; b < context.oneTileFloorlessProcessorDoorGens.size; b++) {
+        for (int b = 0; b < context.oneTileFloorlessProcessorDoorGens.size(); b++) {
           ProcessorDoorGen oneTileDoorGen = context.oneTileFloorlessProcessorDoorGens.get(b);
           if (walkway.flatConnectsWithOneTileFloorlessDoorgen(oneTileDoorGen) &&
-              !allOneTileDoorGens.contains(oneTileDoorGen, true)) {
+              !allOneTileDoorGens.has(oneTileDoorGen, true)) {
             allOneTileDoorGens.add(oneTileDoorGen);
           }
         }
@@ -398,7 +398,7 @@ public class LasertagRoomGenWalkwayProcessor {
       Context context = walkwayStartNode.context;
       // The start connected group will be null for floorless doors.
       ConnectedGroup firstGroupSeen = null;
-      for (int a = 0; a < allConnectedGroups.size; a++) {
+      for (int a = 0; a < allConnectedGroups.size(); a++) {
         ConnectedGroup otherConnectedGroup = allConnectedGroups.get(a);
         if (firstGroupSeen != null) {
           if (context.connectedGroups.removeValue(otherConnectedGroup, true)) {
@@ -408,7 +408,7 @@ public class LasertagRoomGenWalkwayProcessor {
           firstGroupSeen = allConnectedGroups.get(a);
         }
       }
-      for (int a = 0; a < allOneTileDoorGens.size; a++) {
+      for (int a = 0; a < allOneTileDoorGens.size(); a++) {
         ProcessorDoorGen doorGen = allOneTileDoorGens.get(a);
         context.oneTileFloorlessProcessorDoorGens.removeValue(doorGen, true);
       }
@@ -419,10 +419,10 @@ public class LasertagRoomGenWalkwayProcessor {
     @Override public float score() {
       int score = 0;
       int scorePerConnection = 10;
-      score += allOneTileDoorGens.size;
-      score += allConnectedGroups.size;
+      score += allOneTileDoorGens.size();
+      score += allConnectedGroups.size();
       score *= scorePerConnection;
-      score -= walkways.size;
+      score -= walkways.size();
       return score;
     }
   }
@@ -555,7 +555,7 @@ public class LasertagRoomGenWalkwayProcessor {
     }
 
     public boolean flatConnectsWithOneTileFloorlessDoorgen(ProcessorDoorGen doorGen) {
-      PAssert.isTrue(doorGen.floorlessTilesGens.size == 1);
+      PAssert.isTrue(doorGen.floorlessTilesGens.size() == 1);
       return !sloped && endOffsetY == 0 && tileGen == doorGen.floorlessTilesGens.get(0);
     }
 
@@ -603,7 +603,7 @@ public class LasertagRoomGenWalkwayProcessor {
       // Check for walkway validity.
       if (!tryAdding.couldBePlaced()) {return;}
       // Can't add a walkway where there already is one, or where there would be one on top (if sloped).
-      for (int a = 0; a < currentWalkwayBuffer.size; a++) {
+      for (int a = 0; a < currentWalkwayBuffer.size(); a++) {
         Walkway walkway = currentWalkwayBuffer.get(a);
         if (walkway.tileGen == tryAdding.tileGen) {return;}
         if (tryAdding.sloped && walkway.tileGen == tryAdding.tileGen.tileGenInRoomWithLocationOffset(0, 1, 0)) {return;}
@@ -611,7 +611,7 @@ public class LasertagRoomGenWalkwayProcessor {
       // Add the walkway.
       currentWalkwayBuffer.add(tryAdding);
       // Check to see if adding this tile would connect any connecting groups, and if so, emit.
-      for (int a = 0; a < context.connectedGroups.size; a++) {
+      for (int a = 0; a < context.connectedGroups.size(); a++) {
         ConnectedGroup connectedGroup = context.connectedGroups.get(a);
         if (connectedGroup == this.connectedGroup) {continue;}
         if (tryAdding.connectsWithConnectedGroup(connectedGroup)) {
@@ -620,7 +620,7 @@ public class LasertagRoomGenWalkwayProcessor {
         }
       }
       // Recurse.
-      if (currentWalkwayBuffer.size < maxSearchDepth) {
+      if (currentWalkwayBuffer.size() < maxSearchDepth) {
         for (int a = 0; a < FACINGS.length; a++) {
           LasertagTileWall.Facing facing = FACINGS[a];
           LasertagTileGen nextTileGen =

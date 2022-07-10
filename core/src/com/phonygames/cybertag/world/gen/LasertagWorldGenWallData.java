@@ -149,7 +149,7 @@ public class LasertagWorldGenWallData {
     }
 
     public final int length() {
-      return tileTypes.size;
+      return tileTypes.size();
     }
 
     private @Nullable LasertagWorldGenWallData opposingDataAtTileIndex(int index) {
@@ -162,22 +162,22 @@ public class LasertagWorldGenWallData {
         return null;
       }
       // Loop through the LasertagWorldGenWallData of the opposing room to find the LasertagWorldGenWallData that matches the necessary description.
-      for (LasertagWorldGenWallData data : opposingRoom.wallData) {
-        switch (side) {
-          case Xh:
-            if (data.side == Side.Xl && data.indexForTilePosition(x + 1, y, z) != -1) {return data;}
-            break;
-          case Xl:
-            if (data.side == Side.Xh && data.indexForTilePosition(x - 1, y, z) != -1) {return data;}
-            break;
-          case Zh:
-            if (data.side == Side.Zl && data.indexForTilePosition(x, y, z + 1) != -1) {return data;}
-            break;
-          case Zl:
-            if (data.side == Side.Zh && data.indexForTilePosition(x, y, z - 1) != -1) {return data;}
-            break;
-        }
-      }
+//      for (LasertagWorldGenWallData data : opposingRoom.wallData) {
+//        switch (side) {
+//          case Xh:
+//            if (data.side == Side.Xl && data.indexForTilePosition(x + 1, y, z) != -1) {return data;}
+//            break;
+//          case Xl:
+//            if (data.side == Side.Xh && data.indexForTilePosition(x - 1, y, z) != -1) {return data;}
+//            break;
+//          case Zh:
+//            if (data.side == Side.Zl && data.indexForTilePosition(x, y, z + 1) != -1) {return data;}
+//            break;
+//          case Zl:
+//            if (data.side == Side.Zh && data.indexForTilePosition(x, y, z - 1) != -1) {return data;}
+//            break;
+//        }
+//      }
       return null;
     }
 

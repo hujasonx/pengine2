@@ -76,8 +76,9 @@ public class LasertagWorldGenRoom {
     vertexProcessor.setTransform(emitTransform);
     //
     // Loop through walldata and emit the walls.
-    for (LasertagWorldGenWallData data : wallData) {
-      for (int a = 0; a < data.tileTypes.size; a++) {
+    for (int b = 0; b < wallData.size(); b++) {
+      LasertagWorldGenWallData data = wallData.get(b);
+      for (int a = 0; a < data.tileTypes.size(); a++) {
         int x = data.tileXs.get(a);
         int y = data.baseY;
         int z = data.tileZs.get(a);
@@ -179,7 +180,7 @@ public class LasertagWorldGenRoom {
                               @NonNull LasertagWorldGenOld.Context context,
                               @NonNull LasertagWorldGenOld.MeshTemplate template,
                               @NonNull PModelGen.Part.VertexProcessor vertexProcessor, int vColIndexStart) {
-    for (int a = 0; a < template.meshes.size; a++) {
+    for (int a = 0; a < template.meshes.size(); a++) {
       PMesh mesh = template.meshes.get(a);
       boolean emitMesh = template.emitMesh.get(a);
       boolean emitPhysics = template.emitPhysics.get(a);
@@ -244,9 +245,9 @@ public class LasertagWorldGenRoom {
         }
       }
     }
-    for (LasertagWorldGenWallData data : wallData) {
-      data.processFromTiles();
-    }
+//    for (LasertagWorldGenWallData data : wallData) {
+//      data.processFromTiles();
+//    }
   }
 
   private void generateWalkwayData() {

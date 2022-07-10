@@ -22,7 +22,7 @@ public class LasertagBuildingGen extends PBuilder {
   };
 
   public LasertagBuildingGen(LasertagWorldGen worldGen) {
-    building = new LasertagBuilding("building" + worldGen.buildingGens.size, worldGen.lasertagWorld);
+    building = new LasertagBuilding("building" + worldGen.buildingGens.size(), worldGen.lasertagWorld);
     worldGen.buildingGens.add(this);
   }
 
@@ -58,12 +58,12 @@ public class LasertagBuildingGen extends PBuilder {
 
   public LasertagBuilding build() {
     lockBuilder();
-    building.outsideAabbs = new PIntAABB[outsideAabbs.size];
-    for (int a = 0; a < outsideAabbs.size; a++) {
+    building.outsideAabbs = new PIntAABB[outsideAabbs.size()];
+    for (int a = 0; a < outsideAabbs.size(); a++) {
       building.outsideAabbs[a] = outsideAabbs.get(a);
     }
-    building.rooms = new LasertagRoom[roomGens.size];
-    for (int a = 0; a < roomGens.size; a++) {
+    building.rooms = new LasertagRoom[roomGens.size()];
+    for (int a = 0; a < roomGens.size(); a++) {
       building.rooms[a] = roomGens.get(a).build();
     }
     try (val it = tileGens.obtainIterator()) {
@@ -72,7 +72,8 @@ public class LasertagBuildingGen extends PBuilder {
         e.val().build();
       }
     }
-    for (val e : doorGens) {
+    for (int a = 0; a < doorGens.size(); a++) {
+      val e = doorGens.get(a);
       e.build();
     }
     buildModelInstance();
@@ -84,7 +85,8 @@ public class LasertagBuildingGen extends PBuilder {
   }
 
   public void processTiles() {
-    for (val roomGen : roomGens) {
+    for (int a = 0; a < roomGens.size(); a++) {
+      val roomGen = roomGens.get(a);
 
       LasertagRoomGenTileProcessor.processRoomWalls(roomGen);
       LasertagRoomGenTileProcessor.processRoomFloors(roomGen);

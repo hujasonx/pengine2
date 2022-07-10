@@ -75,7 +75,7 @@ public class CybertagGame implements PGame {
     if (catModel != null) {
       // Process the cat model instances.
       PAnimation animation = catModel.animations().get("All Animations");
-      for (int a = 0; a < catModelInstances.size; a++) {
+      for (int a = 0; a < catModelInstances.size(); a++) {
         PModelInstance modelInstance = catModelInstances.get(a);
         modelInstance.worldTransform().idt().setToTranslation(a * .3f, 0, 0).rot(0, 1, 0, a + PEngine.t);
         PStringMap<PMat4> transformMap =
@@ -90,7 +90,7 @@ public class CybertagGame implements PGame {
       catModel.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER, catModelInstances, false);
     }
     if (duckModel != null) {
-      for (int a = 0; a < duckModelInstances.size; a++) {
+      for (int a = 0; a < duckModelInstances.size(); a++) {
         PModelInstance modelInstance = duckModelInstances.get(a);
         modelInstance.worldTransform().idt()
                      .set(PVec3.obtain().set(5 * a, 1.5f, 10), PVec4.obtain().setToRotation(0, 1, 0, a),

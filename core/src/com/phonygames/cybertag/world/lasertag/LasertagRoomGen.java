@@ -36,7 +36,7 @@ public class LasertagRoomGen extends PBuilder {
 
   public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PIntAABB aabb) {
     this.buildingGen = buildingGen;
-    lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size);
+    lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size());
     buildingGen.roomGens.add(this);
     lasertagRoom.building = buildingGen.building;
     this.roomAABB = aabb;
@@ -109,7 +109,8 @@ public class LasertagRoomGen extends PBuilder {
                     true);
         emitStaticPhysicsPartIntoModelBuilder(builder);
         builder.addNode(basePart.name(), null, glNodes, PMat4.IDT);
-        for (Part part : alphaBlendParts) {
+        for (int a = 0; a < alphaBlendParts.size(); a++) {
+          Part part = alphaBlendParts.get(a);
           glNodes.clear();
           chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null,
                       PGltf.Layer.AlphaBlend, true);

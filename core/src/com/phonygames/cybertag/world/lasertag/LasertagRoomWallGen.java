@@ -58,11 +58,11 @@ public class LasertagRoomWallGen {
       searchTileBaseZ += zChangeForAlongWall;
       nextTileGenBase = tileGens.get(searchTileBaseX, searchTileBaseY, searchTileBaseZ);
     }
-    PAssert.isTrue(wallHeights.size > 0);
+    PAssert.isTrue(wallHeights.size() > 0);
   }
 
   private void genPossibleDoors() {
-    for (int startX = 0; startX < wallHeights.size; startX++) {
+    for (int startX = 0; startX < wallHeights.size(); startX++) {
       for (int startY = 0; startY < wallHeights.get(startX); startY++) {
         LasertagTileGen testCornerTile =
             tileGens.get(cornerTile.x + (startX) * xChangeForAlongWall, cornerTile.y + startY,

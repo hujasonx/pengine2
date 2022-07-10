@@ -32,7 +32,7 @@ public class PCollectionUtils {
   }
 
   public static float[] toFloatArray(PList<Float> floats) {
-    float[] ret = new float[floats.size];
+    float[] ret = new float[floats.size()];
     for (int a = 0; a < ret.length; a++) {
       ret[a] = floats.get(a);
     }
@@ -40,7 +40,7 @@ public class PCollectionUtils {
   }
 
   public static short[] toShortArray(PList<Short> shorts) {
-    short[] ret = new short[shorts.size];
+    short[] ret = new short[shorts.size()];
     for (int a = 0; a < ret.length; a++) {
       ret[a] = shorts.get(a);
     }

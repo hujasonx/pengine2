@@ -99,10 +99,10 @@ public class PNodeAnimation {
   private final int getLowerNodeKeyframeIndexForTime(PList keyFrames, float time) {
     PAssert.isTrue(!keyFrames.isEmpty());
     if (time >= length) {
-      return keyFrames.size - 1;
+      return keyFrames.size() - 1;
     }
 
-    int lowerIndex = 0; int higherIndex = keyFrames.size - 1;
+    int lowerIndex = 0; int higherIndex = keyFrames.size() - 1;
     while (lowerIndex < higherIndex) {
       int guessIndex = (lowerIndex + higherIndex) / 2;
       float guessTime = ((NodeKeyframe) keyFrames.get(guessIndex)).keytime;
@@ -118,11 +118,11 @@ public class PNodeAnimation {
         return lowerIndex;
       }
     }
-    return keyFrames.size - 1;
+    return keyFrames.size() - 1;
   }
 
   private final float getMixAmountWithNextKeyframe(PList keyFrames, int lowerKeyframeIndex, float time) {
-    if (lowerKeyframeIndex >= keyFrames.size - 1) {
+    if (lowerKeyframeIndex >= keyFrames.size() - 1) {
       return 0;
     }
     PAssert.isFalse(time < 0);

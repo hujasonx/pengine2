@@ -19,8 +19,8 @@ public class LasertagWorldGen extends PBuilder {
 
   public LasertagWorld build() {
     lockBuilder();
-    lasertagWorld.buildings = new LasertagBuilding[buildingGens.size];
-    for (int a = 0; a < buildingGens.size; a++) {
+    lasertagWorld.buildings = new LasertagBuilding[buildingGens.size()];
+    for (int a = 0; a < buildingGens.size(); a++) {
       lasertagWorld.buildings[a] = buildingGens.get(a).build();
     }
     buildModelInstance();

@@ -153,15 +153,15 @@ public abstract class PPool<T extends PPool.Poolable> {
 
   public final static class PoolBuffer implements Poolable {
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
-    private final PList<PMat4> mat4s = new PList<>();
+    private final PList<PMat4> mat4s = new PList<>(PMat4.getStaticPool());
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
-    private final PList<PVec1> vec1s = new PList<>();
+    private final PList<PVec1> vec1s = new PList<>(PVec1.getStaticPool());
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
-    private final PList<PVec2> vec2s = new PList<>();
+    private final PList<PVec2> vec2s = new PList<>(PVec2.getStaticPool());
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
-    private final PList<PVec3> vec3s = new PList<>();
+    private final PList<PVec3> vec3s = new PList<>(PVec3.getStaticPool());
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
-    private final PList<PVec4> vec4s = new PList<>();
+    private final PList<PVec4> vec4s = new PList<>(PVec4.getStaticPool());
     @Getter
     @Setter
     private PPool ownerPool, sourcePool;
@@ -174,57 +174,30 @@ public abstract class PPool<T extends PPool.Poolable> {
       return ownerPool == null;
     }
 
-    public final PMat4 mat4() {
-      PMat4 v = PMat4.obtain();
-      getMat4s().add(v);
-      return v;
+    public PMat4 mat4() {
+      return getMat4s().genAndAddPooled();
     }
 
     @Override public void reset() {
-      for (PVec1 vec1 : getVec1s()) {
-        vec1.free();
-      }
-      getVec1s().clear();
-      for (PVec2 vec2 : getVec2s()) {
-        vec2.free();
-      }
-      getVec2s().clear();
-      for (PVec3 vec3 : getVec3s()) {
-        vec3.free();
-      }
-      getVec3s().clear();
-      for (PVec4 vec4 : getVec4s()) {
-        vec4.free();
-      }
-      getVec4s().clear();
-      for (PMat4 mat4 : getMat4s()) {
-        mat4.free();
-      }
-      getMat4s().clear();
+      getMat4s().clearAndFreePooled();
+      getVec1s().clearAndFreePooled();
+      getVec2s().clearAndFreePooled();
+      getVec3s().clearAndFreePooled();
+      getVec4s().clearAndFreePooled();
     }
 
-    public final PVec1 vec1() {
-      PVec1 v = PVec1.obtain();
-      getVec1s().add(v);
-      return v;
+    public PVec1 vec1() {
+      return getVec1s().genAndAddPooled();
     }
 
-    public final PVec2 vec2() {
-      PVec2 v = PVec2.obtain();
-      getVec2s().add(v);
-      return v;
+    public PVec2 vec2() { return getVec2s().genAndAddPooled(); }
+
+    public PVec3 vec3() {
+      return getVec3s().genAndAddPooled();
     }
 
-    public final PVec3 vec3() {
-      PVec3 v = PVec3.obtain();
-      getVec3s().add(v);
-      return v;
-    }
-
-    public final PVec4 vec4() {
-      PVec4 v = PVec4.obtain();
-      getVec4s().add(v);
-      return v;
+    public PVec4 vec4() {
+      return getVec4s().genAndAddPooled();
     }
   }
 }
