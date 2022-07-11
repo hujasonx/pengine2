@@ -151,7 +151,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       gun.reload();
     }
     PMat4 gunTransform = pool.mat4().set(cameraController.worldTransform());
-    if (!PKeyboard.isDown(Input.Keys.H)) {
+    if (PKeyboard.isDown(Input.Keys.H)) {
       gunTransform.set(worldTransform()).translate(cameraOffsetFromOrigin);
     }
     gun.frameUpdate(pool, gunTransform);

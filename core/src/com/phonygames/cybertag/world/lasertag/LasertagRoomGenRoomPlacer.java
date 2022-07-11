@@ -33,18 +33,6 @@ public class LasertagRoomGenRoomPlacer {
       int roomSizeX = MathUtils.random(minRoomSize, maxRoomSize);
       int roomSizeY = PArrayUtils.randomIndexWithWeights(roomHeightWeights) + 1;
       int roomSizeZ = MathUtils.random(minRoomSize, maxRoomSize);
-      //      int roomX = PNumberUtils.clamp(
-      //          MathUtils.random(aabb.x0() - edgeShiftBoundaryX, aabb.x1() + edgeShiftBoundaryX - roomSizeX + 1),
-      //          aabb.x0(),
-      //          aabb.x1() - roomSizeX + 1);
-      //      int roomY =
-      //          PNumberUtils.clamp(MathUtils.random(aabb.y0() - edgeShiftLowerY, aabb.y1() - roomSizeY + 1), aabb
-      //          .y0(),
-      //                             aabb.y1() - roomSizeY + 1);
-      //      int roomZ = PNumberUtils.clamp(
-      //          MathUtils.random(aabb.z0() - edgeShiftBoundaryZ, aabb.z1() + edgeShiftBoundaryZ - roomSizeZ + 1),
-      //          aabb.z0(),
-      //          aabb.z1() - roomSizeZ + 1);
       int roomX = MathUtils.random(aabb.x0() - edgeShiftBoundaryX, aabb.x1() + edgeShiftBoundaryX - roomSizeX + 1);
       roomX = MathUtils.clamp(roomX, aabb.x0(), aabb.x1() - roomSizeX + 1);
       int roomY = MathUtils.random(aabb.y0() - edgeShiftLowerY, aabb.y1() - roomSizeY + 1);

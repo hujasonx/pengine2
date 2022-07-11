@@ -288,6 +288,9 @@ public class LasertagRoomGenWalkwayProcessor {
       if (walkwayAt(tileGen) != null) {return false;}
       LasertagTileGen aboveTileGen = tileGen.tileGenInRoomWithLocationOffset(0, 1, 0);
       if (!isFloorWalkway) {
+        if (aboveTileGen == null) { // If this room doesn't own the tile above, we cannot emit a nonfloor walkway.
+          return false;
+        }
         // If there is a walkway above this tile, we cannot emit a nonfloor walkway here.
         if (walkwayAt(tileGen.tileGenInRoomWithLocationOffset(0, 1, 0)) != null) {return false;}
         for (int f = 0; f < FACINGS.length; f++) {
@@ -376,8 +379,7 @@ public class LasertagRoomGenWalkwayProcessor {
         for (int b = 0; b < context.connectedGroups.size(); b++) {
           ConnectedGroup connectedGroup = context.connectedGroups.get(b);
           if (connectedGroup == walkwayStartNode.connectedGroup) {continue;}
-          if (walkway.connectsWithConnectedGroup(connectedGroup) &&
-              !allConnectedGroups.has(connectedGroup, true)) {
+          if (walkway.connectsWithConnectedGroup(connectedGroup) && !allConnectedGroups.has(connectedGroup, true)) {
             allConnectedGroups.add(connectedGroup);
           }
         }
@@ -548,9 +550,9 @@ public class LasertagRoomGenWalkwayProcessor {
 
     @Override public boolean equalsT(Walkway other) {
       if (tileGen != other.tileGen) {return false;}
-      if (endOffsetY != other.endOffsetY) return false;
-      if (sloped != other.sloped) return false;
-      if (facing != other.facing) return false;
+      if (endOffsetY != other.endOffsetY) {return false;}
+      if (sloped != other.sloped) {return false;}
+      if (facing != other.facing) {return false;}
       return true;
     }
 

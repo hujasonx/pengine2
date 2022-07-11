@@ -25,7 +25,8 @@ public class World {
     buildingGen.setTileTranslation(0, 0, 0).setTileRotation(.2f).setTileScale(4, 4, 4);
     LasertagBuildingGenAABBPlacer.addAABBs(buildingGen);
     LasertagRoomGenRoomPlacer.reset();
-    for (int a = 0; a < 30; a++) {
+    LasertagRoomGenRoomPlacer.roomHeightWeights = new float[]{.5f, .4f, .3f, .2f, .1f};
+    for (int a = 0; a < 50; a++) {
       PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen);
       if (roomAABB != null) {
         LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen, roomAABB);
@@ -35,6 +36,7 @@ public class World {
     LasertagBuildingGen buildingGen2 = new LasertagBuildingGen(worldGen);
     buildingGen2.setTileTranslation(MathUtils.random(100f, 150f), MathUtils.random(-10f, 10f), MathUtils.random(100f, 150f)).setTileRotation(MathUtils.random(MathUtils.PI2)).setTileScale(4, 4, 4);
     LasertagBuildingGenAABBPlacer.addAABBs(buildingGen2);
+    LasertagRoomGenRoomPlacer.reset();
     for (int a = 0; a < 10; a++) {
       PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen2);
       if (roomAABB != null) {
