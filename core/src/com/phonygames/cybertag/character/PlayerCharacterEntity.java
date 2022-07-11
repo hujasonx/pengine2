@@ -27,7 +27,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
   private PCharacterCameraController cameraController;
   private Gun gun;
-  private PIKLimb leftLegLimb;
+  private PIKLimb leftLegLimb, rightArmLimb, leftArmLimb;
   private PModelInstance modelInstance;
 
   public PlayerCharacterEntity() {
@@ -65,13 +65,22 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     });
     modelInstance.material("matBase").useVColIndex(true);
     modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
-//    leftLegLimb = PIKLimb.obtain(modelInstance, "LegUpper.L").addNode("LegLower.L", 1, 0, 0)
-//                         .setEndLocalTranslationFromLastNode(
-//                             modelInstance.getNode("Foot.L").templateNode().transform()
-//                                          .getTranslation(pool.vec3()));
-    leftLegLimb = PIKLimb.obtain(modelInstance, "LegUpper.L").setEndLocalTranslationFromLastNode(
-                             modelInstance.getNode("Foot.L").templateNode().transform()
-                                          .getTranslation(pool.vec3()));
+    leftLegLimb = PIKLimb.obtain(modelInstance, "LegUpper.L").addNode("LegLower.L", 1, 0, 0);
+    leftLegLimb.setEndLocalTranslationFromLastNode(
+        modelInstance.getNode("Foot.L").templateNode().transform().getTranslation(pool.vec3()));
+    leftLegLimb.setPole(0, 0, 1);
+    rightArmLimb = PIKLimb.obtain(modelInstance, "ArmUpper.R").addNode("ArmLower.R", 0, -1, 0);
+    rightArmLimb.setEndLocalTranslationFromLastNode(
+        modelInstance.getNode("Wrist.R").templateNode().transform().getTranslation(pool.vec3()));
+    rightArmLimb.setPole(0, 0, -1);
+    leftArmLimb = PIKLimb.obtain(modelInstance, "ArmUpper.L").addNode("ArmLower.L", 0, -1, 0);
+    leftArmLimb.setEndLocalTranslationFromLastNode(
+        modelInstance.getNode("Wrist.L").templateNode().transform().getTranslation(pool.vec3()));
+    leftArmLimb.setPole(0, 0, -1);
+    leftArmLimb.setModelSpacePoleTarget(-1, 1, 1);
+    //    leftLegLimb = PIKLimb.obtain(modelInstance, "LegUpper.L").setEndLocalTranslationFromLastNode(
+    //                             modelInstance.getNode("Foot.L").templateNode().transform()
+    //                                          .getTranslation(pool.vec3()));
     pool.free();
   }
 
@@ -81,7 +90,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (!PNumberUtils.epsilonEquals(0, dir.x()) || !PNumberUtils.epsilonEquals(0, dir.z())) {
       facingDirFlat.set(dir.x(), dir.z()).nor();
     }
-    characterController.getPos(out).add(0, 1.5f, 0).add(facingDirFlat.x() * .1f, 0, facingDirFlat.y() * .1f);
+    characterController.getPos(out).add(0, 1.6f, 0).add(facingDirFlat.x() * .1f, 0, facingDirFlat.y() * .14f);
     facingLeftFlat.set(facingDirFlat.y(), -facingDirFlat.x());
   }
 
@@ -128,7 +137,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     wristL.stopWorldTransformRecursionAt(true);
     modelInstance.recalcTransforms();
     if (leftLegLimb != null) {
-      leftLegLimb.performIkToReach(0,0,0);
+//      leftLegLimb.performIkToReach(5, .5f, 5);
     }
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
       gun.reload();
@@ -137,7 +146,13 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     // Ik arms.
     PVec3 wristLGoalPos = gun.getBoneWorldTransform("Wrist.L").getTranslation(pool.vec3());
     PVec3 wristRGoalPos = gun.getBoneWorldTransform("Wrist.R").getTranslation(pool.vec3());
-    ikArms(pool, wristLGoalPos, wristRGoalPos);
+    modelInstance.resetTransformsFromTemplates();
+    modelInstance.recalcTransforms();
+    leftArmLimb.performIkToReach(wristLGoalPos);
+//    rightArmLimb.performIkToReach(wristRGoalPos);
+    modelInstance.resetTransformsFromTemplates();
+    modelInstance.recalcTransforms();
+    ikArms(pool, wristLGoalPos,wristRGoalPos);
     wristR.stopWorldTransformRecursionAt(false);
     wristL.stopWorldTransformRecursionAt(false);
     // Apply the hand animations to this model instance.
@@ -152,12 +167,13 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PModelInstance.Node armLowerR = modelInstance.getNode("ArmLower.R");
     PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
     PVec3 poleR = pool.vec3().set(.2f, -.3f, -.3f);
-    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, goalR, .01f, poleR);
+//    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, goalR, .01f, null);
     PModelInstance.Node armUpperL = modelInstance.getNode("ArmUpper.L");
     PModelInstance.Node armLowerL = modelInstance.getNode("ArmLower.L");
     PModelInstance.Node wristL = modelInstance.getNode("Wrist.L");
     PVec3 poleL = pool.vec3().set(-.2f, -.3f, -.3f);
-    PInverseKinematicsUtils.twoJointIk(armUpperL, armLowerL, wristL, goalL, .01f, poleL);
+    PInverseKinematicsUtils.twoJointIk(armUpperL, armLowerL, wristL, goalL, .01f, null);
+    System.out.println("DSTIKARMS:" + wristL.worldTransform().getTranslation(pool.vec3()).dst(goalL));
   }
   //
   //  private void ikArms(PPool.PoolBuffer pool, PVec3 wristLPos, PVec3 wristRPos) {

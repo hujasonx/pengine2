@@ -154,6 +154,7 @@ public class PModel {
         node.modelSpaceTransform().set(parentTransform).mul(node.transform());
       }
       node.modelSpaceTransform().lockWriting();
+      node.modelSpaceTransformSet = true;
       for (int a = 0; a < node.children().size(); a++) {
         processNodeRecursive(node.children().get(a), node.modelSpaceTransform());
       }
@@ -187,6 +188,7 @@ public class PModel {
     @Setter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     boolean inheritTransform;
+    private boolean modelSpaceTransformSet = false;
 
     private Node(String id, Node parent, PList<PGlNode> glNodes) {
       this.id = id;
@@ -198,6 +200,8 @@ public class PModel {
       // Dont let the user write to the model space transform; the model builder will set it.
       modelSpaceTransform().lockWriting();
     }
+
+
 
     private boolean hasParent() {
       return parent() != null;

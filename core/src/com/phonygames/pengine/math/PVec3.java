@@ -152,8 +152,40 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
-  public PVec3 cpy() {
-    return new PVec3().set(this);
+  public float angleWithAlongAxis(PVec3 other, PVec3 axis) {
+    float ret;
+    PVec3 temp1 = PVec3.obtain();
+    PVec3 temp2 = PVec3.obtain();
+    PVec3 crs = PVec3.obtain().set(other);
+    temp1.set(this).unprojectVector(axis);
+    temp2.set(other).unprojectVector(axis);
+    ret = temp1.angle(temp2);
+    crs.set(temp2).crs(axis);
+    if (temp1.dot(crs) > 0) {
+      ret *= -1;
+    }
+    temp1.free();
+    temp2.free();
+    crs.free();
+    return PNumberUtils.clampRad(ret);
+  }
+
+  public static PVec3 obtain() {
+    return getStaticPool().obtain();
+  }
+
+  public PVec3 unprojectVector(PVec3 projectOn) {
+    PVec3 temp = PVec3.obtain().set(this).projectVector(projectOn);
+    sub(temp);
+    temp.free();
+    return this;
+  }
+
+  public float angle(PVec3 other) {
+    if (isZero() || other.isZero()) {
+      return 0;
+    }
+    return PNumberUtils.acos(this.dot(other) / (len() * other.len()));
   }
 
   public PVec3 crs(PVec3 other) {
@@ -161,9 +193,22 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  public PVec3 projectVector(PVec3 projectOn) {
+    float dot = dot(projectOn);
+    return set(projectOn).scl(dot / projectOn.dot(projectOn));
+  }
+
+  public PVec3 cpy() {
+    return new PVec3().set(this);
+  }
+
   public PVec3 crs(float x, float y, float z) {
     backingVec3.crs(x, y, z);
     return this;
+  }
+
+  public float dot(float x, float y, float z) {
+    return backingVec3.dot(x, y, z);
   }
 
   public float dst(PVec3 other) {
@@ -208,6 +253,13 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  public PVec3 normalWith(PVec3 out, PVec3 v0, PVec3 v1) {
+    PVec3 t1 = PVec3.obtain().set(v1).sub(this);
+    out.set(v0).sub(this).crs(t1).nor();
+    t1.free();
+    return out;
+  }
+
   public float progressAlongLineSegment(PVec3 lineStart, PVec3 lineEnd) {
     PVec3 t0 = PVec3.obtain().set(lineEnd).sub(lineStart);
     float lineLen = t0.len();
@@ -217,10 +269,6 @@ public class PVec3 extends PVec<PVec3> {
     t0.free();
     t1.free();
     return dotAmount / lineLen;
-  }
-
-  public static PVec3 obtain() {
-    return getStaticPool().obtain();
   }
 
   public Vector3 putInto(Vector3 in) {

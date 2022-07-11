@@ -18,6 +18,8 @@ import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.lighting.PLight;
 import com.phonygames.pengine.logging.PLog;
+import com.phonygames.pengine.math.PVec;
+import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.physics.PPhysicsEngine;
 import com.phonygames.pengine.util.PApplicationUtils;
 import com.phonygames.pengine.util.PStringUtils;
