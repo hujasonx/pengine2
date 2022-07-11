@@ -67,8 +67,8 @@ public class PInverseKinematicsUtils {
     PVec3 baseTarget = pool.vec3().set(poleTarget).sub(basePos);
     PVec4 aGRotInv = pool.vec4().set(aGRot).invQuat();
     PVec3 axisLocalSpace = aGRotInv.applyAsQuat(pool.vec3().set(axisWorldSpace)).nor();
-    float angleRotateAmount = baseKnee.angleWithAlongAxis(baseTarget, axisWorldSpace);
-    //    System.out.println(angleRotateAmount + ", " + axisLocalSpace + ", " + axisWorldSpace);
+    float angleRotateAmount = -baseKnee.angleWithAlongAxis(baseTarget, axisWorldSpace);
+//        System.out.println(angleRotateAmount + ", " + axisLocalSpace + ", " + axisWorldSpace);
     outALRotChange.setToRotation(axisLocalSpace, -angleRotateAmount);
     pool.free();
   }

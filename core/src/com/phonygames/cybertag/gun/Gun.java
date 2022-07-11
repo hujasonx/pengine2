@@ -22,8 +22,10 @@ import lombok.experimental.Accessors;
 
 public abstract class Gun implements PRenderable {
   protected final CharacterEntity characterEntity;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   // Guns are placed based on their offset from the camera eyes.
-  protected final PVec3 standardOffsetFromCamera = PVec3.obtain();
+  protected final PVec3 firstPersonStandardOffsetFromCamera = PVec3.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
@@ -52,7 +54,7 @@ public abstract class Gun implements PRenderable {
 
   public void frameUpdate(PPool.PoolBuffer pool, @Nullable PMat4 cameraTransform) {
     if (modelInstance != null) {
-      PVec3 worldOffsetFromCamera = pool.vec3().set(standardOffsetFromCamera);
+      PVec3 worldOffsetFromCamera = pool.vec3().set(firstPersonStandardOffsetFromCamera);
       modelInstance.worldTransform().set(cameraTransform).translate(worldOffsetFromCamera);
       modelInstance.recalcTransforms();
       if (reloadAnimationT != -1 && reloadAnimation != null) {
