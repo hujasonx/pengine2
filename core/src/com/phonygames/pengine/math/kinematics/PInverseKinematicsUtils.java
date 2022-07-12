@@ -7,6 +7,7 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
+import com.phonygames.pengine.math.PVectorUtils;
 import com.phonygames.pengine.util.PPool;
 
 public class PInverseKinematicsUtils {
@@ -67,8 +68,9 @@ public class PInverseKinematicsUtils {
     PVec3 baseTarget = pool.vec3().set(poleTarget).sub(basePos);
     PVec4 aGRotInv = pool.vec4().set(aGRot).invQuat();
     PVec3 axisLocalSpace = aGRotInv.applyAsQuat(pool.vec3().set(axisWorldSpace)).nor();
-    float angleRotateAmount = -baseKnee.angleWithAlongAxis(baseTarget, axisWorldSpace);
-//        System.out.println(angleRotateAmount + ", " + axisLocalSpace + ", " + axisWorldSpace);
+    float angleRotateAmount = PVectorUtils.angleToRotateOntoPlane(baseKnee,axisWorldSpace,pool.vec3().set(baseTarget).crs(axisWorldSpace));
+//    float angleRotateAmount = -baseKnee.angleWithAlongAxis(baseTarget, axisWorldSpace);
+        System.out.println(angleRotateAmount + ", " + axisLocalSpace + ", " + axisWorldSpace);
     outALRotChange.setToRotation(axisLocalSpace, -angleRotateAmount);
     pool.free();
   }
@@ -110,12 +112,26 @@ public class PInverseKinematicsUtils {
     transformBInv.free();
   }
 
+  public static void twoJointIK(PVec4 outALRotChange, PVec4 outBLRotChange, PMat4 aWT, PMat4 bWT, PVec3 c,
+                                               PVec3 t, float epsilon, PVec4 aGRot, PVec4 bGRot, PVec3 poleMS, PVec3 targetPoleMS) {
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+    }
+  }
+
   public static void twoJointRotationsToLength(PVec4 outALRotChange, PVec4 outBLRotChange, PVec3 a, PVec3 b, PVec3 c,
                                                PVec3 t, float epsilon, PVec4 aGRot, PVec4 bGRot, @Nullable PVec3 pole) {
     PPool.PoolBuffer pool = PPool.getBuffer();
+    // Handle the pole.
+
+    PVec3 ac = pool.vec3().set(c).sub(a);
+    PVec3 polePlaneNormal = null;
+    if (pole != null) {
+//      // Flatten b to the a-c-pole plane.
+      polePlaneNormal = aGRot.applyAsQuat(pool.vec3().set(pole)).crs(ac);
+      b = pool.vec3().set(b).projectOntoPlane(polePlaneNormal, a);
+    }
     PVec3 ab = pool.vec3().set(b).sub(a);
     PVec3 abN = pool.vec3().set(ab).nor();
-    PVec3 ac = pool.vec3().set(c).sub(a);
     PVec3 acN = pool.vec3().set(ac).nor();
     PVec3 bc = pool.vec3().set(c).sub(b);
     PVec3 bcN = pool.vec3().set(bc).nor();
@@ -130,8 +146,8 @@ public class PInverseKinematicsUtils {
     float baBC0 = PNumberUtils.acos(-abN.dot(bcN));
     float acAB1 = PNumberUtils.acos((lcb * lcb - lab * lab - lat * lat) / (-2 * lab * lat));
     float baBC1 = PNumberUtils.acos((lat * lat - lab * lab - lcb * lcb) / (-2 * lab * lcb));
-    PVec3 axis0 = pool.vec3().set(ac).crs(pole == null ? ab : bGRot.applyAsQuat(pool.vec3().set(pole).scl(-1))).nor();
-    PVec3 axis1 = pool.vec3().set(ac).crs(at).nor();
+    PVec3 axis0 = pole != null ? polePlaneNormal : pool.vec3().set(ac).crs(pole == null ? ab : aGRot.applyAsQuat(pool.vec3().set(pole))).nor();
+//    PVec3 axis0 = pool.vec3().set(ac).crs(pole == null ? ab : aGRot.applyAsQuat(pool.vec3().set(pole))).nor();
     PVec3 r0Axis = pool.vec4().set(aGRot).invQuat().applyAsQuat(pool.vec3().set(axis0));
     PVec3 r1Axis = pool.vec4().set(bGRot).invQuat().applyAsQuat(pool.vec3().set(axis0));
     PVec4 r0 = pool.vec4().setToRotation(r0Axis, acAB1 - acAB0);

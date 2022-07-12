@@ -52,7 +52,7 @@ public class CybertagGame implements PGame {
     if (!PMouse.isCatched() && PMouse.isFrameJustDown()) {
       PMouse.setCatched(true);
     }
-    if (PCharacterCameraController.activeCharacterCameraController() != null && false) {
+    if (PCharacterCameraController.activeCharacterCameraController() != null) {
       PCharacterCameraController.activeCharacterCameraController().frameUpdate();
       PCharacterCameraController.activeCharacterCameraController().applyToRenderContext(renderContext);
     } else {

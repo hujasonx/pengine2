@@ -5,7 +5,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.gun.Gun;
 import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
-import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -166,13 +165,16 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     wristR.stopWorldTransformRecursionAt(true);
     wristL.stopWorldTransformRecursionAt(true);
     modelInstance.recalcTransforms();
+    PVec3 testPoleTarget =
+        pool.vec3().set(PKeyboard.isDown(Input.Keys.L) ? 1 : 0, 0, -1); // TODO: figure out why z should be -1 here.
+    leftLegLimb.setModelSpacePoleTarget(testPoleTarget);
     if (leftLegLimb != null) {
-      //      leftLegLimb.performIkToReach(5, .5f, 5);
+//      leftLegLimb.performIkToReach(5, .5f, 5);
     }
     for (int a = 0; a < rightLegLimb.nodeRotationOffsets().size(); a++) {
-      rightLegLimb.nodeRotationOffsets().get(a).x(PEngine.t);
+      //      rightLegLimb.nodeRotationOffsets().get(a).x(PEngine.t);
     }
-    rightLegLimb.testRotationAxes();
+    //    rightLegLimb.testRotationAxes();
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
       gun.reload();
     }
@@ -184,12 +186,14 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     // Ik arms.
     PVec3 wristLGoalPos = gun.getBoneWorldTransform("Wrist.L").getTranslation(pool.vec3());
     PVec3 wristRGoalPos = gun.getBoneWorldTransform("Wrist.R").getTranslation(pool.vec3());
-//    modelInstance.resetTransformsFromTemplates();
-//    modelInstance.recalcTransforms();
-    PVec3 testPoleTarget = pool.vec3().set(MathUtils.sin(PEngine.t), MathUtils.cos(PEngine.t), -.3f);
+    //    modelInstance.resetTransformsFromTemplates();
+    //    modelInstance.recalcTransforms();
+    testPoleTarget = pool.vec3().set(1, 1, 1);
     leftArmLimb.setModelSpacePoleTarget(testPoleTarget);
-    leftArmLimb.performIkToReach(wristLGoalPos);
-    //    rightArmLimb.performIkToReach(wristRGoalPos);
+//    leftArmLimb.performIkToReach(wristLGoalPos);
+    testPoleTarget = pool.vec3().set(0, -1, 0);
+    rightArmLimb.setModelSpacePoleTarget(testPoleTarget);
+    rightArmLimb.performIkToReach(wristRGoalPos);
     //    modelInstance.resetTransformsFromTemplates();
     //    modelInstance.recalcTransforms();
     //    ikArms(pool, wristLGoalPos, wristRGoalPos);

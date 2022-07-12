@@ -59,6 +59,10 @@ public class PNumberUtils {
     return true;
   }
 
+  public static float sqrt(float x) {
+    return (float)Math.sqrt(x);
+  }
+
   /**
    * Returns the true modulus a mod b.
    * @param a left side.

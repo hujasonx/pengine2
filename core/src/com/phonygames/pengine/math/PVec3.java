@@ -152,6 +152,11 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
+  public PVec3 projectOntoPlane(PVec3 normal, PVec3 planePoint) {
+    return add(normal,
+                     -normal.dot(x() - planePoint.x(), y() - planePoint.y(), z() - planePoint.z()));
+  }
+
   public float angleWithAlongAxis(PVec3 other, PVec3 axis) {
     float ret;
     PVec3 temp1 = PVec3.obtain();
