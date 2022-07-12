@@ -63,7 +63,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
     PAssert.isNotNull(modelInstance);
     PModelInstance.Node node = modelInstance.getNode(nodeName);
     nodeRotationOffsets.genPooledAndAdd();
-    PAssert.isNotNull(node);
+    PAssert.isNotNull(node, "No node found with name: " + nodeName);
     nodes.add(node);
     return this;
   }

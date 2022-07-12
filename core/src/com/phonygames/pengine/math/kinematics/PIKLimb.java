@@ -98,7 +98,7 @@ public class PIKLimb implements PPool.Poolable {
 //        System.out.println("DST:" + pool.vec3().set(endLocalTranslationFromLastNode()).mul(nodes.peek()
 //        .worldTransform(), 1).dst(t));
     // Rotate so that the pole faces towards the pole target.
-    if (!modelSpacePoleTarget.isZero()) {
+    if (!modelSpacePoleTarget.isZero() && !PKeyboard.isDown(Input.Keys.M)) {
       PVec3 kneePos = kneeNode.worldTransform().getTranslation(pool.vec3());
       baseNode.worldTransform().getRotation(aGRot);
       PInverseKinematicsUtils.oneJointRotationToAngleKneeTo(aLRotChange,

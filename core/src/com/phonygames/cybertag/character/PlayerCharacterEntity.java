@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.gun.Gun;
 import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -30,9 +31,9 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
   private PCharacterCameraController cameraController;
   private Gun gun;
-  private PIKLimb leftLegLimb, rightArmLimb, leftArmLimb;
+  private PIKLimb leftLegLimb, leftArmLimb;
   private PModelInstance modelInstance;
-  private PPlanarIKLimb rightLegLimb;
+  private PPlanarIKLimb rightLegLimb, rightArmLimb;
 
   public PlayerCharacterEntity() {
     super();
@@ -74,10 +75,10 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     leftLegLimb.setEndLocalTranslationFromLastNode(
         modelInstance.getNode("Foot.L").templateNode().transform().getTranslation(pool.vec3()));
     leftLegLimb.setPole(0, 0, 1);
-    rightArmLimb = PIKLimb.obtain(modelInstance, "ArmUpper.R").addNode("ArmLower.R", 0, -1, 0);
-    rightArmLimb.setEndLocalTranslationFromLastNode(
-        modelInstance.getNode("Wrist.R").templateNode().transform().getTranslation(pool.vec3()));
-    rightArmLimb.setPole(0, 0, -1);
+//    rightArmLimb = PIKLimb.obtain(modelInstance, "ArmUpper.R").addNode("ArmLower.R", 0, -1, 0);
+//    rightArmLimb.setEndLocalTranslationFromLastNode(
+//        modelInstance.getNode("Wrist.R").templateNode().transform().getTranslation(pool.vec3()));
+//    rightArmLimb.setPole(0, 0, -1);
     leftArmLimb = PIKLimb.obtain(modelInstance, "ArmUpper.L").addNode("ArmLower.L", 0, -1, 0);
     leftArmLimb.setEndLocalTranslationFromLastNode(
         modelInstance.getNode("Wrist.L").templateNode().transform().getTranslation(pool.vec3()));
@@ -91,6 +92,11 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     rightLegLimb.setEndLocalTranslationFromLastNode(
         modelInstance.getNode("Foot.R").templateNode().transform().getTranslation(pool.vec3()));
     rightLegLimb.finalizeLimbSettings();
+    rightArmLimb = PPlanarIKLimb.obtain(modelInstance, PVec3.ONE);
+    rightArmLimb.addNode("ArmUpper.R").addNode("ArmLower.R");
+    rightArmLimb.setEndLocalTranslationFromLastNode(
+        modelInstance.getNode("Wrist.R").templateNode().transform().getTranslation(pool.vec3()));
+    rightArmLimb.finalizeLimbSettings();
     pool.free();
   }
 
@@ -169,10 +175,11 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
         pool.vec3().set(PKeyboard.isDown(Input.Keys.L) ? 1 : 0, 0, -1); // TODO: figure out why z should be -1 here.
     leftLegLimb.setModelSpacePoleTarget(testPoleTarget);
     if (leftLegLimb != null) {
-//      leftLegLimb.performIkToReach(5, .5f, 5);
+      leftLegLimb.performIkToReach(5, .5f, 5);
     }
     for (int a = 0; a < rightLegLimb.nodeRotationOffsets().size(); a++) {
       //      rightLegLimb.nodeRotationOffsets().get(a).x(PEngine.t);
+      rightArmLimb.nodeRotationOffsets().get(a).x(PEngine.t);
     }
     //    rightLegLimb.testRotationAxes();
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
@@ -191,9 +198,10 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     testPoleTarget = pool.vec3().set(1, 1, 1);
     leftArmLimb.setModelSpacePoleTarget(testPoleTarget);
 //    leftArmLimb.performIkToReach(wristLGoalPos);
-    testPoleTarget = pool.vec3().set(0, -1, 0);
+    testPoleTarget = pool.vec3().set(0, 0, 1);
     rightArmLimb.setModelSpacePoleTarget(testPoleTarget);
-    rightArmLimb.performIkToReach(wristRGoalPos);
+    rightArmLimb.testRotationAxes();
+//    rightArmLimb.performIkToReach(wristRGoalPos);
     //    modelInstance.resetTransformsFromTemplates();
     //    modelInstance.recalcTransforms();
     //    ikArms(pool, wristLGoalPos, wristRGoalPos);

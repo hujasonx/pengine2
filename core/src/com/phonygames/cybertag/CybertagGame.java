@@ -23,6 +23,7 @@ import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PFlyingCameraController;
 import com.phonygames.pengine.util.PList;
@@ -35,13 +36,13 @@ public class CybertagGame implements PGame {
   PPointLight[] testLights = new PPointLight[10];
   private PModel catModel, duckModel, femaleModel;
   private PList<PModelInstance> catModelInstances = new PList<>(), duckModelInstances = new PList<>();
-  private PModelInstance femaleModelInstance;
   private PFlyingCameraController flyingCameraController;
   private PRenderBuffer gbufferPreviewRenderBuffer;
   private PShader gbufferPreviewShader;
   private PPbrPipeline pPbrPipeline;
   private PRenderContext renderContext;
   private PModel testBoxModel;
+  private PModelInstance testikModelInstance;
   private World world;
 
   @Override public void frameUpdate() {
@@ -52,7 +53,7 @@ public class CybertagGame implements PGame {
     if (!PMouse.isCatched() && PMouse.isFrameJustDown()) {
       PMouse.setCatched(true);
     }
-    if (PCharacterCameraController.activeCharacterCameraController() != null) {
+    if (PCharacterCameraController.activeCharacterCameraController() != null && false) {
       PCharacterCameraController.activeCharacterCameraController().frameUpdate();
       PCharacterCameraController.activeCharacterCameraController().applyToRenderContext(renderContext);
     } else {
@@ -93,9 +94,15 @@ public class CybertagGame implements PGame {
     if (duckModel != null) {
       for (int a = 0; a < duckModelInstances.size(); a++) {
         PModelInstance modelInstance = duckModelInstances.get(a);
-        modelInstance.worldTransform().idt()
-                     .set(pool.vec3().set(5 * a, 1.5f, 10), pool.vec4().setToRotation(0, 1, 0, a),
-                          pool.vec3().set(.1f, .1f, .1f));
+        if (a == 3) {
+          modelInstance.worldTransform().idt()
+                       .set(testIKFrontGoal, pool.vec4().setToRotation(0, 1, 0, a),
+                            pool.vec3().set(.1f, .1f, .1f));
+        } else {
+          modelInstance.worldTransform().idt()
+                       .set(pool.vec3().set(5 * a, 1.5f, 10), pool.vec4().setToRotation(0, 1, 0, a),
+                            pool.vec3().set(.1f, .1f, .1f));
+        }
         modelInstance.recalcTransforms();
       }
       // Enqueue the model instances into the buffer.
@@ -105,9 +112,45 @@ public class CybertagGame implements PGame {
     //      femaleModelInstance.recalcTransforms();
     //      femaleModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
     //    }
+    testIk();
     renderContext.glRenderQueue();
     renderContext.end();
     pool.free();
+  }
+
+  private PVec3 testIKFrontGoal = PVec3.obtain();
+
+  private void testIk() {
+    if (testikModelInstance == null) {return;}
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      testikModelInstance.resetTransformsFromTemplates();
+      testikModelInstance.recalcTransforms();
+      PPlanarIKLimb frontLimb = PPlanarIKLimb.obtain(testikModelInstance, pool.vec3().set(0, 0, 1));
+//      frontLimb.addNode("FrontUpper").addNode("FrontLower").setKneeNodeName("FrontLower");
+      frontLimb.addNode("FrontLower");
+      frontLimb.setEndLocalTranslationFromLastNode(
+          testikModelInstance.getNode("FrontTip").templateNode().transform().getTranslation(pool.vec3()));
+      if (PKeyboard.isDown(Input.Keys.V)) {frontLimb.setModelSpacePoleTarget(0, 0, 1);}
+      frontLimb.finalizeLimbSettings();
+      frontLimb.performIkToReach(testIKFrontGoal);
+      testikModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+      float moveSpeed = .35f * PEngine.dt;
+      if (PKeyboard.isDown(Input.Keys.UP)) {
+        testIKFrontGoal.add(0, 0, moveSpeed);
+      } else if (PKeyboard.isDown(Input.Keys.DOWN)) {
+        testIKFrontGoal.add(0, 0, -moveSpeed);
+      }
+      if (PKeyboard.isDown(Input.Keys.LEFT)) {
+        testIKFrontGoal.add(moveSpeed, 0, 0);
+      } else if (PKeyboard.isDown(Input.Keys.RIGHT)) {
+        testIKFrontGoal.add(-moveSpeed, 0, 0);
+      }
+      if (PKeyboard.isDown(Input.Keys.LEFT_BRACKET)) {
+        testIKFrontGoal.add(0, -moveSpeed, 0);
+      } else if (PKeyboard.isDown(Input.Keys.RIGHT_BRACKET)) {
+        testIKFrontGoal.add(0, moveSpeed, 0);
+      }
+    }
   }
 
   @Override public void init() {
@@ -162,6 +205,7 @@ public class CybertagGame implements PGame {
     world = new World();
     gbufferPreviewRenderBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse").build();
     gbufferPreviewShader = gbufferPreviewRenderBuffer.getQuadShader(Gdx.files.local("shader/previewgbuffer.quad.glsl"));
+    testikModelInstance = new PModelInstance(PAssetManager.model("model/testik.glb", true));
   }
 
   @Override public void logicUpdate() {
