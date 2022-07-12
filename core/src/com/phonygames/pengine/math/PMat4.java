@@ -138,7 +138,7 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     backingMatrix4.idt();
   }
 
-  public PMat4 rot(float axisX, float axisY, float axisZ, float rad) {
+  public PMat4 rotate(float axisX, float axisY, float axisZ, float rad) {
     synchronized (IDT) {
       backingMatrix4.rotateRad(axisX, axisY, axisZ, rad);
     }
@@ -148,6 +148,10 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   public PMat4 rotate(PVec4 rotation) {
     backingMatrix4.rotate(rotation.backingQuaterion());
     return this;
+  }
+
+  public PMat4 rotate(PVec3 axis, float rad) {
+    return this.rotate(axis.x(), axis.y(), axis.z(), rad);
   }
 
   public PMat4 scl(float scl) {

@@ -158,7 +158,7 @@ public abstract class PPool<T extends PPool.Poolable> {
     void reset();
   }
 
-  public final static class PoolBuffer implements Poolable {
+  public final static class PoolBuffer implements Poolable, AutoCloseable {
     // #pragma mark - PPool.Poolable
     @Getter
     @Setter
@@ -176,6 +176,10 @@ public abstract class PPool<T extends PPool.Poolable> {
     private final PList<PVec4> vec4s = new PList<>(PVec4.getStaticPool());
 
     private PoolBuffer() {
+    }
+
+    @Override public void close() {
+      free();
     }
 
     public boolean isValid() {

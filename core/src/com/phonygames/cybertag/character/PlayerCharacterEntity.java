@@ -19,6 +19,7 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.math.kinematics.PIKLimb;
 import com.phonygames.pengine.math.kinematics.PInverseKinematicsUtils;
+import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
 import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PPool;
@@ -32,6 +33,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private Gun gun;
   private PIKLimb leftLegLimb, rightArmLimb, leftArmLimb;
   private PModelInstance modelInstance;
+  private PPlanarIKLimb rightLegLimb;
 
   public PlayerCharacterEntity() {
     super();
@@ -85,6 +87,11 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     //    leftLegLimb = PIKLimb.obtain(modelInstance, "LegUpper.L").setEndLocalTranslationFromLastNode(
     //                             modelInstance.getNode("Foot.L").templateNode().transform()
     //                                          .getTranslation(pool.vec3()));
+    rightLegLimb = PPlanarIKLimb.obtain(modelInstance, PVec3.ONE);
+    rightLegLimb.addNode("LegUpper.R").addNode("LegLower.R");
+    rightLegLimb.setEndLocalTranslationFromLastNode(
+        modelInstance.getNode("Foot.R").templateNode().transform().getTranslation(pool.vec3()));
+    rightLegLimb.finalizeLimbSettings();
     pool.free();
   }
 
@@ -100,6 +107,21 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
                             facingLeftFlat.y() * cameraOffsetFromOrigin.x())
                        .add(facingDirFlat.x() * cameraOffsetFromOrigin.z(), 0,
                             facingDirFlat.y() * cameraOffsetFromOrigin.z());
+  }
+
+  private void ikArms(PPool.PoolBuffer pool, PVec3 goalL, PVec3 goalR) {
+    if (modelInstance == null) {return;}
+    PModelInstance.Node armUpperR = modelInstance.getNode("ArmUpper.R");
+    PModelInstance.Node armLowerR = modelInstance.getNode("ArmLower.R");
+    PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
+    PVec3 poleR = pool.vec3().set(.2f, -.3f, -.3f);
+    //    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, goalR, .01f, null);
+    PModelInstance.Node armUpperL = modelInstance.getNode("ArmUpper.L");
+    PModelInstance.Node armLowerL = modelInstance.getNode("ArmLower.L");
+    PModelInstance.Node wristL = modelInstance.getNode("Wrist.L");
+    PVec3 poleL = pool.vec3().set(-.2f, -.3f, -.3f);
+    PInverseKinematicsUtils.twoJointIk(armUpperL, armLowerL, wristL, goalL, .01f, null);
+    //    System.out.println("DSTIKARMS:" + wristL.worldTransform().getTranslation(pool.vec3()).dst(goalL));
   }
 
   @Override public void preLogicUpdate() {
@@ -134,7 +156,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (modelInstance == null) {return;}
     PPool.PoolBuffer pool = PPool.getBuffer();
     float facingDirAng = PNumberUtils.angle(0, 0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
-    worldTransform().setToTranslation(characterController.getPos(pool.vec3())).rot(0, -1, 0, facingDirAng);
+    worldTransform().setToTranslation(characterController.getPos(pool.vec3())).rotate(0, -1, 0, facingDirAng);
     modelInstance.worldTransform().set(worldTransform());
     modelInstance.resetTransformsFromTemplates();
     // Stop the wrist transforms from propagating recursive transform recalcs, since hand animations will be applied
@@ -147,6 +169,10 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (leftLegLimb != null) {
       //      leftLegLimb.performIkToReach(5, .5f, 5);
     }
+    for (int a = 0; a < rightLegLimb.nodeRotationOffsets().size(); a++) {
+      rightLegLimb.nodeRotationOffsets().get(a).x(PEngine.t);
+    }
+    rightLegLimb.testRotationAxes();
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
       gun.reload();
     }
@@ -158,36 +184,21 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     // Ik arms.
     PVec3 wristLGoalPos = gun.getBoneWorldTransform("Wrist.L").getTranslation(pool.vec3());
     PVec3 wristRGoalPos = gun.getBoneWorldTransform("Wrist.R").getTranslation(pool.vec3());
-    modelInstance.resetTransformsFromTemplates();
-    modelInstance.recalcTransforms();
+//    modelInstance.resetTransformsFromTemplates();
+//    modelInstance.recalcTransforms();
     PVec3 testPoleTarget = pool.vec3().set(MathUtils.sin(PEngine.t), MathUtils.cos(PEngine.t), -.3f);
     leftArmLimb.setModelSpacePoleTarget(testPoleTarget);
     leftArmLimb.performIkToReach(wristLGoalPos);
     //    rightArmLimb.performIkToReach(wristRGoalPos);
-//    modelInstance.resetTransformsFromTemplates();
-//    modelInstance.recalcTransforms();
-//    ikArms(pool, wristLGoalPos, wristRGoalPos);
+    //    modelInstance.resetTransformsFromTemplates();
+    //    modelInstance.recalcTransforms();
+    //    ikArms(pool, wristLGoalPos, wristRGoalPos);
     wristR.stopWorldTransformRecursionAt(false);
     wristL.stopWorldTransformRecursionAt(false);
     // Apply the hand animations to this model instance.
     gun.applyTransformsToCharacterModelInstance(modelInstance);
     modelInstance.recalcTransforms();
     pool.free();
-  }
-
-  private void ikArms(PPool.PoolBuffer pool, PVec3 goalL, PVec3 goalR) {
-    if (modelInstance == null) {return;}
-    PModelInstance.Node armUpperR = modelInstance.getNode("ArmUpper.R");
-    PModelInstance.Node armLowerR = modelInstance.getNode("ArmLower.R");
-    PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
-    PVec3 poleR = pool.vec3().set(.2f, -.3f, -.3f);
-    //    PInverseKinematicsUtils.twoJointIk(armUpperR, armLowerR, wristR, goalR, .01f, null);
-    PModelInstance.Node armUpperL = modelInstance.getNode("ArmUpper.L");
-    PModelInstance.Node armLowerL = modelInstance.getNode("ArmLower.L");
-    PModelInstance.Node wristL = modelInstance.getNode("Wrist.L");
-    PVec3 poleL = pool.vec3().set(-.2f, -.3f, -.3f);
-    PInverseKinematicsUtils.twoJointIk(armUpperL, armLowerL, wristL, goalL, .01f, null);
-//    System.out.println("DSTIKARMS:" + wristL.worldTransform().getTranslation(pool.vec3()).dst(goalL));
   }
   //
   //  private void ikArms(PPool.PoolBuffer pool, PVec3 wristLPos, PVec3 wristRPos) {
