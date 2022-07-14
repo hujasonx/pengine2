@@ -166,7 +166,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PVec3 wristLGoalPos = gun.getBoneWorldTransform("Wrist.L").getTranslation(pool.vec3());
     PVec3 wristRGoalPos = gun.getBoneWorldTransform("Wrist.R").getTranslation(pool.vec3());
     leftArmLimb.performIkToReach(wristLGoalPos);
-    rightArmLimb.performIkToReach(wristRGoalPos);
+    rightArmLimb.performIkToReach(gun.getBoneWorldTransform("Wrist.R"), wristR.templateNode().modelSpaceTransform());
     wristR.stopWorldTransformRecursionAt(false);
     wristL.stopWorldTransformRecursionAt(false);
     // Apply the hand animations to this model instance.

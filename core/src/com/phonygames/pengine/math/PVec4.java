@@ -1,6 +1,7 @@
 package com.phonygames.pengine.math;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
@@ -32,6 +33,9 @@ public class PVec4 extends PVec<PVec4> {
   private final Quaternion backingQuaterion = new Quaternion().set(0, 0, 0, 0);
 
   private PVec4() {}
+  public float getAxisAngle(PVec3 outAxis) {
+    return backingQuaterion.getAxisAngleRad(outAxis.backingVec3());
+  }
 
   public static PVec4 obtain() {
     return getStaticPool().obtain();
@@ -298,6 +302,40 @@ public class PVec4 extends PVec<PVec4> {
 
   @Override public PVec4 set(@NonNull PVec4 other) {
     this.backingQuaterion.set(other.backingQuaterion);
+    return this;
+  }
+
+  /**
+   * https://stackoverflow.com/questions/3684269/component-of-a-quaternion-rotation-around-an-axis
+   * Decompose the rotation on to 2 parts.
+   * 1. Twist - rotation around the "direction" vector
+   * 2. Swing - rotation around axis that is perpendicular to "direction" vector
+   * The rotation can be composed back by
+   * rotation = swing * twist
+   * <p>
+   * has singularity in case of swing_rotation close to 180 degrees rotation.
+   * if the input quaternion is of non-unit length, the outputs are non-unit as well
+   * otherwise, outputs are both unit
+   * @param direction
+   * @param outSwing
+   * @param outTwist
+   * @return
+   */
+  public PVec4 swingTwistDecompose(@NonNull PVec3 direction, @Nullable PVec4 outSwing, @Nullable PVec4 outTwist) {
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      PVec3 ra = pool.vec3(x(), y(), z());
+      PVec3 p = pool.vec3(ra).projectVector(direction);
+      if (outTwist == null) {outTwist = pool.vec4();}
+      outTwist.set(p.x(), p.y(), p.z(), w()).nor();
+      if (outSwing != null) {
+        outSwing.set(this).mul(pool.vec4(outTwist).conjugate());
+      }
+    }
+    return this;
+  }
+
+  public PVec4 conjugate() {
+    backingQuaterion.conjugate();
     return this;
   }
 

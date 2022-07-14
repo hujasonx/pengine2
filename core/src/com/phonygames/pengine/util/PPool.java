@@ -244,5 +244,9 @@ public abstract class PPool<T extends PPool.Poolable> {
     public PVec4 vec4(float x, float y, float z, float w) {
       return getVec4s().genPooledAndAdd().set(x, y, z, w);
     }
+
+    public PMat4 mat4(PMat4 mat) {
+      return getMat4s().genPooledAndAdd().set(mat);
+    }
   }
 }

@@ -1,5 +1,7 @@
 package com.phonygames.pengine.math.kinematics;
 
+import android.support.annotation.Nullable;
+
 import com.badlogic.gdx.Input;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModel;
@@ -68,6 +70,14 @@ public class PPlanarIKLimb implements PPool.Poolable {
     return this;
   }
 
+  public void applyRotationAxes() {
+    for (int a = 0; a < nodes.size(); a++) {
+      PModelInstance.Node node = nodes.get(a);
+      node.transform().rotate(nodeLocalRotationAxes.get(a), nodeRotationOffsets.get(a).x());
+    }
+    nodes.get(0).recalcNodeWorldTransformsRecursive(true);
+  }
+
   public PPlanarIKLimb finalizeLimbSettings() {
     processLocalSpaceRotationAxes();
     return this;
@@ -98,15 +108,20 @@ public class PPlanarIKLimb implements PPool.Poolable {
   }
 
   public void performIkToReach(PVec3 vec3) {
-    performIkToReach(vec3.x(), vec3.y(), vec3.z());
+    performIkToReach(vec3, null, null);
   }
 
-  public void performIkToReach(float x, float y, float z) {
+  public void performIkToReach(@Nullable PVec3 endEffectorGoalPosition, @Nullable PMat4 endEffectorTransform,
+                               @Nullable PMat4 endEffectorBindMSTransform) {
+    PPool.PoolBuffer pool = PPool.getBuffer();
+    PAssert.isFalse(endEffectorGoalPosition == null && endEffectorTransform == null);
+    if (endEffectorGoalPosition == null) {
+      endEffectorGoalPosition = endEffectorTransform.getTranslation(pool.vec3());
+    }
     processLocalSpaceRotationAxes();
     PAssert.isTrue(nodes.size() > 0 && !endLocalTranslationFromLastNode().isZero());
     PModelInstance.Node baseNode = nodes.get(0);
-    PPool.PoolBuffer pool = PPool.getBuffer();
-    PVec3 t = pool.vec3().set(x, y, z);
+    PVec3 t = pool.vec3(endEffectorGoalPosition);
     PVec3 basePos = baseNode.worldTransform().getTranslation(pool.vec3());
     PVec3 currentEndPos = pool.vec3().set(endLocalTranslationFromLastNode()).mul(nodes.peek().worldTransform(), 1);
     PVec4 aGRot = baseNode.worldTransform().getRotation(pool.vec4());
@@ -135,7 +150,33 @@ public class PPlanarIKLimb implements PPool.Poolable {
     }
     PInverseKinematicsUtils.twoJointIK(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
                                        worldSpaceBindPole, worldSpaceGoalPole);
+    if (endEffectorTransform != null && endEffectorBindMSTransform != null) {
+      PMat4 bcLocalTransform = pool.mat4(kneeNode.worldTransform()).inv().mul(endEffectorTransform);
+      PVec4 bcLocalRot = bcLocalTransform.getRotation(pool.vec4());
+      PMat4 bcBindLocalTransform =
+          pool.mat4(kneeNode.templateNode().modelSpaceTransform()).inv().mul(endEffectorBindMSTransform);
+      PVec4 bcBindLocalRot = bcBindLocalTransform.getRotation(pool.vec4());
+      PVec3 bcLocalAxisN = bcLocalTransform.getTranslation(pool.vec3()).nor();
+      PVec4 bcLocalTwist = pool.vec4();
+      PVec4 bcBindLocalTwist = pool.vec4();
+      bcLocalRot.swingTwistDecompose(bcLocalAxisN, null, bcLocalTwist);
+      bcBindLocalRot.swingTwistDecompose(bcLocalAxisN, null, bcBindLocalTwist);
+      PVec3 bcLocalTwistAxis = pool.vec3();
+      float bcLocalTwistAngle = bcLocalTwist.nor().getAxisAngle(bcLocalTwistAxis);
+      PVec3 bcBindLocalTwistAxis = pool.vec3();
+      float bcBindLocalTwistAngle = bcBindLocalTwist.nor().getAxisAngle(bcBindLocalTwistAxis);
+      float bRotateMixAmount = 1;
+      // Note: the local and bind quaternions might be pointing in opposite directions, but this code seems to work?
+      PVec4 bLocalRotChange =
+          pool.vec4().setToRotation(bcLocalAxisN, (bcLocalTwistAngle - bcBindLocalTwistAngle) * bRotateMixAmount);
+      kneeNode.transform().rotate(bLocalRotChange);
+      kneeNode.recalcNodeWorldTransformsRecursive(true);
+    }
     pool.free();
+  }
+
+  public void performIkToReach(PMat4 mat4, PMat4 endEffectorBindMSTransform) {
+    performIkToReach(null, mat4, endEffectorBindMSTransform);
   }
 
   @Override public void reset() {
@@ -177,13 +218,5 @@ public class PPlanarIKLimb implements PPool.Poolable {
   public PPlanarIKLimb setModelSpaceKneePoleTarget(float x, float y, float z) {
     modelSpaceKneePoleTarget().set(x, y, z);
     return this;
-  }
-
-  public void applyRotationAxes() {
-    for (int a = 0; a < nodes.size(); a++) {
-      PModelInstance.Node node = nodes.get(a);
-      node.transform().rotate(nodeLocalRotationAxes.get(a), nodeRotationOffsets.get(a).x());
-    }
-    nodes.get(0).recalcNodeWorldTransformsRecursive(true);
   }
 }
