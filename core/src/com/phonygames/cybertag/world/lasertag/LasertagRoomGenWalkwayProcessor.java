@@ -287,6 +287,15 @@ public class LasertagRoomGenWalkwayProcessor {
       // Cant place a walkway where the already is a walkway.
       if (walkwayAt(tileGen) != null) {return false;}
       LasertagTileGen aboveTileGen = tileGen.tileGenInRoomWithLocationOffset(0, 1, 0);
+      for (int f = 0; f < FACINGS.length; f++) {
+        LasertagTileWall.Facing testFacing = FACINGS[f];
+        // Non-floor walkways cannot be generated in front of doors, and floor walkways can only be generated at the
+        // door's bottom.
+        LasertagTileGen tileGenBelow = tileGen.tileGenInRoomWithLocationOffset(0, -1, 0);
+        boolean shouldBeInvalidIfHasDoorAtTileGen =
+            !isFloorWalkway || (tileGenBelow != null && tileGenBelow.wallGen(facing).wall.isDoor());
+        if (tileGen.wallGen(testFacing).wall.isDoor() && shouldBeInvalidIfHasDoorAtTileGen) {return false;}
+      }
       if (!isFloorWalkway) {
         if (aboveTileGen == null) { // If this room doesn't own the tile above, we cannot emit a nonfloor walkway.
           return false;
@@ -295,9 +304,7 @@ public class LasertagRoomGenWalkwayProcessor {
         if (walkwayAt(tileGen.tileGenInRoomWithLocationOffset(0, 1, 0)) != null) {return false;}
         for (int f = 0; f < FACINGS.length; f++) {
           LasertagTileWall.Facing testFacing = FACINGS[f];
-          // Non-floor walkways cannot be generated in front of doors.
-          if (tileGen.wallGen(testFacing).wall.isDoor()) {return false;}
-          if (aboveTileGen != null && aboveTileGen.wallGen(testFacing).wall.isDoor()) {
+          if (aboveTileGen.wallGen(testFacing).wall.isDoor()) {
             // If there is a door above, the only way this is valid is if this walkway is coming from it.
             if (endOffsetY == rampTiles - 1 && sloped && facing == testFacing) {continue;}
             return false;
