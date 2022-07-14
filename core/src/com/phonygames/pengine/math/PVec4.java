@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.utils.NumberUtils;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
 
@@ -13,10 +14,11 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 
 public class PVec4 extends PVec<PVec4> {
+  public static final PVec4 ONE = new PVec4().set(1, 1, 1, 1);
+  public static final PVec4 REAL = new PVec4().set(0, 0, 0, 1);
   public static final PVec4 X = new PVec4().set(1, 0, 0, 0);
   public static final PVec4 Y = new PVec4().set(0, 1, 0, 0);
   public static final PVec4 Z = new PVec4().set(0, 0, 1, 0);
-  public static final PVec4 REAL = new PVec4().set(0, 0, 0, 1);
   public static final PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PVec4> staticPool = new PPool<PVec4>() {
@@ -297,6 +299,11 @@ public class PVec4 extends PVec<PVec4> {
   @Override public PVec4 set(@NonNull PVec4 other) {
     this.backingQuaterion.set(other.backingQuaterion);
     return this;
+  }
+
+  public float toFloatBits() {
+    int color = ((int) (255 * w()) << 24) | ((int) (255 * z()) << 16) | ((int) (255 * y()) << 8) | ((int) (255 * x()));
+    return NumberUtils.intToFloatColor(color);
   }
 
   @Override public String toString() {

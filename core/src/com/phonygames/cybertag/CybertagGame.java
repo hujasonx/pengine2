@@ -8,6 +8,7 @@ import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.PGame;
 import com.phonygames.pengine.graphics.PApplicationWindow;
+import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PPbrPipeline;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
@@ -55,7 +56,7 @@ public class CybertagGame implements PGame {
     if (!PMouse.isCatched() && PMouse.isFrameJustDown()) {
       PMouse.setCatched(true);
     }
-    if (PCharacterCameraController.activeCharacterCameraController() != null && false) {
+    if (PCharacterCameraController.activeCharacterCameraController() != null) {
       PCharacterCameraController.activeCharacterCameraController().frameUpdate();
       PCharacterCameraController.activeCharacterCameraController().applyToRenderContext(renderContext);
     } else {
@@ -119,27 +120,68 @@ public class CybertagGame implements PGame {
     pool.free();
   }
 
+//  private void testIk() {
+//    if (testikModelInstance == null) {return;}
+//    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+//      testikModelInstance.resetTransformsFromTemplates();
+//      testikModelInstance.recalcTransforms();
+//      PVec3 frontLimbBindPole = pool.vec3().set(0, 0, 1);
+//      if (PKeyboard.isDown(Input.Keys.B)) {frontLimbBindPole.set(1, 0, 1);}
+//      PPlanarIKLimb frontLimb = PPlanarIKLimb.obtain(testikModelInstance, frontLimbBindPole);
+//      frontLimb.addNode("FrontUpper").addNode("FrontLower").setKneeNodeName("FrontLower");
+//      //      frontLimb.addNode("FrontLower");
+//      frontLimb.setEndLocalTranslationFromLastNode(
+//          testikModelInstance.getNode("FrontTip").templateNode().transform().getTranslation(pool.vec3()));
+//      if (!PKeyboard.isDown(Input.Keys.V)) {
+//        frontLimb.setModelSpaceKneePoleTarget(0, 0, 1);
+//      } else {
+//        frontLimb.setModelSpaceKneePoleTarget(1, 0, 1);
+//      }
+//      frontLimb.finalizeLimbSettings();
+//      //      frontLimb.nodeRotationOffsets().get(0).set(testIKFrontGoal.x());
+//      //      frontLimb.nodeRotationOffsets().get(1).set(testIKFrontGoal.z());
+//      frontLimb.performIkToReach(testIKFrontGoal);
+//      testikModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+//      float moveSpeed = .35f * PEngine.dt;
+//      if (PKeyboard.isDown(Input.Keys.UP)) {
+//        testIKFrontGoal.add(0, 0, moveSpeed);
+//      } else if (PKeyboard.isDown(Input.Keys.DOWN)) {
+//        testIKFrontGoal.add(0, 0, -moveSpeed);
+//      }
+//      if (PKeyboard.isDown(Input.Keys.LEFT)) {
+//        testIKFrontGoal.add(moveSpeed, 0, 0);
+//      } else if (PKeyboard.isDown(Input.Keys.RIGHT)) {
+//        testIKFrontGoal.add(-moveSpeed, 0, 0);
+//      }
+//      if (PKeyboard.isDown(Input.Keys.LEFT_BRACKET)) {
+//        testIKFrontGoal.add(0, -moveSpeed, 0);
+//      } else if (PKeyboard.isDown(Input.Keys.RIGHT_BRACKET)) {
+//        testIKFrontGoal.add(0, moveSpeed, 0);
+//      }
+//    }
+//  }
+
   private void testIk() {
     if (testikModelInstance == null) {return;}
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       testikModelInstance.resetTransformsFromTemplates();
       testikModelInstance.recalcTransforms();
-      PVec3 frontLimbBindPole = pool.vec3().set(0, 0, 1);
-      if (PKeyboard.isDown(Input.Keys.B)) {frontLimbBindPole.set(1, 0, 1);}
-      PPlanarIKLimb frontLimb = PPlanarIKLimb.obtain(testikModelInstance, frontLimbBindPole);
-      frontLimb.addNode("FrontUpper").addNode("FrontLower").setKneeNodeName("FrontLower");
-      //      frontLimb.addNode("FrontLower");
-      frontLimb.setEndLocalTranslationFromLastNode(
-          testikModelInstance.getNode("FrontTip").templateNode().transform().getTranslation(pool.vec3()));
+      PVec3 outLimbBindPole = pool.vec3().set(0, 0, -1);
+      if (PKeyboard.isDown(Input.Keys.B)) {outLimbBindPole.set(1, 0, -1);}
+      PPlanarIKLimb outLimb = PPlanarIKLimb.obtain(testikModelInstance, outLimbBindPole);
+      outLimb.addNode("OutUpper").addNode("OutLower").setKneeNodeName("OutLower");
+      //      outLimb.addNode("OutLower");
+      outLimb.setEndLocalTranslationFromLastNode(
+          testikModelInstance.getNode("OutTip").templateNode().transform().getTranslation(pool.vec3()));
       if (!PKeyboard.isDown(Input.Keys.V)) {
-        frontLimb.setModelSpaceKneePoleTarget(0, 0, 1);
+        outLimb.setModelSpaceKneePoleTarget(0, 0, -1);
       } else {
-        frontLimb.setModelSpaceKneePoleTarget(1, 0, 1);
+        outLimb.setModelSpaceKneePoleTarget(1, -1, -1);
       }
-      frontLimb.finalizeLimbSettings();
-      //      frontLimb.nodeRotationOffsets().get(0).set(testIKFrontGoal.x());
-      //      frontLimb.nodeRotationOffsets().get(1).set(testIKFrontGoal.z());
-      frontLimb.performIkToReach(testIKFrontGoal);
+      outLimb.finalizeLimbSettings();
+      //      outLimb.nodeRotationOffsets().get(0).set(testIKOutGoal.x());
+      //      outLimb.nodeRotationOffsets().get(1).set(testIKOutGoal.z());
+      outLimb.performIkToReach(testIKFrontGoal);
       testikModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
       float moveSpeed = .35f * PEngine.dt;
       if (PKeyboard.isDown(Input.Keys.UP)) {
@@ -245,6 +287,8 @@ public class CybertagGame implements PGame {
         PApplicationWindow.drawTextureToScreen(gbufferPreviewRenderBuffer.texture());
       }
     }
+    PDebugRenderer.render(renderContext);
+    PDebugRenderer.clear();
   }
 
   @Override public void postLogicUpdate() {

@@ -7,11 +7,15 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import java.util.HashSet;
 import java.util.Set;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public class PApplicationWindow {
   private static final OrthographicCamera orthoCamera = new OrthographicCamera();
   // A SpriteBatch that will draw things on the window at 1-1 pixel scale.
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private static final SpriteBatch windowSpriteBatch = new SpriteBatch();
   private static Set<ResizeListener> resizeListeners = new HashSet<>();
   @Getter

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.g3d.utils.TextureBinder;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.shader.PShader;
@@ -107,6 +108,16 @@ public class PRenderContext {
     PAssert.isTrue(isActive());
     backingRenderContext().setDepthTest(0);
     return this;
+  }
+
+  // Returns whether or not the projection was successful.
+  public boolean projectIf(PVec3 in) {
+    if (cameraDir().dot(in.x() - cameraPos().x(), in.y() - cameraPos().y(), in.z() - cameraPos().z()) < 0) {
+      return false;
+    }
+    perspectiveCamera().project(in.backingVec3());
+    in.y(perspectiveCamera().viewportHeight - in.y());
+    return true;
   }
 
   public boolean isActive() {

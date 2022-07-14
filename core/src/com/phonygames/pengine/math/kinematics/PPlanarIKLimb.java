@@ -129,7 +129,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
     }
     PVec3 worldSpaceBindPole = pool.vec3().set(bindPole).mul(modelInstance.worldTransform(), 0);
     worldSpaceBindPole = worldSpaceBindPole.isZero(.001f) || PKeyboard.isDown(Input.Keys.N) ? null : worldSpaceBindPole;
-    PVec3 worldSpaceGoalPole = pool.vec3().set(modelSpaceKneePoleTarget).mul(modelInstance.worldTransform(), 1);
+    PVec3 worldSpaceGoalPole = pool.vec3().set(modelSpaceKneePoleTarget).mul(modelInstance.worldTransform(), 0);
     if (modelSpaceKneePoleTarget.isZero()) {
       worldSpaceGoalPole = null;
     }
@@ -179,7 +179,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
     return this;
   }
 
-  public void testRotationAxes() {
+  public void applyRotationAxes() {
     for (int a = 0; a < nodes.size(); a++) {
       PModelInstance.Node node = nodes.get(a);
       node.transform().rotate(nodeLocalRotationAxes.get(a), nodeRotationOffsets.get(a).x());

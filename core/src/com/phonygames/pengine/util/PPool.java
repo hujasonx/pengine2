@@ -203,14 +203,46 @@ public abstract class PPool<T extends PPool.Poolable> {
       return getVec1s().genPooledAndAdd();
     }
 
+    public PVec1 vec1(PVec1 vec) {
+      return getVec1s().genPooledAndAdd().set(vec);
+    }
+
+    public PVec1 vec1(float x) {
+      return getVec1s().genPooledAndAdd().set(x);
+    }
+
     public PVec2 vec2() {return getVec2s().genPooledAndAdd();}
+
+    public PVec2 vec2(PVec2 vec) {
+      return getVec2s().genPooledAndAdd().set(vec);
+    }
+
+    public PVec2 vec2(float x, float y) {
+      return getVec2s().genPooledAndAdd().set(x, y);
+    }
 
     public PVec3 vec3() {
       return getVec3s().genPooledAndAdd();
     }
 
+    public PVec3 vec3(PVec3 vec) {
+      return getVec3s().genPooledAndAdd().set(vec);
+    }
+
+    public PVec3 vec3(float x, float y, float z) {
+      return getVec3s().genPooledAndAdd().set(x, y, z);
+    }
+
     public PVec4 vec4() {
       return getVec4s().genPooledAndAdd();
+    }
+
+    public PVec4 vec4(PVec4 vec) {
+      return getVec4s().genPooledAndAdd().set(vec);
+    }
+
+    public PVec4 vec4(float x, float y, float z, float w) {
+      return getVec4s().genPooledAndAdd().set(x, y, z, w);
     }
   }
 }

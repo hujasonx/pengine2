@@ -2,9 +2,8 @@ package com.phonygames.pengine.math.kinematics;
 
 import android.support.annotation.Nullable;
 
-import com.badlogic.gdx.math.MathUtils;
+import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.model.PModelInstance;
-import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -12,12 +11,7 @@ import com.phonygames.pengine.math.PVectorUtils;
 import com.phonygames.pengine.util.PPool;
 
 public class PInverseKinematicsUtils {
-  /**
-   * Applies two joint IK.
-   * @param a
-   * @param b
-   * @param t
-   */
+  private static boolean renderDebug = false;
   public static void oneJointIK(PModelInstance.Node a, PModelInstance.Node b, PVec3 t) {
     PPool.PoolBuffer pool = PPool.getBuffer();
     PVec3 aPos = a.worldTransform().getTranslation(pool.vec3());
@@ -32,17 +26,9 @@ public class PInverseKinematicsUtils {
     pool.free();
   }
 
-  public static void oneJointRotationToPointTo(PVec4 outALRotChange, @Nullable PVec4 outAGRotChange, PVec3 a, PVec3 b, PVec3 t, PVec4 aGRot) {
+  public static void oneJointRotationToPointTo(PVec4 outALRotChange, @Nullable PVec4 outAGRotChange, PVec3 a, PVec3 b,
+                                               PVec3 t, PVec4 aGRot) {
     PPool.PoolBuffer pool = PPool.getBuffer();
-    /*
-    float ac_at_0 = acos(clamp(dot(
-    normalize(c - a),
-    normalize(t - a)), -1, 1));
-
-    vec3 axis1 = normalize(cross(c - a, t - a));
-
-    quat r2 = quat_angle_axis(ac_at_0,  quat_mul(quat_inv(a_gr), axis1)));
-     */
     PVec3 abN = pool.vec3().set(b).sub(a).nor();
     PVec3 atN = pool.vec3().set(t).sub(a).nor();
     float abAT0 = PNumberUtils.acos(abN.dot(atN));
@@ -51,10 +37,10 @@ public class PInverseKinematicsUtils {
       axisWorld.nor();
       PVec3 axisLocal = pool.vec4().set(aGRot).invQuat().applyAsQuat(pool.vec3().set(axisWorld));
       outALRotChange.setToRotation(axisLocal, abAT0);
-      if (outAGRotChange != null) { outAGRotChange.setToRotation(axisWorld,abAT0); }
+      if (outAGRotChange != null) {outAGRotChange.setToRotation(axisWorld, abAT0);}
     } else {
       outALRotChange.setIdentityQuaternion();
-      if (outAGRotChange != null) { outAGRotChange.setIdentityQuaternion(); }
+      if (outAGRotChange != null) {outAGRotChange.setIdentityQuaternion();}
     }
     pool.free();
   }
@@ -83,24 +69,16 @@ public class PInverseKinematicsUtils {
     pool.free();
   }
 
-  //  public static void twoJointIK(PVec4 outALRotChange, PVec4 outBLRotChange, PVec3 a, PVec3 b, PVec3 c, PVec3 t,
-  //                                float epsilon, PVec4 aGRot, PVec4 bGRot, PVec3 poleWS, PVec3 targetPoleWS) {
-  //    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-  //      // First, rotate the segments such that the combined length is the desired length.
-  //      PVec3 outWorldAxis = pool.vec3();
-  //      twoJointRotationsToLength(outALRotChange, outBLRotChange, outWorldAxis, a, b, c, t, epsilon, aGRot, bGRot,
-  //      poleWS);
-  //      nodeA.transform().rotate(outALRotChange);
-  //      nodeB.transform().rotate(outBLRotChange);
-  //      nodeA.recalcNodeWorldTransformsRecursive(true);
-  //      // Now, rotate the base joint to point the tip to the target.
-  //      cPos.set(tipLocalTransformFromB).mul(nodeB.worldTransform(), 1.0f);
-  //      nodeA.worldTransform().getRotation(aGRot);
-  //      oneJointRotationToPointTo(outALRotChange, aPos, cPos, t, aGRot);
-  //      nodeA.transform().rotate(outALRotChange);
-  //      nodeA.recalcNodeWorldTransformsRecursive(true);
-  //    }
-  //  }
+  /**
+   * Applies inverse kinematics to the provided joint chain.
+   * @param nodeA                    The first node
+   * @param nodeB                    The knee node (does not necessarily need to be a direct child of node A)
+   * @param tipLocalTranslationFromB The end effector's offset from B in the local space of B
+   * @param t                        The target
+   * @param epsilon                  The distance tolerance
+   * @param poleWS                   The world-space pole to bend the knee using
+   * @param targetPoleWS             The world-space pole to rotate the limb to point the knee towards
+   */
   public static void twoJointIK(PModelInstance.Node nodeA, PModelInstance.Node nodeB, PVec3 tipLocalTranslationFromB,
                                 PVec3 t, float epsilon, @Nullable PVec3 poleWS, @Nullable PVec3 targetPoleWS) {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
@@ -138,6 +116,14 @@ public class PInverseKinematicsUtils {
         PVec4 axisChangeRotationLocalA = pool.vec4().setToRotation(axisChangeAxisLocalA, ang);
         nodeA.transform().rotate(axisChangeRotationLocalA);
         nodeA.recalcNodeWorldTransformsRecursive(true);
+        nodeB.worldTransform().getTranslation(b);
+        if (renderDebug) {
+          PDebugRenderer.line(a, newC, pool.vec4(1, 1, 1, 1), 1);
+          PDebugRenderer.line(b, pool.vec3(b).add(transformedAxisWS), pool.vec4(0, 1, 0, 1), 1);
+          PDebugRenderer.line(b, pool.vec3(b).add(goalAxisFromTargetPoleWS), pool.vec4(0, 1, 1, 1), 1);
+          PDebugRenderer.line(a, pool.vec3(a).add(poleWS, .25f), pool.vec4(1, 0, 0, 1), 1);
+          PDebugRenderer.line(a, pool.vec3(a).add(targetPoleWS, .25f), pool.vec4(0, 0, 1, 1), 1);
+        }
       }
     }
   }
@@ -182,133 +168,5 @@ public class PInverseKinematicsUtils {
     outALRotChange.set(r0);
     outBLRotChange.set(r1);
     pool.free();
-  }
-
-//  /**
-//   * Applies two joint IK.
-//   * @param a
-//   * @param b
-//   * @param c
-//   * @param t
-//   * @param epsilon
-//   */
-//  public static void twoJointIk(PModelInstance.Node a, PModelInstance.Node b, PModelInstance.Node c, PVec3 t,
-//                                float epsilon, @Nullable PVec3 pole) {
-//    //    PPool.PoolBuffer pool = PPool.getBuffer();
-//    //    // First, rotate the segments such that the combined length is the desired length.
-//    //    PVec3 aPos = a.worldTransform().getTranslation(pool.vec3());
-//    //    PVec3 bPos = b.worldTransform().getTranslation(pool.vec3());
-//    //    PVec3 cPos = c.worldTransform().getTranslation(pool.vec3());
-//    //    PVec4 aGRot = a.worldTransform().getRotation(pool.vec4());
-//    //    PVec4 bGRot = b.worldTransform().getRotation(pool.vec4());
-//    //    PVec4 outALRotChange = pool.vec4();
-//    //    PVec4 outBLRotChange = pool.vec4();
-//    //    twoJointRotationsToLength(outALRotChange, outBLRotChange, aPos, bPos, cPos, t, epsilon, aGRot, bGRot, pole);
-//    //    a.transform().rotate(outALRotChange);
-//    //    b.transform().rotate(outBLRotChange);
-//    //    a.recalcNodeWorldTransformsRecursive(true);
-//    //    // Now, rotate the base joint to point the tip to the target.
-//    //    c.worldTransform().getTranslation(cPos);
-//    //    a.worldTransform().getRotation(aGRot);
-//    //    oneJointRotationToPointTo(outALRotChange, aPos, cPos, t, aGRot);
-//    //    a.transform().rotate(outALRotChange);
-//    //    a.recalcNodeWorldTransformsRecursive(true);
-//    //    pool.free();
-//    PMat4 transformBInv = PMat4.obtain().set(b.worldTransform()).inv();
-//    PVec3 tipTranslationLocalB = c.worldTransform().getTranslation(PVec3.obtain()).mul(transformBInv, 1);
-//    twoJointIk(a, b, tipTranslationLocalB, t, epsilon, pole);
-//    tipTranslationLocalB.free();
-//    transformBInv.free();
-//  }
-
-//  /**
-//   * Applies two joint IK.
-//   * @param a
-//   * @param b
-//   * @param tipLocalTransformFromB
-//   * @param t
-//   * @param epsilon
-//   */
-//  public static void twoJointIk(PModelInstance.Node a, PModelInstance.Node b, PVec3 tipLocalTransformFromB, PVec3 t,
-//                                float epsilon, @Nullable PVec3 pole) {
-//    PPool.PoolBuffer pool = PPool.getBuffer();
-//    // First, rotate the segments such that the combined length is the desired length.
-//    PVec3 aPos = a.worldTransform().getTranslation(pool.vec3());
-//    PVec3 bPos = b.worldTransform().getTranslation(pool.vec3());
-//    PVec3 cPos = pool.vec3().set(tipLocalTransformFromB).mul(b.worldTransform(), 1.0f);
-//    PVec4 aGRot = a.worldTransform().getRotation(pool.vec4());
-//    PVec4 bGRot = b.worldTransform().getRotation(pool.vec4());
-//    PVec4 outALRotChange = pool.vec4();
-//    PVec4 outBLRotChange = pool.vec4();
-//    twoJointRotationsToLength(outALRotChange, outBLRotChange, null, aPos, bPos, cPos, t, epsilon, aGRot, bGRot, pole);
-//    a.transform().rotate(outALRotChange);
-//    b.transform().rotate(outBLRotChange);
-//    a.recalcNodeWorldTransformsRecursive(true);
-//    // Now, rotate the base joint to point the tip to the target.
-//    cPos.set(tipLocalTransformFromB).mul(b.worldTransform(), 1.0f);
-//    a.worldTransform().getRotation(aGRot);
-//    oneJointRotationToPointTo(outALRotChange, null, aPos, cPos, t, aGRot);
-//    a.transform().rotate(outALRotChange);
-//    a.recalcNodeWorldTransformsRecursive(true);
-//    pool.free();
-//  }
-
-  /**
-   * Applies two joint IK, using a strategy of finding the knee location and just pointing the nodes individually.
-   * @param nodeA
-   * @param nodeB
-   * @param tipLocalTransformFromB
-   * @param t
-   * @param epsilon
-   */
-  public static void twoJointIk2(PModelInstance.Node nodeA, PModelInstance.Node nodeB, PVec3 tipLocalTransformFromB,
-                                 PVec3 t, float epsilon, @Nullable PVec3 poleTarget) {
-    if (poleTarget == null) {
-//      twoJointIK(nodeA, nodeB, tipLocalTransformFromB, t, epsilon, null);
-      return;
-    }
-    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-      PVec3 goalJointPos = pool.vec3();
-      // First, rotate the segments such that the combined length is the desired length.
-      PVec3 a = nodeA.worldTransform().getTranslation(pool.vec3());
-      PVec3 b = nodeB.worldTransform().getTranslation(pool.vec3());
-      PVec3 c = pool.vec3().set(tipLocalTransformFromB).mul(nodeB.worldTransform(), 1.0f);
-      PVec3 ab = pool.vec3().set(b).sub(a);
-      PVec3 at = pool.vec3().set(t).sub(a);
-      PVec3 atN = pool.vec3().set(at).nor();
-      PVec3 bc = pool.vec3().set(c).sub(b);
-      float bcLen = bc.len();
-      float abLen = ab.len();
-      float atLen = PNumberUtils.clamp(at.len(), epsilon, abLen + bcLen - epsilon);
-      // Check that the chain can reach the target.
-      if (atLen > abLen + bcLen + epsilon) {
-        // The goal is too far, so just fully extend the chain.
-        goalJointPos.set(t);
-      } else {
-        // Find the ideal goal position based on the pole target.
-        // Angles should be <a, b, t>
-        PVec3 anglesForEndTriangle = PVectorUtils.getAnglesForTriangleWithLengths(pool.vec3(), bcLen, atLen, abLen);
-        float jointLenAlongAt = abLen * MathUtils.cos(anglesForEndTriangle.x());
-        float jointLocationsCircleRadius = abLen * MathUtils.sin(anglesForEndTriangle.x());
-        PVec3 jointLocationsCircleCenter = pool.vec3().set(a).add(atN, jointLenAlongAt);
-        PVec3 jointLocationsCircleNormal = atN;
-        PVec3 goalPoleTargetPos = pool.vec3().set(a).add(pool.vec3().set(poleTarget).nor(), abLen);
-        PVectorUtils.closestPointOnCircle(goalJointPos, goalPoleTargetPos, jointLocationsCircleNormal,
-                                          jointLocationsCircleCenter, jointLocationsCircleRadius);
-      }
-      // First, rotate nodeA to point towards the goal joint pos.
-      PVec4 aGRot = nodeA.worldTransform().getRotation(pool.vec4());
-      PVec4 outALRotChange = pool.vec4();
-      oneJointRotationToPointTo(outALRotChange, null, a, b, goalJointPos, aGRot);
-      nodeA.transform().rotate(outALRotChange);
-      nodeA.recalcNodeWorldTransformsRecursive(true);
-      // Next, rotate nodeB to point towards the target.
-      PVec4 bGRot = nodeB.worldTransform().getRotation(pool.vec4());
-      PVec4 outBLRotChange = pool.vec4();
-      PVec3 newC = pool.vec3().set(tipLocalTransformFromB).mul(nodeB.worldTransform(), 1.0f);
-      oneJointRotationToPointTo(outBLRotChange, null, b, newC, t, bGRot);
-      nodeB.transform().rotate(outBLRotChange);
-      nodeB.recalcNodeWorldTransformsRecursive(true);
-    }
   }
 }
