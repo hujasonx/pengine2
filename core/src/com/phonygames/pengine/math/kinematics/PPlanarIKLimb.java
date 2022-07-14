@@ -33,7 +33,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
   };
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final PVec3 bindPole = PVec3.obtain(), modelSpacePoleTarget = PVec3.obtain();
+  private final PVec3 bindPole = PVec3.obtain(), modelSpaceKneePoleTarget = PVec3.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PVec3 endLocalTranslationFromLastNode = PVec3.obtain();
@@ -55,7 +55,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
   public static PPlanarIKLimb obtain(PModelInstance modelInstance, PVec3 bindPole) {
     PPlanarIKLimb ret = staticPool().obtain();
     ret.modelInstance = modelInstance;
-    ret.bindPole().set(bindPole);
+    ret.bindPole().set(bindPole).nor();
     return ret;
   }
 
@@ -112,13 +112,13 @@ public class PPlanarIKLimb implements PPool.Poolable {
     PVec4 aGRot = baseNode.worldTransform().getRotation(pool.vec4());
     PVec4 aLRotChange = pool.vec4();
     if (nodes.size() == 1) {
-      PInverseKinematicsUtils.oneJointRotationToPointTo(aLRotChange, basePos, currentEndPos, t, aGRot);
+      PInverseKinematicsUtils.oneJointRotationToPointTo(aLRotChange, null, basePos, currentEndPos, t, aGRot);
       baseNode.transform().rotate(aLRotChange);
       baseNode.recalcNodeWorldTransformsRecursive(true);
       pool.free();
       return;
     }
-    PModelInstance.Node kneeNode = modelInstance.nodes().get(kneeNodeName);
+    PModelInstance.Node kneeNode = kneeNodeName == null ? null : modelInstance.nodes().get(kneeNodeName);
     if (kneeNode == null) {
       if (nodes.size() == 2) {
         // Use the second node as the knee node if there are two nodes.
@@ -127,22 +127,11 @@ public class PPlanarIKLimb implements PPool.Poolable {
         PAssert.fail("No valid knee was found for ik.");
       }
     }
-    PInverseKinematicsUtils.twoJointIk(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
-                                       bindPole.isZero(.001f) || PKeyboard.isDown(Input.Keys.N) ? null : bindPole);
-    System.out.println(
-        "DST:" + pool.vec3().set(endLocalTranslationFromLastNode()).mul(nodes.peek().worldTransform(), 1).dst(t));
-    // Rotate so that the pole faces towards the pole target.
-    if (!modelSpacePoleTarget.isZero()) {
-      PVec3 kneePos = kneeNode.worldTransform().getTranslation(pool.vec3());
-      baseNode.worldTransform().getRotation(aGRot);
-      PInverseKinematicsUtils.oneJointRotationToAngleKneeTo(aLRotChange,
-                                                            baseNode.worldTransform().getTranslation(pool.vec3()),
-                                                            kneePos, t, pool.vec3().set(modelSpacePoleTarget)
-                                                                            .mul(modelInstance.worldTransform(), 1),
-                                                            aGRot);
-      baseNode.transform().rotate(aLRotChange);
-      baseNode.recalcNodeWorldTransformsRecursive(true);
-    }
+    PVec3 worldSpaceBindPole = pool.vec3().set(bindPole).mul(modelInstance.worldTransform(), 0);
+    worldSpaceBindPole = worldSpaceBindPole.isZero(.001f) || PKeyboard.isDown(Input.Keys.N) ? null : worldSpaceBindPole;
+    PVec3 worldSpaceGoalPole = pool.vec3().set(modelSpaceKneePoleTarget).mul(modelInstance.worldTransform(), 1);
+    PInverseKinematicsUtils.twoJointIK(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
+                                       worldSpaceBindPole, worldSpaceGoalPole);
     pool.free();
   }
 
@@ -153,7 +142,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
     nodePlanarLengths.clearAndFreePooled();
     nodeRotationOffsets.clearAndFreePooled();
     bindPole.setZero();
-    modelSpacePoleTarget.setZero();
+    modelSpaceKneePoleTarget.setZero();
     modelInstance = null;
   }
 
@@ -177,13 +166,13 @@ public class PPlanarIKLimb implements PPool.Poolable {
     return this;
   }
 
-  public PPlanarIKLimb setModelSpacePoleTarget(PVec3 target) {
-    modelSpacePoleTarget().set(target);
+  public PPlanarIKLimb setModelSpaceKneePoleTarget(PVec3 target) {
+    modelSpaceKneePoleTarget().set(target);
     return this;
   }
 
   public PPlanarIKLimb setModelSpacePoleTarget(int x, int y, int z) {
-    modelSpacePoleTarget().set(x, y, z);
+    modelSpaceKneePoleTarget().set(x, y, z);
     return this;
   }
 

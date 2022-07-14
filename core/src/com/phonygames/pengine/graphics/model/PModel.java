@@ -63,7 +63,7 @@ public class PModel {
           PModelInstance firstInstance = null;
           int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
           for (int b = 0; b < instances.size(); b++) {
-            PModelInstance modelInstance = instances.get(a);
+            PModelInstance modelInstance = instances.get(b);
             PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
             modelInstance.outputBoneTransformsToBuffer(renderContext, glNode.id());
             if (firstInstance == null) {

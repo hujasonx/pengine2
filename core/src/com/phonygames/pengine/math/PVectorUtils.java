@@ -1,6 +1,7 @@
 package com.phonygames.pengine.math;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
 import com.phonygames.pengine.util.PPool;
 
 public class PVectorUtils {
@@ -9,8 +10,9 @@ public class PVectorUtils {
       float a = vec.dot(planeNormal);
       float b = (pool.vec3().set(axis).crs(vec)).dot(planeNormal);
       float c = (vec.dot(axis) * planeNormal.dot(vec));
+      float v = (a - c) * (a - c) + b * b;
       float xPlus =
-          (c * (c - a) + PNumberUtils.sqrt(b * b * ((a - c) * (a - c) + b * b - c * c)) / ((a - c) * (a - c) + b * b));
+          (c * (c - a) + PNumberUtils.sqrt(b * b * (v - c * c)) / v);
       float yPlus = ((c - a) * xPlus - c) / b;
       return MathUtils.atan2(yPlus, xPlus);
     }
@@ -37,5 +39,11 @@ public class PVectorUtils {
     }
     float t = (planeNormal.dot(planePosition) - planeNormal.dot(p0)) / planeNormal.dot(out.nor());
     return out.scl(t).add(p0);
+  }
+  public static PVec3 getAnglesForTriangleWithLengths(PVec3 out, float l1, float l2, float l3) {
+    float t1 = PNumberUtils.acos(((l2 * l2) + (l3 * l3) - (l1 * l1)) / (2 * l3 * l2));
+    float t2 = PNumberUtils.acos(((l3 * l3) + (l1 * l1) - (l2 * l2)) / (2 * l1 * l3));
+    float t3 = PNumberUtils.acos(((l2 * l2) + (l1 * l1) - (l3 * l3)) / (2 * l1 * l2));
+    return out.set(t1, t2, t3);
   }
 }

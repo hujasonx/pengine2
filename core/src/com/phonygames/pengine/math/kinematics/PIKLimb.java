@@ -78,7 +78,7 @@ public class PIKLimb implements PPool.Poolable {
     PVec4 aGRot = baseNode.worldTransform().getRotation(pool.vec4());
     PVec4 aLRotChange = pool.vec4();
     if (nodes.size() == 1) {
-      PInverseKinematicsUtils.oneJointRotationToPointTo(aLRotChange, basePos, currentEndPos, t, aGRot);
+      PInverseKinematicsUtils.oneJointRotationToPointTo(aLRotChange, null, basePos, currentEndPos, t, aGRot);
       baseNode.transform().rotate(aLRotChange);
       baseNode.recalcNodeWorldTransformsRecursive(true);
       pool.free();
@@ -93,8 +93,8 @@ public class PIKLimb implements PPool.Poolable {
         PAssert.fail("No valid knee was found for ik.");
       }
     }
-    PInverseKinematicsUtils.twoJointIk(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
-                                       pole.isZero(.001f) || PKeyboard.isDown(Input.Keys.N) ? null : pole);
+//    PInverseKinematicsUtils.twoJointIk(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
+//                                       pole.isZero(.001f) || PKeyboard.isDown(Input.Keys.N) ? null : pole);
 //        System.out.println("DST:" + pool.vec3().set(endLocalTranslationFromLastNode()).mul(nodes.peek()
 //        .worldTransform(), 1).dst(t));
     // Rotate so that the pole faces towards the pole target.

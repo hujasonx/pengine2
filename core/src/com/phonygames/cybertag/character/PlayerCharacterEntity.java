@@ -125,7 +125,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PModelInstance.Node armLowerL = modelInstance.getNode("ArmLower.L");
     PModelInstance.Node wristL = modelInstance.getNode("Wrist.L");
     PVec3 poleL = pool.vec3().set(-.2f, -.3f, -.3f);
-    PInverseKinematicsUtils.twoJointIk(armUpperL, armLowerL, wristL, goalL, .01f, null);
+//    PInverseKinematicsUtils.twoJointIk(armUpperL, armLowerL, wristL, goalL, .01f, null);
     //    System.out.println("DSTIKARMS:" + wristL.worldTransform().getTranslation(pool.vec3()).dst(goalL));
   }
 
@@ -175,7 +175,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
         pool.vec3().set(PKeyboard.isDown(Input.Keys.L) ? 1 : 0, 0, -1); // TODO: figure out why z should be -1 here.
     leftLegLimb.setModelSpacePoleTarget(testPoleTarget);
     if (leftLegLimb != null) {
-      leftLegLimb.performIkToReach(5, .5f, 5);
+//      leftLegLimb.performIkToReach(5, .5f, 5);
     }
     for (int a = 0; a < rightLegLimb.nodeRotationOffsets().size(); a++) {
       //      rightLegLimb.nodeRotationOffsets().get(a).x(PEngine.t);
@@ -196,12 +196,12 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     //    modelInstance.resetTransformsFromTemplates();
     //    modelInstance.recalcTransforms();
     testPoleTarget = pool.vec3().set(1, 1, 1);
-    leftArmLimb.setModelSpacePoleTarget(testPoleTarget);
-//    leftArmLimb.performIkToReach(wristLGoalPos);
+//    leftArmLimb.setModelSpacePoleTarget(testPoleTarget);
+    leftArmLimb.performIkToReach(wristLGoalPos);
     testPoleTarget = pool.vec3().set(0, 0, 1);
-    rightArmLimb.setModelSpacePoleTarget(testPoleTarget);
-    rightArmLimb.testRotationAxes();
-//    rightArmLimb.performIkToReach(wristRGoalPos);
+//    rightArmLimb.setModelSpaceKneePoleTarget(testPoleTarget);
+//    rightArmLimb.testRotationAxes();
+    rightArmLimb.performIkToReach(wristRGoalPos);
     //    modelInstance.resetTransformsFromTemplates();
     //    modelInstance.recalcTransforms();
     //    ikArms(pool, wristLGoalPos, wristRGoalPos);

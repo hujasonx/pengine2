@@ -17,6 +17,7 @@ import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.lighting.PEnvironment;
@@ -42,6 +43,7 @@ public class CybertagGame implements PGame {
   private PPbrPipeline pPbrPipeline;
   private PRenderContext renderContext;
   private PModel testBoxModel;
+  private PVec3 testIKFrontGoal = PVec3.obtain();
   private PModelInstance testikModelInstance;
   private World world;
 
@@ -96,8 +98,7 @@ public class CybertagGame implements PGame {
         PModelInstance modelInstance = duckModelInstances.get(a);
         if (a == 3) {
           modelInstance.worldTransform().idt()
-                       .set(testIKFrontGoal, pool.vec4().setToRotation(0, 1, 0, a),
-                            pool.vec3().set(.1f, .1f, .1f));
+                       .set(testIKFrontGoal, pool.vec4().setToRotation(0, 1, 0, a), pool.vec3().set(.1f, .1f, .1f));
         } else {
           modelInstance.worldTransform().idt()
                        .set(pool.vec3().set(5 * a, 1.5f, 10), pool.vec4().setToRotation(0, 1, 0, a),
@@ -118,20 +119,22 @@ public class CybertagGame implements PGame {
     pool.free();
   }
 
-  private PVec3 testIKFrontGoal = PVec3.obtain();
-
   private void testIk() {
     if (testikModelInstance == null) {return;}
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       testikModelInstance.resetTransformsFromTemplates();
       testikModelInstance.recalcTransforms();
-      PPlanarIKLimb frontLimb = PPlanarIKLimb.obtain(testikModelInstance, pool.vec3().set(0, 0, 1));
-//      frontLimb.addNode("FrontUpper").addNode("FrontLower").setKneeNodeName("FrontLower");
-      frontLimb.addNode("FrontLower");
+      PVec3 frontLimbBindPole = pool.vec3().set(0, 0, 1);
+      if (PKeyboard.isDown(Input.Keys.B)) {frontLimbBindPole.set(1, 0, 1);}
+      PPlanarIKLimb frontLimb = PPlanarIKLimb.obtain(testikModelInstance, frontLimbBindPole);
+      frontLimb.addNode("FrontUpper").addNode("FrontLower").setKneeNodeName("FrontLower");
+      //      frontLimb.addNode("FrontLower");
       frontLimb.setEndLocalTranslationFromLastNode(
           testikModelInstance.getNode("FrontTip").templateNode().transform().getTranslation(pool.vec3()));
-      if (PKeyboard.isDown(Input.Keys.V)) {frontLimb.setModelSpacePoleTarget(0, 0, 1);}
+      if (!PKeyboard.isDown(Input.Keys.V)) {frontLimb.setModelSpacePoleTarget(0, 0, 1);}
       frontLimb.finalizeLimbSettings();
+      //      frontLimb.nodeRotationOffsets().get(0).set(testIKFrontGoal.x());
+      //      frontLimb.nodeRotationOffsets().get(1).set(testIKFrontGoal.z());
       frontLimb.performIkToReach(testIKFrontGoal);
       testikModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
       float moveSpeed = .35f * PEngine.dt;
@@ -206,6 +209,14 @@ public class CybertagGame implements PGame {
     gbufferPreviewRenderBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse").build();
     gbufferPreviewShader = gbufferPreviewRenderBuffer.getQuadShader(Gdx.files.local("shader/previewgbuffer.quad.glsl"));
     testikModelInstance = new PModelInstance(PAssetManager.model("model/testik.glb", true));
+    testikModelInstance.material("matBase").useVColIndex(true);
+    testikModelInstance.setDataBufferEmitter(renderContext -> {
+      PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
+      // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+      // the normal or the Index with this buffer.
+      vColIndexBuffer.addData(.5f, .8f, 1, 1); // Skin color diffuseM.
+      vColIndexBuffer.addData(0, 0, 0, 0); // Skin color emissiveR.
+    });
   }
 
   @Override public void logicUpdate() {
