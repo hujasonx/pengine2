@@ -131,7 +131,11 @@ public class CybertagGame implements PGame {
       //      frontLimb.addNode("FrontLower");
       frontLimb.setEndLocalTranslationFromLastNode(
           testikModelInstance.getNode("FrontTip").templateNode().transform().getTranslation(pool.vec3()));
-      if (!PKeyboard.isDown(Input.Keys.V)) {frontLimb.setModelSpacePoleTarget(0, 0, 1);}
+      if (!PKeyboard.isDown(Input.Keys.V)) {
+        frontLimb.setModelSpaceKneePoleTarget(0, 0, 1);
+      } else {
+        frontLimb.setModelSpaceKneePoleTarget(1, 0, 1);
+      }
       frontLimb.finalizeLimbSettings();
       //      frontLimb.nodeRotationOffsets().get(0).set(testIKFrontGoal.x());
       //      frontLimb.nodeRotationOffsets().get(1).set(testIKFrontGoal.z());
@@ -217,6 +221,7 @@ public class CybertagGame implements PGame {
       vColIndexBuffer.addData(.5f, .8f, 1, 1); // Skin color diffuseM.
       vColIndexBuffer.addData(0, 0, 0, 0); // Skin color emissiveR.
     });
+    testikModelInstance.worldTransform().setToRotation(0, 1, 0, 2).translate(0, 0, .2f);
   }
 
   @Override public void logicUpdate() {

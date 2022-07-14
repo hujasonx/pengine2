@@ -130,7 +130,7 @@ public class PInverseKinematicsUtils {
         // Finally, attempt to rotate the axes to align from the poles.
         PVec3 newC = pool.vec3().set(tipLocalTranslationFromB).mul(nodeB.worldTransform(), 1.0f);
         PVec3 newAc = pool.vec3().set(newC).sub(a);
-        PVec3 goalAxisFromTargetPoleWS = pool.vec3().set(newAc).crs(targetPoleWS);
+        PVec3 goalAxisFromTargetPoleWS = pool.vec3().set(newAc).crs(targetPoleWS).nor();
         PVec3 axisChangeAxis = pool.vec3().set(transformedAxisWS).crs(goalAxisFromTargetPoleWS).nor();
         float ang = PNumberUtils.acos(transformedAxisWS.dot(goalAxisFromTargetPoleWS));
         PVec4 newAGRotInv = nodeA.worldTransform().getRotation(pool.vec4()).invQuat();

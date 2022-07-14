@@ -130,6 +130,9 @@ public class PPlanarIKLimb implements PPool.Poolable {
     PVec3 worldSpaceBindPole = pool.vec3().set(bindPole).mul(modelInstance.worldTransform(), 0);
     worldSpaceBindPole = worldSpaceBindPole.isZero(.001f) || PKeyboard.isDown(Input.Keys.N) ? null : worldSpaceBindPole;
     PVec3 worldSpaceGoalPole = pool.vec3().set(modelSpaceKneePoleTarget).mul(modelInstance.worldTransform(), 1);
+    if (modelSpaceKneePoleTarget.isZero()) {
+      worldSpaceGoalPole = null;
+    }
     PInverseKinematicsUtils.twoJointIK(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
                                        worldSpaceBindPole, worldSpaceGoalPole);
     pool.free();
@@ -151,7 +154,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
     return this;
   }
 
-  public PPlanarIKLimb setBindPole(int x, int y, int z) {
+  public PPlanarIKLimb setBindPole(float x, float y, float z) {
     this.bindPole().set(x, y, z);
     return this;
   }
@@ -161,7 +164,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
     return this;
   }
 
-  public PPlanarIKLimb setEndLocalTranslationFromLastNode(int x, int y, int z) {
+  public PPlanarIKLimb setEndLocalTranslationFromLastNode(float x, float y, float z) {
     endLocalTranslationFromLastNode().set(x, y, z);
     return this;
   }
@@ -171,7 +174,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
     return this;
   }
 
-  public PPlanarIKLimb setModelSpacePoleTarget(int x, int y, int z) {
+  public PPlanarIKLimb setModelSpaceKneePoleTarget(float x, float y, float z) {
     modelSpaceKneePoleTarget().set(x, y, z);
     return this;
   }

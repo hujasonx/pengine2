@@ -31,7 +31,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
   private PCharacterCameraController cameraController;
   private Gun gun;
-  private PIKLimb leftLegLimb, leftArmLimb;
+  private PPlanarIKLimb leftLegLimb, leftArmLimb;
   private PModelInstance modelInstance;
   private PPlanarIKLimb rightLegLimb, rightArmLimb;
 
@@ -71,19 +71,21 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     });
     modelInstance.material("matBase").useVColIndex(true);
     modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
-    leftLegLimb = PIKLimb.obtain(modelInstance, "LegUpper.L").addNode("LegLower.L", 1, 0, 0);
+    leftLegLimb = PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, 1)).addNode("LegUpper.L").addNode("LegLower.L");
     leftLegLimb.setEndLocalTranslationFromLastNode(
         modelInstance.getNode("Foot.L").templateNode().transform().getTranslation(pool.vec3()));
-    leftLegLimb.setPole(0, 0, 1);
+    leftLegLimb.setModelSpaceKneePoleTarget(0, 0, 1);
+    leftLegLimb.finalizeLimbSettings();
 //    rightArmLimb = PIKLimb.obtain(modelInstance, "ArmUpper.R").addNode("ArmLower.R", 0, -1, 0);
 //    rightArmLimb.setEndLocalTranslationFromLastNode(
 //        modelInstance.getNode("Wrist.R").templateNode().transform().getTranslation(pool.vec3()));
 //    rightArmLimb.setPole(0, 0, -1);
-    leftArmLimb = PIKLimb.obtain(modelInstance, "ArmUpper.L").addNode("ArmLower.L", 0, -1, 0);
+    leftArmLimb = PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, -1)).addNode("ArmUpper.L").addNode("ArmLower.L");
     leftArmLimb.setEndLocalTranslationFromLastNode(
         modelInstance.getNode("Wrist.L").templateNode().transform().getTranslation(pool.vec3()));
-    leftArmLimb.setPole(0, 0, -1);
-    leftArmLimb.setModelSpacePoleTarget(-1, 1, 1);
+    leftArmLimb.setModelSpaceKneePoleTarget(1, -1, -1);
+    leftArmLimb.finalizeLimbSettings();
+//    leftArmLimb.setModelSpacePoleTarget(-1, 1, 1);
     //    leftLegLimb = PIKLimb.obtain(modelInstance, "LegUpper.L").setEndLocalTranslationFromLastNode(
     //                             modelInstance.getNode("Foot.L").templateNode().transform()
     //                                          .getTranslation(pool.vec3()));
@@ -92,7 +94,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     rightLegLimb.setEndLocalTranslationFromLastNode(
         modelInstance.getNode("Foot.R").templateNode().transform().getTranslation(pool.vec3()));
     rightLegLimb.finalizeLimbSettings();
-    rightArmLimb = PPlanarIKLimb.obtain(modelInstance, PVec3.ONE);
+    rightArmLimb = PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, -1));
     rightArmLimb.addNode("ArmUpper.R").addNode("ArmLower.R");
     rightArmLimb.setEndLocalTranslationFromLastNode(
         modelInstance.getNode("Wrist.R").templateNode().transform().getTranslation(pool.vec3()));
@@ -173,20 +175,20 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     modelInstance.recalcTransforms();
     PVec3 testPoleTarget =
         pool.vec3().set(PKeyboard.isDown(Input.Keys.L) ? 1 : 0, 0, -1); // TODO: figure out why z should be -1 here.
-    leftLegLimb.setModelSpacePoleTarget(testPoleTarget);
+//    leftLegLimb.setModelSpacePoleTarget(testPoleTarget);
     if (leftLegLimb != null) {
 //      leftLegLimb.performIkToReach(5, .5f, 5);
     }
     for (int a = 0; a < rightLegLimb.nodeRotationOffsets().size(); a++) {
       //      rightLegLimb.nodeRotationOffsets().get(a).x(PEngine.t);
-      rightArmLimb.nodeRotationOffsets().get(a).x(PEngine.t);
+//      rightArmLimb.nodeRotationOffsets().get(a).x(PEngine.t);
     }
     //    rightLegLimb.testRotationAxes();
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
       gun.reload();
     }
     PMat4 gunTransform = pool.mat4().set(cameraController.worldTransform());
-    if (PKeyboard.isDown(Input.Keys.H)) {
+    if (!PKeyboard.isDown(Input.Keys.H)) {
       gunTransform.set(worldTransform()).translate(cameraOffsetFromOrigin);
     }
     gun.frameUpdate(pool, gunTransform);
@@ -196,11 +198,15 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     //    modelInstance.resetTransformsFromTemplates();
     //    modelInstance.recalcTransforms();
     testPoleTarget = pool.vec3().set(1, 1, 1);
-//    leftArmLimb.setModelSpacePoleTarget(testPoleTarget);
+//    leftArmLimb.setModelSpaceKneePoleTarget(testPoleTarget);
     leftArmLimb.performIkToReach(wristLGoalPos);
     testPoleTarget = pool.vec3().set(0, 0, 1);
 //    rightArmLimb.setModelSpaceKneePoleTarget(testPoleTarget);
 //    rightArmLimb.testRotationAxes();
+    rightArmLimb.setModelSpaceKneePoleTarget(1, 1, 1);
+    if (PKeyboard.isDown(Input.Keys.G)) {
+      rightArmLimb.setModelSpaceKneePoleTarget(-1, -1, -.6f);
+    }
     rightArmLimb.performIkToReach(wristRGoalPos);
     //    modelInstance.resetTransformsFromTemplates();
     //    modelInstance.recalcTransforms();
