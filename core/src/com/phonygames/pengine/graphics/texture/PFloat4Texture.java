@@ -10,27 +10,34 @@ import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.math.PInt;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PPool;
 
 import java.nio.FloatBuffer;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
-public class PFloat4Texture extends Texture implements Pool.Poolable {
+public class PFloat4Texture extends Texture implements PPool.Poolable {
+  // #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
+  // #pragma end - PPool.Poolable
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
-  private static final PMap<Integer, Pool<PFloat4Texture>> staticTexturePools =
-      new PMap<Integer, Pool<PFloat4Texture>>() {
-        @Override protected Pool<PFloat4Texture> newUnpooled(final Integer integer) {
-          final int vec4capacity = integer.intValue();
-          return new Pool<PFloat4Texture>() {
+  private static final PMap<PInt, PPool<PFloat4Texture>> staticTexturePools =
+      new PMap<PInt, PPool<PFloat4Texture>>() {
+        @Override protected PPool<PFloat4Texture> newUnpooled(final PInt integer) {
+          final int vec4capacity = integer.valueOf();
+          return new PPool<PFloat4Texture>() {
             @Override public PFloat4Texture newObject() {
               PFloat4Texture newO = PFloat4Texture.get(vec4capacity, true);
               return newO;
@@ -46,6 +53,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
   // Floats are packed into vec4s.
   @Getter
   private int vec4Capacity;
+  private static final PInt tempPInt = PInt.obtain();
 
   private PFloat4Texture(PFloat4TextureTextureData data, int sideLength) {
     super(data);
@@ -65,7 +73,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
   }
 
   public static PFloat4Texture getTemp(int vec4Capacity) {
-    return staticTexturePools().genUnpooled(vec4Capacity).obtain();
+    return staticTexturePools().genUnpooled(tempPInt.set(vec4Capacity)).obtain();
   }
 
   public PFloat4Texture addData(PVec3 vec3, float w) {
@@ -118,7 +126,7 @@ public class PFloat4Texture extends Texture implements Pool.Poolable {
 
   public void freeTemp() {
     PAssert.isFalse(this == getWHITE_PIXEL());
-    staticTexturePools().genUnpooled(vec4Capacity).free(this);
+    staticTexturePools().genUnpooled(tempPInt.set(tempPInt)).free(this);
   }
 
   public static PFloat4Texture getWHITE_PIXEL() {

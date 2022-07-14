@@ -114,7 +114,7 @@ public class CybertagGame implements PGame {
     //      femaleModelInstance.recalcTransforms();
     //      femaleModelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
     //    }
-    testIk();
+//    testIk();
     renderContext.glRenderQueue();
     renderContext.end();
     pool.free();

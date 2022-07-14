@@ -12,6 +12,7 @@ import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.graphics.texture.PTextureBinder;
+import com.phonygames.pengine.math.PInt;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
@@ -87,10 +88,10 @@ public class PRenderContext {
   private final ArrayMap<String, PhaseHandler> phaseHandlers = new ArrayMap<>();
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
-  private final PStringMap<Integer> storedBufferOffsets = new PStringMap<>();
+  private final PStringMap<PInt> storedBufferOffsets = new PStringMap<>(PInt.getStaticPool());
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
-  private final PStringMap<Integer> storedVecsPerInstance = new PStringMap<>();
+  private final PStringMap<PInt> storedVecsPerInstance = new PStringMap<>(PInt.getStaticPool());
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PMat4 viewProjInvTraTransform = PMat4.obtain();
@@ -191,9 +192,9 @@ public class PRenderContext {
       while (it.hasNext()) {
         val e = it.next();
         val buffer = genDataBuffer(e.k());
-        int vecsWrittenToThisBuffer = buffer.vecsWritten() - storedBufferOffsets().get(e.k());
+        int vecsWrittenToThisBuffer = buffer.vecsWritten() - storedBufferOffsets().get(e.k()).valueOf();
         int vecsWrittenPerInstance = vecsWrittenToThisBuffer / Math.max(1, drawCall.numInstances());
-        storedVecsPerInstance().put(e.k(), vecsWrittenPerInstance);
+        storedVecsPerInstance().genPooled(e.k()).set(vecsWrittenPerInstance);
       }
     }
     addRenderContextDataBufferOffsetsToDrawCall(drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance);
@@ -214,8 +215,8 @@ public class PRenderContext {
     }
     PFloat4Texture dataBuffer = PFloat4Texture.getTemp(DATA_BUFFER_CAPACITY);
     dataBuffers().put(name, dataBuffer);
-    storedVecsPerInstance().put(name, 0);
-    storedBufferOffsets().put(name, 0);
+    storedVecsPerInstance().genPooled(name).set(0);
+    storedBufferOffsets().genPooled(name).set(0);
     return dataBuffer;
   }
 
@@ -232,7 +233,7 @@ public class PRenderContext {
     try (val it = dataBuffers().obtainIterator()) {
       while (it.hasNext()) {
         val e = it.next();
-        storedBufferOffsets().put(e.k(), e.v().vecsWritten());
+        storedBufferOffsets().genPooled(e.k()).set(e.v().vecsWritten());
       }
     }
   }
@@ -405,8 +406,8 @@ public class PRenderContext {
     PGlDrawCall.DEFAULT().prepRenderContext(this);
   }
 
-  public int storeDataBufferOffset(String name) {
-    return storedBufferOffsets().get(name);
+  public int storedDataBufferOffset(String name) {
+    return storedBufferOffsets().get(name).valueOf();
   }
 
   public int vecsWrittenToDataBuffer(String name) {

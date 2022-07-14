@@ -8,6 +8,7 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.math.PInt;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PDeepCopyable;
 import com.phonygames.pengine.util.PMap;
@@ -44,10 +45,10 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   };
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
-  private final PMap<String, Integer> dataBufferLookupOffsets = new PMap<String, Integer>();
+  private final PMap<String, PInt> dataBufferLookupOffsets = new PMap<String, PInt>(PInt.getStaticPool());
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
-  private final PMap<String, Integer> dataBufferLookupVecsPerInstance = new PMap<String, Integer>();
+  private final PMap<String, PInt> dataBufferLookupVecsPerInstance = new PMap<String, PInt>(PInt.getStaticPool());
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 origin = PVec3.obtain();
@@ -82,8 +83,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
 
   @Override public void reset() {
     PAssert.isFalse(renderingDisabled, "Cannot reset() a renderingDisabled PGlDrawCall");
-    dataBufferLookupOffsets().clear();
-    dataBufferLookupVecsPerInstance().clear();
+    dataBufferLookupOffsets().clearRecursive();
+    dataBufferLookupVecsPerInstance().clearRecursive();
     material = null;
     mesh = null;
     enableBlend = false;
@@ -147,8 +148,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
       try (val it = dataBufferLookupOffsets().obtainIterator()) {
         while (it.hasNext()) {
           val e = it.next();
-          renderContext.genDataBuffer(e.k()).applyShader(shader, e.k(), dataBufferLookupOffsets().get(e.k()),
-                                                         dataBufferLookupVecsPerInstance().get(e.k()));
+          renderContext.genDataBuffer(e.k()).applyShader(shader, e.k(), dataBufferLookupOffsets().get(e.k()).valueOf(),
+                                                         dataBufferLookupVecsPerInstance().get(e.k()).valueOf());
         }
       }
       if (material != null) {
@@ -181,14 +182,24 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     return this;
   }
 
-  public PGlDrawCall setDataBufferInfo(PMap<String, Integer> dataBufferLookupVecsPerInstance,
-                                       PMap<String, Integer> dataBufferLookupOffsets, int boneTransformsLookupOffset,
+  public PGlDrawCall setDataBufferInfo(PMap<String, PInt> dataBufferLookupVecsPerInstance,
+                                       PMap<String, PInt> dataBufferLookupOffsets, int boneTransformsLookupOffset,
                                        int boneTransformsVecsPerInstance) {
+    this.dataBufferLookupVecsPerInstance().clearRecursive();
+    this.dataBufferLookupOffsets().clearRecursive();
     PAssert.isFalse(renderingDisabled, "Cannot setDataBufferInfo() a renderingDisabled PGlDrawCall");
-    this.dataBufferLookupVecsPerInstance().clear();
-    this.dataBufferLookupVecsPerInstance().putAll(dataBufferLookupVecsPerInstance);
-    this.dataBufferLookupOffsets().clear();
-    this.dataBufferLookupOffsets().putAll(dataBufferLookupOffsets);
+    try(val it = dataBufferLookupVecsPerInstance.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        this.dataBufferLookupVecsPerInstance().genPooled(e.k()).set(e.v());
+      }
+    }
+    try(val it = dataBufferLookupOffsets.obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        this.dataBufferLookupOffsets().genPooled(e.k()).set(e.v());
+      }
+    }
     this.boneTransformsLookupOffset = boneTransformsLookupOffset;
     this.boneTransformsVecsPerInstance = boneTransformsVecsPerInstance;
     return this;
