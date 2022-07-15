@@ -9,9 +9,7 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PSODynamics;
-import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 
 import lombok.AccessLevel;
@@ -29,12 +27,14 @@ public class PCharacterCameraController {
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 dir = PVec3.obtain().set(1, 0, 0), smoothDir = PVec3.obtain().set(1, 0, 0);
+  private final PSODynamics.PSODynamics2 pitchYawSpring = PSODynamics.obtain2();
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 pos = PVec3.obtain();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PMat4 worldTransform = PMat4.obtain();
+  private float currentPitch = 0, currentYaw = 0, goalPitch, goalYaw;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -43,8 +43,6 @@ public class PCharacterCameraController {
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private float rotateSpeed = 2;
-  private float currentPitch = 0, currentYaw = 0, goalPitch, goalYaw;
-  private final PSODynamics.PSODynamics2 pitchYawSpring = PSODynamics.obtain2();
 
   public PCharacterCameraController(@NonNull Delegate delegate) {
     this.delegate = delegate;
@@ -81,7 +79,7 @@ public class PCharacterCameraController {
     goalYaw += yawRotateAmount;
     pitchYawSpring.setGoal(goalPitch, goalYaw);
     pitchYawSpring.frameUpdate();
-    smoothDir().setToSpherical(pitchYawSpring.pos().y(), pitchYawSpring.pos().x(),1);
+    smoothDir().setToSpherical(pitchYawSpring.pos().y(), pitchYawSpring.pos().x(), 1);
     delegate.getFirstPersonCameraPosition(pos(), smoothDir());
     PVec3 smoothLeft = pool.vec3().set(smoothDir()).crs(0, -1, 0).nor();
     PVec3 smoothUp = pool.vec3().set(smoothDir()).crs(smoothLeft).nor();

@@ -53,6 +53,10 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
 
   @Override public void reset() {
     goal.setZero();
+    vel.setZero();
+    pos.setZero();
+    goalPrev.setZero();
+    k1 = k2 = k3 = 0;
   }
 
   public static PSODynamics1 obtain1() {
