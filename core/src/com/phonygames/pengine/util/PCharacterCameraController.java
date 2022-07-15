@@ -38,7 +38,7 @@ public class PCharacterCameraController {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private float maxPitch = MathUtils.HALF_PI - .15f, minPitch = -MathUtils.HALF_PI + .15f;
+  private float maxPitch = MathUtils.HALF_PI - .25f, minPitch = -MathUtils.HALF_PI + .25f;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -73,6 +73,9 @@ public class PCharacterCameraController {
     }
     if (PKeyboard.isFrameJustDown(Input.Keys.Z)) {
       yawRotateAmount += 1;
+    }
+    if (PKeyboard.isFrameJustDown(Input.Keys.X)) {
+      pitchYawSpring.setVel(pitchYawSpring.vel().y(pitchYawSpring.vel().y() + 10));
     }
     goalPitch += pitchRotateAmount;
     goalYaw += yawRotateAmount;

@@ -60,7 +60,7 @@ public class PRenderContext {
   private final PVec3 cameraDir = PVec3.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final PVec1 cameraFov = PVec1.obtain().set(60);
+  private final PVec1 cameraFov = PVec1.obtain().set(70);
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PVec3 cameraPos = PVec3.obtain();

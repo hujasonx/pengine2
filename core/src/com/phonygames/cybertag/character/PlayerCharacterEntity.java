@@ -24,7 +24,7 @@ import com.phonygames.pengine.util.PPool;
 public class PlayerCharacterEntity extends CharacterEntity implements PCharacterCameraController.Delegate {
   private final PPhysicsCharacterController characterController;
   private final PVec3 facingDir = PVec3.obtain().set(1, 0, 0), cameraOffsetFromOrigin =
-      PVec3.obtain().set(0, 1.5f, .09f);
+      PVec3.obtain().set(0, 1.6f, .15f);
   private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
   private PCharacterCameraController cameraController;
   private Gun gun;
