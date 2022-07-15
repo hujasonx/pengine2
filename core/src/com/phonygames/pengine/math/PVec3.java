@@ -33,6 +33,13 @@ public class PVec3 extends PVec<PVec3> {
   private PVec3() {
   }
 
+  public PVec3 setToSpherical(float theta, float phi, float radius) {
+    float sinPhi = MathUtils.sin(-phi + MathUtils.HALF_PI);
+    set(radius * sinPhi * MathUtils.cos(theta + 0 * MathUtils.HALF_PI), radius * MathUtils.cos(-phi + MathUtils.HALF_PI),
+            radius * sinPhi * MathUtils.sin(theta + 0 * MathUtils.HALF_PI));
+    return this;
+  }
+
   /**
    * Adds other to caller into caller.
    * @param other
@@ -152,11 +159,6 @@ public class PVec3 extends PVec<PVec3> {
     return this;
   }
 
-  public PVec3 projectOntoPlane(PVec3 normal, PVec3 planePoint) {
-    return add(normal,
-                     -normal.dot(x() - planePoint.x(), y() - planePoint.y(), z() - planePoint.z()));
-  }
-
   public float angleWithAlongAxis(PVec3 other, PVec3 axis) {
     float ret;
     PVec3 temp1 = PVec3.obtain();
@@ -210,10 +212,6 @@ public class PVec3 extends PVec<PVec3> {
   public PVec3 crs(float x, float y, float z) {
     backingVec3.crs(x, y, z);
     return this;
-  }
-
-  public float dot(float x, float y, float z) {
-    return backingVec3.dot(x, y, z);
   }
 
   public float dst(PVec3 other) {
@@ -274,6 +272,14 @@ public class PVec3 extends PVec<PVec3> {
     t0.free();
     t1.free();
     return dotAmount / lineLen;
+  }
+
+  public PVec3 projectOntoPlane(PVec3 normal, PVec3 planePoint) {
+    return add(normal, -normal.dot(x() - planePoint.x(), y() - planePoint.y(), z() - planePoint.z()));
+  }
+
+  public float dot(float x, float y, float z) {
+    return backingVec3.dot(x, y, z);
   }
 
   public Vector3 putInto(Vector3 in) {
@@ -337,7 +343,7 @@ public class PVec3 extends PVec<PVec3> {
   }
 
   @Override public String toString() {
-    return "[PVec3] <" + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingVec3.x), 7) +
+    return "<" + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingVec3.x), 7) +
            ", " + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingVec3.y), 7) + ", " +
            PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingVec3.z), 7) + ">";
   }

@@ -2,11 +2,16 @@ package com.phonygames.pengine.util;
 
 import android.support.annotation.NonNull;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PSODynamics;
+import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 
 import lombok.AccessLevel;
@@ -38,9 +43,12 @@ public class PCharacterCameraController {
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private float rotateSpeed = 2;
+  private float currentPitch = 0, currentYaw = 0, goalPitch, goalYaw;
+  private final PSODynamics.PSODynamics2 pitchYawSpring = PSODynamics.obtain2();
 
   public PCharacterCameraController(@NonNull Delegate delegate) {
     this.delegate = delegate;
+    pitchYawSpring.setDynamicsParams(24, 1, 0);
   }
 
   public void applyToRenderContext(PRenderContext renderContext) {
@@ -56,19 +64,21 @@ public class PCharacterCameraController {
     PVec3 flatDir = pool.vec3().set(dir().x(), 0, dir().z()).nor();
     float yawRotateAmount = (PMouse.isCatched() ? PMouse.frameDx() * .35f : 0);
     float pitchRotateAmount = (PMouse.isCatched() ? PMouse.frameDy() * -.35f : 0);
-    float currentPitch = MathUtils.asin(dir().y());
     yawRotateAmount *= rotateSpeed * PEngine.uidt;
     pitchRotateAmount *= rotateSpeed * PEngine.uidt;
-    if (currentPitch + pitchRotateAmount > maxPitch) {
-      pitchRotateAmount = maxPitch - currentPitch;
-    } else if (currentPitch + pitchRotateAmount < minPitch) {
-      pitchRotateAmount = minPitch - currentPitch;
+    if (goalPitch + pitchRotateAmount > maxPitch) {
+      pitchRotateAmount = maxPitch - goalPitch;
+    } else if (goalPitch + pitchRotateAmount < minPitch) {
+      pitchRotateAmount = minPitch - goalPitch;
     }
-    dir().rotate(flatLeft, -pitchRotateAmount);
-    dir().rotate(0, -1, 0, yawRotateAmount);
-    // Use lerp to smooth the camera movement.
-    final float smoothFactor = 90;
-    smoothDir().lerp(dir(), Math.min(1, PEngine.uidt * smoothFactor)).nor();
+    if (PKeyboard.isFrameJustDown(Input.Keys.Z)) {
+      yawRotateAmount += 1;
+    }
+    goalPitch += pitchRotateAmount;
+    goalYaw += yawRotateAmount;
+    pitchYawSpring.setGoal(goalPitch, goalYaw);
+    pitchYawSpring.frameUpdate();
+    smoothDir().setToSpherical(pitchYawSpring.pos().y(), pitchYawSpring.pos().x(),1);
     delegate.getFirstPersonCameraPosition(pos(), smoothDir());
     PVec3 smoothLeft = pool.vec3().set(smoothDir()).crs(0, -1, 0).nor();
     PVec3 smoothUp = pool.vec3().set(smoothDir()).crs(smoothLeft).nor();

@@ -1,6 +1,7 @@
 package com.phonygames.pengine.math;
 
 import com.phonygames.pengine.util.PPool;
+import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,6 +30,11 @@ public class PVec2 extends PVec<PVec2> {
     x += other.x;
     y += other.y;
     return this;
+  }
+
+  @Override public String toString() {
+    return "<" + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(x), 7) +
+           ", " + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(y), 7) + ">";
   }
 
   /**
