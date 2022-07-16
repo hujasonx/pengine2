@@ -26,6 +26,7 @@ public class PNumberUtils {
 
   /**
    * Returns the true modulus a mod b.
+   *
    * @param a left side.
    * @param b right side.
    * @return a mod b
@@ -50,6 +51,25 @@ public class PNumberUtils {
     return Math.abs(x - y) < 0.001f;
   }
 
+  // Generalized smoothstep
+  public static float generalSmoothStep(int N, float x) {
+    x = clamp(x, 0, 1); // x must be equal to or between 0 and 1
+    float result = 0;
+    for (int n = 0; n <= N; ++n) {
+      result += (float) (pascalTriangle(-N - 1, n) * pascalTriangle(2 * N + 1, N - n) * Math.pow(x, N + n + 1));
+    }
+    return result;
+  }
+
+  /** Returns binomial coefficient without explicit use of factorials, which can't be used with negative integers. */
+  public static float pascalTriangle(float a, int b) {
+    float result = 1;
+    for (int i = 0; i < b; ++i) {
+      result *= (a - i) / (i + 1);
+    }
+    return result;
+  }
+
   public static boolean isPrimeBruteForce(int number) {
     for (int i = 2; i < number; i++) {
       if (number % i == 0) {
@@ -59,12 +79,9 @@ public class PNumberUtils {
     return true;
   }
 
-  public static float sqrt(float x) {
-    return (float)Math.sqrt(x);
-  }
-
   /**
    * Returns the true modulus a mod b.
+   *
    * @param a left side.
    * @param b right side.
    * @return a mod b
@@ -84,5 +101,21 @@ public class PNumberUtils {
       return Math.max(goal, in - speed);
     }
     return goal;
+  }
+
+  public static float smin(float a, float b, float k) {
+    if (k <= 0) {
+      return Math.min(a, b);
+    }
+    float h = clamp(0.5f + 0.5f * (a - b) / k, 0.0f, 1.0f);
+    return mix(a, b, h) - k * h * (1.0f - h);
+  }
+
+  public static float mix(float a, float b, float mixAmount) {
+    return a + (b - a) * mixAmount;
+  }
+
+  public static float sqrt(float x) {
+    return (float) Math.sqrt(x);
   }
 }

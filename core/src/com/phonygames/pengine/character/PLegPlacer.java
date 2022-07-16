@@ -3,7 +3,6 @@ package com.phonygames.pengine.character;
 import android.support.annotation.NonNull;
 
 import com.phonygames.pengine.PEngine;
-import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PParametricCurve;
@@ -96,17 +95,16 @@ public class PLegPlacer implements PPool.Poolable {
         for (int a = 0; a < legs.size(); a++) {
           Leg leg = legs.get(a);
           if (!leg.inCycle && (leg == queuedMoveLeg && lastMovedLeg != null && lastMovedLeg.inCycle &&
-                                lastMovedLeg.cycleT >= timeBetweenConsecutiveLegMoves)) {
+                               lastMovedLeg.cycleT >= timeBetweenConsecutiveLegMoves)) {
             // If there are no moving legs or the cycle just finished, we can trigger the next leg cycle if needed.
             float deviation = leg.calcDeviationFromNatural();
             if (deviation > minimumDeviationForKickOff) {
-              kickOffMove(leg,a);
+              kickOffMove(leg, a);
             }
           }
         }
       } else {
         // If there are no moving legs, find the leg with the highest deviation and kick it off.
-
         Leg bestLeg = null;
         float bestDeviation = 0;
         int bestLegIndex = -1;
@@ -120,7 +118,7 @@ public class PLegPlacer implements PPool.Poolable {
           }
         }
         if (bestLeg != null) {
-          kickOffMove(bestLeg,bestLegIndex);
+          kickOffMove(bestLeg, bestLegIndex);
         }
       }
     }
@@ -148,8 +146,12 @@ public class PLegPlacer implements PPool.Poolable {
     @Setter
     private PPool ownerPool, sourcePool;
     // #pragma end - PPool.Poolable
-    private final PVec3 curEEPos = PVec3.obtain();
+    /**
+     * CurEEPos is the current end effector pos (affected by smin, etc)
+     */
+    private final PVec3 curEEPos = PVec3.obtain(), curCalcedEEPos = PVec3.obtain();
     private final PSODynamics.PSODynamics3 curEEPosGoal = PSODynamics.obtain3();
+    private final PSODynamics.PSODynamics3 curEEPosMS = PSODynamics.obtain3();
     private final PVec4 curEERot = PVec4.obtain();
     private final PVec4 curEERotGoal = PVec4.obtain();
     private final PVec3 naturalEEPosLocal = PVec3.obtain();
@@ -177,6 +179,7 @@ public class PLegPlacer implements PPool.Poolable {
     @Override public void reset() {
       legPlacer = null;
       curEEPos.setZero();
+      curCalcedEEPos.setZero();
       curEERot.setIdentityQuaternion();
       curEEPosGoal.reset();
       curEERotGoal.setIdentityQuaternion();
@@ -186,6 +189,8 @@ public class PLegPlacer implements PPool.Poolable {
       naturalEERotLocal.setIdentityQuaternion();
       curEEPosGoal.setGoalFlat(PVec3.ZERO);
       curEEPosGoal.setDynamicsParams(8, 1, 0);
+      curEEPosMS.setGoalFlat(PVec3.ZERO);
+      curEEPosMS.setDynamicsParams(16, 1, 0);
       upThisCycle = false;
       downThisCycle = false;
       eeGoalFlatSetThisCycle = false;
@@ -243,11 +248,11 @@ public class PLegPlacer implements PPool.Poolable {
           PVec3 eePosGoal = curEEPosGoal.pos();
           // Lerp between the previous position goal and the smoothed goal value.
           float lerpMix = 1 - (stepTimeOffsets.y() - cycleT) / (stepTimeOffsets.y() - stepTimeOffsets.x());
-          lerpMix = PNumberUtils.clamp(lerpMix, 0, 1);
+          lerpMix = PNumberUtils.generalSmoothStep(1, lerpMix);
           PVec3 lerpedPos = pool.vec3(prevEEPosGoal).lerp(eePosGoal, lerpMix);
-          curEEPos.set(lerpedPos);
+          curCalcedEEPos.set(lerpedPos);
           if (endEffector.id().equals("Foot.L")) {
-            System.out.println(expectedFootPositionAtEnd + ", " + curEEPos + ", " + lerpMix);
+            System.out.println(expectedFootPositionAtEnd + ", " + curCalcedEEPos + ", " + lerpMix);
           }
           if (nextCycleT > stepTimeOffsets.y()) {
             downThisCycle = true;
@@ -265,20 +270,41 @@ public class PLegPlacer implements PPool.Poolable {
           justFinishedCycle = true;
         }
       }
+      // Modify and then smooth the model-space end effector position.
+      PVec3 curCalcedEEPosMS =
+          pool.vec3(curCalcedEEPos).mul(pool.mat4(legPlacer.modelInstance.worldTransform()).inv(), 1);
+      PVec3 curModifiedEEPosMS = modifyCalcedEEPosMS(pool, pool.vec3(), curCalcedEEPosMS);
+      curEEPosMS.setGoal(curModifiedEEPosMS);
+      curEEPosMS.frameUpdate();
+      curEEPos.set(curEEPosMS.pos()).mul(legPlacer.modelInstance.worldTransform(), 1);
       limb.performIkToReach(curEEPos);
       if (justUp) {
         // Now that we've applied IK, if we are just up, set the move start variables.
-        endEffector.worldTransform().getTranslation(curEEPos);
-        prevEEPosGoal.set(curEEPos);
+        endEffector.worldTransform().getTranslation(curCalcedEEPos);
+        prevEEPosGoal.set(curCalcedEEPos);
+        curEEPos.set(curCalcedEEPos);
         endEffector.worldTransform().getRotation(prevEERotGoal);
       }
       return justFinishedCycle;
     }
 
+    /**
+     * Modifies the ms EE pos to ensure it's valid.
+     *
+     * @return
+     */
+    private PVec3 modifyCalcedEEPosMS(PPool.PoolBuffer pool, PVec3 out, PVec3 in) {
+      PVec3 basePos = limb.getNodes().get(0).templateNode().modelSpaceTransform().getTranslation(pool.vec3());
+      PVec3 delta = pool.vec3(in).sub(basePos);
+      float deltaLen = delta.len();
+      return out.set(in);
+    }
+
     private void recalc() {
       endEffector.templateNode().modelSpaceTransform().getTranslation(naturalEEPosLocal);
       endEffector.templateNode().modelSpaceTransform().getRotation(naturalEERotLocal);
-      calcNaturalEEPos(curEEPos);
+      calcNaturalEEPos(curCalcedEEPos);
+      curEEPos.set(curCalcedEEPos);
       calcNaturalEERot(curEERot);
     }
 

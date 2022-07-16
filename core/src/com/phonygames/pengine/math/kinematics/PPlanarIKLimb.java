@@ -90,7 +90,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
       PModelInstance.Node lastNode = nodes.peek();
       PVec3 firstMSPos = firstNode.templateNode().modelSpaceTransform().getTranslation(PVec3.obtain());
       PVec3 endMSPos =
-          PVec3.obtain().set(endLocalTranslationFromLastNode()).mul(lastNode.templateNode().modelSpaceTransform(), 1);
+          pool.vec3(endLocalTranslationFromLastNode()).mul(lastNode.templateNode().modelSpaceTransform(), 1);
       PVec3 limbMSDelta = pool.vec3().set(endMSPos).sub(firstMSPos);
       PVec3 limbMSLongAxis = pool.vec3().set(limbMSDelta).nor();
       PVec3 rotAxisMS = pool.vec3().set(limbMSDelta).crs(bindPole).nor();
@@ -105,6 +105,29 @@ public class PPlanarIKLimb implements PPool.Poolable {
         nodeBindMSRotationInv.applyAsQuat(nodeLocalRotationAxes.genPooledAndAdd().set(rotAxisMS));
       }
     }
+  }
+
+  public float maximumExtendedLength() {
+    PModelInstance.Node kneeNode = getKneeNode();
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      PVec3 startSPos = pool.vec3(endLocalTranslationFromLastNode()).mul(nodes.get(0).worldTransform(), 1);
+      PVec3 midWSPos = pool.vec3(endLocalTranslationFromLastNode()).mul(kneeNode.worldTransform(), 1);
+      PVec3 endWSPos = pool.vec3(endLocalTranslationFromLastNode()).mul(nodes.peek().worldTransform(), 1);
+      return startSPos.dst(midWSPos) + endWSPos.dst(midWSPos);
+    }
+  }
+
+  private PModelInstance.Node getKneeNode() {
+    PModelInstance.Node kneeNode = kneeNodeName == null ? null : modelInstance.nodes().get(kneeNodeName);
+    if (kneeNode == null) {
+      if (nodes.size() == 2) {
+        // Use the second node as the knee node if there are two nodes.
+        kneeNode = nodes.get(1);
+      } else {
+        PAssert.fail("No valid knee was found for ik.");
+      }
+    }
+    return kneeNode;
   }
 
   public void performIkToReach(PVec3 vec3) {
@@ -133,15 +156,7 @@ public class PPlanarIKLimb implements PPool.Poolable {
       pool.free();
       return;
     }
-    PModelInstance.Node kneeNode = kneeNodeName == null ? null : modelInstance.nodes().get(kneeNodeName);
-    if (kneeNode == null) {
-      if (nodes.size() == 2) {
-        // Use the second node as the knee node if there are two nodes.
-        kneeNode = nodes.get(1);
-      } else {
-        PAssert.fail("No valid knee was found for ik.");
-      }
-    }
+    PModelInstance.Node kneeNode = getKneeNode();
     PVec3 worldSpaceBindPole = pool.vec3().set(bindPole).mul(modelInstance.worldTransform(), 0);
     worldSpaceBindPole = worldSpaceBindPole.isZero(.001f) || PKeyboard.isDown(Input.Keys.N) ? null : worldSpaceBindPole;
     PVec3 worldSpaceGoalPole = pool.vec3().set(modelSpaceKneePoleTarget).mul(modelInstance.worldTransform(), 0);
