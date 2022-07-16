@@ -43,6 +43,7 @@ public class LasertagRoomGenWalkwayProcessor {
 
   /**
    * Separates the given tiles into floor tile islands.
+   *
    * @param tiles
    * @param @optional blockedTiles tiles that will not be included in island generation.
    * @return
@@ -106,8 +107,9 @@ public class LasertagRoomGenWalkwayProcessor {
     }
 
     /**
-     * Returns whether or not these groups are adjacent and really should be one.
-     * This works by checking flat walkways and floor tile islands only.
+     * Returns whether or not these groups are adjacent and really should be one. This works by checking flat walkways
+     * and floor tile islands only.
+     *
      * @param other
      * @return
      */
@@ -120,7 +122,7 @@ public class LasertagRoomGenWalkwayProcessor {
           for (int f = 0; f < FACINGS.length; f++) {
             LasertagTileWall.Facing facing = FACINGS[f];
             if (other.hasFloorOrFlatWalkwayAt(
-                tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ()))) {return true;}
+                tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ()), 0)) {return true;}
           }
         }
       }
@@ -130,7 +132,8 @@ public class LasertagRoomGenWalkwayProcessor {
         for (int f = 0; f < FACINGS.length; f++) {
           LasertagTileWall.Facing facing = FACINGS[f];
           if (other.hasFloorOrFlatWalkwayAt(
-              tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ()))) {return true;}
+              tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ()),
+              walkways.get(a).endOffsetY)) {return true;}
         }
       }
       return false;
@@ -138,17 +141,20 @@ public class LasertagRoomGenWalkwayProcessor {
 
     /**
      * Returns whether or not
+     *
      * @param tileGen
      * @return
      */
-    boolean hasFloorOrFlatWalkwayAt(@Nullable LasertagTileGen tileGen) {
+    boolean hasFloorOrFlatWalkwayAt(@Nullable LasertagTileGen tileGen, int offsetY) {
       if (tileGen == null) {return false;}
-      for (int a = 0; a < floorTileIslands.size(); a++) {
-        if (floorTileIslands.get(a).tiles.has(tileGen, true)) {return true;}
+      if (offsetY == 0) {
+        for (int a = 0; a < floorTileIslands.size(); a++) {
+          if (floorTileIslands.get(a).tiles.has(tileGen, true)) {return true;}
+        }
       }
       for (int a = 0; a < walkways.size(); a++) {
         Walkway walkway = walkways.get(a);
-        if (!walkway.sloped && walkway.tileGen == tileGen) {return true;}
+        if (!walkway.sloped && walkway.tileGen == tileGen && walkway.endOffsetY == offsetY) {return true;}
       }
       return false;
     }
@@ -509,9 +515,9 @@ public class LasertagRoomGenWalkwayProcessor {
     public boolean connectsWithConnectedGroup(ConnectedGroup connectedGroup) {
       for (int f = 0; f < FACINGS.length; f++) {
         LasertagTileWall.Facing facing = FACINGS[f];
-        if (endOffsetY == 0 && (!sloped || facing == this.facing)) {
+        if (!sloped || facing == this.facing) {
           if (connectedGroup.hasFloorOrFlatWalkwayAt(
-              tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ()))) {
+              tileGen.tileGenInRoomWithLocationOffset(facing.normalX(), 0, facing.normalZ()), endOffsetY)) {
             return true;
           }
         }
