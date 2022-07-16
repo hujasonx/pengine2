@@ -197,13 +197,15 @@ public class LasertagRoomGenWalkwayProcessor {
       System.out.println("ROOM " + roomGen.lasertagRoom.id);
       for (int a = 0; a < processorDoorGens.size(); a++) {
         ProcessorDoorGen doorGen = processorDoorGens.get(a);
-        System.out.println("\tDOOR " + doorGen.doorGen.door.w + "x"+doorGen.doorGen.door.h);
+        System.out.println("\tDOOR " + doorGen.doorGen.door.w + "x" + doorGen.doorGen.door.h);
         // Door gens that have no floorless tiles don't need to be added to a connected group.
         if (doorGen.floorlessTilesGens.size() == 0) {continue;}
         // Door gens that have one floorless tile will be used to spawn walkway nodes.
         if (doorGen.floorlessTilesGens.size() == 1) {
           oneTileFloorlessProcessorDoorGens.add(doorGen);
-          System.out.println("\t\tOneTileFloorless");
+          System.out.println(
+              "\t\tOneTileFloorless: " + doorGen.doorGen.door.tileX + ", " + doorGen.doorGen.door.tileY + ", " +
+              doorGen.doorGen.door.tileZ);
           continue;
         }
         // If the door has 2 or more floorless tiles, generate a connected group for it with walkways placed
@@ -313,10 +315,14 @@ public class LasertagRoomGenWalkwayProcessor {
         LasertagTileWall.Facing testFacing = FACINGS[f];
         // Non-floor walkways cannot be generated in front of doors, and floor walkways can only be generated at the
         // door's bottom.
-        LasertagTileGen tileGenBelow = tileGen.tileGenInRoomWithLocationOffset(0, -1, 0);
-        boolean shouldBeInvalidIfHasDoorAtTileGen =
-            !isFloorWalkway || (tileGenBelow != null && tileGenBelow.wallGen(facing).wall.isDoor());
-        if (tileGen.wallGen(testFacing).wall.isDoor() && shouldBeInvalidIfHasDoorAtTileGen) {return false;}
+        if (tileGen.wallGen(testFacing).wall.isDoor()) {
+          LasertagDoor door = tileGen.wallGen(testFacing).wall.door;
+          LasertagTileGen tileGenBelow = tileGen.tileGenInRoomWithLocationOffset(0, -1, 0);
+          if (!isFloorWalkway || (tileGenBelow != null && tileGenBelow.wallGen(facing).wall.isDoor() &&
+                                  tileGenBelow.wallGen(facing).wall.door == door)) {
+            return false;
+          }
+        }
       }
       if (!isFloorWalkway) {
         if (aboveTileGen == null) { // If this room doesn't own the tile above, we cannot emit a nonfloor walkway.
@@ -428,12 +434,14 @@ public class LasertagRoomGenWalkwayProcessor {
     public boolean applyToContext() {
       Context context = walkwayStartNode.context;
       // The start connected group will be null for floorless doors.
+      System.out.println("\tEmit walkway len: " + walkways.size());
       ConnectedGroup firstGroupSeen = null;
       for (int a = 0; a < allConnectedGroups.size(); a++) {
         ConnectedGroup otherConnectedGroup = allConnectedGroups.get(a);
         if (firstGroupSeen != null) {
           if (context.connectedGroups.removeValue(otherConnectedGroup, true)) {
             firstGroupSeen.addAllFrom(otherConnectedGroup);
+            System.out.println("\t\tCombine connected group");
           }
         } else {
           firstGroupSeen = allConnectedGroups.get(a);
@@ -441,6 +449,9 @@ public class LasertagRoomGenWalkwayProcessor {
       }
       for (int a = 0; a < allOneTileDoorGens.size(); a++) {
         ProcessorDoorGen doorGen = allOneTileDoorGens.get(a);
+        System.out.println(
+            "\t\tconnects floorlessdoorgen " + doorGen.doorGen.door.tileX + ", " + doorGen.doorGen.door.tileY + ", " +
+            doorGen.doorGen.door.tileZ);
         context.oneTileFloorlessProcessorDoorGens.removeValue(doorGen, true);
       }
       firstGroupSeen.walkways.addAll(walkways);
