@@ -98,8 +98,8 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       rightArmLimb.setModelSpaceKneePoleTarget(-2, -1, -1);
       rightArmLimb.finalizeLimbSettings();
       legPlacer = PLegPlacer.obtain(modelInstance);
-      legPlacer.addLeg(leftLegLimb,"Foot.L");
-      legPlacer.addLeg(rightLegLimb,"Foot.R");
+      legPlacer.addLeg(leftLegLimb,"Foot.L").preventEEAboveBase(true);
+      legPlacer.addLeg(rightLegLimb,"Foot.R").preventEEAboveBase(true);
     }
   }
 
@@ -159,7 +159,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     wristR.stopWorldTransformRecursionAt(true);
     wristL.stopWorldTransformRecursionAt(true);
     modelInstance.recalcTransforms();
-    legPlacer.frameUpdate(characterController.getVel(pool.vec3()));
+    legPlacer.frameUpdate(characterController.getVel(pool.vec3()), characterController.isOnGround());
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
       gun.reload();
     }

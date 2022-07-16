@@ -110,10 +110,10 @@ public class PPlanarIKLimb implements PPool.Poolable {
   public float maximumExtendedLength() {
     PModelInstance.Node kneeNode = getKneeNode();
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-      PVec3 startSPos = pool.vec3(endLocalTranslationFromLastNode()).mul(nodes.get(0).worldTransform(), 1);
-      PVec3 midWSPos = pool.vec3(endLocalTranslationFromLastNode()).mul(kneeNode.worldTransform(), 1);
+      PVec3 startWSPos = nodes.get(0).worldTransform().getTranslation(pool.vec3());
+      PVec3 midWSPos = kneeNode.worldTransform().getTranslation(pool.vec3());
       PVec3 endWSPos = pool.vec3(endLocalTranslationFromLastNode()).mul(nodes.peek().worldTransform(), 1);
-      return startSPos.dst(midWSPos) + endWSPos.dst(midWSPos);
+      return startWSPos.dst(midWSPos) + endWSPos.dst(midWSPos);
     }
   }
 

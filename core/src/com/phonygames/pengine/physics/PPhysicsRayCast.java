@@ -13,6 +13,11 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 public class PPhysicsRayCast implements PPool.Poolable {
+  // #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
+  // #pragma end - PPool.Poolable
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private static final PPool<PPhysicsRayCast> staticPool = new PPool<PPhysicsRayCast>() {
@@ -24,9 +29,6 @@ public class PPhysicsRayCast implements PPool.Poolable {
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 rayFromWorld = PVec3.obtain(), rayToWorld = PVec3.obtain();
-  @Getter
-  @Setter
-  private PPool ownerPool, sourcePool;
   private boolean hasHit = false;
   private float hitDistance, hitFraction;
   @Getter(value = AccessLevel.PUBLIC)
@@ -71,6 +73,18 @@ public class PPhysicsRayCast implements PPool.Poolable {
     staticPool().free(this);
   }
 
+  @Override public void reset() {
+    rayFromWorld().setZero();
+    rayToWorld().setZero();
+    valid = false;
+    hasHit = false;
+    hitDistance = 0;
+    backingCallback.setCollisionObject(null);
+    backingCallback.setClosestHitFraction(1f);
+    backingCallback.setCollisionFilterMask(PPhysicsEngine.ALL_FLAG);
+    backingCallback.setCollisionFilterGroup(PPhysicsEngine.ALL_FLAG);
+  }
+
   public boolean hasHit() {
     PAssert.isTrue(valid);
     return hasHit;
@@ -83,7 +97,7 @@ public class PPhysicsRayCast implements PPool.Poolable {
 
   public PVec3 hitLocation(PVec3 out) {
     PAssert.isTrue(valid && hasHit);
-    backingCallback.getHitPointWorld(out.backingVec3());
+    out.set(rayFromWorld()).lerp(rayToWorld(), hitFraction);
     return out;
   }
 
@@ -91,18 +105,6 @@ public class PPhysicsRayCast implements PPool.Poolable {
     PAssert.isTrue(valid && hasHit);
     backingCallback.getHitNormalWorld(out.backingVec3());
     return out;
-  }
-
-  @Override public void reset() {
-    rayFromWorld().setZero();
-    rayToWorld().setZero();
-    valid = false;
-    hasHit = false;
-    hitDistance = 0;
-    backingCallback.setCollisionObject(null);
-    backingCallback.setClosestHitFraction(1f);
-    backingCallback.setCollisionFilterMask(PPhysicsEngine.ALL_FLAG);
-    backingCallback.setCollisionFilterGroup(PPhysicsEngine.ALL_FLAG);
   }
 
   public PPhysicsRayCast setCollisionFilterGroup(int group) {

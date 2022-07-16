@@ -35,7 +35,8 @@ public class PPhysicsCharacterController implements Disposable {
   private PRigidBody crouchCapsuleRigidBody;
   private PPhysicsCapsuleShape crouchCapsuleShape;
   private boolean forceCrouching = false;
-  private transient boolean isOnGround = false, isOnGroundPrev;
+  private transient boolean isOnGround = false;
+  private transient boolean isOnGroundPrev = false;
   private float jumpTimeRequirement = .1f;
   private transient float timeSinceLastJump = -1, timeSinceLastTouchingGround, jumpVerticalVelocity;
   // How long after a jump is triggered that the jump will be enforced (e.g. not bringing the character to the
@@ -118,6 +119,11 @@ public class PPhysicsCharacterController implements Disposable {
       jumpVerticalVelocity -= PPhysicsEngine.gravity * PEngine.logictimestep;
     }
     pool.free();
+  }
+
+  public boolean isOnGround() {
+    // Return the prev value because rigidbody velocities and positions are one logic timestep behind.
+    return isOnGroundPrev;
   }
 
   @Override public void dispose() {

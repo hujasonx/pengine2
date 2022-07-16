@@ -11,6 +11,8 @@ import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
+import com.phonygames.pengine.physics.PPhysicsEngine;
+import com.phonygames.pengine.physics.PPhysicsRayCast;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 
@@ -53,14 +55,14 @@ public class PLegPlacer implements PPool.Poolable {
     return ret;
   }
 
-  public PLegPlacer addLeg(@NonNull PPlanarIKLimb limb, @NonNull String endEffector) {
+  public Leg addLeg(@NonNull PPlanarIKLimb limb, @NonNull String endEffector) {
     assert modelInstance != null;
     Leg leg = legs.genPooledAndAdd();
     leg.legPlacer = this;
     leg.limb = limb;
     leg.endEffector = modelInstance.getNode(endEffector);
     leg.recalc();
-    return this;
+    return leg;
   }
 
   private float cycleTime() {
@@ -71,7 +73,7 @@ public class PLegPlacer implements PPool.Poolable {
     return this.cycleTimeThisFrame;
   }
 
-  public void frameUpdate(PVec3 velocity) {
+  public void frameUpdate(PVec3 velocity, boolean isOnGround) {
     if (legs.isEmpty()) {return;}
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       PVec3 pos = modelInstance.worldTransform().getTranslation(pool.vec3());
@@ -83,7 +85,7 @@ public class PLegPlacer implements PPool.Poolable {
       // Initial pass to frame update all the legs.
       for (int a = 0; a < legs.size(); a++) {
         Leg leg = legs.get(a);
-        leg.frameUpdate(pool, pos, rot, left, up, forward, velocity);
+        leg.frameUpdate(pool, pos, rot, left, up, forward, velocity, isOnGround);
         if (leg.inCycle) {
           numMovingLegs++;
         }
@@ -147,10 +149,12 @@ public class PLegPlacer implements PPool.Poolable {
     private PPool ownerPool, sourcePool;
     // #pragma end - PPool.Poolable
     /**
-     * CurEEPos is the current end effector pos (affected by smin, etc)
+     * CurEEPos is the current end effector pos (affected by smin, etc), curCalcedEEPos is the raw value that generates
+     * curEEPos.
      */
     private final PVec3 curEEPos = PVec3.obtain(), curCalcedEEPos = PVec3.obtain();
     private final PSODynamics.PSODynamics3 curEEPosGoal = PSODynamics.obtain3();
+    /** Spring just to help smooth movement. */
     private final PSODynamics.PSODynamics3 curEEPosMS = PSODynamics.obtain3();
     private final PVec4 curEERot = PVec4.obtain();
     private final PVec4 curEERotGoal = PVec4.obtain();
@@ -158,18 +162,26 @@ public class PLegPlacer implements PPool.Poolable {
     private final PVec4 naturalEERotLocal = PVec4.obtain();
     private final PVec3 prevEEPosGoal = PVec3.obtain();
     private final PVec4 prevEERotGoal = PVec4.obtain();
+    private final PPhysicsRayCast rayCast = PPhysicsRayCast.obtain();
     @Getter(value = AccessLevel.PUBLIC)
     @Setter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     /** X: step up time[0, 1], Y: step down time[0, 1]. Parameter: cycleTime. */
         PParametricCurve.PParametricCurve2 stepTimeOffsetsCurve = PParametricCurve.obtain2().addKeyFrame(0, .25f, .75f);
     /** Range: [0, 1]. */
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     private float cycleT = 0;
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private PModelInstance.Node endEffector;
     private PLegPlacer legPlacer;
     private PPlanarIKLimb limb;
+    private transient boolean modelWasOnGroundPrev = true;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Setter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private boolean preventEEAboveBase = false;
     private boolean upThisCycle = false, downThisCycle = false, inCycle = false, eeGoalFlatSetThisCycle = false;
 
     private Leg() {
@@ -191,6 +203,8 @@ public class PLegPlacer implements PPool.Poolable {
       curEEPosGoal.setDynamicsParams(8, 1, 0);
       curEEPosMS.setGoalFlat(PVec3.ZERO);
       curEEPosMS.setDynamicsParams(16, 1, 0);
+      preventEEAboveBase = false;
+      modelWasOnGroundPrev = true;
       upThisCycle = false;
       downThisCycle = false;
       eeGoalFlatSetThisCycle = false;
@@ -217,57 +231,95 @@ public class PLegPlacer implements PPool.Poolable {
 
     /** Returns true if the cycle was finished on this timestep. */
     boolean frameUpdate(PPool.PoolBuffer pool, PVec3 modelPosition, PVec4 modelRotation, PVec3 left, PVec3 up,
-                        PVec3 forward, PVec3 velocity) {
+                        PVec3 forward, PVec3 velocity, boolean isOnGround) {
       boolean justFinishedCycle = false;
+      PVec3 basePosWS = limb.getNodes().get(0).worldTransform().getTranslation(pool.vec3());
+      PVec3 bindEndPosWS = endEffector.worldTransform().getTranslation(pool.vec3());
       float cycleDt = PEngine.dt / legPlacer.cycleTime();
       float nextCycleT = cycleT + cycleDt;
-      boolean justUp = false;
-      if (inCycle) {
-        PVec2 stepTimeOffsets = stepTimeOffsetsCurve.get(pool.vec2(), legPlacer.cycleTime());
-        if (!upThisCycle) {
-          // Before foot up.
-          if (nextCycleT > stepTimeOffsets.x()) {
-            upThisCycle = true;
-            justUp = true;
+      PVec2 stepTimeOffsets = stepTimeOffsetsCurve.get(pool.vec2(), legPlacer.cycleTime());
+      boolean justUp = false, justDown = false;
+      if (!isOnGround) {
+        // At this point, the end effector should be at the bind position. Set it as the goal pos, but with a weak
+        // spring.
+        curCalcedEEPos.set(bindEndPosWS);
+        curEEPosMS.setDynamicsParams(4, 1, 0);
+        cycleT = stepTimeOffsets.y() + .001f;
+        inCycle = true;
+        upThisCycle = true;
+        downThisCycle = false;
+        eeGoalFlatSetThisCycle = false;
+      } else {
+        // Not on ground.
+        if (!modelWasOnGroundPrev) {
+          // Just landed on the ground.
+          // Reset the calced ee pos.
+          PVec3 rayCastHitPos = pool.vec3(), rayCastHitNor = pool.vec3();
+          PVec3 startEndBindWSDelta = pool.vec3(bindEndPosWS).sub(basePosWS);
+          PVec3 rayCastEnd = pool.vec3(basePosWS).add(startEndBindWSDelta, 2);
+          if (!rayTest(rayCastHitPos, rayCastHitNor, basePosWS, rayCastEnd)) {
+            rayCastHitPos.set(bindEndPosWS);
+            rayCastHitNor.set(0, 1, 0);
           }
-        } else if (!downThisCycle) {
-          // Before foot down.
-          // Figure out the goal position and orientation of the foot at the down time.
-          float timeLeftBeforeEnd = (1 - cycleT) * legPlacer.cycleTime();
-          float timeLeftBeforeFootDown = (stepTimeOffsets.y() - cycleT) * legPlacer.cycleTime();
-          PVec3 expectedModelTranslationDeltaAtEnd = pool.vec3(velocity).scl(timeLeftBeforeEnd);
-          PVec3 expectedFootPositionAtEnd = calcNaturalEEPos(pool.vec3()).add(expectedModelTranslationDeltaAtEnd);
-          // The EEPosGoal lets us smooth out the goal.
-          curEEPosGoal.setGoal(expectedFootPositionAtEnd);
-          if (!eeGoalFlatSetThisCycle) {
-            curEEPosGoal.vel().setZero();
-            curEEPosGoal.pos().set(expectedFootPositionAtEnd);
-            eeGoalFlatSetThisCycle = true;
-          }
-          curEEPosGoal.frameUpdate();
-          PVec3 eePosGoal = curEEPosGoal.pos();
-          // Lerp between the previous position goal and the smoothed goal value.
-          float lerpMix = 1 - (stepTimeOffsets.y() - cycleT) / (stepTimeOffsets.y() - stepTimeOffsets.x());
-          lerpMix = PNumberUtils.generalSmoothStep(1, lerpMix);
-          PVec3 lerpedPos = pool.vec3(prevEEPosGoal).lerp(eePosGoal, lerpMix);
-          curCalcedEEPos.set(lerpedPos);
-          if (endEffector.id().equals("Foot.L")) {
-            System.out.println(expectedFootPositionAtEnd + ", " + curCalcedEEPos + ", " + lerpMix);
-          }
-          if (nextCycleT > stepTimeOffsets.y()) {
-            downThisCycle = true;
-          }
-        } else {
-          // After foot down.
+          curCalcedEEPos.set(rayCastHitPos);
+          downThisCycle = true;
         }
-        cycleT = nextCycleT;
-        if (cycleT > 1) {
-          cycleT = 0;
-          upThisCycle = false;
-          downThisCycle = false;
-          inCycle = false;
-          eeGoalFlatSetThisCycle = false;
-          justFinishedCycle = true;
+        // While on the ground, the ee pos ms spring should be fast.
+        curEEPosMS.setDynamicsParams(16, 1, 0);
+        if (inCycle) {
+          if (!upThisCycle) {
+            // Before foot up.
+            if (nextCycleT > stepTimeOffsets.x()) {
+              upThisCycle = true;
+              justUp = true;
+            }
+          } else if (!downThisCycle) {
+            // Before foot down.
+            // Figure out the goal position and orientation of the foot at the down time.
+            float timeLeftBeforeEnd = (1 - cycleT) * legPlacer.cycleTime();
+            float timeLeftBeforeFootDown = (stepTimeOffsets.y() - cycleT) * legPlacer.cycleTime();
+            PVec3 expectedModelTranslationDeltaAtEnd = pool.vec3(velocity).scl(timeLeftBeforeEnd);
+            PVec3 expectedFootPositionAtEnd = calcNaturalEEPos(pool.vec3()).add(expectedModelTranslationDeltaAtEnd);
+            PVec3 expectedBasePositionAtEnd = pool.vec3(basePosWS).add(expectedModelTranslationDeltaAtEnd);
+            // Do a raycast at the expected end position.
+            PVec3 rayCastHitPos = pool.vec3(), rayCastHitNor = pool.vec3();
+            PVec3 startEndBindWSDelta = pool.vec3(expectedFootPositionAtEnd).sub(expectedBasePositionAtEnd);
+            PVec3 rayCastEnd = pool.vec3(expectedBasePositionAtEnd).add(startEndBindWSDelta, 2);
+            if (!rayTest(rayCastHitPos, rayCastHitNor, expectedBasePositionAtEnd, rayCastEnd)) {
+              rayCastHitPos.set(bindEndPosWS);
+              rayCastHitNor.set(0, 1, 0);
+            }
+            expectedFootPositionAtEnd.set(rayCastHitPos);
+            // The EEPosGoal lets us smooth out the goal.
+            curEEPosGoal.setGoal(expectedFootPositionAtEnd);
+            if (!eeGoalFlatSetThisCycle) {
+              curEEPosGoal.vel().setZero();
+              curEEPosGoal.pos().set(expectedFootPositionAtEnd);
+              eeGoalFlatSetThisCycle = true;
+            }
+            curEEPosGoal.frameUpdate();
+            PVec3 eePosGoal = curEEPosGoal.pos();
+            // Lerp between the previous position goal and the smoothed goal value.
+            float lerpMix = 1 - (stepTimeOffsets.y() - cycleT) / (stepTimeOffsets.y() - stepTimeOffsets.x());
+            lerpMix = PNumberUtils.generalSmoothStep(1, lerpMix);
+            PVec3 lerpedPos = pool.vec3(prevEEPosGoal).lerp(eePosGoal, lerpMix);
+            curCalcedEEPos.set(lerpedPos);
+            if (nextCycleT > stepTimeOffsets.y()) {
+              downThisCycle = true;
+              justDown = true;
+            }
+          } else {
+            // After foot down.
+          }
+          cycleT = nextCycleT;
+          if (cycleT > 1) {
+            cycleT = 0;
+            upThisCycle = false;
+            downThisCycle = false;
+            inCycle = false;
+            eeGoalFlatSetThisCycle = false;
+            justFinishedCycle = true;
+          }
         }
       }
       // Modify and then smooth the model-space end effector position.
@@ -285,7 +337,27 @@ public class PLegPlacer implements PPool.Poolable {
         curEEPos.set(curCalcedEEPos);
         endEffector.worldTransform().getRotation(prevEERotGoal);
       }
+      if (justDown) {
+        // Now that we've applied IK, if we just placed our foot down, move the calculated end position variable.
+        endEffector.worldTransform().getTranslation(curCalcedEEPos);
+      }
+      modelWasOnGroundPrev = isOnGround;
       return justFinishedCycle;
+    }
+
+    private boolean rayTest(PVec3 outPos, PVec3 outNor, PVec3 startPos, PVec3 endPos) {
+      rayCast.setOnlyStaticBodies(true);
+      rayCast.rayFromWorld().set(startPos);
+      rayCast.rayToWorld().set(endPos);
+      rayCast.setCollisionFilterGroup(PPhysicsEngine.ALL_FLAG).setCollisionFilterMask(PPhysicsEngine.STATIC_FLAG);
+      rayCast.cast();
+      boolean hasHit = rayCast.hasHit();
+      if (hasHit) {
+        rayCast.hitLocation(outPos);
+        rayCast.hitNormal(outNor);
+      }
+      rayCast.reset();
+      return hasHit;
     }
 
     /**
@@ -296,8 +368,11 @@ public class PLegPlacer implements PPool.Poolable {
     private PVec3 modifyCalcedEEPosMS(PPool.PoolBuffer pool, PVec3 out, PVec3 in) {
       PVec3 basePos = limb.getNodes().get(0).templateNode().modelSpaceTransform().getTranslation(pool.vec3());
       PVec3 delta = pool.vec3(in).sub(basePos);
+      if (delta.y() > 0 && preventEEAboveBase) {
+        delta.y(0);
+      }
       float deltaLen = delta.len();
-      return out.set(in);
+      return out.set(basePos).add(delta, Math.min(1, limb.maximumExtendedLength() / deltaLen));
     }
 
     private void recalc() {
