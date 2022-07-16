@@ -7,6 +7,7 @@ import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.character.PLegPlacer;
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
@@ -14,6 +15,7 @@ import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PSODynamics;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -21,6 +23,7 @@ import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
 import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PPool;
+import com.phonygames.pengine.util.PStringMap;
 
 public class PlayerCharacterEntity extends CharacterEntity implements PCharacterCameraController.Delegate {
   private final PPhysicsCharacterController characterController;
@@ -30,9 +33,11 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private PCharacterCameraController cameraController;
   private Gun gun;
   private PPlanarIKLimb leftLegLimb, leftArmLimb;
+  private PLegPlacer.Leg leftLegPlacerLeg, rightLegPlacerLeg;
   private PLegPlacer legPlacer;
   private PModelInstance modelInstance;
   private PPlanarIKLimb rightLegLimb, rightArmLimb;
+  private PSODynamics.PSODynamics1 walkCycleTSpring = PSODynamics.obtain1().setGoalFlat(.5f);
 
   public PlayerCharacterEntity() {
     super();
@@ -43,6 +48,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     cameraController.minPitch(-MathUtils.HALF_PI + .33f);
     initModelInstance();
     gun = new Pistol0(this);
+    walkCycleTSpring.setDynamicsParams(2,1,0);
   }
 
   private void initModelInstance() {
@@ -98,8 +104,8 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       rightArmLimb.setModelSpaceKneePoleTarget(-2, -1, -1);
       rightArmLimb.finalizeLimbSettings();
       legPlacer = PLegPlacer.obtain(modelInstance);
-      legPlacer.addLeg(leftLegLimb,"Foot.L").preventEEAboveBase(true);
-      legPlacer.addLeg(rightLegLimb,"Foot.R").preventEEAboveBase(true);
+      leftLegPlacerLeg = legPlacer.addLeg(leftLegLimb, "Foot.L").preventEEAboveBase(true).maximumStrengthDis(1);
+      rightLegPlacerLeg = legPlacer.addLeg(rightLegLimb, "Foot.R").preventEEAboveBase(true).maximumStrengthDis(1);
     }
   }
 
@@ -159,7 +165,17 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     wristR.stopWorldTransformRecursionAt(true);
     wristL.stopWorldTransformRecursionAt(true);
     modelInstance.recalcTransforms();
+    // Apply the walk/run cycle animation.
+    float rawWalkRunCycleT = rawWalkRunCycleTFrameUpdate();
+    PAnimation walkCycleAnimation = modelInstance.model().animations().get("WalkCycle");
+    PStringMap<PMat4> transformMap =
+        walkCycleAnimation.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), rawWalkRunCycleT);
+    modelInstance.setNodeTransformsFromMap(transformMap, 1f);
+    transformMap.free();
+    modelInstance.recalcTransforms();
+    // Apply the leg placer.
     legPlacer.frameUpdate(characterController.getVel(pool.vec3()), characterController.isOnGround());
+    // Gun and arm stuff.
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
       gun.reload();
     }
@@ -179,6 +195,18 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     gun.applyTransformsToCharacterModelInstance(modelInstance);
     modelInstance.recalcTransforms();
     pool.free();
+  }
+
+  /** Calculates the walkRunCycleT [0, 1] based on the leg cycleT values. */
+  public float rawWalkRunCycleTFrameUpdate() {
+    float leftT = leftLegPlacerLeg.inCycle() ? leftLegPlacerLeg.cycleT() : 0;
+    float rightT = rightLegPlacerLeg.inCycle() ? rightLegPlacerLeg.cycleT() : 0;
+    float upMixAmountL = (1 - Math.abs(leftT - .5f) * 2) * leftLegPlacerLeg.cycleStrength();
+    float upMixAmountR = (1 - Math.abs(rightT - .5f) * 2) * rightLegPlacerLeg.cycleStrength();
+    float result = .5f * (1 + (upMixAmountL - upMixAmountR));
+    walkCycleTSpring.setGoal(result);
+    walkCycleTSpring.frameUpdate();
+    return PNumberUtils.clamp(walkCycleTSpring.pos().x(), 0, 1);
   }
 
   @Override public void render(PRenderContext renderContext) {

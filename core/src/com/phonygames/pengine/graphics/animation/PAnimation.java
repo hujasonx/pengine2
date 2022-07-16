@@ -22,6 +22,7 @@ public class PAnimation {
 
   /**
    * Additively applys the animation with the given weight.
+   *
    * @param transforms
    * @param t
    * @param alpha
@@ -38,6 +39,24 @@ public class PAnimation {
       }
     }
     return;
+  }
+
+  public PStringMap<PMat4> outputNodeTransformsToMap(final PStringMap<PMat4> map, float t) {
+    try (val it = getNodeAnimations().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        if (map.has(e.k())) {
+          // There was already a maxtrix in the map for this node.
+          PMat4 mat4 = map.get(e.k());
+          e.v().apply(mat4, t, 1);
+        } else {
+          // Put in a new matrix into the map for this node, ignoring alpha.
+          PMat4 mat4 = map.genPooled(e.k());
+          e.v().apply(mat4, t, 1);
+        }
+      }
+    }
+    return map;
   }
 
   public static class Builder extends PBuilder {

@@ -130,7 +130,6 @@ public class PLegPlacer implements PPool.Poolable {
     if (leg.inCycle) {return;}
     numMovingLegs++;
     leg.triggerCycle();
-    System.out.println("Triggered cycle: " + leg + ", t=" + PEngine.t);
     lastMovedLeg = leg;
     queuedMoveLeg = legs.get(legIndex + 1);
   }
@@ -171,18 +170,25 @@ public class PLegPlacer implements PPool.Poolable {
     /** Range: [0, 1]. */
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
-    private float cycleT = 0;
+    private float cycleT = 0, cycleStrength = 0;
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private PModelInstance.Node endEffector;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private boolean inCycle = false;
     private PLegPlacer legPlacer;
     private PPlanarIKLimb limb;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Setter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    /** The displacement distance threshold for the maximum cycle strength */ private float maximumStrengthDis = 0;
     private transient boolean modelWasOnGroundPrev = true;
     @Getter(value = AccessLevel.PUBLIC)
     @Setter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private boolean preventEEAboveBase = false;
-    private boolean upThisCycle = false, downThisCycle = false, inCycle = false, eeGoalFlatSetThisCycle = false;
+    private boolean upThisCycle = false, downThisCycle = false, eeGoalFlatSetThisCycle = false;
 
     private Leg() {
       reset();
@@ -203,12 +209,14 @@ public class PLegPlacer implements PPool.Poolable {
       curEEPosGoal.setDynamicsParams(8, 1, 0);
       curEEPosMS.setGoalFlat(PVec3.ZERO);
       curEEPosMS.setDynamicsParams(16, 1, 0);
+      maximumStrengthDis = 0;
       preventEEAboveBase = false;
       modelWasOnGroundPrev = true;
       upThisCycle = false;
       downThisCycle = false;
       eeGoalFlatSetThisCycle = false;
       cycleT = 0;
+      cycleStrength = 0;
       inCycle = false;
     }
 
@@ -292,11 +300,20 @@ public class PLegPlacer implements PPool.Poolable {
             expectedFootPositionAtEnd.set(rayCastHitPos);
             // The EEPosGoal lets us smooth out the goal.
             curEEPosGoal.setGoal(expectedFootPositionAtEnd);
+            // Initialize the deltas; this should only be done once per cycle.
             if (!eeGoalFlatSetThisCycle) {
               curEEPosGoal.vel().setZero();
               curEEPosGoal.pos().set(expectedFootPositionAtEnd);
               eeGoalFlatSetThisCycle = true;
             }
+            // Get the cycle strength.
+            PVec3 goalDelta = pool.vec3(expectedFootPositionAtEnd).sub(prevEEPosGoal);
+            if (maximumStrengthDis == 0) {
+              cycleStrength = 1;
+            } else {
+              cycleStrength = Math.min(1, goalDelta.len() / maximumStrengthDis);
+            }
+            System.out.println(cycleStrength);
             curEEPosGoal.frameUpdate();
             PVec3 eePosGoal = curEEPosGoal.pos();
             // Lerp between the previous position goal and the smoothed goal value.

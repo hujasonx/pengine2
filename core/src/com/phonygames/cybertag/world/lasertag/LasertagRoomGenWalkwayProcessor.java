@@ -193,9 +193,6 @@ public class LasertagRoomGenWalkwayProcessor {
           connectedGroup.walkways.add(new Walkway(this, tileGen, 0));
         }
       }
-      if (connectedGroups.size() >= 2) {
-        System.out.println();
-      }
       prepassJoinConnectedGroups();
     }
 

@@ -93,10 +93,6 @@ public class PIKLimb implements PPool.Poolable {
         PAssert.fail("No valid knee was found for ik.");
       }
     }
-//    PInverseKinematicsUtils.twoJointIk(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
-//                                       pole.isZero(.001f) || PKeyboard.isDown(Input.Keys.N) ? null : pole);
-//        System.out.println("DST:" + pool.vec3().set(endLocalTranslationFromLastNode()).mul(nodes.peek()
-//        .worldTransform(), 1).dst(t));
     // Rotate so that the pole faces towards the pole target.
     if (!modelSpacePoleTarget.isZero() && !PKeyboard.isDown(Input.Keys.M)) {
       PVec3 kneePos = kneeNode.worldTransform().getTranslation(pool.vec3());

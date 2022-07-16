@@ -133,6 +133,11 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
       this.goal().set(x);
       return this;
     }
+
+    public PSODynamics1 setGoalFlat(float x) {
+      setGoalFlat(this.goal().set(x));
+      return this;
+    }
   }
 
   public static class PSODynamics2 extends PSODynamics<PVec2> {
@@ -142,6 +147,11 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
 
     public PSODynamics2 setGoal(float x, float y) {
       this.goal().set(x, y);
+      return this;
+    }
+
+    public PSODynamics2 setGoalFlat(float x, float y) {
+      setGoalFlat(this.goal().set(x, y));
       return this;
     }
   }

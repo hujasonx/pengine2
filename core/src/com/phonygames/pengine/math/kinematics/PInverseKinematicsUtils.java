@@ -60,12 +60,8 @@ public class PInverseKinematicsUtils {
     float angleRotateAmount = PVectorUtils.angleToRotateOntoPlane(baseKnee, axisWorldSpace,
                                                                   pool.vec3().set(baseTarget).crs(axisWorldSpace)
                                                                       .scl(-1));
-    //    float angleRotateAmount = -baseKnee.angleWithAlongAxis(baseTarget, axisWorldSpace);
-    System.out.println(angleRotateAmount + ", " + axisLocalSpace + ", " + axisWorldSpace);
     outALRotChange.setToRotation(axisLocalSpace, -angleRotateAmount);
-    //    outALRotChange.setToRotation(axisLocalSpace, -angleRotateAmount);
     PVec3 resultingKnee = outALRotChange.applyAsQuat(pool.vec3().set(baseKnee)).add(basePos);
-    System.out.println("Resulting base knee " + resultingKnee);
     pool.free();
   }
 

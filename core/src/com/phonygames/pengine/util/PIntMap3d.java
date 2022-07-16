@@ -219,9 +219,6 @@ public class PIntMap3d<T> extends PPooledIterable<PIntMap3d.Entry<T>> {
             PMap.Entry<Integer, T> zEntry = zIterable.next();
             nextZ = zEntry.k();
             nextVal = zEntry.v();
-            if (nextVal == null) {
-              System.out.println();
-            }
           } else {
             reset();
           }
