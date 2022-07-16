@@ -52,6 +52,19 @@ public class PNumberUtils {
     return (float)Math.pow(x, p);
   }
 
+  /**
+   * If a negative number is passed in, return -pow(abs(x))
+   * @param x
+   * @param p
+   * @return
+   */
+  public static float powNeg(float x, float p) {
+    if (x < 0) {
+      return -(float)Math.pow(-x, p);
+    }
+    return (float)Math.pow(x, p);
+  }
+
   /** Will never be more than PI away from the nearestTo value. */
   public static float nearestRad(float rawAngle, float nearestTo) {
     rawAngle = clampRad(rawAngle);

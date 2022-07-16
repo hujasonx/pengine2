@@ -27,6 +27,8 @@ public class PCharacterCameraController {
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 dir = PVec3.obtain().set(1, 0, 0), smoothDir = PVec3.obtain().set(1, 0, 0);
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PSODynamics.PSODynamics2 pitchYawSpring = PSODynamics.obtain2();
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)

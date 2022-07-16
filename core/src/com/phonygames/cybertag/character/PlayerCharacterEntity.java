@@ -32,17 +32,17 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
   private PCharacterCameraController cameraController;
   private Gun gun;
+  private PSODynamics.PSODynamics1 hipYawSpring = PSODynamics.obtain1();
   private PPlanarIKLimb leftLegLimb, leftArmLimb;
   private PLegPlacer.Leg leftLegPlacerLeg, rightLegPlacerLeg;
   private PLegPlacer legPlacer;
   private PModelInstance modelInstance;
   private PPlanarIKLimb rightLegLimb, rightArmLimb;
-  private PSODynamics.PSODynamics1 walkCycleTSpring = PSODynamics.obtain1().setGoalFlat(.5f);
-  private PSODynamics.PSODynamics1 hipYawSpring = PSODynamics.obtain1();
-  private PSODynamics.PSODynamics3 weaponPosEulRotSpring = PSODynamics.obtain3();
-  private PSODynamics.PSODynamics3 weaponPosOffsetSpring = PSODynamics.obtain3();
   /** Below this speed, the hip rotation from velocity will be reduced */
   private float speedForMaxHipRotation = 2;
+  private PSODynamics.PSODynamics1 walkCycleTSpring = PSODynamics.obtain1().setGoalFlat(.5f);
+  private PSODynamics.PSODynamics3 weaponPosEulRotSpring = PSODynamics.obtain3();
+  private PSODynamics.PSODynamics3 weaponPosOffsetSpring = PSODynamics.obtain3();
 
   public PlayerCharacterEntity() {
     super();
@@ -190,7 +190,6 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       gun.reload();
     }
     PMat4 gunTransform = pool.mat4().set(cameraController.worldTransform());
-    gun.setGoalsForOffsetSprings(walkCycleTSpring.pos().x(), weaponPosOffsetSpring, weaponPosEulRotSpring);
     PMat4 gunTransformOffset = frameUpdateWeaponOffsetSprings(pool);
     if (PKeyboard.isDown(Input.Keys.H)) {
       gunTransform.set(worldTransform()).translate(cameraOffsetFromOrigin);
@@ -222,8 +221,10 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PModelInstance.Node torsoNode = modelInstance.getNode("Torso");
     torsoNode.stopWorldTransformRecursionAt(true);
     hipNode.recalcNodeWorldTransformsRecursive(true);
-    PVec3 axisYLocalHip = hipNode.worldTransform().getRotation(pool.vec4()).invQuat().applyAsQuat(pool.vec3().set(PVec3.Y));
-    PVec3 axisYLocalTorso = hipNode.worldTransform().getRotation(pool.vec4()).invQuat().applyAsQuat(pool.vec3().set(PVec3.Y));
+    PVec3 axisYLocalHip =
+        hipNode.worldTransform().getRotation(pool.vec4()).invQuat().applyAsQuat(pool.vec3().set(PVec3.Y));
+    PVec3 axisYLocalTorso =
+        hipNode.worldTransform().getRotation(pool.vec4()).invQuat().applyAsQuat(pool.vec3().set(PVec3.Y));
     // Calculate the desired angle offset of the hip.
     PVec3 velocity = characterController.getVel(pool.vec3());
     float angle;
@@ -231,7 +232,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       PVec3 velocityDir = pool.vec3(velocity).nor();
       float velocityDirFlat = velocityDir.dot(facingDirFlat.x(), 0, facingDirFlat.y());
       float velocityLeftFlat = velocityDir.dot(facingLeftFlat.x(), 0, facingLeftFlat.y());
-      angle = MathUtils.atan2(velocityLeftFlat,velocityDirFlat);
+      angle = MathUtils.atan2(velocityLeftFlat, velocityDirFlat);
       if (velocityDirFlat < -.01f) { // If we are going backwards, invert the angle.
         angle += MathUtils.PI;
       }
@@ -260,7 +261,15 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   }
 
   private PMat4 frameUpdateWeaponOffsetSprings(PPool.PoolBuffer pool) {
+    gun.setGoalsForOffsetSprings(walkCycleTSpring.pos().x(), weaponPosOffsetSpring, weaponPosEulRotSpring);
     PMat4 out = pool.mat4();
+    float camRotNudgeFactorPos = .012f;
+    float camRotNudgeFactorPosPow = .5f;
+    weaponPosOffsetSpring.vel().add(
+        PNumberUtils.powNeg(-cameraController.pitchYawSpring().vel().y(), camRotNudgeFactorPosPow) *
+        camRotNudgeFactorPos,
+        PNumberUtils.powNeg(cameraController.pitchYawSpring().vel().x(), camRotNudgeFactorPosPow) *
+        camRotNudgeFactorPos, 0);
     weaponPosOffsetSpring.frameUpdate();
     weaponPosEulRotSpring.frameUpdate();
     PVec4 tempRot = pool.vec4().setToRotationEuler(weaponPosEulRotSpring.pos());
