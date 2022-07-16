@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.gun.Gun;
 import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
+import com.phonygames.pengine.character.PLegPlacer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -29,6 +30,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private PCharacterCameraController cameraController;
   private Gun gun;
   private PPlanarIKLimb leftLegLimb, leftArmLimb;
+  private PLegPlacer legPlacer;
   private PModelInstance modelInstance;
   private PPlanarIKLimb rightLegLimb, rightArmLimb;
 
@@ -44,58 +46,61 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   }
 
   private void initModelInstance() {
-    PPool.PoolBuffer pool = PPool.getBuffer();
-    modelInstance = new PModelInstance(PAssetManager.model("model/player/female.glb", true));
-    final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
-    modelInstance.setDataBufferEmitter(renderContext -> {
-      PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
-      // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
-      // the normal or the Index with this buffer.
-      vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
-      vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
-      vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
-      vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
-      vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
-      vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
-      vColIndexBuffer.addData(52f / 255f, 136f / 255f, 232f / 255f, 1); // Iris diffuseM.
-      vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
-      vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
-      vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
-      vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
-      vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveR.
-      vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
-      vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveR.
-    });
-    modelInstance.material("matBase").useVColIndex(true);
-    modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
-    // Left Leg.
-    leftLegLimb =
-        PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, 1)).addNode("LegUpper.L").addNode("LegLower.L");
-    leftLegLimb.setEndLocalTranslationFromLastNode(
-        modelInstance.getNode("Foot.L").templateNode().transform().getTranslation(pool.vec3()));
-    leftLegLimb.setModelSpaceKneePoleTarget(0, 0, 1);
-    leftLegLimb.finalizeLimbSettings();
-    // Left Arm.
-    leftArmLimb =
-        PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, -1)).addNode("ArmUpper.L").addNode("ArmLower.L");
-    leftArmLimb.setEndLocalTranslationFromLastNode(
-        modelInstance.getNode("Wrist.L").templateNode().transform().getTranslation(pool.vec3()));
-    leftArmLimb.setModelSpaceKneePoleTarget(2, -1, -1);
-    leftArmLimb.finalizeLimbSettings();
-    // Right Leg.
-    rightLegLimb = PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, 1));
-    rightLegLimb.addNode("LegUpper.R").addNode("LegLower.R");
-    rightLegLimb.setEndLocalTranslationFromLastNode(
-        modelInstance.getNode("Foot.R").templateNode().transform().getTranslation(pool.vec3()));
-    rightLegLimb.finalizeLimbSettings();
-    // Right Arm.
-    rightArmLimb = PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, -1));
-    rightArmLimb.addNode("ArmUpper.R").addNode("ArmLower.R");
-    rightArmLimb.setEndLocalTranslationFromLastNode(
-        modelInstance.getNode("Wrist.R").templateNode().transform().getTranslation(pool.vec3()));
-    rightArmLimb.setModelSpaceKneePoleTarget(-2, -1, -1);
-    rightArmLimb.finalizeLimbSettings();
-    pool.free();
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      modelInstance = new PModelInstance(PAssetManager.model("model/player/female.glb", true));
+      final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
+      modelInstance.setDataBufferEmitter(renderContext -> {
+        PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
+        // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+        // the normal or the Index with this buffer.
+        vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
+        vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
+        vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
+        vColIndexBuffer.addData(52f / 255f, 136f / 255f, 232f / 255f, 1); // Iris diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
+        vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
+        vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveR.
+        vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveR.
+      });
+      modelInstance.material("matBase").useVColIndex(true);
+      modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
+      // Left Leg.
+      leftLegLimb =
+          PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, 1)).addNode("LegUpper.L").addNode("LegLower.L");
+      leftLegLimb.setEndLocalTranslationFromLastNode(
+          modelInstance.getNode("Foot.L").templateNode().transform().getTranslation(pool.vec3()));
+      leftLegLimb.setModelSpaceKneePoleTarget(0, 0, 1);
+      leftLegLimb.finalizeLimbSettings();
+      // Left Arm.
+      leftArmLimb =
+          PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, -1)).addNode("ArmUpper.L").addNode("ArmLower.L");
+      leftArmLimb.setEndLocalTranslationFromLastNode(
+          modelInstance.getNode("Wrist.L").templateNode().transform().getTranslation(pool.vec3()));
+      leftArmLimb.setModelSpaceKneePoleTarget(2, -1, -1);
+      leftArmLimb.finalizeLimbSettings();
+      // Right Leg.
+      rightLegLimb = PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, 1));
+      rightLegLimb.addNode("LegUpper.R").addNode("LegLower.R");
+      rightLegLimb.setEndLocalTranslationFromLastNode(
+          modelInstance.getNode("Foot.R").templateNode().transform().getTranslation(pool.vec3()));
+      rightLegLimb.finalizeLimbSettings();
+      // Right Arm.
+      rightArmLimb = PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, -1));
+      rightArmLimb.addNode("ArmUpper.R").addNode("ArmLower.R");
+      rightArmLimb.setEndLocalTranslationFromLastNode(
+          modelInstance.getNode("Wrist.R").templateNode().transform().getTranslation(pool.vec3()));
+      rightArmLimb.setModelSpaceKneePoleTarget(-2, -1, -1);
+      rightArmLimb.finalizeLimbSettings();
+      legPlacer = PLegPlacer.obtain(modelInstance);
+      legPlacer.addLeg(leftLegLimb,"Foot.L");
+      legPlacer.addLeg(rightLegLimb,"Foot.R");
+    }
   }
 
   @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
@@ -147,6 +152,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     worldTransform().setToTranslation(characterController.getPos(pool.vec3())).rotate(0, -1, 0, facingDirAng);
     modelInstance.worldTransform().set(worldTransform());
     modelInstance.resetTransformsFromTemplates();
+    legPlacer.frameUpdate(characterController.getVel(pool.vec3()));
     // Stop the wrist transforms from propagating recursive transform recalcs, since hand animations will be applied
     // by the gun.
     PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");

@@ -2,6 +2,7 @@ package com.phonygames.pengine.math;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PEngine;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
@@ -41,6 +42,7 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
   private final T goalPrev;
   private final PPool<T> tPool;
   protected float k1, k2, k3; // Dynamics constants.
+  private boolean isValid = false;
 
   private PSODynamics(PPool<T> pool) {
     this.tPool = pool;
@@ -57,6 +59,7 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
     pos.setZero();
     goalPrev.setZero();
     k1 = k2 = k3 = 0;
+    isValid = false;
   }
 
   public static PSODynamics1 obtain1() {
@@ -87,6 +90,7 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
   }
 
   public void frameUpdate() {
+    PAssert.isTrue(isValid, "Call setDynamicsParams first!");
     T goalDelta = tPool.obtain();
     goalDelta.set(goal).add(goalPrev, -1).scl(1f / PEngine.dt);
     goalPrev.set(goal);
@@ -101,10 +105,17 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
     k1 = zeta / (MathUtils.PI * freq);
     k2 = 1 / ((2 * MathUtils.PI * freq) * (2 * MathUtils.PI * freq));
     k3 = response * zeta / (2 * MathUtils.PI * freq);
+    isValid = true;
   }
 
   public void setGoal(T goal) {
     this.goal.set(goal);
+  }
+
+  public void setGoalFlat(T goal) {
+    this.goal.set(goal);
+    this.goalPrev.set(goal);
+    this.vel.setZero();
   }
 
   public void setVel(T vel) {

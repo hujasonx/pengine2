@@ -130,6 +130,11 @@ public class PPhysicsCharacterController implements Disposable {
     return out;
   }
 
+  public PVec3 getVel(PVec3 out) {
+    out.set(capsuleRigidBody.vel());
+    return out;
+  }
+
   public void preLogicUpdate() {
     //    if (newLinVel().isZero()) {
     //      // Deactivate the rigidbody if we are not moving.

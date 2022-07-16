@@ -102,6 +102,9 @@ public class PParametricCurve<T extends PVec<T>> implements PPool.Poolable {
     if (time >= length()) {
       return keyFrames.size() - 1;
     }
+    if (time <= keyFrames.get(0).t) {
+      return 0;
+    }
     int lowerIndex = 0;
     int higherIndex = keyFrames.size() - 1;
     while (lowerIndex < higherIndex) {
@@ -127,6 +130,7 @@ public class PParametricCurve<T extends PVec<T>> implements PPool.Poolable {
     }
     PAssert.isFalse(time < 0);
     float timeOfLower = (keyFrames.get(lowerKeyframeIndex)).t;
+    if (time <= timeOfLower) { return 0; }
     float timeOfUpper = (keyFrames.get(lowerKeyframeIndex + 1)).t;
     return (time - timeOfLower) / (timeOfUpper - timeOfLower);
   }

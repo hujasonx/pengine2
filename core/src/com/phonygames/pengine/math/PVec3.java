@@ -33,6 +33,13 @@ public class PVec3 extends PVec<PVec3> {
   private PVec3() {
   }
 
+  public PVec3 newAxes(PVec3 xAxis, PVec3 yAxis, PVec3 zAxis) {
+    float x = this.x();
+    float y = this.y();
+    float z = this.z();
+    return this.setZero().add(xAxis, x).add(yAxis, y).add(zAxis, z);
+  }
+
   public PVec3 setToSpherical(float theta, float phi, float radius) {
     float sinPhi = MathUtils.sin(-phi + MathUtils.HALF_PI);
     set(radius * sinPhi * MathUtils.cos(theta + 0 * MathUtils.HALF_PI), radius * MathUtils.cos(-phi + MathUtils.HALF_PI),

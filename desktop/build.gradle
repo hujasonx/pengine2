@@ -12,6 +12,7 @@ task run(dependsOn: classes, type: JavaExec) {
     standardInput = System.in
     workingDir = project.assetsDir
     ignoreExitValue = true
+    enableAssertions = true
 }
 
 task debug(dependsOn: classes, type: JavaExec) {
@@ -21,6 +22,7 @@ task debug(dependsOn: classes, type: JavaExec) {
     workingDir = project.assetsDir
     ignoreExitValue = true
     debug = true
+    enableAssertions = true
 }
 
 task dist(type: Jar) {

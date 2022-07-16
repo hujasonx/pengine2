@@ -45,6 +45,10 @@ public class PRigidBody implements PPool.Poolable {
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private RunnableOnPostLogicUpdate runnableOnPostLogicUpdate;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PVec3 pos = PVec3.obtain(), vel = PVec3.obtain();
+  private final PVec3 posPrev = PVec3.obtain();
 
   private PRigidBody() {
   }
@@ -120,6 +124,9 @@ public class PRigidBody implements PPool.Poolable {
 
   protected void postLogicUpdate() {
     if (rigidBody == null) {return;}
+    posPrev.set(pos);
+    worldTransformLogicCurrent().getTranslation(pos);
+    vel.set(pos).sub(posPrev).scl(1f / PEngine.logictimestep);
     worldTransformLogicPrev().set(worldTransformLogicCurrent());
     rigidBody.getWorldTransform(worldTransformLogicCurrent().getBackingMatrix4());
     if (runnableOnPostLogicUpdate != null) {
@@ -155,6 +162,8 @@ public class PRigidBody implements PPool.Poolable {
     worldTransformLogicPrev().idt();
     collisionShape = null;
     runnableOnPostLogicUpdate = null;
+    pos.setZero();
+    posPrev.setZero();
   }
 
   public PRigidBody setAngularFactor(float x, float y, float z) {
