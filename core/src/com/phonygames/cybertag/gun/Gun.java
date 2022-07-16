@@ -32,10 +32,12 @@ public abstract class Gun implements PRenderable {
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
   protected String reloadAnimation = null;
+  /** The walk cycle will be scaled between [inset, 1 - inset] */
+  protected float walkCycleShakeTEdgeInset = 1;
   /** How much to scale the x offset from walking; will be multiplied with [-1, 1] */
-  protected float walkCycleXOffsetScale = .014f;
+  protected float walkCycleXOffsetScale = 1;
   /** How much to scale the y offset from walking; will be multiplied with [0, 1] */
-  protected float walkCycleYOffsetScale = .02f;
+  protected float walkCycleYOffsetScale = 1;
   private transient float reloadAnimationT = -1;
 
   protected Gun(String modelName, CharacterEntity characterEntity) {
@@ -95,10 +97,8 @@ public abstract class Gun implements PRenderable {
 
   public void setGoalsForOffsetSprings(float walkCycleT, PSODynamics.PSODynamics3 weaponPosOffsetSpring,
                                        PSODynamics.PSODynamics3 weaponPosEulRotSpring) {
-    // Shake the weapon based on the walk cycle T.
-    float walkCycleTMin = .2f, walkCycleTMax = .8f;
-    float cycleTScaled =
-        (PNumberUtils.clamp(walkCycleT, walkCycleTMin, walkCycleTMax) - .2f) / (walkCycleTMax - walkCycleTMin);
+    float cycleTScaled = (PNumberUtils.clamp(walkCycleT, walkCycleShakeTEdgeInset, 1 - walkCycleShakeTEdgeInset) -
+                          walkCycleShakeTEdgeInset) / (1 - 2 * walkCycleShakeTEdgeInset);
     float xFactor = ((cycleTScaled - .5f) * 2);
     float yFactor = PNumberUtils.pow(Math.abs(cycleTScaled - .5f) * 2, .75f);
     weaponPosOffsetSpring.goal().x(xFactor * walkCycleXOffsetScale); // Left.

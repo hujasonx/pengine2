@@ -19,6 +19,7 @@ public class PNumberUtils {
     return Math.max(Math.min(n, max), min);
   }
 
+  /** Clamps the output to [-PI, PI] */
   public static float clampRad(float radians) {
     radians += MathUtils.PI;
     return mod(radians, MathUtils.PI2) - MathUtils.PI;
@@ -49,6 +50,13 @@ public class PNumberUtils {
 
   public static float pow(float x, float p) {
     return (float)Math.pow(x, p);
+  }
+
+  /** Will never be more than PI away from the nearestTo value. */
+  public static float nearestRad(float rawAngle, float nearestTo) {
+    rawAngle = clampRad(rawAngle);
+    float nearestToNearest0 = MathUtils.PI2 * Math.round(nearestTo / MathUtils.PI2);
+    return nearestToNearest0 + rawAngle;
   }
 
   public static boolean epsilonEquals(float x, float y) {

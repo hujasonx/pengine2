@@ -38,8 +38,11 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private PModelInstance modelInstance;
   private PPlanarIKLimb rightLegLimb, rightArmLimb;
   private PSODynamics.PSODynamics1 walkCycleTSpring = PSODynamics.obtain1().setGoalFlat(.5f);
+  private PSODynamics.PSODynamics1 hipYawSpring = PSODynamics.obtain1();
   private PSODynamics.PSODynamics3 weaponPosEulRotSpring = PSODynamics.obtain3();
   private PSODynamics.PSODynamics3 weaponPosOffsetSpring = PSODynamics.obtain3();
+  /** Below this speed, the hip rotation from velocity will be reduced */
+  private float speedForMaxHipRotation = 2;
 
   public PlayerCharacterEntity() {
     super();
@@ -51,8 +54,9 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     initModelInstance();
     gun = new Pistol0(this);
     walkCycleTSpring.setDynamicsParams(2, 1, 0);
-    weaponPosOffsetSpring.setDynamicsParams(4, 1, 0);
-    weaponPosEulRotSpring.setDynamicsParams(4, 1, 0);
+    hipYawSpring.setDynamicsParams(2, 1, 0);
+    weaponPosOffsetSpring.setDynamicsParams(4, .9f, 0);
+    weaponPosEulRotSpring.setDynamicsParams(4, .9f, 0);
   }
 
   private void initModelInstance() {
@@ -178,13 +182,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     wristL.stopWorldTransformRecursionAt(true);
     modelInstance.recalcTransforms();
     // Apply the walk/run cycle animation.
-    float rawWalkRunCycleT = rawWalkRunCycleTFrameUpdate();
-    PAnimation walkCycleAnimation = modelInstance.model().animations().get("WalkCycle");
-    PStringMap<PMat4> transformMap =
-        walkCycleAnimation.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), rawWalkRunCycleT);
-    modelInstance.setNodeTransformsFromMap(transformMap, 1f);
-    transformMap.free();
-    modelInstance.recalcTransforms();
+    frameUpdateSpine(pool);
     // Apply the leg placer.
     legPlacer.frameUpdate(characterController.getVel(pool.vec3()), characterController.isOnGround());
     // Gun and arm stuff.
@@ -211,6 +209,65 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     pool.free();
   }
 
+  private void frameUpdateSpine(PPool.PoolBuffer pool) {
+    // Apply the walkcycle animation.
+    float rawWalkRunCycleT = rawWalkRunCycleTFrameUpdate();
+    PAnimation walkCycleAnimation = modelInstance.model().animations().get("WalkCycle");
+    PStringMap<PMat4> transformMap =
+        walkCycleAnimation.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), rawWalkRunCycleT);
+    modelInstance.setNodeTransformsFromMap(transformMap, 1f);
+    transformMap.free();
+    // Rotate the hip and torso along the y axis based on velocity.
+    PModelInstance.Node hipNode = modelInstance.getNode("Hip");
+    PModelInstance.Node torsoNode = modelInstance.getNode("Torso");
+    torsoNode.stopWorldTransformRecursionAt(true);
+    hipNode.recalcNodeWorldTransformsRecursive(true);
+    PVec3 axisYLocalHip = hipNode.worldTransform().getRotation(pool.vec4()).invQuat().applyAsQuat(pool.vec3().set(PVec3.Y));
+    PVec3 axisYLocalTorso = hipNode.worldTransform().getRotation(pool.vec4()).invQuat().applyAsQuat(pool.vec3().set(PVec3.Y));
+    // Calculate the desired angle offset of the hip.
+    PVec3 velocity = characterController.getVel(pool.vec3());
+    float angle;
+    if (!velocity.isZero()) {
+      PVec3 velocityDir = pool.vec3(velocity).nor();
+      float velocityDirFlat = velocityDir.dot(facingDirFlat.x(), 0, facingDirFlat.y());
+      float velocityLeftFlat = velocityDir.dot(facingLeftFlat.x(), 0, facingLeftFlat.y());
+      angle = MathUtils.atan2(velocityLeftFlat,velocityDirFlat);
+      if (velocityDirFlat < -.01f) { // If we are going backwards, invert the angle.
+        angle += MathUtils.PI;
+      }
+      angle = PNumberUtils.clampRad(angle);
+      float rawAngle = angle;
+      angle *= .4f * Math.min(velocity.len() / speedForMaxHipRotation, 1);
+      hipYawSpring.setGoal(PNumberUtils.nearestRad(angle, hipYawSpring.goal().x()));
+    } else {
+      hipYawSpring.setGoal(0);
+    }
+    hipYawSpring.frameUpdate();
+    angle = hipYawSpring.pos().x();
+    // Apply a rotation to the hip and a reverse rotation to the torso.
+    PVec4 hipLocalRot = pool.vec4().setToRotation(axisYLocalHip, angle);
+    PVec4 torsoLocalRot = pool.vec4().setToRotation(axisYLocalTorso, -angle);
+    hipNode.transform().rotate(hipLocalRot);
+    torsoNode.transform().rotate(torsoLocalRot);
+    torsoNode.stopWorldTransformRecursionAt(false);
+    modelInstance.recalcTransforms();
+    // Apply the rotation to the leg bind poles.
+    PVec3 legBindPole = pool.vec3(MathUtils.sin(angle), 0, MathUtils.cos(angle));
+    leftLegLimb.setBindPole(legBindPole);
+    rightLegLimb.setBindPole(legBindPole);
+    leftLegLimb.setModelSpaceKneePoleTarget(legBindPole);
+    rightLegLimb.setModelSpaceKneePoleTarget(legBindPole);
+  }
+
+  private PMat4 frameUpdateWeaponOffsetSprings(PPool.PoolBuffer pool) {
+    PMat4 out = pool.mat4();
+    weaponPosOffsetSpring.frameUpdate();
+    weaponPosEulRotSpring.frameUpdate();
+    PVec4 tempRot = pool.vec4().setToRotationEuler(weaponPosEulRotSpring.pos());
+    out.set(weaponPosOffsetSpring.pos(), tempRot, PVec3.ONE);
+    return out;
+  }
+
   /** Calculates the walkRunCycleT [0, 1] based on the leg cycleT values. */
   public float rawWalkRunCycleTFrameUpdate() {
     float leftT = leftLegPlacerLeg.inCycle() ? leftLegPlacerLeg.cycleT() : 0;
@@ -221,15 +278,6 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     walkCycleTSpring.setGoal(result);
     walkCycleTSpring.frameUpdate();
     return PNumberUtils.clamp(walkCycleTSpring.pos().x(), 0, 1);
-  }
-
-  private PMat4 frameUpdateWeaponOffsetSprings(PPool.PoolBuffer pool) {
-    PMat4 out = pool.mat4();
-    weaponPosOffsetSpring.frameUpdate();
-    weaponPosEulRotSpring.frameUpdate();
-    PVec4 tempRot = pool.vec4().setToRotationEuler(weaponPosEulRotSpring.pos());
-    out.set(weaponPosOffsetSpring.pos(), tempRot, PVec3.ONE);
-    return out;
   }
 
   @Override public void render(PRenderContext renderContext) {
