@@ -38,6 +38,8 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private PModelInstance modelInstance;
   private PPlanarIKLimb rightLegLimb, rightArmLimb;
   private PSODynamics.PSODynamics1 walkCycleTSpring = PSODynamics.obtain1().setGoalFlat(.5f);
+  private PSODynamics.PSODynamics3 weaponPosEulRotSpring = PSODynamics.obtain3();
+  private PSODynamics.PSODynamics3 weaponPosOffsetSpring = PSODynamics.obtain3();
 
   public PlayerCharacterEntity() {
     super();
@@ -48,7 +50,9 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     cameraController.minPitch(-MathUtils.HALF_PI + .33f);
     initModelInstance();
     gun = new Pistol0(this);
-    walkCycleTSpring.setDynamicsParams(2,1,0);
+    walkCycleTSpring.setDynamicsParams(2, 1, 0);
+    weaponPosOffsetSpring.setDynamicsParams(4, 1, 0);
+    weaponPosEulRotSpring.setDynamicsParams(4, 1, 0);
   }
 
   private void initModelInstance() {
@@ -104,6 +108,9 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       rightArmLimb.setModelSpaceKneePoleTarget(-2, -1, -1);
       rightArmLimb.finalizeLimbSettings();
       legPlacer = PLegPlacer.obtain(modelInstance);
+      legPlacer.cycleTimeCurve().addKeyFrame(0, 1);
+      legPlacer.cycleTimeCurve().addKeyFrame(4, .6f);
+      legPlacer.cycleTimeCurve().addKeyFrame(5, .6f);
       leftLegPlacerLeg = legPlacer.addLeg(leftLegLimb, "Foot.L").preventEEAboveBase(true).maximumStrengthDis(1);
       rightLegPlacerLeg = legPlacer.addLeg(rightLegLimb, "Foot.R").preventEEAboveBase(true).maximumStrengthDis(1);
     }
@@ -133,6 +140,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PVec2 outputVelocity = pool.vec2();
     characterController.velXZ(0, 0);
     float forwardSpeed = PKeyboard.isDown(Input.Keys.SHIFT_LEFT) ? 10 : 3;
+    // Keyboard movement.
     if (PKeyboard.isDown(Input.Keys.W)) {
       inputVelocity.add(0, 1);
     }
@@ -145,6 +153,10 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (PKeyboard.isDown(Input.Keys.D)) {
       inputVelocity.add(-1, 0);
     }
+    if (!inputVelocity.isZero()) {
+      inputVelocity.nor();
+    }
+    // TODO: add controller input here.
     outputVelocity.add(facingDirFlat, forwardSpeed * inputVelocity.y());
     outputVelocity.add(facingLeftFlat, forwardSpeed * inputVelocity.x());
     characterController.velXZ(outputVelocity.x(), outputVelocity.y());
@@ -180,10 +192,12 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       gun.reload();
     }
     PMat4 gunTransform = pool.mat4().set(cameraController.worldTransform());
+    gun.setGoalsForOffsetSprings(walkCycleTSpring.pos().x(), weaponPosOffsetSpring, weaponPosEulRotSpring);
+    PMat4 gunTransformOffset = frameUpdateWeaponOffsetSprings(pool);
     if (PKeyboard.isDown(Input.Keys.H)) {
       gunTransform.set(worldTransform()).translate(cameraOffsetFromOrigin);
     }
-    gun.frameUpdate(pool, gunTransform);
+    gun.frameUpdate(pool, gunTransform.mul(gunTransformOffset));
     // Ik arms.
     PVec3 wristLGoalPos = gun.getBoneWorldTransform("Wrist.L").getTranslation(pool.vec3());
     PVec3 wristRGoalPos = gun.getBoneWorldTransform("Wrist.R").getTranslation(pool.vec3());
@@ -207,6 +221,15 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     walkCycleTSpring.setGoal(result);
     walkCycleTSpring.frameUpdate();
     return PNumberUtils.clamp(walkCycleTSpring.pos().x(), 0, 1);
+  }
+
+  private PMat4 frameUpdateWeaponOffsetSprings(PPool.PoolBuffer pool) {
+    PMat4 out = pool.mat4();
+    weaponPosOffsetSpring.frameUpdate();
+    weaponPosEulRotSpring.frameUpdate();
+    PVec4 tempRot = pool.vec4().setToRotationEuler(weaponPosEulRotSpring.pos());
+    out.set(weaponPosOffsetSpring.pos(), tempRot, PVec3.ONE);
+    return out;
   }
 
   @Override public void render(PRenderContext renderContext) {

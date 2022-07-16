@@ -190,6 +190,11 @@ public class PParametricCurve<T extends PVec<T>> implements PPool.Poolable {
         super(PVec1.getStaticPool());
       }
     }
+
+    public float get(float t) {
+      get(temp, t);
+      return temp.x();
+    }
   }
 
   public static class PParametricCurve2 extends PParametricCurve<PVec2> {

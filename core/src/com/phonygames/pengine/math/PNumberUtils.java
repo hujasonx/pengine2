@@ -47,6 +47,10 @@ public class PNumberUtils {
     return Math.abs(x - y) < epsilon;
   }
 
+  public static float pow(float x, float p) {
+    return (float)Math.pow(x, p);
+  }
+
   public static boolean epsilonEquals(float x, float y) {
     return Math.abs(x - y) < 0.001f;
   }

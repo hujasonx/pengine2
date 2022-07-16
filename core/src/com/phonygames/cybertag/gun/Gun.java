@@ -12,6 +12,8 @@ import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PSODynamics;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
@@ -30,7 +32,11 @@ public abstract class Gun implements PRenderable {
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
   protected String reloadAnimation = null;
-  private float reloadAnimationT = -1;
+  /** How much to scale the x offset from walking; will be multiplied with [-1, 1] */
+  protected float walkCycleXOffsetScale = .014f;
+  /** How much to scale the y offset from walking; will be multiplied with [0, 1] */
+  protected float walkCycleYOffsetScale = .02f;
+  private transient float reloadAnimationT = -1;
 
   protected Gun(String modelName, CharacterEntity characterEntity) {
     this.characterEntity = characterEntity;
@@ -85,5 +91,17 @@ public abstract class Gun implements PRenderable {
     if (this.modelInstance != null) {
       this.modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
     }
+  }
+
+  public void setGoalsForOffsetSprings(float walkCycleT, PSODynamics.PSODynamics3 weaponPosOffsetSpring,
+                                       PSODynamics.PSODynamics3 weaponPosEulRotSpring) {
+    // Shake the weapon based on the walk cycle T.
+    float walkCycleTMin = .2f, walkCycleTMax = .8f;
+    float cycleTScaled =
+        (PNumberUtils.clamp(walkCycleT, walkCycleTMin, walkCycleTMax) - .2f) / (walkCycleTMax - walkCycleTMin);
+    float xFactor = ((cycleTScaled - .5f) * 2);
+    float yFactor = PNumberUtils.pow(Math.abs(cycleTScaled - .5f) * 2, .75f);
+    weaponPosOffsetSpring.goal().x(xFactor * walkCycleXOffsetScale); // Left.
+    weaponPosOffsetSpring.goal().y(yFactor * walkCycleYOffsetScale); // Left.
   }
 }

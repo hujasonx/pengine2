@@ -40,6 +40,9 @@ public class PLegPlacer implements PPool.Poolable {
       return new PLegPlacer.Leg();
     }
   };
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PParametricCurve.PParametricCurve1 cycleTimeCurve = PParametricCurve.obtain1();
   private int cycleTimeFrameIndex = -1;
   private float cycleTimeThisFrame = -1;
   private Leg lastMovedLeg = null, queuedMoveLeg = null;
@@ -65,10 +68,10 @@ public class PLegPlacer implements PPool.Poolable {
     return leg;
   }
 
-  private float cycleTime() {
+  private float cycleTime(float speed) {
     if (cycleTimeFrameIndex != PEngine.frameCount) {
       cycleTimeFrameIndex = PEngine.frameCount;
-      this.cycleTimeThisFrame = 1;// TODO: variable cycle time.
+      this.cycleTimeThisFrame = cycleTimeCurve.get(speed);
     }
     return this.cycleTimeThisFrame;
   }
@@ -136,6 +139,7 @@ public class PLegPlacer implements PPool.Poolable {
 
   @Override public void reset() {
     legs.clearAndFreePooled();
+    cycleTimeCurve.reset();
     lastMovedLeg = null;
     queuedMoveLeg = null;
     numMovingLegs = 0;
@@ -243,9 +247,10 @@ public class PLegPlacer implements PPool.Poolable {
       boolean justFinishedCycle = false;
       PVec3 basePosWS = limb.getNodes().get(0).worldTransform().getTranslation(pool.vec3());
       PVec3 bindEndPosWS = endEffector.worldTransform().getTranslation(pool.vec3());
-      float cycleDt = PEngine.dt / legPlacer.cycleTime();
+      float speed = velocity.len();
+      float cycleDt = PEngine.dt / legPlacer.cycleTime(speed);
       float nextCycleT = cycleT + cycleDt;
-      PVec2 stepTimeOffsets = stepTimeOffsetsCurve.get(pool.vec2(), legPlacer.cycleTime());
+      PVec2 stepTimeOffsets = stepTimeOffsetsCurve.get(pool.vec2(), legPlacer.cycleTime(speed));
       boolean justUp = false, justDown = false;
       if (!isOnGround) {
         // At this point, the end effector should be at the bind position. Set it as the goal pos, but with a weak
@@ -284,8 +289,8 @@ public class PLegPlacer implements PPool.Poolable {
           } else if (!downThisCycle) {
             // Before foot down.
             // Figure out the goal position and orientation of the foot at the down time.
-            float timeLeftBeforeEnd = (1 - cycleT) * legPlacer.cycleTime();
-            float timeLeftBeforeFootDown = (stepTimeOffsets.y() - cycleT) * legPlacer.cycleTime();
+            float timeLeftBeforeEnd = (1 - cycleT) * legPlacer.cycleTime(speed);
+            float timeLeftBeforeFootDown = (stepTimeOffsets.y() - cycleT) * legPlacer.cycleTime(speed);
             PVec3 expectedModelTranslationDeltaAtEnd = pool.vec3(velocity).scl(timeLeftBeforeEnd);
             PVec3 expectedFootPositionAtEnd = calcNaturalEEPos(pool.vec3()).add(expectedModelTranslationDeltaAtEnd);
             PVec3 expectedBasePositionAtEnd = pool.vec3(basePosWS).add(expectedModelTranslationDeltaAtEnd);
@@ -313,7 +318,6 @@ public class PLegPlacer implements PPool.Poolable {
             } else {
               cycleStrength = Math.min(1, goalDelta.len() / maximumStrengthDis);
             }
-            System.out.println(cycleStrength);
             curEEPosGoal.frameUpdate();
             PVec3 eePosGoal = curEEPosGoal.pos();
             // Lerp between the previous position goal and the smoothed goal value.

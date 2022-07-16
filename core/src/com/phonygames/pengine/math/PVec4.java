@@ -33,9 +33,6 @@ public class PVec4 extends PVec<PVec4> {
   private final Quaternion backingQuaterion = new Quaternion().set(0, 0, 0, 0);
 
   private PVec4() {}
-  public float getAxisAngle(PVec3 outAxis) {
-    return backingQuaterion.getAxisAngleRad(outAxis.backingVec3());
-  }
 
   public static PVec4 obtain() {
     return getStaticPool().obtain();
@@ -156,6 +153,7 @@ public class PVec4 extends PVec<PVec4> {
 
   /**
    * Subtracts other from caller into caller.
+   *
    * @param other
    * @return caller for chaining
    */
@@ -200,6 +198,10 @@ public class PVec4 extends PVec<PVec4> {
   public PVec4 fromColor(@NonNull Color color) {
     this.backingQuaterion.set(color.r, color.g, color.b, color.a);
     return this;
+  }
+
+  public float getAxisAngle(PVec3 outAxis) {
+    return backingQuaterion.getAxisAngleRad(outAxis.backingVec3());
   }
 
   public PVec4 invQuat() {
@@ -291,6 +293,20 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  /**
+   * @param in [yaw, pitch, roll]
+   * @return
+   */
+  public PVec4 setToRotationEuler(PVec3 in) {
+    backingQuaterion.setEulerAnglesRad(in.x(), in.y(), in.z());
+    return this;
+  }
+
+  public PVec4 setToRotationEuler(float yaw, float pitch, float roll) {
+    backingQuaterion.setEulerAnglesRad(yaw, pitch, roll);
+    return this;
+  }
+
   public PVec4 slerp(PVec4 other, float mix) {
     backingQuaterion.slerp(other.backingQuaterion, mix);
     return this;
@@ -306,16 +322,13 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   /**
-   * https://stackoverflow.com/questions/3684269/component-of-a-quaternion-rotation-around-an-axis
-   * Decompose the rotation on to 2 parts.
-   * 1. Twist - rotation around the "direction" vector
-   * 2. Swing - rotation around axis that is perpendicular to "direction" vector
-   * The rotation can be composed back by
-   * rotation = swing * twist
+   * https://stackoverflow.com/questions/3684269/component-of-a-quaternion-rotation-around-an-axis Decompose the
+   * rotation on to 2 parts. 1. Twist - rotation around the "direction" vector 2. Swing - rotation around axis that is
+   * perpendicular to "direction" vector The rotation can be composed back by rotation = swing * twist
    * <p>
-   * has singularity in case of swing_rotation close to 180 degrees rotation.
-   * if the input quaternion is of non-unit length, the outputs are non-unit as well
-   * otherwise, outputs are both unit
+   * has singularity in case of swing_rotation close to 180 degrees rotation. if the input quaternion is of non-unit
+   * length, the outputs are non-unit as well otherwise, outputs are both unit
+   *
    * @param direction
    * @param outSwing
    * @param outTwist
