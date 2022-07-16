@@ -11,6 +11,7 @@ import lombok.NonNull;
 import lombok.Setter;
 
 public abstract class PShaderProvider {
+  private static boolean log = false;
   public static void init() {
   }
 
@@ -74,11 +75,15 @@ public abstract class PShaderProvider {
       shader = genShader(fragmentLayout, layer, vertexAttributes, material);
       if (shader != null) {
         if (markForAnyMaterialId) {
-          PLog.i("PShaderProvider generating new shader any material, original: " + material.id());
+          if (log) {
+            PLog.i("PShaderProvider generating new shader any material, original: " + material.id());
+          }
           markForAnyMaterialId = false;
           fragmentLayoutLayerVertexAttributesMap.get(fragmentLayout).genUnpooled(layerId).put(vertexAttributes, shader);
         } else {
-          PLog.i("PShaderProvider generating new shader for: " + material.id());
+          if (log) {
+            PLog.i("PShaderProvider generating new shader for: " + material.id());
+          }
           fragmentLayoutLayerVertexAttributesMaterialIdMap.genUnpooled(fragmentLayout)
                                                           .genUnpooled(layer == null ? "" : layer)
                                                           .genUnpooled(vertexAttributes).put(material.id(), shader);

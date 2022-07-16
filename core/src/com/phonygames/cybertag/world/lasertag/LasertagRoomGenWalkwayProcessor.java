@@ -238,6 +238,9 @@ public class LasertagRoomGenWalkwayProcessor {
       while (possibleWalkwayPaths.size() > 0) {
         if (possibleWalkwayPaths.removeLast().applyToContext()) {return true;}
       }
+      if (connectedGroups.size() > 2) {
+        PAssert.warn("COULD NOT GENERATE");
+      }
       return false;
     }
 
