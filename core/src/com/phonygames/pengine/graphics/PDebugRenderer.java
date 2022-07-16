@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PVec1;
+import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PList;
@@ -40,6 +41,19 @@ public class PDebugRenderer {
     line.widthB.set(widthB);
   }
 
+  public static void line(PVec3 a, float offsetAX, float offsetAY, PVec3 b, float offsetBX, float offsetBY, PVec4 colA,
+                          PVec4 colB, float widthA, float widthB) {
+    Line line = queuedLines.genPooledAndAdd();
+    line.a.set(a);
+    line.b.set(b);
+    line.colA.set(colA);
+    line.colB.set(colB);
+    line.widthA.set(widthA);
+    line.widthB.set(widthB);
+    line.offsetA.set(offsetAX, offsetAY);
+    line.offsetB.set(offsetBX, offsetBY);
+  }
+
   public static void line(PVec3 a, PVec3 b, PVec4 col, float width) {
     Line line = queuedLines.genPooledAndAdd();
     line.a.set(a);
@@ -65,6 +79,7 @@ public class PDebugRenderer {
     // #pragma end - PPool.Poolable
     final PVec3 a = PVec3.obtain(), b = PVec3.obtain();
     final PVec4 colA = PVec4.obtain(), colB = PVec4.obtain();
+    final PVec2 offsetA = PVec2.obtain(), offsetB = PVec2.obtain();
     final PVec1 widthA = PVec1.obtain(), widthB = PVec1.obtain();
 
     public void render(PRenderContext renderContext) {
@@ -72,7 +87,8 @@ public class PDebugRenderer {
       PVec3 bOut = PVec3.obtain().set(b);
       PApplicationWindow.windowSpriteBatch().begin();
       if (renderContext.projectIf(aOut) && renderContext.projectIf(bOut)) {
-        render2d(aOut.x(), aOut.y(), bOut.x(), bOut.y(), widthA.x(), widthB.x(), colA, colB);
+        render2d(aOut.x() + offsetA.x(), aOut.y() + offsetA.y(), bOut.x() + offsetB.x(), bOut.y() + offsetB.y(),
+                 widthA.x(), widthB.x(), colA, colB);
       }
       PApplicationWindow.windowSpriteBatch().end();
       aOut.free();
@@ -112,6 +128,8 @@ public class PDebugRenderer {
     @Override public void reset() {
       a.setZero();
       b.setZero();
+      offsetA.setZero();
+      offsetB.setZero();
       colA.set(1, 1, 1, 1);
       colB.set(1, 1, 1, 1);
       widthA.set(1);

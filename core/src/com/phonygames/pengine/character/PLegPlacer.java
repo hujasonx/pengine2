@@ -3,7 +3,9 @@ package com.phonygames.pengine.character;
 import android.support.annotation.NonNull;
 
 import com.phonygames.pengine.PEngine;
+import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PParametricCurve;
 import com.phonygames.pengine.math.PSODynamics;
 import com.phonygames.pengine.math.PVec2;
@@ -79,37 +81,58 @@ public class PLegPlacer implements PPool.Poolable {
       PVec3 forward = modelInstance.worldTransform().getZAxis(pool.vec3());
       PVec4 rot = modelInstance.worldTransform().getRotation(pool.vec4());
       numMovingLegs = 0;
-      // Initial pass just to count the number of moving legs.
+      // Initial pass to frame update all the legs.
       for (int a = 0; a < legs.size(); a++) {
         Leg leg = legs.get(a);
+        leg.frameUpdate(pool, pos, rot, left, up, forward, velocity);
         if (leg.inCycle) {
           numMovingLegs++;
         }
       }
-      // Next pass to update each leg, and possibly trigger moves.
+      float minimumDeviationForKickOff = .003f;
+      // Next pass to trigger moves.
       float timeBetweenConsecutiveLegMoves = 1f / legs.size();
-      for (int a = 0; a < legs.size(); a++) {
-        Leg leg = legs.get(a);
-        boolean legCycleJustFinished = leg.frameUpdate(pool, pos, rot, left, up, forward, velocity);
-        if (legCycleJustFinished) {
-          System.out.println("Ended cycle: " + leg + ", t=" + PEngine.t);
-          numMovingLegs--;
-        }
-        if (!leg.inCycle && (numMovingLegs == 0 ||
-                             (leg == queuedMoveLeg && lastMovedLeg != null && lastMovedLeg.inCycle &&
-                              lastMovedLeg.currentStepTime >= timeBetweenConsecutiveLegMoves))) {
-          // If there are no moving legs or the cycle just finished, we can trigger the next leg cycle if needed.
-          float deviation = leg.calcDeviationFromNatural();
-          if (deviation > .001f) {
-            leg.triggerCycle();
-            System.out.println("Triggered cycle: " + leg + ", t=" + PEngine.t);
-            lastMovedLeg = leg;
-            queuedMoveLeg = legs.get(a + 1);
-            numMovingLegs++;
+      if (numMovingLegs != 0) {
+        for (int a = 0; a < legs.size(); a++) {
+          Leg leg = legs.get(a);
+          if (!leg.inCycle && (leg == queuedMoveLeg && lastMovedLeg != null && lastMovedLeg.inCycle &&
+                                lastMovedLeg.cycleT >= timeBetweenConsecutiveLegMoves)) {
+            // If there are no moving legs or the cycle just finished, we can trigger the next leg cycle if needed.
+            float deviation = leg.calcDeviationFromNatural();
+            if (deviation > minimumDeviationForKickOff) {
+              kickOffMove(leg,a);
+            }
           }
+        }
+      } else {
+        // If there are no moving legs, find the leg with the highest deviation and kick it off.
+
+        Leg bestLeg = null;
+        float bestDeviation = 0;
+        int bestLegIndex = -1;
+        for (int a = 0; a < legs.size(); a++) {
+          Leg leg = legs.get(a);
+          float deviation = leg.calcDeviationFromNatural();
+          if (deviation > minimumDeviationForKickOff && (bestLeg == null || deviation > bestDeviation)) {
+            bestDeviation = deviation;
+            bestLeg = leg;
+            bestLegIndex = a;
+          }
+        }
+        if (bestLeg != null) {
+          kickOffMove(bestLeg,bestLegIndex);
         }
       }
     }
+  }
+
+  private void kickOffMove(Leg leg, int legIndex) {
+    if (leg.inCycle) {return;}
+    numMovingLegs++;
+    leg.triggerCycle();
+    System.out.println("Triggered cycle: " + leg + ", t=" + PEngine.t);
+    lastMovedLeg = leg;
+    queuedMoveLeg = legs.get(legIndex + 1);
   }
 
   @Override public void reset() {
@@ -134,18 +157,41 @@ public class PLegPlacer implements PPool.Poolable {
     private final PVec3 prevEEPosGoal = PVec3.obtain();
     private final PVec4 prevEERotGoal = PVec4.obtain();
     @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private PModelInstance.Node endEffector;
-    private PPlanarIKLimb limb;
-    @Getter(value = AccessLevel.PUBLIC)
     @Setter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     /** X: step up time[0, 1], Y: step down time[0, 1]. Parameter: cycleTime. */
         PParametricCurve.PParametricCurve2 stepTimeOffsetsCurve = PParametricCurve.obtain2().addKeyFrame(0, .25f, .75f);
     /** Range: [0, 1]. */
-    private float currentStepTime = 0;
+    private float cycleT = 0;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private PModelInstance.Node endEffector;
     private PLegPlacer legPlacer;
+    private PPlanarIKLimb limb;
     private boolean upThisCycle = false, downThisCycle = false, inCycle = false, eeGoalFlatSetThisCycle = false;
+
+    private Leg() {
+      reset();
+    }
+
+    @Override public void reset() {
+      legPlacer = null;
+      curEEPos.setZero();
+      curEERot.setIdentityQuaternion();
+      curEEPosGoal.reset();
+      curEERotGoal.setIdentityQuaternion();
+      prevEEPosGoal.setZero();
+      prevEERotGoal.setIdentityQuaternion();
+      naturalEEPosLocal.setZero();
+      naturalEERotLocal.setIdentityQuaternion();
+      curEEPosGoal.setGoalFlat(PVec3.ZERO);
+      curEEPosGoal.setDynamicsParams(8, 1, 0);
+      upThisCycle = false;
+      downThisCycle = false;
+      eeGoalFlatSetThisCycle = false;
+      cycleT = 0;
+      inCycle = false;
+    }
 
     /**
      * Calculates the deviation from the natural position and orientation of the end effector.
@@ -168,47 +214,50 @@ public class PLegPlacer implements PPool.Poolable {
     boolean frameUpdate(PPool.PoolBuffer pool, PVec3 modelPosition, PVec4 modelRotation, PVec3 left, PVec3 up,
                         PVec3 forward, PVec3 velocity) {
       boolean justFinishedCycle = false;
+      float cycleDt = PEngine.dt / legPlacer.cycleTime();
+      float nextCycleT = cycleT + cycleDt;
+      boolean justUp = false;
       if (inCycle) {
         PVec2 stepTimeOffsets = stepTimeOffsetsCurve.get(pool.vec2(), legPlacer.cycleTime());
         if (!upThisCycle) {
           // Before foot up.
-          if (currentStepTime > stepTimeOffsets.x()) {
-            endEffector.worldTransform().getTranslation(prevEEPosGoal);
-            endEffector.worldTransform().getRotation(prevEERotGoal);
+          if (nextCycleT > stepTimeOffsets.x()) {
             upThisCycle = true;
+            justUp = true;
           }
         } else if (!downThisCycle) {
           // Before foot down.
           // Figure out the goal position and orientation of the foot at the down time.
-          float timeLeftBeforeFootDown = (stepTimeOffsets.y() - currentStepTime) * legPlacer.cycleTime();
-          PVec3 expectedModelTranslationDeltaAtFootDown = pool.vec3(velocity).scl(timeLeftBeforeFootDown);
-          PVec3 expectedFootPositionAtFootDown =
-              calcNaturalEEPos(pool.vec3()).add(expectedModelTranslationDeltaAtFootDown);
+          float timeLeftBeforeEnd = (1 - cycleT) * legPlacer.cycleTime();
+          float timeLeftBeforeFootDown = (stepTimeOffsets.y() - cycleT) * legPlacer.cycleTime();
+          PVec3 expectedModelTranslationDeltaAtEnd = pool.vec3(velocity).scl(timeLeftBeforeEnd);
+          PVec3 expectedFootPositionAtEnd = calcNaturalEEPos(pool.vec3()).add(expectedModelTranslationDeltaAtEnd);
           // The EEPosGoal lets us smooth out the goal.
-          if (eeGoalFlatSetThisCycle) {
-            curEEPosGoal.setGoal(expectedFootPositionAtFootDown);
-          } else {
-            curEEPosGoal.setGoalFlat(expectedFootPositionAtFootDown);
+          curEEPosGoal.setGoal(expectedFootPositionAtEnd);
+          if (!eeGoalFlatSetThisCycle) {
+            curEEPosGoal.vel().setZero();
+            curEEPosGoal.pos().set(expectedFootPositionAtEnd);
             eeGoalFlatSetThisCycle = true;
           }
           curEEPosGoal.frameUpdate();
-          if (endEffector.id().equals("Foot.R")) {
-            System.out.println(expectedFootPositionAtFootDown + ", " + curEEPos);
-          }
           PVec3 eePosGoal = curEEPosGoal.pos();
           // Lerp between the previous position goal and the smoothed goal value.
-          float lerpMix = (stepTimeOffsets.y() - currentStepTime) / (stepTimeOffsets.y() - stepTimeOffsets.x());
+          float lerpMix = 1 - (stepTimeOffsets.y() - cycleT) / (stepTimeOffsets.y() - stepTimeOffsets.x());
+          lerpMix = PNumberUtils.clamp(lerpMix, 0, 1);
           PVec3 lerpedPos = pool.vec3(prevEEPosGoal).lerp(eePosGoal, lerpMix);
           curEEPos.set(lerpedPos);
-          if (currentStepTime > stepTimeOffsets.y()) {
+          if (endEffector.id().equals("Foot.L")) {
+            System.out.println(expectedFootPositionAtEnd + ", " + curEEPos + ", " + lerpMix);
+          }
+          if (nextCycleT > stepTimeOffsets.y()) {
             downThisCycle = true;
           }
         } else {
           // After foot down.
         }
-        currentStepTime += PEngine.dt / legPlacer.cycleTime();
-        if (currentStepTime > 1) {
-          currentStepTime = 0;
+        cycleT = nextCycleT;
+        if (cycleT > 1) {
+          cycleT = 0;
           upThisCycle = false;
           downThisCycle = false;
           inCycle = false;
@@ -217,15 +266,18 @@ public class PLegPlacer implements PPool.Poolable {
         }
       }
       limb.performIkToReach(curEEPos);
-      endEffector.worldTransform().getTranslation(curEEPos);
-      endEffector.worldTransform().getRotation(curEERot);
+      if (justUp) {
+        // Now that we've applied IK, if we are just up, set the move start variables.
+        endEffector.worldTransform().getTranslation(curEEPos);
+        prevEEPosGoal.set(curEEPos);
+        endEffector.worldTransform().getRotation(prevEERotGoal);
+      }
       return justFinishedCycle;
     }
 
     private void recalc() {
       endEffector.templateNode().modelSpaceTransform().getTranslation(naturalEEPosLocal);
       endEffector.templateNode().modelSpaceTransform().getRotation(naturalEERotLocal);
-      PModelInstance modelInstance = legPlacer.modelInstance;
       calcNaturalEEPos(curEEPos);
       calcNaturalEERot(curEERot);
     }
@@ -237,32 +289,10 @@ public class PLegPlacer implements PPool.Poolable {
       return out;
     }
 
-    @Override public void reset() {
-      legPlacer = null;
-      curEEPos.setZero();
-      curEERot.setIdentityQuaternion();
-      curEEPosGoal.reset();
-      curEERotGoal.setIdentityQuaternion();
-      prevEEPosGoal.setZero();
-      prevEERotGoal.setIdentityQuaternion();
-      naturalEEPosLocal.setZero();
-      naturalEERotLocal.setIdentityQuaternion();
-      curEEPosGoal.setGoalFlat(PVec3.ZERO);
-      curEEPosGoal.setDynamicsParams(8,1,0);
-      upThisCycle = false;
-      downThisCycle = false;
-      eeGoalFlatSetThisCycle = false;
-      currentStepTime = 0;
-      inCycle = false;
-    }
-
     public String toString() {
       return "[Leg ee: " + endEffector.id() + "]";
     }
 
-    private Leg() {
-      reset();
-    }
     void triggerCycle() {
       inCycle = true;
     }

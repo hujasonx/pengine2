@@ -24,6 +24,7 @@ import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.lighting.PEnvironment;
 import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PSODynamics;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.util.PCharacterCameraController;
@@ -47,7 +48,6 @@ public class CybertagGame implements PGame {
   private PVec3 testIKFrontGoal = PVec3.obtain();
   private PModelInstance testikModelInstance;
   private World world;
-
   @Override public void frameUpdate() {
     PPool.PoolBuffer pool = PPool.getBuffer();
     if (PKeyboard.isFrameJustDown(Input.Keys.ESCAPE)) {

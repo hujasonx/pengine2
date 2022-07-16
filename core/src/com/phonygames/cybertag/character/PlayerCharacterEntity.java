@@ -152,7 +152,6 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     worldTransform().setToTranslation(characterController.getPos(pool.vec3())).rotate(0, -1, 0, facingDirAng);
     modelInstance.worldTransform().set(worldTransform());
     modelInstance.resetTransformsFromTemplates();
-    legPlacer.frameUpdate(characterController.getVel(pool.vec3()));
     // Stop the wrist transforms from propagating recursive transform recalcs, since hand animations will be applied
     // by the gun.
     PModelInstance.Node wristR = modelInstance.getNode("Wrist.R");
@@ -160,6 +159,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     wristR.stopWorldTransformRecursionAt(true);
     wristL.stopWorldTransformRecursionAt(true);
     modelInstance.recalcTransforms();
+    legPlacer.frameUpdate(characterController.getVel(pool.vec3()));
     if (PKeyboard.isFrameJustDown(Input.Keys.R)) {
       gun.reload();
     }

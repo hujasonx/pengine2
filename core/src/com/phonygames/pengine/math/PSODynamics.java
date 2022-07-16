@@ -99,6 +99,7 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
     T temp = tPool.obtain().set(goal).add(goalDelta, k3).add(pos, -1).add(vel, -k1);
     vel.add(temp, PEngine.dt / k2Stable);
     temp.free();
+    goalDelta.free();
   }
 
   public void setDynamicsParams(float freq, float zeta, float response) {
@@ -116,6 +117,7 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
     this.goal.set(goal);
     this.goalPrev.set(goal);
     this.vel.setZero();
+    this.pos.set(goal);
   }
 
   public void setVel(T vel) {
