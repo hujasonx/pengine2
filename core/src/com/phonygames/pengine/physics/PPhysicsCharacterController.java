@@ -15,10 +15,16 @@ import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
-public class PPhysicsCharacterController implements Disposable {
-  public final float radius, height, crouchHeight, stepHeight, mass;
+public class PPhysicsCharacterController implements Disposable, PPool.Poolable {
+  // #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
+  // #pragma end - PPool.Poolable
+  public float radius, height, crouchHeight, stepHeight, mass;
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 manualVelocity = PVec3.obtain();
@@ -26,14 +32,14 @@ public class PPhysicsCharacterController implements Disposable {
   @Accessors(fluent = true)
   /** The newly calculated velocity calculated in postLogicUpdate
    and applied to the rigidbody in the next preLogicUpdate. */ private final PVec3 newLinVel = PVec3.obtain();
-  private final float rayCastFloorExtra = .2f;
+  private float rayCastFloorExtra = .2f;
   public float selfAcceleration = 30;
   private transient float capsuleOffsetYFromOrigin = 0;
   private PRigidBody capsuleRigidBody;
   private PPhysicsCapsuleShape capsuleShape;
-  private transient float crouchCapsuleOffsetYFromOrigin;
-  private PRigidBody crouchCapsuleRigidBody;
-  private PPhysicsCapsuleShape crouchCapsuleShape;
+//  private transient float crouchCapsuleOffsetYFromOrigin;
+//  private PRigidBody crouchCapsuleRigidBody;
+//  private PPhysicsCapsuleShape crouchCapsuleShape;
   private boolean forceCrouching = false;
   private transient boolean isOnGround = false;
   private transient boolean isOnGroundPrev = false;
@@ -42,24 +48,45 @@ public class PPhysicsCharacterController implements Disposable {
   // How long after a jump is triggered that the jump will be enforced (e.g. not bringing the character to the
   // ground)
 
-  public PPhysicsCharacterController(float mass, float radius, float height, float crouchHeight, float stepHeight) {
-    this.mass = mass;
-    this.radius = radius;
-    this.height = height;
-    this.crouchHeight = crouchHeight;
-    this.stepHeight = stepHeight;
-    capsuleOffsetYFromOrigin = (height - stepHeight) / 2 + stepHeight;
-    capsuleShape = new PPhysicsCapsuleShape(new btCapsuleShape(radius, (height - stepHeight - 2 * radius)));
-    capsuleRigidBody =
-        PRigidBody.obtain(capsuleShape, mass, PPhysicsEngine.CHARACTER_CONTROLLER_FLAG, PPhysicsEngine.STATIC_FLAG | PPhysicsEngine.CHARACTER_CONTROLLER_FLAG);
-    capsuleRigidBody.setAngularFactor(0, 0, 0);
-    capsuleRigidBody.setFriction(0);
-    capsuleRigidBody.runnableOnPostLogicUpdate(new PRigidBody.RunnableOnPostLogicUpdate() {
+  private PPhysicsCharacterController() {
+
+  }
+
+  private static PPool<PPhysicsCharacterController> staticPool = new PPool<PPhysicsCharacterController>() {
+    @Override protected PPhysicsCharacterController newObject() {
+      return new PPhysicsCharacterController();
+    }
+  };
+
+  public static PPhysicsCharacterController obtain(float mass, float radius, float height, float crouchHeight, float stepHeight) {
+    PPhysicsCharacterController ret = staticPool.obtain();
+    ret.mass = mass;
+    ret.radius = radius;
+    ret.height = height;
+    ret.crouchHeight = crouchHeight;
+    ret.stepHeight = stepHeight;
+    ret.capsuleOffsetYFromOrigin = (height - stepHeight) / 2 + stepHeight;
+    ret.capsuleShape = new PPhysicsCapsuleShape(new btCapsuleShape(radius, (height - stepHeight - 2 * radius)));
+    ret.capsuleRigidBody = PRigidBody.obtain(ret.capsuleShape, mass, PPhysicsEngine.CHARACTER_CONTROLLER_FLAG,
+                                         PPhysicsEngine.STATIC_FLAG | PPhysicsEngine.CHARACTER_CONTROLLER_FLAG);
+    ret.capsuleRigidBody.setAngularFactor(0, 0, 0);
+    ret.capsuleRigidBody.setFriction(0);
+    ret.capsuleRigidBody.runnableOnPostLogicUpdate(new PRigidBody.RunnableOnPostLogicUpdate() {
       @Override public void afterPostLogicUpdate(PRigidBody rigidBody) {
-        processRigidBodyAfterLogicUpdate(rigidBody);
+        ret.processRigidBodyAfterLogicUpdate(rigidBody);
       }
     });
+    return ret;
+  }
+
+  public PPhysicsCharacterController addToDynamicsWorld() {
     capsuleRigidBody.addToDynamicsWorld();
+    return this;
+  }
+
+  public PPhysicsCharacterController removeFromDynamicsWorld() {
+    capsuleRigidBody.removeFromDynamicsWorld();
+    return this;
   }
 
   private void processRigidBodyAfterLogicUpdate(PRigidBody rigidBody) {
@@ -121,9 +148,10 @@ public class PPhysicsCharacterController implements Disposable {
     pool.free();
   }
 
-  public boolean isOnGround() {
-    // Return the prev value because rigidbody velocities and positions are one logic timestep behind.
-    return isOnGroundPrev;
+  @Override public void reset() {
+    if (capsuleRigidBody != null) {
+      capsuleRigidBody.free();
+    }
   }
 
   @Override public void dispose() {
@@ -139,6 +167,11 @@ public class PPhysicsCharacterController implements Disposable {
   public PVec3 getVel(PVec3 out) {
     out.set(capsuleRigidBody.vel());
     return out;
+  }
+
+  public boolean isOnGround() {
+    // Return the prev value because rigidbody velocities and positions are one logic timestep behind.
+    return isOnGroundPrev;
   }
 
   public void preLogicUpdate() {

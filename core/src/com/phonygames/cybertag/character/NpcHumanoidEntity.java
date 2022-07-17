@@ -1,35 +1,25 @@
 package com.phonygames.cybertag.character;
 
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.math.MathUtils;
-import com.phonygames.cybertag.gun.Gun;
-import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
-import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.character.PLegPlacer;
 import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;
-import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
-import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PSODynamics;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
-import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringMap;
-
-import lombok.val;
 
 public class NpcHumanoidEntity extends CharacterEntity {
+  /** The character controller should be reused between instances. */
   private final PPhysicsCharacterController characterController;
   private final PVec3 facingDir = PVec3.obtain().set(1, 0, 0), cameraOffsetFromOrigin =
       PVec3.obtain().set(0, 1.6f, .15f);
@@ -48,8 +38,9 @@ public class NpcHumanoidEntity extends CharacterEntity {
 
   public NpcHumanoidEntity() {
     super();
-    characterController = new PPhysicsCharacterController(1, .3f, 1.8f, .5f, .2f);
+    characterController = PPhysicsCharacterController.obtain(1, .3f, 1.8f, .5f, .2f);
     characterController.setPos(10, 10, 10);
+    characterController.addToDynamicsWorld();
     initModelInstance();
     walkCycleTSpring.setDynamicsParams(2, 1, 0);
     hipYawSpring.setDynamicsParams(2, 1, 0);
@@ -130,9 +121,10 @@ public class NpcHumanoidEntity extends CharacterEntity {
       PVec3 pos = pool.vec3();
       modelInstance.worldTransform().setToTranslation(characterController.getPos(pos));
       modelInstance.recalcTransforms();
-      PDebugRenderer.line(pos,0,0,pos,10,0,PVec4.ONE ,PVec4.ONE,2, 2);
+      PDebugRenderer.line(pos, 0, 0, pos, 10, 0, PVec4.ONE, PVec4.ONE, 2, 2);
       if (PKeyboard.isFrameJustDown(Input.Keys.BACKSLASH)) {
-modelInstance.ragdoll(PVec3.Y);
+        modelInstance.ragdoll(PVec3.Y);
+        characterController.removeFromDynamicsWorld();
       }
     }
   }
