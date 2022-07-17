@@ -1,6 +1,7 @@
 package com.phonygames.cybertag.world;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.phonygames.cybertag.character.NpcHumanoidEntity;
 import com.phonygames.cybertag.character.PlayerCharacterEntity;
 import com.phonygames.cybertag.world.lasertag.LasertagBuildGenDoorProcessor;
 import com.phonygames.cybertag.world.lasertag.LasertagBuilding;
@@ -18,6 +19,7 @@ import com.phonygames.pengine.math.aabb.PIntAABB;
 public class World {
   public final LasertagWorld lasertagWorld;
   private PlayerCharacterEntity playerCharacter;
+  private NpcHumanoidEntity npcHumanoidEntity;
 
   public World() {
     LasertagWorldGen worldGen = new LasertagWorldGen(this);
@@ -57,24 +59,29 @@ public class World {
     LasertagRoomGenWalkwayProcessor.processRoomWalkways(buildingGen2);
     this.lasertagWorld = worldGen.build();
     playerCharacter = new PlayerCharacterEntity();
+    npcHumanoidEntity = new NpcHumanoidEntity();
   }
 
   public void logicUpdate() {
     lasertagWorld.logicUpdate();
     playerCharacter.logicUpdate();
+    npcHumanoidEntity.logicUpdate();
   }
 
   public void preLogicUpdate() {
     playerCharacter.preLogicUpdate();
+    npcHumanoidEntity.preLogicUpdate();
   }
 
   public void frameUpdate() {
     lasertagWorld.frameUpdate();
     playerCharacter.frameUpdate();
+    npcHumanoidEntity.frameUpdate();
   }
 
   public void render(PRenderContext renderContext) {
     lasertagWorld.render(renderContext);
     playerCharacter.render(renderContext);
+    npcHumanoidEntity.render(renderContext);
   }
 }

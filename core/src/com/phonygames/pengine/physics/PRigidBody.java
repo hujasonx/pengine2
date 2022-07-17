@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.bullet.collision.ContactResultCallback;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PPool;
@@ -51,6 +52,10 @@ public class PRigidBody implements PPool.Poolable {
   @Accessors(fluent = true)
   private final PVec3 pos = PVec3.obtain(), vel = PVec3.obtain();
   private final PVec3 posPrev = PVec3.obtain();
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private PModelInstance.Node modelInstanceNode = null;
 
   private PRigidBody() {
   }
@@ -164,6 +169,7 @@ public class PRigidBody implements PPool.Poolable {
     worldTransformLogicPrev().idt();
     collisionShape = null;
     runnableOnPostLogicUpdate = null;
+    modelInstanceNode = null;
     pos.setZero();
     posPrev.setZero();
   }

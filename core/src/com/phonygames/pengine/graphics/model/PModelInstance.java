@@ -285,6 +285,9 @@ public class PModelInstance {
         rigidBody =
             PRigidBody.obtain(templateNode.physicsCollisionShape, templateNode.boneMass, PPhysicsEngine.BONE_FLAG,
                               PPhysicsEngine.ALL_FLAG);
+        rigidBody.setLinearVelocity(0, 0, 0);
+        rigidBody.setAngularFactor(0, 0, 0);
+        rigidBody.modelInstanceNode(this);
       }
       return rigidBody != null;
     }

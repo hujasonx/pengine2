@@ -113,6 +113,7 @@ public class PModelGen implements PPostableTask {
         val e = it.next();
         if (e.v().indices().isEmpty()) {continue;}
         btBvhTriangleMeshShape triangleMeshShape = e.v().getTriangleMeshShape();
+        triangleMeshShape.setMargin(.04f);
         PPhysicsBvhTriangleMeshShape collisionShape = new PPhysicsBvhTriangleMeshShape(triangleMeshShape) {};
         builder.model.staticCollisionShapes().put(e.k(), collisionShape);
       }

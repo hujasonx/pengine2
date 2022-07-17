@@ -51,7 +51,7 @@ public class PPhysicsCharacterController implements Disposable {
     capsuleOffsetYFromOrigin = (height - stepHeight) / 2 + stepHeight;
     capsuleShape = new PPhysicsCapsuleShape(new btCapsuleShape(radius, (height - stepHeight - 2 * radius)));
     capsuleRigidBody =
-        PRigidBody.obtain(capsuleShape, mass, PPhysicsEngine.CHARACTER_CONTROLLER_FLAG, PPhysicsEngine.STATIC_FLAG);
+        PRigidBody.obtain(capsuleShape, mass, PPhysicsEngine.CHARACTER_CONTROLLER_FLAG, PPhysicsEngine.STATIC_FLAG | PPhysicsEngine.CHARACTER_CONTROLLER_FLAG);
     capsuleRigidBody.setAngularFactor(0, 0, 0);
     capsuleRigidBody.setFriction(0);
     capsuleRigidBody.runnableOnPostLogicUpdate(new PRigidBody.RunnableOnPostLogicUpdate() {
