@@ -169,7 +169,7 @@ public class PPhysicsCharacterController implements Disposable {
     PMat4 tempMat = PMat4.obtain();
     rigidBodyPos.set(x, y + capsuleOffsetYFromOrigin, z);
     tempMat.setToTranslation(rigidBodyPos);
-    capsuleRigidBody.setWorldTransform(tempMat);
+    capsuleRigidBody.setWorldTransformFlat(tempMat);
     rigidBodyPos.free();
     tempMat.free();
     capsuleRigidBody.activate();

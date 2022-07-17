@@ -195,9 +195,16 @@ public class PRigidBody implements PPool.Poolable {
   public PRigidBody setWorldTransform(PMat4 mat4) {
     PAssert.isNotNull(rigidBody);
     rigidBody.setWorldTransform(mat4.getBackingMatrix4());
-    worldTransformLogicPrev().set(mat4);
     worldTransformLogicCurrent().set(mat4);
-    frameWorldTransform().set(mat4);
+    return this;
+  }
+
+  public PRigidBody setWorldTransformFlat(PMat4 mat4) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setWorldTransform(mat4.getBackingMatrix4());
+    worldTransformLogicCurrent().set(mat4);
+        worldTransformLogicPrev().set(mat4);
+        frameWorldTransform().set(mat4);
     return this;
   }
 

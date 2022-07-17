@@ -217,8 +217,8 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
         if (node.rigidBody() != null) {
           PMat4 tempMat = PMat4.obtain().set(node.worldTransform()).mul(node.templateNode().physicsCollisionShapeOffset());
           node.rigidBody().getWorldTransform(tempMat);
-          PDebugRenderer.line(node.worldTransform().getTranslation(PVec3.obtain()), tempMat.getTranslation(PVec3.obtain()),
-                              PVec4.ONE, PVec4.ZERO, 2, 2);
+//          PDebugRenderer.line(node.worldTransform().getTranslation(PVec3.obtain()), tempMat.getTranslation(PVec3.obtain()),
+//                              PVec4.ONE, PVec4.ZERO, 2, 2);
           tempMat.free();
         }
       }
