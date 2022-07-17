@@ -107,6 +107,16 @@ public class PEngine extends ApplicationAdapter {
         Gdx.input.isKeyJustPressed(Input.Keys.D)) {
       PPhysicsEngine.enableDebugRender(!PPhysicsEngine.enableDebugRender());
     }
+    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.PAGE_UP)) {
+      timeScale *= 1.25;
+    }
+    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.PAGE_DOWN)) {
+      timeScale /= 1.25;
+    }
+    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.HOME)) {
+      timeScale = 1;
+    }
+
   }
 
   private void processLogicUpdateForFrame() {

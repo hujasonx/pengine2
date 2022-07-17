@@ -7,6 +7,7 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PBasic;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.PStringUtils;
 import com.phonygames.pengine.util.PWriteLockable;
 
 import lombok.AccessLevel;
@@ -138,13 +139,6 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     backingMatrix4.idt();
   }
 
-  public PMat4 rotate(float axisX, float axisY, float axisZ, float rad) {
-    synchronized (IDT) {
-      backingMatrix4.rotateRad(axisX, axisY, axisZ, rad);
-    }
-    return this;
-  }
-
   public PMat4 rotate(PVec4 rotation) {
     backingMatrix4.rotate(rotation.backingQuaterion());
     return this;
@@ -152,6 +146,13 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
 
   public PMat4 rotate(PVec3 axis, float rad) {
     return this.rotate(axis.x(), axis.y(), axis.z(), rad);
+  }
+
+  public PMat4 rotate(float axisX, float axisY, float axisZ, float rad) {
+    synchronized (IDT) {
+      backingMatrix4.rotateRad(axisX, axisY, axisZ, rad);
+    }
+    return this;
   }
 
   public PMat4 scl(float scl) {
@@ -245,6 +246,29 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
   @Override public PMat4 set(PMat4 other) {
     this.forWriting().backingMatrix4.set(other.backingMatrix4);
     return this;
+  }
+
+  @Override public String toString() {
+    return "[PMat4]\n\t[" +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[0]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[4]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[8]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[12]), 7) +
+           "]\n\t[" +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[1]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[5]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[9]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[13]), 7) +
+           "]\n\t[" +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[2]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[6]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[10]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[14]), 7) +
+           "]\n\t[" +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[3]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[7]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[11]), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingMatrix4.val[15]), 7) + "]";
   }
 
   public PMat4 tra() {

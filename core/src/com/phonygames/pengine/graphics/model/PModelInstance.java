@@ -4,11 +4,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.PPhysicsEngine;
+import com.phonygames.pengine.physics.PRigidBody;
 import com.phonygames.pengine.physics.PStaticBody;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
@@ -136,6 +140,7 @@ public class PModelInstance {
 
   /**
    * Outputs the node transform values into the map.
+   *
    * @param map
    * @param useBindPose If set, use the bind pose instead of the actual pose.
    * @param alpha
@@ -177,6 +182,7 @@ public class PModelInstance {
 
   /**
    * Sets the node transform values from the values in the map.
+   *
    * @param map
    * @param alpha how much to affect the transforms by.
    * @return
@@ -229,6 +235,10 @@ public class PModelInstance {
     @Accessors(fluent = true)
     // If Set, this node will not recurse on its children when recalculating world transforms.
     boolean stopWorldTransformRecursionAt = false;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private PRigidBody rigidBody;
+    private boolean rigidBodyDrivesMovement = false;
 
     private Node(PModelInstance owner, PModel.Node templateNode, Node parent) {
       this.owner = owner;
@@ -245,6 +255,17 @@ public class PModelInstance {
       if (parent != null) {
         parent.children().add(this);
       }
+      genRigidBodyFromTemplate();
+    }
+
+    /** Returns true if the rigid body is not null. */
+    private boolean genRigidBodyFromTemplate() {
+      if (templateNode.physicsCollisionShape != null && rigidBody == null) {
+        rigidBody =
+            PRigidBody.obtain(templateNode.physicsCollisionShape, templateNode.boneMass, PPhysicsEngine.BONE_FLAG,
+                              PPhysicsEngine.ALL_FLAG);
+      }
+      return rigidBody != null;
     }
 
     /**
@@ -290,10 +311,17 @@ public class PModelInstance {
     }
 
     public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform, boolean forceRecursionIfFirst) {
-      if (inheritTransform) {
+      if (rigidBody != null && rigidBodyDrivesMovement) {
+        rigidBody.getWorldTransform(worldTransform());
+      } else if (inheritTransform) {
         worldTransform().set(parentWorldTransform).mul(transform());
       } else {
         worldTransform().set(transform());
+      }
+      if (rigidBody != null && !rigidBodyDrivesMovement) {
+        PMat4 tempMat = PMat4.obtain().set(worldTransform()).mul(templateNode.physicsCollisionShapeOffset());
+        rigidBody.setWorldTransform(tempMat);
+        tempMat.free();
       }
       worldTransformInvTra().set(worldTransform()).invTra();
       for (int a = 0; a < glNodes().size(); a++) {

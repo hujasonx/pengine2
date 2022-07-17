@@ -112,11 +112,24 @@ public class PLegPlacer implements PPool.Poolable {
         // If there are no moving legs, find the leg with the highest deviation and kick it off.
         Leg bestLeg = null;
         float bestDeviation = 0;
+        float bestVelocityScore = 0;
         int bestLegIndex = -1;
+        PVec3 modelSpaceVelocity = pool.vec3(left.dot(velocity), up.dot(velocity), forward.dot(velocity));
         for (int a = 0; a < legs.size(); a++) {
           Leg leg = legs.get(a);
           float deviation = leg.calcDeviationFromNatural();
-          if (deviation > minimumDeviationForKickOff && (bestLeg == null || deviation > bestDeviation)) {
+          if (deviation > minimumDeviationForKickOff && (bestLeg == null || deviation > bestDeviation - .001f)) {
+            if (bestLegIndex != -1 && Math.abs(deviation - bestDeviation) < .01f) {
+              // If the deviations are pretty similar, compare velocity scores instead. This should help select
+              // the right foot if moving right, etc.
+              // TODO: velocity score doesn't work.
+              PVec3 endEffectorMSBindTranslation =
+                  leg.endEffector.templateNode().modelSpaceTransform().getTranslation(pool.vec3());
+              float velocityScore = modelSpaceVelocity.dot(endEffectorMSBindTranslation);
+              if (velocityScore > bestVelocityScore) {
+                bestVelocityScore = velocityScore;
+              } else {continue;}
+            }
             bestDeviation = deviation;
             bestLeg = leg;
             bestLegIndex = a;

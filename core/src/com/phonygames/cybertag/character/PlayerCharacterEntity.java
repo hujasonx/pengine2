@@ -6,6 +6,7 @@ import com.phonygames.cybertag.gun.Gun;
 import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.character.PLegPlacer;
+import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -24,6 +25,8 @@ import com.phonygames.pengine.physics.PPhysicsCharacterController;
 import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
+
+import lombok.val;
 
 public class PlayerCharacterEntity extends CharacterEntity implements PCharacterCameraController.Delegate {
   private final PPhysicsCharacterController characterController;
@@ -206,6 +209,18 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     gun.applyTransformsToCharacterModelInstance(modelInstance);
     modelInstance.recalcTransforms();
     pool.free();
+    try (val it = modelInstance.nodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        PModelInstance.Node node = e.v();
+        if (node.rigidBody() != null) {
+          PMat4 tempMat = PMat4.obtain().set(node.worldTransform()).mul(node.templateNode().physicsCollisionShapeOffset());
+          PDebugRenderer.line(node.worldTransform().getTranslation(PVec3.obtain()), tempMat.getTranslation(PVec3.obtain()),
+                              PVec4.ONE, PVec4.ZERO, 2, 2);
+          tempMat.free();
+        }
+      }
+    }
   }
 
   private void frameUpdateSpine(PPool.PoolBuffer pool) {

@@ -9,6 +9,7 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
@@ -188,6 +189,15 @@ public class PModel {
     @Setter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     boolean inheritTransform;
+    protected @Nullable PPhysicsCollisionShape physicsCollisionShape;
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
+    private final PMat4 physicsCollisionShapeOffset = PMat4.obtain();
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
+    private final PMat4 physicsCollisionShapeOffsetInv = PMat4.obtain();
+    protected float boneMass = 0;
+
     private boolean modelSpaceTransformSet = false;
 
     private Node(String id, Node parent, PList<PGlNode> glNodes) {
