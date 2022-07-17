@@ -120,6 +120,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       legPlacer.cycleTimeCurve().addKeyFrame(5, .6f);
       leftLegPlacerLeg = legPlacer.addLeg(leftLegLimb, "Foot.L").preventEEAboveBase(true).maximumStrengthDis(1);
       rightLegPlacerLeg = legPlacer.addLeg(rightLegLimb, "Foot.R").preventEEAboveBase(true).maximumStrengthDis(1);
+      modelInstance.addBoneRigidBodiesToSimulation();
     }
   }
 
@@ -215,6 +216,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
         PModelInstance.Node node = e.v();
         if (node.rigidBody() != null) {
           PMat4 tempMat = PMat4.obtain().set(node.worldTransform()).mul(node.templateNode().physicsCollisionShapeOffset());
+          node.rigidBody().getWorldTransform(tempMat);
           PDebugRenderer.line(node.worldTransform().getTranslation(PVec3.obtain()), tempMat.getTranslation(PVec3.obtain()),
                               PVec4.ONE, PVec4.ZERO, 2, 2);
           tempMat.free();

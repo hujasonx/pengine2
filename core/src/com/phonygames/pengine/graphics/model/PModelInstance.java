@@ -4,13 +4,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.PPhysicsEngine;
 import com.phonygames.pengine.physics.PRigidBody;
 import com.phonygames.pengine.physics.PStaticBody;
@@ -76,6 +73,30 @@ public class PModelInstance {
         PModel.Node child = modelNode.children().get(a);
         modelNodesToProcess.add(child);
         childToParentNodeMap.put(child, node);
+      }
+    }
+  }
+
+  public void addBoneRigidBodiesToSimulation() {
+    try (val it = nodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        Node node = e.v();
+        if (node.rigidBody != null && !node.rigidBody.isInDynamicsWorld()) {
+          node.rigidBody.addToDynamicsWorld();
+        }
+      }
+    }
+  }
+
+  public void removeBoneRigidBodiesFromSimulation() {
+    try (val it = nodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        Node node = e.v();
+        if (node.rigidBody != null && node.rigidBody.isInDynamicsWorld()) {
+          node.rigidBody.removeFromDynamicsWorld();
+        }
       }
     }
   }

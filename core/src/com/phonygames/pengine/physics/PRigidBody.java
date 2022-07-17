@@ -39,6 +39,8 @@ public class PRigidBody implements PPool.Poolable {
       frameWorldTransform = PMat4.obtain();
   private PPhysicsCollisionShape collisionShape;
   private int group, mask;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private boolean isInDynamicsWorld;
   private float prevLogicT = -1, prevFrameT = -1;
   private btRigidBody rigidBody;
@@ -110,7 +112,7 @@ public class PRigidBody implements PPool.Poolable {
     return mat4;
   }
 
-  public PMat4 getWorldTransform(PMat4 mat4) {
+  public PMat4 getWorldTransform(PMat4 out) {
     PAssert.isNotNull(rigidBody);
     if (prevFrameT != PEngine.t) {
       // Recalculate the frame transform.
@@ -118,8 +120,8 @@ public class PRigidBody implements PPool.Poolable {
                            .lerp(worldTransformLogicCurrent(), PEngine.logicupdateframeratio);
       prevFrameT = PEngine.t;
     }
-    mat4.set(frameWorldTransform());
-    return mat4;
+    out.set(frameWorldTransform());
+    return out;
   }
 
   protected void postLogicUpdate() {
@@ -193,7 +195,9 @@ public class PRigidBody implements PPool.Poolable {
   public PRigidBody setWorldTransform(PMat4 mat4) {
     PAssert.isNotNull(rigidBody);
     rigidBody.setWorldTransform(mat4.getBackingMatrix4());
+    worldTransformLogicPrev().set(mat4);
     worldTransformLogicCurrent().set(mat4);
+    frameWorldTransform().set(mat4);
     return this;
   }
 

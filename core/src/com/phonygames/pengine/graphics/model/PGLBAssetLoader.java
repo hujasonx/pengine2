@@ -200,6 +200,7 @@ public class PGLBAssetLoader extends AsynchronousAssetLoader<PModel, PGLBAssetLo
         physicsNode.mass = Float.parseFloat(value);
       }
     }
+    // If we are a center of mass node, calculate the center orientations.
     if (couldBeCOMNode) {
       physicsNode.centerOrientation.getBackingMatrix4().set(node.translation, node.rotation, tempVector3_111);
       if (parentModelNode != null && node.inheritTransform) {
