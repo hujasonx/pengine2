@@ -8,7 +8,9 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.physics.PPhysicsEngine;
+import com.phonygames.pengine.physics.PRagdollUtils;
 import com.phonygames.pengine.physics.PRigidBody;
 import com.phonygames.pengine.physics.PStaticBody;
 import com.phonygames.pengine.util.PList;
@@ -48,6 +50,9 @@ public class PModelInstance {
   @Setter
   // You can hook swap this out whenever you like.
   private PRenderContext.DataBufferEmitter dataBufferEmitter;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private boolean isRagdoll = false;
 
   public PModelInstance(PModel model) {
     this.model = model;
@@ -84,18 +89,6 @@ public class PModelInstance {
         Node node = e.v();
         if (node.rigidBody != null && !node.rigidBody.isInDynamicsWorld()) {
           node.rigidBody.addToDynamicsWorld();
-        }
-      }
-    }
-  }
-
-  public void removeBoneRigidBodiesFromSimulation() {
-    try (val it = nodes().obtainIterator()) {
-      while (it.hasNext()) {
-        val e = it.next();
-        Node node = e.v();
-        if (node.rigidBody != null && node.rigidBody.isInDynamicsWorld()) {
-          node.rigidBody.removeFromDynamicsWorld();
         }
       }
     }
@@ -185,10 +178,37 @@ public class PModelInstance {
     return map;
   }
 
+  public boolean ragdoll(PVec3 initialVelocity) {
+    if (this.isRagdoll) {return false;}
+    this.isRagdoll = true;
+    PRagdollUtils.addConstraintsForGenericRagdoll(initialVelocity, this);
+    try (val it = nodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        if (e.v().rigidBody() != null) {
+          e.v().rigidBody().activateConstraints();
+        }
+      }
+    }
+    return true;
+  }
+
   public void recalcTransforms() {
     for (int a = 0; a < rootNodes().size(); a++) {
       Node node = rootNodes().get(a);
       node.recalcNodeWorldTransformsRecursive(worldTransform(), false);
+    }
+  }
+
+  public void removeBoneRigidBodiesFromSimulation() {
+    try (val it = nodes().obtainIterator()) {
+      while (it.hasNext()) {
+        val e = it.next();
+        Node node = e.v();
+        if (node.rigidBody != null && node.rigidBody.isInDynamicsWorld()) {
+          node.rigidBody.removeFromDynamicsWorld();
+        }
+      }
     }
   }
 
@@ -259,6 +279,9 @@ public class PModelInstance {
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private PRigidBody rigidBody;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Setter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     private boolean rigidBodyDrivesMovement = false;
 
     private Node(PModelInstance owner, PModel.Node templateNode, Node parent) {
@@ -285,7 +308,7 @@ public class PModelInstance {
         rigidBody =
             PRigidBody.obtain(templateNode.physicsCollisionShape, templateNode.boneMass, PPhysicsEngine.BONE_FLAG,
                               PPhysicsEngine.ALL_FLAG);
-        rigidBody.setLinearVelocity(0, 0, 0);
+        rigidBody.setLinearFactor(0, 0, 0);
         rigidBody.setAngularFactor(0, 0, 0);
         rigidBody.modelInstanceNode(this);
       }

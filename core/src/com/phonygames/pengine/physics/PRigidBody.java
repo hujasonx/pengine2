@@ -5,11 +5,13 @@ import android.support.annotation.NonNull;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.ContactResultCallback;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
@@ -44,6 +46,7 @@ public class PRigidBody implements PPool.Poolable {
   @Accessors(fluent = true)
   private boolean isInDynamicsWorld;
   private float prevLogicT = -1, prevFrameT = -1;
+  @Getter(value = AccessLevel.PUBLIC)
   private btRigidBody rigidBody;
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -57,7 +60,16 @@ public class PRigidBody implements PPool.Poolable {
   @Accessors(fluent = true)
   private PModelInstance.Node modelInstanceNode = null;
 
+  /** A list of btTypedConstraints that are applied to this body (where this body is the child.) Disposed on reset. */
+  private PList<btTypedConstraint> managedConstraints = new PList<>();
+
   private PRigidBody() {
+  }
+
+  public btTypedConstraint addManagedConstraint(btTypedConstraint constraint) {
+    PAssert.isTrue(constraint.getRigidBodyB() == rigidBody);
+    managedConstraints.add(constraint);
+    return constraint;
   }
 
   public static PRigidBody obtain(@NonNull PPhysicsCollisionShape collisionShape, float mass, int group, int mask) {
@@ -142,6 +154,22 @@ public class PRigidBody implements PPool.Poolable {
     prevLogicT = PEngine.logict;
   }
 
+  public void activateConstraints() {
+    PAssert.isNotNull(rigidBody);
+    for (int a = 0; a < managedConstraints.size(); a++) {
+      btTypedConstraint constraint = managedConstraints.get(a);
+      PPhysicsEngine.dynamicsWorld.addConstraint(constraint, true);
+    }
+  }
+
+  public void deactivateConstraints() {
+    PAssert.isNotNull(rigidBody);
+    for (int a = 0; a < managedConstraints.size(); a++) {
+      btTypedConstraint constraint = managedConstraints.get(a);
+      PPhysicsEngine.dynamicsWorld.removeConstraint(constraint);
+    }
+  }
+
   public void preFrameUpdate() {
     if (rigidBody == null) {return;}
   }
@@ -163,6 +191,11 @@ public class PRigidBody implements PPool.Poolable {
       rigidBody.dispose();
       rigidBody = null;
     }
+    deactivateConstraints();
+    for (int a = 0; a < managedConstraints.size(); a++) {
+      managedConstraints.get(a).dispose();
+    }
+    managedConstraints.clear();
     prevLogicT = -1;
     prevFrameT = -1;
     worldTransformLogicCurrent().idt();
@@ -177,6 +210,18 @@ public class PRigidBody implements PPool.Poolable {
   public PRigidBody setAngularFactor(float x, float y, float z) {
     PAssert.isNotNull(rigidBody);
     rigidBody.setAngularFactor(tempSharedVec3.set(x, y, z));
+    return this;
+  }
+
+  public PRigidBody setSleepingThresholds(float linear, float angular) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setSleepingThresholds(linear, angular);
+    return this;
+  }
+
+  public PRigidBody setLinearFactor(float x, float y, float z) {
+    PAssert.isNotNull(rigidBody);
+    rigidBody.setLinearFactor(tempSharedVec3.set(x, y, z));
     return this;
   }
 

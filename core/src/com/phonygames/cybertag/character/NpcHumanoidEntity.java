@@ -132,7 +132,7 @@ public class NpcHumanoidEntity extends CharacterEntity {
       modelInstance.recalcTransforms();
       PDebugRenderer.line(pos,0,0,pos,10,0,PVec4.ONE ,PVec4.ONE,2, 2);
       if (PKeyboard.isFrameJustDown(Input.Keys.BACKSLASH)) {
-
+modelInstance.ragdoll(PVec3.Y);
       }
     }
   }
