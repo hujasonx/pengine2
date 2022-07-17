@@ -15,6 +15,11 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 public class PStaticBody implements PPool.Poolable {
+  // #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
+  // #pragma end - PPool.Poolable
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private static final PPool<PStaticBody> staticPool = new PPool<PStaticBody>() {
@@ -30,23 +35,8 @@ public class PStaticBody implements PPool.Poolable {
   private PPhysicsCollisionShape collisionShape;
   private int group, mask;
   private boolean isInDynamicsWorld;
-  @Getter
-  @Setter
-  private PPool ownerPool, sourcePool;
 
   private PStaticBody() {
-  }
-
-  public PMat4 getWorldTransform(PMat4 mat4) {
-    PAssert.isNotNull(collisionObject);
-    collisionObject.getWorldTransform(mat4.getBackingMatrix4());
-    return mat4;
-  }
-
-  public PStaticBody setWorldTransform(PMat4 mat4) {
-    PAssert.isNotNull(collisionObject);
-    collisionObject.setWorldTransform(mat4.getBackingMatrix4());
-    return this;
   }
 
   public static PStaticBody obtain(@NonNull PPhysicsCollisionShape collisionShape, int group, int mask) {
@@ -55,6 +45,8 @@ public class PStaticBody implements PPool.Poolable {
     ret.collisionObject = new btCollisionObject();
     ret.collisionObject.userData = ret;
     ret.collisionObject.setCollisionShape(collisionShape.collisionShape);
+    ret.collisionObject.setCollisionFlags(
+        ret.collisionObject.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_DISABLE_VISUALIZE_OBJECT);
     ret.group = group;
     ret.mask = mask;
     return ret;
@@ -64,6 +56,12 @@ public class PStaticBody implements PPool.Poolable {
     PAssert.isFalse(isInDynamicsWorld);
     isInDynamicsWorld = true;
     PPhysicsEngine.dynamicsWorld.addCollisionObject(collisionObject, group, mask);
+  }
+
+  public PMat4 getWorldTransform(PMat4 mat4) {
+    PAssert.isNotNull(collisionObject);
+    collisionObject.getWorldTransform(mat4.getBackingMatrix4());
+    return mat4;
   }
 
   public void removeFromDynamicsWorld() {
@@ -81,5 +79,11 @@ public class PStaticBody implements PPool.Poolable {
     collisionObject.dispose();
     collisionObject = null;
     collisionShape = null;
+  }
+
+  public PStaticBody setWorldTransform(PMat4 mat4) {
+    PAssert.isNotNull(collisionObject);
+    collisionObject.setWorldTransform(mat4.getBackingMatrix4());
+    return this;
   }
 }

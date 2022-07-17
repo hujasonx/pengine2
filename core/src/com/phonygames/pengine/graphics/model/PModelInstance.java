@@ -359,7 +359,7 @@ public class PModelInstance {
 
     public void recalcNodeWorldTransformsRecursive(PMat4 parentWorldTransform, boolean forceRecursionIfFirst) {
       if (rigidBody != null && rigidBodyDrivesMovement) {
-        rigidBody.getWorldTransform(worldTransform());
+        rigidBody.getWorldTransform(worldTransform()).mul(templateNode.physicsCollisionShapeOffsetInv());
       } else if (inheritTransform) {
         worldTransform().set(parentWorldTransform).mul(transform());
       } else {

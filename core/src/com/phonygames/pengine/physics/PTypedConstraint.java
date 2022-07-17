@@ -1,12 +1,15 @@
 package com.phonygames.pengine.physics;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btConeTwistConstraint;
+import com.badlogic.gdx.physics.bullet.dynamics.btPoint2PointConstraint;
 import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
@@ -63,6 +66,9 @@ public class PTypedConstraint implements PPool.Poolable {
 
   public PTypedConstraint setLimitsToDefaultForType() {
     switch (type) {
+      case Point2Point:
+        // No limits.
+        break;
       case ConeTwist:
         setConeTwistLimits(MathUtils.PI * 2, MathUtils.PI * 2, MathUtils.PI * 2, .05f, 0, 1);
         break;
@@ -83,6 +89,11 @@ public class PTypedConstraint implements PPool.Poolable {
   public btTypedConstraint genBtTypedConstraint(PRigidBody rigidBodyA, PRigidBody rigidBodyB) {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       switch (type) {
+        case Point2Point:
+          btPoint2PointConstraint point2PointConstraint =
+              new btPoint2PointConstraint(rigidBodyA.getRigidBody(), rigidBodyB.getRigidBody(),
+                                          localA.getBackingMatrix4().getTranslation(new Vector3()), localB.getBackingMatrix4().getTranslation(new Vector3()));
+          return point2PointConstraint;
         case ConeTwist:
           btConeTwistConstraint coneTwistConstraint =
               new btConeTwistConstraint(rigidBodyA.getRigidBody(), rigidBodyB.getRigidBody(),
@@ -115,7 +126,7 @@ public class PTypedConstraint implements PPool.Poolable {
       PMat4 bodyBBindMSTransform =
           pool.mat4().set(nodeBBindMSTransform).mul(nodeB.templateNode().physicsCollisionShapeOffset());
       localA.set(bodyABindMSTransform).inv().mul(nodeBBindMSTransform);
-      localB.set(nodeB.templateNode().physicsCollisionShapeOffsetInv());
+      localB.set(bodyBBindMSTransform).inv().mul(nodeBBindMSTransform);
     }
     return this;
   }
