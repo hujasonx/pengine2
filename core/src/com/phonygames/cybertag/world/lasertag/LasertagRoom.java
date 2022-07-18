@@ -33,6 +33,8 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
+  /** Hallway rooms won't have walkways attached; instead, their floor might sloped. */
+  protected boolean isHallway = false;
   /** The number of vCol indices dedicated to shared base colors, as opposed to per-tile colors. */
   protected int numBaseVCols = 16;
   private transient boolean roomColorsInitialized = false;

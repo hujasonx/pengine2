@@ -31,6 +31,8 @@ public class LasertagRoomGenWalkwayProcessor {
 
   // Doors should already be applied for walls.
   public static void processRoomWalkways(LasertagRoomGen roomGen) {
+    // Hallways shouldn't have walkways.
+    if (roomGen.lasertagRoom.isHallway) { return; }
     Context context = new Context(roomGen);
     if (context.fullyJoined()) {
       return;

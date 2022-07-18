@@ -148,7 +148,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     PVec2 inputVelocity = pool.vec2();
     PVec2 outputVelocity = pool.vec2();
     characterController.velXZ(0, 0);
-    float forwardSpeed = PKeyboard.isDown(Input.Keys.SHIFT_LEFT) ? 10 : 3;
+    float forwardSpeed = PKeyboard.isDown(Input.Keys.SHIFT_LEFT) ? 12 : 4;
     // Keyboard movement.
     if (PKeyboard.isDown(Input.Keys.W)) {
       inputVelocity.add(0, 1);

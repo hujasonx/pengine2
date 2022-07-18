@@ -89,8 +89,13 @@ public class LasertagRoomWallGen {
                     tileGens.get(cornerTile.x + (testX) * xChangeForAlongWall, cornerTile.y + testY,
                                  cornerTile.z + (testX) * zChangeForAlongWall);
                 LasertagTileGen otherTile = otherTileForWall(roomGen.buildingGen, lookTile, facing);
-                if (!needsWallInDirection(roomGen, lookTile, facing) || otherTile == null ||
-                    otherTile.roomGen == null || otherRoom != otherTile.roomGen.lasertagRoom) {
+                if (otherTile == null || lookTile.wallGen(facing).preventDoorSpawns ||
+                    otherTile.wallGen(facing.opposite()).preventDoorSpawns) {
+                  couldBeValid = false;
+                  break;
+                }
+                if (!needsWallInDirection(roomGen, lookTile, facing) || otherTile.roomGen == null ||
+                    otherRoom != otherTile.roomGen.lasertagRoom) {
                   couldBeValid = false;
                   break;
                 } else {

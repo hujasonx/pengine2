@@ -32,21 +32,29 @@ public class LasertagRoomGen extends PBuilder {
   protected final PList<LasertagRoomWallGen> roomWallGens = new PList<>();
   protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<>();
   protected final PSet<LasertagRoomGen> verticallyAdjacentRooms = new PSet<>();
-  private final PIntAABB roomAABB;
 
   public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PIntAABB aabb) {
     this.buildingGen = buildingGen;
     lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size());
     buildingGen.roomGens.add(this);
     lasertagRoom.building = buildingGen.building;
-    this.roomAABB = aabb;
-    for (int x = roomAABB.x0(); x <= roomAABB.x1(); x++) {
-      for (int y = roomAABB.y0(); y <= roomAABB.y1(); y++) {
-        for (int z = roomAABB.z0(); z <= roomAABB.z1(); z++) {
+    for (int x = aabb.x0(); x <= aabb.x1(); x++) {
+      for (int y = aabb.y0(); y <= aabb.y1(); y++) {
+        for (int z = aabb.z0(); z <= aabb.z1(); z++) {
           LasertagTileGen tileGen = buildingGen.tileGens.get(x, y, z);
           markTileWithSelf(tileGen);
         }
       }
+    }
+  }
+
+  public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PList<LasertagTileGen> tileGens) {
+    this.buildingGen = buildingGen;
+    lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size());
+    buildingGen.roomGens.add(this);
+    lasertagRoom.building = buildingGen.building;
+    for (int a = 0; a < tileGens.size(); a++) {
+      markTileWithSelf(tileGens.get(a));
     }
   }
 

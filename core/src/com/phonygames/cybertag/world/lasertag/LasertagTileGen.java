@@ -7,8 +7,8 @@ import com.phonygames.pengine.util.PBuilder;
 public class LasertagTileGen extends PBuilder {
   public final int x, y, z;
   protected final LasertagTile tile;
-  protected LasertagRoomGen roomGen;
   protected final LasertagTileWallGen wallX, wallZ, wallMX, wallMZ;
+  protected LasertagRoomGen roomGen;
 
   public LasertagTileGen(String id, int x, int y, int z) {
     this.x = x;
@@ -35,6 +35,7 @@ public class LasertagTileGen extends PBuilder {
   }
 
   public @Nullable LasertagTileGen tileGenInRoomWithLocationOffset(int x, int y, int z) {
+    if (this.roomGen == null) {return null;}
     return roomGen.tileGens.get(this.x + x, this.y + y, this.z + z);
   }
 

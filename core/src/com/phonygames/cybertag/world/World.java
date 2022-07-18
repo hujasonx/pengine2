@@ -7,6 +7,7 @@ import com.phonygames.cybertag.world.lasertag.LasertagBuildGenDoorProcessor;
 import com.phonygames.cybertag.world.lasertag.LasertagBuilding;
 import com.phonygames.cybertag.world.lasertag.LasertagBuildingGen;
 import com.phonygames.cybertag.world.lasertag.LasertagBuildingGenAABBPlacer;
+import com.phonygames.cybertag.world.lasertag.LasertagHallwayProcessor;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGen;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGenRoomPlacer;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGenTileProcessor;
@@ -34,6 +35,7 @@ public class World {
         LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen, roomAABB);
       }
     }
+    LasertagHallwayProcessor.processHallways(buildingGen);
     buildingGen.processTiles();
     LasertagBuildingGen buildingGen2 = new LasertagBuildingGen(worldGen);
     buildingGen2.setTileTranslation(MathUtils.random(100f, 150f), MathUtils.random(-10f, 10f), MathUtils.random(100f, 150f)).setTileRotation(MathUtils.random(MathUtils.PI2)).setTileScale(4, 4, 4);
@@ -45,6 +47,7 @@ public class World {
         LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen2, roomAABB);
       }
     }
+    LasertagHallwayProcessor.processHallways(buildingGen2);
     buildingGen2.processTiles();
     // Process
     LasertagBuildGenDoorProcessor.processPossibleDoorsIntoAcutal(buildingGen);

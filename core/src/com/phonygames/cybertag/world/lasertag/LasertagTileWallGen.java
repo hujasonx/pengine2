@@ -8,6 +8,8 @@ public class LasertagTileWallGen extends PBuilder {
   protected final LasertagTileGen tileGen;
   protected final LasertagTileWall wall;
   protected LasertagRoomWallGen roomWallGen, otherRoomWallGen;
+  /** If set, then doors will not spawn that connect directly to this tileGen. */
+  protected boolean preventDoorSpawns = false;
 
   protected LasertagTileWallGen(LasertagTileWall.Facing facing, @NonNull LasertagTileGen tileGen) {
     this.tileGen = tileGen;

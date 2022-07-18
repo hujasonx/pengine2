@@ -38,6 +38,20 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
     return this;
   }
 
+  /** Calls toString() on all its elements. */
+  public String deepToString() {
+    StringBuilder ret = new StringBuilder().append("[PList] [");
+    for (int a = 0; a < size(); a++) {
+      ret.append(get(a));
+      if (a != size() - 1) {
+        ret.append(", ");
+      } else {
+        ret.append("]");
+      }
+    }
+    return ret.toString();
+  }
+
   public PList<E> addAll(E[] es) {
     for (int a = 0; a < es.length; a++) {
       backingArray.add(es[a]);
