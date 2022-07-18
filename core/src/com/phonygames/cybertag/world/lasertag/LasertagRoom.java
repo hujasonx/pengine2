@@ -30,11 +30,11 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected boolean initialized = false;
+  /** Hallway rooms won't have walkways attached; instead, their floor might sloped. */
+  protected boolean isHallway = false;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
-  /** Hallway rooms won't have walkways attached; instead, their floor might sloped. */
-  protected boolean isHallway = false;
   /** The number of vCol indices dedicated to shared base colors, as opposed to per-tile colors. */
   protected int numBaseVCols = 16;
   private transient boolean roomColorsInitialized = false;
@@ -74,8 +74,13 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
         tile.frameUpdate();
         if (colorDataEmitter != null) {
           colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 0].set(0, 0, 0, 1);
-          colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].set((tile.x * .2f) % 1, (tile.y * .2f) % 1,
-                                                                          (tile.z * .2f) % 1, 1);
+          if (isHallway) {
+            colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].setHSVA(id.hashCode() * .3732f, 1, .4f,
+                                                                                1); // EmissiveR;
+          } else {
+            colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].set((tile.x * .2f) % 1, (tile.y * .2f) % 1,
+                                                                            (tile.z * .2f) % 1, 1);
+          }
         }
       }
     }

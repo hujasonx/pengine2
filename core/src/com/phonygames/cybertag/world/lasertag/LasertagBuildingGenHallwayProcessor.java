@@ -5,6 +5,7 @@ import static com.phonygames.cybertag.world.lasertag.LasertagTileWall.FACINGS;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PNumberUtils;
@@ -112,6 +113,7 @@ public class LasertagBuildingGenHallwayProcessor {
   }
 
   private static class Context {
+    private static int madeWindow = 0;
     final LasertagBuildingGen buildingGen;
     final PList<ConnectedGroup> connectedGroups = new PList<>();
     final PList<ProcessorDoorGen> processorDoorGens = new PList<>();
@@ -127,8 +129,8 @@ public class LasertagBuildingGenHallwayProcessor {
      * @return whether or not a hallway was generated.
      */
     private boolean attemptGenHallway() {
-      PLog.i("Attempting hallway gen");
       PList<HallwayStartNode> startNodes = genHallwayStartNodes();
+      PLog.i("Attempting hallway gen, " + startNodes.size() + " starting nodes");
       PList<PossibleHallwayPath> possibleHallwayPaths = new PList<>();
       for (int a = 0; a < startNodes.size(); a++) {
         HallwayStartNode hallwayStartNode = startNodes.get(a);
@@ -153,13 +155,13 @@ public class LasertagBuildingGenHallwayProcessor {
           LasertagRoomGen roomGen = connectedGroup.roomGens.get(b);
           PList<LasertagTileGen> tilesInRoom = roomGen.tileGens.genValuesList();
           for (int c = 0; c < tilesInRoom.size(); c++) {
-            LasertagTileGen tileGen = tilesInRoom.get(a);
+            LasertagTileGen tileGen = tilesInRoom.get(c);
             if (getRoomGen(neighBor(tileGen, 0, -1, 0)) == tileGen.roomGen) {continue;}
             for (int f = 0; f < FACINGS.length; f++) {
               LasertagTileWall.Facing facing = FACINGS[f];
               LasertagTileGen neighbor = neighBor(tileGen, facing.normalX(), 0, facing.normalZ());
               if (neighbor != null && neighbor.roomGen == null) {
-                tileGen.wallGen(facing.opposite()).wall.isWindow = true;
+                //                tileGen.wallGen(facing.opposite()).wall.isWindow = true;
                 ret.add(new HallwayStartNode(this, neighbor, 0, connectedGroup, facing));
               }
             }
@@ -195,6 +197,15 @@ public class LasertagBuildingGenHallwayProcessor {
       if (tileGen == null) {return false;}
       // Cant place a hallway where the already is a hallway.
       if (hallwayAt(tileGen) != null) {return false;}
+      // Cant place a hallway where there is a room.
+      if (tileGen.roomGen != null) {return false;}
+      if (sloped || endOffsetY > 0) {
+        // Cant place a two-tile-tall hallway too high up.
+        LasertagTileGen aboveNeighbor = neighBor(tileGen, 0, 1, 0);
+        if (aboveNeighbor == null) {return false;}
+        if (aboveNeighbor.roomGen != null) {return false;}
+        if (hallwayAt(aboveNeighbor) != null) {return false;}
+      }
       return true;
     }
 
@@ -218,11 +229,18 @@ public class LasertagBuildingGenHallwayProcessor {
         for (int b = 0; b < connectedGroup.hallways.size(); b++) {
           Hallway hallway = connectedGroup.hallways.get(b);
           hallways.add(hallway);
+          if (hallway.tileGen.roomGen != null) {
+            PAssert.fail("Roomgen was not null!");
+          }
+          if (hallway.tileGenAbove != null && hallway.tileGenAbove.roomGen != null) {
+            PAssert.fail("Above Roomgen was not null!");
+          }
+          hallway.emitToTileAndTileAbove();
         }
       }
       // Generate rooms.
       PList<PList<Hallway>> groupedHallways = combineHallwaysIntoAdjacentGroups(hallways);
-      PLog.i("Grouped " + hallways.size() + " hallways into " + groupedHallways.size() + " groups");
+      PLog.i("!!!Grouped " + hallways.size() + " hallways into " + groupedHallways.size() + " groups!!!");
       for (int a = 0; a < groupedHallways.size(); a++) {
         PLog.i("Group has " + groupedHallways.get(a).size() + " hallways");
         PList<LasertagTileGen> roomTileGens = new PList<>();
@@ -234,6 +252,7 @@ public class LasertagBuildingGenHallwayProcessor {
         LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen, roomTileGens);
         roomGen.lasertagRoom.isHallway = true;
         PLog.i("created roomGen " + roomGen.lasertagRoom.id);
+        // TODO: add walls between hallways if theyre are in the same room but not connected.
       }
     }
 
@@ -268,15 +287,6 @@ public class LasertagBuildingGenHallwayProcessor {
     public boolean fullyJoined() {
       return connectedGroups.size() == 1;
     }
-
-    public ProcessorDoorGen processorDoorGenAt(LasertagTileGen tileGen) {
-      for (int a = 0; a < processorDoorGens.size(); a++) {
-        if (processorDoorGens.get(a).tileGen == tileGen || processorDoorGens.get(a).otherTileGen == tileGen) {
-          return processorDoorGens.get(a);
-        }
-      }
-      return null;
-    }
   }
 
   /**
@@ -308,26 +318,6 @@ public class LasertagBuildingGenHallwayProcessor {
       this.facing = facing;
     }
 
-    int absoluteGridOffsetY00() {
-      return tileGen.y * context.rampTiles + endOffsetY +
-             ((sloped && (facing == LasertagTileWall.Facing.Z || facing == LasertagTileWall.Facing.X)) ? 1 : 0);
-    }
-
-    int absoluteGridOffsetY01() {
-      return tileGen.y * context.rampTiles + endOffsetY +
-             ((sloped && (facing == LasertagTileWall.Facing.mZ || facing == LasertagTileWall.Facing.X)) ? 1 : 0);
-    }
-
-    int absoluteGridOffsetY10() {
-      return tileGen.y * context.rampTiles + endOffsetY +
-             ((sloped && (facing == LasertagTileWall.Facing.Z || facing == LasertagTileWall.Facing.mX)) ? 1 : 0);
-    }
-
-    int absoluteGridOffsetY11() {
-      return tileGen.y * context.rampTiles + endOffsetY +
-             ((sloped && (facing == LasertagTileWall.Facing.mZ || facing == LasertagTileWall.Facing.mX)) ? 1 : 0);
-    }
-
     public boolean connectsWithConnectedGroup(ConnectedGroup connectedGroup) {
       for (int f = 0; f < FACINGS.length; f++) {
         LasertagTileWall.Facing facing = FACINGS[f];
@@ -345,48 +335,87 @@ public class LasertagBuildingGenHallwayProcessor {
       if (other == null) {return false;}
       // We should always be on the same level or above than other, just to simplify things.
       if (tileGen.x == other.tileGen.x && tileGen.z == other.tileGen.z - 1) {
-        return absoluteGridOffsetY01() == other.absoluteGridOffsetY00() && absoluteGridOffsetY11() == other.absoluteGridOffsetY10();
+        return absoluteGridOffsetY01() == other.absoluteGridOffsetY00() &&
+               absoluteGridOffsetY11() == other.absoluteGridOffsetY10();
       }
       if (tileGen.x == other.tileGen.x && tileGen.z == other.tileGen.z + 1) {
-        return absoluteGridOffsetY00() == other.absoluteGridOffsetY01() && absoluteGridOffsetY10() == other.absoluteGridOffsetY11();
+        return absoluteGridOffsetY00() == other.absoluteGridOffsetY01() &&
+               absoluteGridOffsetY10() == other.absoluteGridOffsetY11();
       }
       if (tileGen.x == other.tileGen.x - 1 && tileGen.z == other.tileGen.z) {
-        return absoluteGridOffsetY10() == other.absoluteGridOffsetY00() && absoluteGridOffsetY11() == other.absoluteGridOffsetY01();
+        return absoluteGridOffsetY10() == other.absoluteGridOffsetY00() &&
+               absoluteGridOffsetY11() == other.absoluteGridOffsetY01();
       }
       if (tileGen.x == other.tileGen.x + 1 && tileGen.z == other.tileGen.z) {
-        return absoluteGridOffsetY00() == other.absoluteGridOffsetY10() && absoluteGridOffsetY01() == other.absoluteGridOffsetY11();
+        return absoluteGridOffsetY00() == other.absoluteGridOffsetY10() &&
+               absoluteGridOffsetY01() == other.absoluteGridOffsetY11();
       }
       return false;
     }
 
-    public boolean couldBePlaced() {
-      if (tileGen == null) {return false;}
+    int absoluteGridOffsetY01() {
+      return tileGen.y * context.rampTiles + endOffsetY +
+             ((sloped && (facing == LasertagTileWall.Facing.mZ || facing == LasertagTileWall.Facing.X)) ? 1 : 0);
+    }
+
+    int absoluteGridOffsetY00() {
+      return tileGen.y * context.rampTiles + endOffsetY +
+             ((sloped && (facing == LasertagTileWall.Facing.Z || facing == LasertagTileWall.Facing.X)) ? 1 : 0);
+    }
+
+    int absoluteGridOffsetY11() {
+      return tileGen.y * context.rampTiles + endOffsetY +
+             ((sloped && (facing == LasertagTileWall.Facing.mZ || facing == LasertagTileWall.Facing.mX)) ? 1 : 0);
+    }
+
+    int absoluteGridOffsetY10() {
+      return tileGen.y * context.rampTiles + endOffsetY +
+             ((sloped && (facing == LasertagTileWall.Facing.Z || facing == LasertagTileWall.Facing.mX)) ? 1 : 0);
+    }
+
+    public boolean couldBePlaced(@Nullable PList<Hallway> tempHallwayBuffer) {
+      // Check for conflicts with temp hallway buffer hallways.
+      if (tempHallwayBuffer != null) {
+        for (int a = 0; a < tempHallwayBuffer.size(); a++) {
+          Hallway tempHallway = tempHallwayBuffer.get(a);
+          if (tileGen == tempHallway.tileGen || tileGen == tempHallway.tileGenAbove) {
+            return false;
+          }
+          if (tileGenAbove != null &&
+              (tileGenAbove == tempHallway.tileGen || tileGenAbove == tempHallway.tileGenAbove)) {
+            return false;
+          }
+        }
+      }
       return context.couldGenHallway(tileGen, sloped, endOffsetY, facing);
     }
 
     private void emitToTileAndTileAbove() {
-      tileGen.tile.hasWalkway = true;
-      tileGen.tile.walkwayTile00OffsetY = ((float) endOffsetY) / context.rampTiles;
-      tileGen.tile.walkwayTile10OffsetY = ((float) endOffsetY) / context.rampTiles;
-      tileGen.tile.walkwayTile11OffsetY = ((float) endOffsetY) / context.rampTiles;
-      tileGen.tile.walkwayTile01OffsetY = ((float) endOffsetY) / context.rampTiles;
+      tileGen.tile.hasFloor = true;
+      if (tileGenAbove != null) {
+        tileGenAbove.tile.hasFloor = false;
+      }
+      tileGen.tile.floorTile00OffsetY = ((float) endOffsetY) / context.rampTiles;
+      tileGen.tile.floorTile10OffsetY = ((float) endOffsetY) / context.rampTiles;
+      tileGen.tile.floorTile11OffsetY = ((float) endOffsetY) / context.rampTiles;
+      tileGen.tile.floorTile01OffsetY = ((float) endOffsetY) / context.rampTiles;
       if (sloped) {
         switch (facing) {
           case mX:
-            tileGen.tile.walkwayTile10OffsetY += 1f / context.rampTiles;
-            tileGen.tile.walkwayTile11OffsetY += 1f / context.rampTiles;
+            tileGen.tile.floorTile10OffsetY += 1f / context.rampTiles;
+            tileGen.tile.floorTile11OffsetY += 1f / context.rampTiles;
             break;
           case mZ:
-            tileGen.tile.walkwayTile01OffsetY += 1f / context.rampTiles;
-            tileGen.tile.walkwayTile11OffsetY += 1f / context.rampTiles;
+            tileGen.tile.floorTile01OffsetY += 1f / context.rampTiles;
+            tileGen.tile.floorTile11OffsetY += 1f / context.rampTiles;
             break;
           case X:
-            tileGen.tile.walkwayTile00OffsetY += 1f / context.rampTiles;
-            tileGen.tile.walkwayTile01OffsetY += 1f / context.rampTiles;
+            tileGen.tile.floorTile00OffsetY += 1f / context.rampTiles;
+            tileGen.tile.floorTile01OffsetY += 1f / context.rampTiles;
             break;
           case Z:
-            tileGen.tile.walkwayTile00OffsetY += 1f / context.rampTiles;
-            tileGen.tile.walkwayTile10OffsetY += 1f / context.rampTiles;
+            tileGen.tile.floorTile00OffsetY += 1f / context.rampTiles;
+            tileGen.tile.floorTile10OffsetY += 1f / context.rampTiles;
             break;
         }
       }
@@ -424,7 +453,7 @@ public class LasertagBuildingGenHallwayProcessor {
     final ConnectedGroup connectedGroup;
     final Context context;
     final LasertagTileWall.Facing facing;
-    final int maxSearchDepth = 6;
+    final int maxSearchDepth = 10;
     final PList<PossibleHallwayPath> possibleHallwayPaths = new PList<>();
     final int startOffsetY;
     final LasertagTileGen tileGen;
@@ -440,7 +469,7 @@ public class LasertagBuildingGenHallwayProcessor {
 
     void __searchRecursive(PList<Hallway> currentHallwayBuffer, Hallway tryAdding, int turnsLeft) {
       // Check for walkway validity.
-      if (!tryAdding.couldBePlaced()) {return;}
+      if (!tryAdding.couldBePlaced(currentHallwayBuffer)) {return;}
       // Can't add a walkway where there already is one, or where there would be one on top (if sloped).
       for (int a = 0; a < currentHallwayBuffer.size(); a++) {
         Hallway hallway = currentHallwayBuffer.get(a);
@@ -453,7 +482,7 @@ public class LasertagBuildingGenHallwayProcessor {
       currentHallwayBuffer.add(tryAdding);
       //      System.out.println("Current buffer : " + currentHallwayBuffer.deepToString());
       // Check to see if adding this tile would connect any connecting groups, and if so, emit.
-      if (currentHallwayBuffer.size() >= 4) { // Check for minimum length.
+      if (currentHallwayBuffer.size() >= 1) { // Check for minimum length.
         for (int a = 0; a < context.connectedGroups.size(); a++) {
           ConnectedGroup connectedGroup = context.connectedGroups.get(a);
           if (connectedGroup == this.connectedGroup) {continue;}
@@ -500,6 +529,7 @@ public class LasertagBuildingGenHallwayProcessor {
     final HallwayStartNode hallwayStartNode;
     final PList<Hallway> hallways = new PList<>();
     final ConnectedGroup startGroup, endGroup;
+    float stableRandom = MathUtils.random();
 
     public PossibleHallwayPath(HallwayStartNode startNode, PList<Hallway> hallways, ConnectedGroup endGroup) {
       this.hallwayStartNode = startNode;
@@ -534,9 +564,9 @@ public class LasertagBuildingGenHallwayProcessor {
             couldGenDoorOnTile = true;
           }
           if (couldGenDoorOnTile) {
-            couldGenDoorOnTile = ((a == 0 && facing == hallway.facing) || a == hallways.size() - 1);
+            //            couldGenDoorOnTile = ((a == 0 && facing == hallway.facing) || a == hallways.size() - 1);
           }
-          if (!couldGenDoorOnTile && false) {
+          if (!couldGenDoorOnTile) {
             // Use facing.opposite for wallGens.
             hallway.tileGen.wallGen(facing.opposite()).preventDoorSpawns = true;
           }
@@ -554,6 +584,9 @@ public class LasertagBuildingGenHallwayProcessor {
             }
           }
         }
+        if (!hallway.couldBePlaced(null)) {
+          PAssert.fail("Conflicting hallway");
+        }
         startGroup.hallways.add(hallway);
       }
       return true;
@@ -561,9 +594,11 @@ public class LasertagBuildingGenHallwayProcessor {
 
     @Override public float score() {
       int score = 0;
-      int scorePerConnection = 10;
       score += startGroup.roomGens.size();
       score += endGroup.roomGens.size();
+      int idealLength = 8;
+      score += 4 * stableRandom;
+      score -= Math.abs(idealLength - hallways.size());
       score -= hallways.size();
       return score;
     }
