@@ -1,6 +1,7 @@
 package com.phonygames.cybertag.world.lasertag;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PSortableByScore;
@@ -24,14 +25,14 @@ public class LasertagDoorGen extends PBuilder {
     return door;
   }
 
-  public static class PossibleDoor implements PSortableByScore<PossibleDoor> {
+  public static class PossibleWallDoor implements PSortableByScore<PossibleWallDoor> {
     private final LasertagRoomGen ownerRoomGen, otherRoomGen;
     private final LasertagRoomWallGen ownerWall;
     private final int x, y, w, h;
     private final float stableRandom = MathUtils.random();
 
-    PossibleDoor(LasertagRoomWallGen wallGen, int x, int y, int w, int h, LasertagRoomGen ownerRoomGen,
-                 LasertagRoomGen otherRoomGen) {
+    PossibleWallDoor(LasertagRoomWallGen wallGen, int x, int y, int w, int h, LasertagRoomGen ownerRoomGen,
+                     LasertagRoomGen otherRoomGen) {
       this.ownerWall = wallGen;
       this.x = x;
       this.y = y;
@@ -101,6 +102,56 @@ public class LasertagDoorGen extends PBuilder {
       ownerRoomGen.connectedRoomConnectionSizes.genPooled(otherRoomGen).add(w); // Add the width to the connected room
       // sizes, mostly to reduce the likelihood of another door spawning connecting the two rooms.
       otherRoomGen.connectedRoomConnectionSizes.genPooled(ownerRoomGen).add(w);
+      return ret;
+    }
+  }
+
+  public static class PossibleHallwayDoor implements PSortableByScore<PossibleWallDoor> {
+    private final LasertagTileGen hallwayRoomTileGen, otherRoomTileGen;
+    private final LasertagTileWall.Facing facing;
+    private final float stableRandom = MathUtils.random();
+
+    PossibleHallwayDoor(LasertagTileGen hallwayRoomTileGen, LasertagTileGen otherRoomTileGen) {
+      this.hallwayRoomTileGen = hallwayRoomTileGen;
+      this.otherRoomTileGen = otherRoomTileGen;
+      PAssert.isTrue(!otherRoomTileGen.roomGen.lasertagRoom.isHallway);
+      PAssert.isTrue(hallwayRoomTileGen.y == otherRoomTileGen.y);
+      if (hallwayRoomTileGen.x == otherRoomTileGen.x + 1) {
+        facing = LasertagTileWall.Facing.X;
+      } else if (hallwayRoomTileGen.x == otherRoomTileGen.x - 1) {
+        facing = LasertagTileWall.Facing.mX;
+      }else if (hallwayRoomTileGen.z == otherRoomTileGen.z + 1) {
+        facing = LasertagTileWall.Facing.Z;
+      } else {
+        facing = LasertagTileWall.Facing.mZ;
+      }
+    }
+
+    @Override public float score() {
+      return 1;
+    }
+
+    /** Finalizes this possible door as an actual door. */
+    public LasertagDoorGen toDoorGen() {
+      PAssert.isTrue(hallwayRoomTileGen.roomGen.lasertagRoom.isHallway);
+      LasertagDoorGen ret = new LasertagDoorGen(hallwayRoomTileGen.roomGen, otherRoomTileGen.roomGen);
+      ret.door.w = 1;
+      ret.door.h = 1;
+      ret.door.tileX = hallwayRoomTileGen.x;
+      ret.door.tileY = hallwayRoomTileGen.y;
+      ret.door.tileZ = hallwayRoomTileGen.z;
+      ret.door.facing = facing;
+      // Fill out the wall data.
+      hallwayRoomTileGen.wallGen(facing).wall.hasDoorframeL = true;
+      hallwayRoomTileGen.wallGen(facing).wall.hasDoorframeR = true;
+      hallwayRoomTileGen.wallGen(facing).wall.hasDoorframeT = true;
+      hallwayRoomTileGen.wallGen(facing).wall.isValid = true;
+      hallwayRoomTileGen.wallGen(facing).wall.door = ret.door;
+
+      hallwayRoomTileGen.roomGen.buildingGen.doorGens.add(ret);
+      hallwayRoomTileGen.roomGen.connectedRoomConnectionSizes.genPooled(otherRoomTileGen.roomGen).add(1); // Add the width to the connected room
+      // sizes, mostly to reduce the likelihood of another door spawning connecting the two rooms.
+      otherRoomTileGen.roomGen.connectedRoomConnectionSizes.genPooled(hallwayRoomTileGen.roomGen).add(1);
       return ret;
     }
   }

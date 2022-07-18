@@ -7,7 +7,7 @@ public class LasertagBuildingGenAABBPlacer {
    */
   public static void addAABBs(LasertagBuildingGen lasertagBuildingGen) {
     lasertagBuildingGen.aabb.set(0, 0, 0, 14, 4, 14);
-    lasertagBuildingGen.addOutsideAABB(8, 2, 0, 14, 4, 14);
+//    lasertagBuildingGen.addOutsideAABB(8, 2, 0, 14, 4, 14);
     // Place the valid tileGens.
     for (int x = lasertagBuildingGen.aabb.x0(); x <= lasertagBuildingGen.aabb.x1(); x++) {
       for (int y = lasertagBuildingGen.aabb.y0(); y <= lasertagBuildingGen.aabb.y1(); y++) {

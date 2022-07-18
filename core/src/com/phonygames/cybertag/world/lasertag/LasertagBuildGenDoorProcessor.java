@@ -2,18 +2,16 @@ package com.phonygames.cybertag.world.lasertag;
 
 import com.phonygames.pengine.util.PList;
 
-import java.util.Collections;
-
 public class LasertagBuildGenDoorProcessor {
   public static void processPossibleDoorsIntoAcutal(LasertagBuildingGen buildingGen) {
-    PList<LasertagDoorGen.PossibleDoor> possibleDoors = buildingGen.possibleDoors;
+    PList<LasertagDoorGen.PossibleWallDoor> possibleDoors = buildingGen.possibleDoors;
     if (possibleDoors == null) {
       return;
     }
 
     while (!possibleDoors.isEmpty()) {
       possibleDoors.sort();
-      LasertagDoorGen.PossibleDoor nextDoor = possibleDoors.removeLast();
+      LasertagDoorGen.PossibleWallDoor nextDoor = possibleDoors.removeLast();
       if (!nextDoor.checkStillValid()) {
         continue;
       }

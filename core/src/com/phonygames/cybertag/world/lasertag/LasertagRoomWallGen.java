@@ -89,8 +89,8 @@ public class LasertagRoomWallGen {
                     tileGens.get(cornerTile.x + (testX) * xChangeForAlongWall, cornerTile.y + testY,
                                  cornerTile.z + (testX) * zChangeForAlongWall);
                 LasertagTileGen otherTile = otherTileForWall(roomGen.buildingGen, lookTile, facing);
-                if (otherTile == null || lookTile.wallGen(facing).preventDoorSpawns ||
-                    otherTile.wallGen(facing.opposite()).preventDoorSpawns) {
+                if (otherTile == null || lookTile.wallGen(facing).preventWallDoorSpawns ||
+                    otherTile.wallGen(facing.opposite()).preventWallDoorSpawns) {
                   couldBeValid = false;
                   break;
                 }
@@ -107,9 +107,9 @@ public class LasertagRoomWallGen {
               }
             }
             if (couldBeValid) {
-              LasertagDoorGen.PossibleDoor possibleDoor =
-                  new LasertagDoorGen.PossibleDoor(this, startX, startY, w, h, roomGen, testCornerTileOther.roomGen);
-              roomGen.buildingGen.possibleDoors.add(possibleDoor);
+              LasertagDoorGen.PossibleWallDoor possibleWallDoor =
+                  new LasertagDoorGen.PossibleWallDoor(this, startX, startY, w, h, roomGen, testCornerTileOther.roomGen);
+              roomGen.buildingGen.possibleDoors.add(possibleWallDoor);
             }
           }
         }

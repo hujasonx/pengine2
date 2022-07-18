@@ -2,11 +2,15 @@ package com.phonygames.cybertag.world.lasertag;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.world.ColorDataEmitter;
+import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PIntMap3d;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -107,6 +111,25 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
     if (modelInstance != null) {
       modelInstance.setDataBufferEmitter(this);
       modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+    }
+    if (isHallway) {
+      try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+        try (val it = tiles().obtainIterator()){
+          while (it.hasNext()) {
+            val e = it.next();
+            if (!e.val().hasFloor) { continue; }
+            PVec3 c000 = pool.vec3(), c001 = pool.vec3();
+            PVec3 c010 = pool.vec3(), c011 = pool.vec3();
+            PVec3 c110 = pool.vec3(), c111 = pool.vec3();
+            PVec3 c100 = pool.vec3(), c101 = pool.vec3();
+            e.val().getCornersFloorCeiling(c000,c001,c010,c011,c100,c101,c110,c111);
+            PDebugRenderer.line(c000, c001, PVec4.ONE, 2);
+            PDebugRenderer.line(c001, c101, PVec4.ONE, 2);
+            PDebugRenderer.line(c101, c100, PVec4.ONE, 2);
+            PDebugRenderer.line(c100, c000, PVec4.ONE, 2);
+          }
+        }
+      }
     }
   }
 }
