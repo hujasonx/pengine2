@@ -53,10 +53,16 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
     if (!initialized) {return;}
     if (colorDataEmitter != null && !roomColorsInitialized) {
       for (int a = 0; a < numBaseVCols; a++) {
-        // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
-        // the normal or the index with this buffer.
-        colorDataEmitter.colorData[a * 2 + 0].setHSVA(MathUtils.random(), MathUtils.random(.1f, .3f),
-                                                      MathUtils.random(.2f, .5f), 1); // DiffuseM;
+        if (isHallway) {
+          // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+          // the normal or the index with this buffer.
+          colorDataEmitter.colorData[a * 2 + 0].setHSVA(.01f, .01f, .01f, 1); // DiffuseM;
+        } else {
+          // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+          // the normal or the index with this buffer.
+          colorDataEmitter.colorData[a * 2 + 0].setHSVA(MathUtils.random(), MathUtils.random(.1f, .3f),
+                                                        MathUtils.random(.2f, .5f), 1); // DiffuseM;
+        }
         colorDataEmitter.colorData[a * 2 + 1].set(0, 0, 0, 1); // EmissiveR;
       }
       roomColorsInitialized = true;
