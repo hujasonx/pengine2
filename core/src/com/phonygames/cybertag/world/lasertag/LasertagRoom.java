@@ -123,10 +123,10 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
             PVec3 c110 = pool.vec3(), c111 = pool.vec3();
             PVec3 c100 = pool.vec3(), c101 = pool.vec3();
             e.val().getCornersFloorCeiling(c000,c001,c010,c011,c100,c101,c110,c111);
-            PDebugRenderer.line(c000, c001, PVec4.ONE, 2);
-            PDebugRenderer.line(c001, c101, PVec4.ONE, 2);
-            PDebugRenderer.line(c101, c100, PVec4.ONE, 2);
-            PDebugRenderer.line(c100, c000, PVec4.ONE, 2);
+//            PDebugRenderer.line(c000, c001, PVec4.ONE, 2);
+//            PDebugRenderer.line(c001, c101, PVec4.ONE, 2);
+//            PDebugRenderer.line(c101, c100, PVec4.ONE, 2);
+//            PDebugRenderer.line(c100, c000, PVec4.ONE, 2);
           }
         }
       }

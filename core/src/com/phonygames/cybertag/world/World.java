@@ -27,7 +27,7 @@ public class World {
     LasertagBuildingGenAABBPlacer.addAABBs(buildingGen);
     LasertagRoomGenRoomPlacer.reset();
     LasertagRoomGenRoomPlacer.roomHeightWeights = new float[]{.5f, .4f, .3f, .2f, .1f};
-    for (int a = 0; a < 50; a++) {
+    for (int a = 0; a < 10; a++) {
       PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen);
       if (roomAABB != null) {
         LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen, roomAABB);

@@ -446,16 +446,16 @@ public class LasertagBuildingGenHallwayProcessor {
     public boolean isFlatOnWallEdge(LasertagTileWall.Facing facing, int gridY, int offsetY) {
       int totalCheckOffsetY = gridY * context.rampTiles + offsetY;
       int totalOffset00 = (tileGen.y * context.rampTiles) + endOffsetY +
-                          ((sloped && (facing == LasertagTileWall.Facing.X || facing == LasertagTileWall.Facing.Z)) ?
+                          ((sloped && (this.facing == LasertagTileWall.Facing.X || this.facing == LasertagTileWall.Facing.Z)) ?
                            1 : 0);
       int totalOffset01 = (tileGen.y * context.rampTiles) + endOffsetY +
-                          ((sloped && (facing == LasertagTileWall.Facing.X || facing == LasertagTileWall.Facing.mZ)) ?
+                          ((sloped && (this.facing == LasertagTileWall.Facing.X || this.facing == LasertagTileWall.Facing.mZ)) ?
                            1 : 0);
       int totalOffset11 = (tileGen.y * context.rampTiles) + endOffsetY +
-                          ((sloped && (facing == LasertagTileWall.Facing.mX || facing == LasertagTileWall.Facing.mZ)) ?
+                          ((sloped && (this.facing == LasertagTileWall.Facing.mX || this.facing == LasertagTileWall.Facing.mZ)) ?
                            1 : 0);
       int totalOffset10 = (tileGen.y * context.rampTiles) + endOffsetY +
-                          ((sloped && (facing == LasertagTileWall.Facing.mX || facing == LasertagTileWall.Facing.Z)) ?
+                          ((sloped && (this.facing == LasertagTileWall.Facing.mX || this.facing == LasertagTileWall.Facing.Z)) ?
                            1 : 0);
       switch (facing) {
         case X:
@@ -515,14 +515,12 @@ public class LasertagBuildingGenHallwayProcessor {
       }
       // Add the walkway.
       currentHallwayBuffer.add(tryAdding);
-      //      System.out.println("Current buffer : " + currentHallwayBuffer.deepToString());
       // Check to see if adding this tile would connect any connecting groups, and if so, emit.
       if (currentHallwayBuffer.size() >= 1) { // Check for minimum length.
         for (int a = 0; a < context.connectedGroups.size(); a++) {
           ConnectedGroup connectedGroup = context.connectedGroups.get(a);
           if (connectedGroup == this.connectedGroup) {continue;}
           if (tryAdding.connectsWithConnectedGroup(connectedGroup)) {
-            //            System.out.println("\t\t Valid path!");
             emitPossibleHallwayPath(currentHallwayBuffer, connectedGroup);
             break;
           }
@@ -555,8 +553,8 @@ public class LasertagBuildingGenHallwayProcessor {
 
     void search() {
       PList<Hallway> currentWalkwayBuffer = new PList<>();
-      __searchRecursive(currentWalkwayBuffer, new Hallway(context, tileGen, startOffsetY, false, facing), 3);
-      __searchRecursive(currentWalkwayBuffer, new Hallway(context, tileGen, startOffsetY - 1, true, facing), 3);
+      __searchRecursive(currentWalkwayBuffer, new Hallway(context, tileGen, startOffsetY, false, facing), 2);
+      __searchRecursive(currentWalkwayBuffer, new Hallway(context, tileGen, startOffsetY - 1, true, facing), 2);
     }
   }
 
@@ -629,6 +627,7 @@ public class LasertagBuildingGenHallwayProcessor {
       for (int f = 0; f < FACINGS.length; f++) {
         LasertagTileWall.Facing facing = FACINGS[f];
         if (hallways.peek().isFlatOnWallEdge(facing.opposite(), lastHallwayTileGen.y, 0)) {
+          PLog.i("\t\t\tLast hallway is flat0 in direction: " + facing);
           LasertagTileGen otherTileGen = context.neighBor(lastHallwayTileGen, facing.normalX(), 0, facing.normalZ());
           if (otherTileGen != null && otherTileGen.roomGen != null && !otherTileGen.roomGen.lasertagRoom.isHallway) {
             validDoorFacings.add(facing);
@@ -652,7 +651,7 @@ public class LasertagBuildingGenHallwayProcessor {
       int score = 0;
       score += startGroup.roomGens.size();
       score += endGroup.roomGens.size();
-      int idealLength = 8;
+      int idealLength = 6;
       score += 4 * stableRandom;
       score -= Math.abs(idealLength - hallways.size());
       score -= hallways.size();
