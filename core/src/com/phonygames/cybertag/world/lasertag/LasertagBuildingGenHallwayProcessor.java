@@ -134,6 +134,50 @@ public class LasertagBuildingGenHallwayProcessor {
       PLog.i("Created hallway processor context with " + connectedGroups.size() + " connected groups");
     }
 
+    private void addInteriorWallsToNewHallwayRoomGen(PList<Hallway> hallways) {
+      for (int a = 0; a < hallways.size(); a++) {
+        Hallway hallway = hallways.get(a);
+        for (int b = a + 1; b < hallways.size(); b++) {
+          Hallway hallway2 = hallways.get(b);
+          if (hallway.connectsWithHallwayFlatOrSloped(hallway2)) {
+            // Two connected hallways shouldn't have interior walls between them.
+            continue;
+
+          }
+          // Check if the two hallways are neighbors. Since they dont connect, generate an interior wall.
+          for (int f = 0; f < FACINGS.length; f++) {
+            LasertagTileWall.Facing facing = FACINGS[f];
+            LasertagTileGen checkNeighbor = neighBor(hallway.tileGen, facing.normalX(), 0, facing.normalZ());
+            LasertagTileGen checkNeighborAbove = hallway.tileGenAbove == null ? null :
+                                                 neighBor(hallway.tileGenAbove, facing.normalX(), 0, facing.normalZ());
+            if (checkNeighbor != null && (checkNeighbor == hallway2.tileGen || checkNeighbor == hallway2.tileGenAbove)) {
+              hallway.tileGen.wallGen(facing.opposite()).wall.hasWall = true;
+              hallway.tileGen.wallGen(facing.opposite()).wall.isSolidWall = true;
+              hallway.tileGen.wallGen(facing.opposite()).wall.isValid = true;
+              checkNeighbor.wallGen(facing).wall.hasWall = true;
+              checkNeighbor.wallGen(facing).wall.isSolidWall = true;
+              checkNeighbor.wallGen(facing).wall.isValid = true;
+              PLog.i("\t\t\tAdding hallway interior wall");
+            }
+            if (checkNeighborAbove != null && (checkNeighborAbove == hallway2.tileGen || checkNeighborAbove == hallway2.tileGenAbove)) {
+              hallway.tileGenAbove.wallGen(facing.opposite()).wall.hasWall = true;
+              hallway.tileGenAbove.wallGen(facing.opposite()).wall.isSolidWall = true;
+              hallway.tileGenAbove.wallGen(facing.opposite()).wall.isValid = true;
+              checkNeighborAbove.wallGen(facing).wall.hasWall = true;
+              checkNeighborAbove.wallGen(facing).wall.isSolidWall = true;
+              checkNeighborAbove.wallGen(facing).wall.isValid = true;
+              PLog.i("\t\t\tAdding hallway interior wall");
+            }
+          }
+        }
+      }
+    }
+
+    public LasertagTileGen neighBor(LasertagTileGen tileGen, int xOffset, int yOffset, int zOffset) {
+      if (tileGen == null) {return null;}
+      return buildingGen.tileGens.get(tileGen.x + xOffset, tileGen.y + yOffset, tileGen.z + zOffset);
+    }
+
     /**
      * @return whether or not a hallway was generated.
      */
@@ -196,11 +240,6 @@ public class LasertagBuildingGenHallwayProcessor {
       return tileGen.roomGen;
     }
 
-    public LasertagTileGen neighBor(LasertagTileGen tileGen, int xOffset, int yOffset, int zOffset) {
-      if (tileGen == null) {return null;}
-      return buildingGen.tileGens.get(tileGen.x + xOffset, tileGen.y + yOffset, tileGen.z + zOffset);
-    }
-
     private boolean couldGenHallway(@Nullable LasertagTileGen tileGen, boolean sloped, int endOffsetY,
                                     @NonNull LasertagTileWall.Facing facing) {
       if (tileGen == null) {return false;}
@@ -252,6 +291,7 @@ public class LasertagBuildingGenHallwayProcessor {
       PLog.i("!!!Grouped " + hallways.size() + " hallways into " + groupedHallways.size() + " groups!!!");
       for (int a = 0; a < groupedHallways.size(); a++) {
         PLog.i("Group has " + groupedHallways.get(a).size() + " hallways");
+        addInteriorWallsToNewHallwayRoomGen(groupedHallways.get(a));
         PList<LasertagTileGen> roomTileGens = new PList<>();
         for (int b = 0; b < groupedHallways.get(a).size(); b++) {
           Hallway hallway = groupedHallways.get(a).get(b);
@@ -445,18 +485,22 @@ public class LasertagBuildingGenHallwayProcessor {
 
     public boolean isFlatOnWallEdge(LasertagTileWall.Facing facing, int gridY, int offsetY) {
       int totalCheckOffsetY = gridY * context.rampTiles + offsetY;
-      int totalOffset00 = (tileGen.y * context.rampTiles) + endOffsetY +
-                          ((sloped && (this.facing == LasertagTileWall.Facing.X || this.facing == LasertagTileWall.Facing.Z)) ?
-                           1 : 0);
-      int totalOffset01 = (tileGen.y * context.rampTiles) + endOffsetY +
-                          ((sloped && (this.facing == LasertagTileWall.Facing.X || this.facing == LasertagTileWall.Facing.mZ)) ?
-                           1 : 0);
-      int totalOffset11 = (tileGen.y * context.rampTiles) + endOffsetY +
-                          ((sloped && (this.facing == LasertagTileWall.Facing.mX || this.facing == LasertagTileWall.Facing.mZ)) ?
-                           1 : 0);
-      int totalOffset10 = (tileGen.y * context.rampTiles) + endOffsetY +
-                          ((sloped && (this.facing == LasertagTileWall.Facing.mX || this.facing == LasertagTileWall.Facing.Z)) ?
-                           1 : 0);
+      int totalOffset00 = (tileGen.y * context.rampTiles) + endOffsetY + ((sloped &&
+                                                                           (this.facing == LasertagTileWall.Facing.X ||
+                                                                            this.facing == LasertagTileWall.Facing.Z)) ?
+                                                                          1 : 0);
+      int totalOffset01 = (tileGen.y * context.rampTiles) + endOffsetY + ((sloped &&
+                                                                           (this.facing == LasertagTileWall.Facing.X ||
+                                                                            this.facing ==
+                                                                            LasertagTileWall.Facing.mZ)) ? 1 : 0);
+      int totalOffset11 = (tileGen.y * context.rampTiles) + endOffsetY + ((sloped &&
+                                                                           (this.facing == LasertagTileWall.Facing.mX ||
+                                                                            this.facing ==
+                                                                            LasertagTileWall.Facing.mZ)) ? 1 : 0);
+      int totalOffset10 = (tileGen.y * context.rampTiles) + endOffsetY + ((sloped &&
+                                                                           (this.facing == LasertagTileWall.Facing.mX ||
+                                                                            this.facing == LasertagTileWall.Facing.Z)) ?
+                                                                          1 : 0);
       switch (facing) {
         case X:
           return totalOffset00 == totalCheckOffsetY && totalOffset01 == totalCheckOffsetY;
