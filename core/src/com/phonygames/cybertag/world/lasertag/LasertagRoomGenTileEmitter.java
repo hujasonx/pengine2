@@ -7,8 +7,11 @@ import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 
 public class LasertagRoomGenTileEmitter {
+  private static float floorAndWalkwayVerticalOffset = .01f;
+
   /**
    * Emits tile model data for a room model.
+   *
    * @param tile
    * @param modelGen
    * @param basePart
@@ -26,23 +29,33 @@ public class LasertagRoomGenTileEmitter {
     PPool.PoolBuffer pool = PPool.getBuffer();
     PVec3 tile000 = pool.vec3(), tile100 = pool.vec3(), tile010 = pool.vec3(), tile110 = pool.vec3(), tile001 =
         pool.vec3(), tile101 = pool.vec3(), tile011 = pool.vec3(), tile111 = pool.vec3();
+    PVec3 floorUp = pool.vec3(0, floorAndWalkwayVerticalOffset, 0);
     tile.getCornersFloorCeiling(tile000, tile001, tile010, tile011, tile100, tile101, tile110, tile111);
     if (tile.hasFloor) {
+      tile000.add(floorUp);
+      tile001.add(floorUp);
+      tile101.add(floorUp);
+      tile100.add(floorUp);
       MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/basic.glb");
       vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
       floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     if (tile.hasCeiling) {
-      MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/basic.glb");
-      vertexProcessor.setFlatQuad(tile010.y(tile010.y() - .1f), tile110.y(tile110.y() - .1f),
-                                  tile111.y(tile111.y() - .1f), tile011.y(tile011.y() - .1f));
-      floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
+      MeshTemplate ceilingTemplate = MeshTemplate.get("model/template/ceiling/basic.glb");
+      vertexProcessor.setFlatQuad(tile010, tile110, tile111, tile011);
+      ceilingTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     if (tile.hasWalkway) {
       tile.getCornersWalkway(tile000, tile100, tile101, tile001);
+      tile000.add(floorUp);
+      tile001.add(floorUp);
+      tile101.add(floorUp);
+      tile100.add(floorUp);
       MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/basic.glb");
       vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
       floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
+      MeshTemplate ceilingTemplate = MeshTemplate.get("model/template/ceiling/basic.glb");
+      ceilingTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     emitWall(tile.wallX, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
     emitWall(tile.wallZ, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, vertexProcessor, pool);
