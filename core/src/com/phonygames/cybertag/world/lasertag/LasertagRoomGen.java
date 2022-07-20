@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.phonygames.cybertag.world.ColorDataEmitter;
+import com.phonygames.cybertag.world.lasertag.emit.LasertagRoomTemplateSelector;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
@@ -32,6 +33,7 @@ public class LasertagRoomGen extends PBuilder {
   protected final PList<LasertagRoomWallGen> roomWallGens = new PList<>();
   protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<>();
   protected final PSet<LasertagRoomGen> verticallyAdjacentRooms = new PSet<>();
+  protected LasertagRoomTemplateSelector templateSelector;
 
   public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PIntAABB aabb) {
     this.buildingGen = buildingGen;
@@ -88,7 +90,14 @@ public class LasertagRoomGen extends PBuilder {
     return lasertagRoom;
   }
 
+  private void createTemplateSelectorDefault() {
+    this.templateSelector = new LasertagRoomTemplateSelector(this);
+  }
+
   private void buildModelInstance() {
+    if (templateSelector == null) {
+      createTemplateSelectorDefault();
+    }
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
       PList<Part> alphaBlendParts = new PList<>();
       Part basePart;
@@ -101,7 +110,7 @@ public class LasertagRoomGen extends PBuilder {
       }
 
       @Override protected void modelMiddle() {
-        try (val it = lasertagRoom.tiles().obtainIterator()) {
+        try (val it = tileGens.obtainIterator()) {
           while (it.hasNext()) {
             val e = it.next();
             tileVColIndex = LasertagRoomGenTileEmitter.emit(e.val(), this, basePart, staticPhysicsPart, tileVColIndex,

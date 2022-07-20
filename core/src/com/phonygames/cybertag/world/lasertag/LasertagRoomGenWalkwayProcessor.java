@@ -50,7 +50,7 @@ public class LasertagRoomGenWalkwayProcessor {
    * @param @optional blockedTiles tiles that will not be included in island generation.
    * @return
    */
-  private static PList<FloorTileIsland> separateFloorTilesIntoIslands(PList<LasertagTileGen> tiles,
+  public static PList<FloorTileIsland> separateFloorTilesIntoIslands(PList<LasertagTileGen> tiles,
                                                                       @Nullable PList<LasertagTileGen> blockedTiles) {
     PList<FloorTileIsland> ret = new PList();
     PList<LasertagTileGen> unGroupedTileGens = new PList<>();
@@ -386,9 +386,9 @@ public class LasertagRoomGenWalkwayProcessor {
     }
   }
 
-  private static class FloorTileIsland {
-    final PList<LasertagTileGen> tiles = new PList<>();
-    final int y;
+  public static class FloorTileIsland {
+    public final PList<LasertagTileGen> tiles = new PList<>();
+    public final int y;
 
     FloorTileIsland(int y) {
       this.y = y;
