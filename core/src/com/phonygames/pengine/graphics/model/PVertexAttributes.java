@@ -25,6 +25,7 @@ public class PVertexAttributes {
   private static PVertexAttributes POSITION, DEFAULT, GLTF_UNSKINNED, GLTF_UNSKINNED_NOCOLOR;
   @Getter
   private final VertexAttributes backingVertexAttributes;
+//  private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
   private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
   @Getter
   private int bytesPerVertex;
@@ -102,11 +103,11 @@ public class PVertexAttributes {
   public int indexForVertexAttribute(String alias) {
     PAssert.isTrue(vertexAttributeFloatIndexInVertex.containsKey(alias),
                    alias + " not found in vertexAttributeFloatIndexInVertex");
+    if (!vertexAttributeFloatIndexInVertex.containsKey(alias)) { return -1;}
     return vertexAttributeFloatIndexInVertex.get(alias);
   }
 
   public static final class Attribute {
-    public static final Class[] VectorClasses = new Class[]{null, null, PVec2.class, PVec3.class, PVec4.class};
     private static final PStringMap<VertexAttribute> list = new PStringMap<>();
 
     private static void init() {
