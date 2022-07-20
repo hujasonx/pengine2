@@ -32,7 +32,7 @@ public class LasertagRoomGenWalkwayProcessor {
   // Doors should already be applied for walls.
   public static void processRoomWalkways(LasertagRoomGen roomGen) {
     // Hallways shouldn't have walkways.
-    if (roomGen.lasertagRoom.isHallway) { return; }
+    if (roomGen.lasertagRoom.isHallway) {return;}
     Context context = new Context(roomGen);
     if (context.fullyJoined()) {
       return;
@@ -259,7 +259,7 @@ public class LasertagRoomGenWalkwayProcessor {
         if (possibleWalkwayPaths.removeLast().applyToContext()) {return true;}
       }
       if (connectedGroups.size() > 2 || !oneTileFloorlessProcessorDoorGens.isEmpty()) {
-        PAssert.warn("COULD NOT GENERATE");
+        PAssert.warn("COULD NOT GENERATE WALKWAY!");
       }
       return false;
     }

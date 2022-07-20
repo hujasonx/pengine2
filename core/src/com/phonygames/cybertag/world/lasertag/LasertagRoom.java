@@ -2,6 +2,7 @@ package com.phonygames.cybertag.world.lasertag;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.world.ColorDataEmitter;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -82,8 +83,10 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
             colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].setHSVA(id.hashCode() * .3732f, 1, .4f,
                                                                                 1); // EmissiveR;
           } else {
-            colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].set((tile.x * .2f) % 1, (tile.y * .2f) % 1,
-                                                                            (tile.z * .2f) % 1, 1);
+//            colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].set((tile.x * .2f) % 1, (tile.y * .2f) % 1,
+//                                                                            (tile.z * .2f) % 1, 1);
+            colorDataEmitter.colorData[tile.tileVColIndexStart * 2 + 1].setHSVA((tile.x + tile.y + tile.z) * .022f +
+                                                                                PEngine.t * .01f, 1, 1, 1);
           }
         }
       }

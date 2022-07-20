@@ -36,7 +36,7 @@ public class LasertagRoomGenTileEmitter {
       tile001.add(floorUp);
       tile101.add(floorUp);
       tile100.add(floorUp);
-      MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/basic.glb");
+      MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/bigsquare.glb");
       vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
       floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
@@ -51,7 +51,7 @@ public class LasertagRoomGenTileEmitter {
       tile001.add(floorUp);
       tile101.add(floorUp);
       tile100.add(floorUp);
-      MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/basic.glb");
+      MeshTemplate floorTemplate = MeshTemplate.get("model/template/floor/bigsquare.glb");
       vertexProcessor.setFlatQuad(tile000, tile100, tile101, tile001);
       floorTemplate.emit(modelGen, vertexProcessor, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
       MeshTemplate ceilingTemplate = MeshTemplate.get("model/template/ceiling/basic.glb");
