@@ -101,10 +101,10 @@ public class PModelGen implements PPostableTask {
       glNode.drawCall().setOrigin(glNode.drawCall().mesh().center());
     }
     if (alphaBlend) {
-      glNode.drawCall().strictDepthOrder(true);
-      glNode.drawCall().setEnableBlend(true);
-      glNode.drawCall().setSrcFactor(GL20.GL_ONE);
-      glNode.drawCall().setDstFactor(GL20.GL_ONE);
+//      glNode.drawCall().strictDepthOrder(true);
+//      glNode.drawCall().setEnableBlend(true);
+//      glNode.drawCall().setSrcFactor(GL20.GL_ONE);
+//      glNode.drawCall().setDstFactor(GL20.GL_ONE);
     }
     // Set the occlusion radius to slightly more than half the bounds.
     glNode.drawCall().occludeRadius(

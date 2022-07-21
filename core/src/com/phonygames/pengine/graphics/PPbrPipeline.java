@@ -1,9 +1,10 @@
 package com.phonygames.pengine.graphics;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.model.PGltf;
+import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.lighting.PEnvironment;
 
 import lombok.AccessLevel;
@@ -26,14 +27,18 @@ public class PPbrPipeline {
   @Accessors(fluent = true)
   protected PEnvironment environment;
   private PRenderContext.PhaseHandler[] phases;
+  private PShader postprocessingcombineshader;
 
   public PPbrPipeline() {
     super();
     this.gBuffer =
         new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addFloatAttachment("normalR")
-                                   .addFloatAttachment("emissiveI").addFloatAttachment("alphaBlend").addDepthAttachment().build();
+                                   .addFloatAttachment("emissiveI").addFloatAttachment("alphaBlend")
+                                   .addDepthAttachment().build();
     this.lightedBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("lighted").build();
     this.finalBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("final").build();
+    this.postprocessingcombineshader =
+        finalBuffer.getQuadShader(Gdx.files.local("engine/shader/postprocessingcombine.quad.glsl"));
     setPhases();
   }
 
@@ -53,7 +58,7 @@ public class PPbrPipeline {
       }
     }, new PRenderContext.PhaseHandler("Lights", lightedBuffer, true) {
       @Override public void begin() {
-        PGLUtils.clearScreen(0, 0, 0, 1);
+        PGLUtils.clearScreen(0, 0, 0, 0);
         if (environment == null) {
           return;
         }
@@ -64,6 +69,25 @@ public class PPbrPipeline {
         // TODO: Lock the camera of the context, to prevent bugs.
         environment.renderLights(PRenderContext.activeContext(), depthTex, diffuseMTex, normalRTex, emissiveITex);
         // TODO: unlock
+      }
+
+      @Override public void end() {
+      }
+    }, new PRenderContext.PhaseHandler("PostProcess", null, true) {
+      @Override public void begin() {
+        PGLUtils.clearScreen(0, 0, 0, 1);
+        if (environment == null) {
+          return;
+        }
+        Texture lightedTex = lightedBuffer.texture("lighted");
+        Texture alphaBlendTex = gBuffer.texture("alphaBlend");
+        finalBuffer.begin(true);
+        postprocessingcombineshader.start(PRenderContext.activeContext());
+        postprocessingcombineshader.setWithUniform("u_lightedTex", lightedTex);
+        postprocessingcombineshader.setWithUniform("u_alphaBlendTex", alphaBlendTex);
+        finalBuffer.renderQuad(postprocessingcombineshader);
+        postprocessingcombineshader.end();
+        finalBuffer.end();
       }
 
       @Override public void end() {

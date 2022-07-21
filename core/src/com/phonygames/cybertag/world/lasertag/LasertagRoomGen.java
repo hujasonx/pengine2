@@ -132,6 +132,7 @@ public class LasertagRoomGen extends PBuilder {
           chainGlNode(glNodes, part, new PMaterial(part.name(), null).useVColIndex(true), null,
                       PGltf.Layer.AlphaBlend, true, true);
           builder.addNode(part.name(), null, glNodes, PMat4.IDT);
+          System.out.println("Alpha blend part : " + part.name());
         }
         lasertagRoom.modelInstance = new PModelInstance(builder.build());
         lasertagRoom.initialized = true;

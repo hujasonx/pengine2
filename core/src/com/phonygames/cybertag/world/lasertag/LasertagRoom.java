@@ -42,6 +42,7 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
   protected PModelInstance modelInstance;
   /** The number of vCol indices dedicated to shared base colors, as opposed to per-tile colors. */
   protected int numBaseVCols = 16;
+  protected int baseVColIndexForAlphaBlend = 8;
   private transient boolean roomColorsInitialized = false;
 
   protected LasertagRoom(String id) {
@@ -58,15 +59,20 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
     if (!initialized) {return;}
     if (colorDataEmitter != null && !roomColorsInitialized) {
       for (int a = 0; a < numBaseVCols; a++) {
-        if (isHallway) {
-          // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
-          // the normal or the index with this buffer.
-          colorDataEmitter.colorData[a * 2 + 0].setHSVA(.01f, .01f, .01f, 1); // DiffuseM;
-        } else {
-          // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
-          // the normal or the index with this buffer.
+        if (a >= baseVColIndexForAlphaBlend) {
+          // Alpha blend colors now.
           colorDataEmitter.colorData[a * 2 + 0].setHSVA(MathUtils.random(), MathUtils.random(.1f, .3f),
-                                                        MathUtils.random(.2f, .5f), 1); // DiffuseM;
+                                                        MathUtils.random(.2f, .5f), .2f); // Diffuse;
+        } else {
+          if (isHallway) {
+            // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+            // the normal or the index with this buffer.
+            colorDataEmitter.colorData[a * 2 + 0].setHSVA(.01f, .01f, .01f, 1); // DiffuseM;
+          } else {
+            // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
+            // the normal or the index with this buffer.
+            colorDataEmitter.colorData[a * 2 + 0].setHSVA(MathUtils.random(), MathUtils.random(.1f, .3f), MathUtils.random(.2f, .5f), 1); // DiffuseM;
+          }
         }
         colorDataEmitter.colorData[a * 2 + 1].set(0, 0, 0, 1); // EmissiveR;
       }

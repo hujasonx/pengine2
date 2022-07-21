@@ -21,9 +21,10 @@ public class PGltf {
                            Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
                            Gdx.files.local("engine/shader/gltf/default.frag.glsl"));
       } else if (Layer.AlphaBlend.equals(layer)) {
+        markForAnyMaterialId();
         if (material.useVColIndex()) {
           return new PShader("", fragmentLayout, vertexAttributes,
-                             Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
+                             Gdx.files.local("engine/shader/gltf/vcolindex.vert.glsl"),
                              Gdx.files.local("engine/shader/gltf/vcolindex.alphablend.frag.glsl"));
         }
       } else {

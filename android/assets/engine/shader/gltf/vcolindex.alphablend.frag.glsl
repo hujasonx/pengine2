@@ -20,15 +20,14 @@ void main() {
     vec2 pbrUV0 = vec2(0.0);
     #endif
 
-    diffuse = u_diffuseCol * diffuseTex(pbrUV0);
+    diffuse = u_diffuseCol * diffuseTex(pbrUV0) * v_diffuseM;
     diffuse.rgb = diffuse.rgb * diffuse.a;// Set the diffuse color.
 
-    emissive = u_emissiveCol * emissiveTex(pbrUV0);// * texture(u_emissiveTex, uv0);
+    emissive = u_emissiveCol * emissiveTex(pbrUV0) * v_emissiveR;// * texture(u_emissiveTex, uv0);
     emissive.rgb = emissive.rgb * emissive.a;// Set the emissive color.
 
-    alphaBlend.rgb += diffuse.rgb + emissive.rgb;
-    alphaBlend.a += diffuse.a + emissive.a;
-    alphaBlend = vec4(1.0);
+    alphaBlend.rgb = diffuse.rgb + emissive.rgb;
+    alphaBlend.a = diffuse.a;
 
     #include <engine/shader/end/rendercontext.frag>
     #include <engine/shader/end/instanced.frag>

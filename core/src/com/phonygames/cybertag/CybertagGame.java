@@ -272,11 +272,10 @@ public class CybertagGame implements PGame {
 
   @Override public void postFrameUpdate() {
     PGLUtils.clearScreen(1, 1, 1, 1);
-    PApplicationWindow.drawTextureToScreen(pPbrPipeline.lightedBuffer().texture());
+    PApplicationWindow.drawTextureToScreen(pPbrPipeline.getTexture());
     for (int a = 0; a < pPbrPipeline.gBuffer().numTextures(); a++) {
       if (Gdx.input.isKeyPressed(Input.Keys.NUM_1 + a)) {
         renderContext.start();
-        System.out.println(pPbrPipeline.gBuffer().getTextureName(a));
         gbufferPreviewRenderBuffer.begin();
         gbufferPreviewShader.start(renderContext);
         gbufferPreviewShader.setWithUniform("u_dataTex", pPbrPipeline.gBuffer().texture(a));

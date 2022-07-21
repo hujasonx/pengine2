@@ -20,3 +20,5 @@ diffuseM.a = 1.0;// Set the metalicity.
 emissiveI = u_emissiveCol * emissiveTex(pbrUV0);// * texture(u_emissiveTex, uv0);
 emissiveI.rgb = emissiveI.rgb * emissiveI.a;// Set the emissive color.
 emissiveI.a = 1.0;// Set the roughness.
+
+alphaBlend = vec4(0.0);
