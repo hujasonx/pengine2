@@ -112,6 +112,8 @@ public class PRenderContext {
   @Accessors(fluent = true)
   private int width = 1, height = 1;
 
+  private int drawCallCt = 0;
+
   public PRenderContext disableDepthTest() {
     PAssert.isTrue(isActive());
     backingRenderContext().setDepthTest(0);
@@ -141,6 +143,7 @@ public class PRenderContext {
         it.next().v().freeTemp();
       }
     }
+    drawCallCt = 0;
     boneTransformsBuffer().reset();
     dataBuffers().clearRecursive();
     storedVecsPerInstance().clearRecursive();
@@ -195,6 +198,7 @@ public class PRenderContext {
         storedVecsPerInstance().genPooled(e.k()).set(vecsWrittenPerInstance);
       }
     }
+    drawCallCt ++;
     addRenderContextDataBufferOffsetsToDrawCall(drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance);
     if (drawCall.strictDepthOrder()) {
       enqueuedStrictOrderDrawCalls().genPooled(layer).add(drawCall);
