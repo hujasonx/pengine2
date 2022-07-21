@@ -9,6 +9,7 @@ public class Pistol0 extends Gun {
     walkCycleShakeTEdgeInset = .1f;
     walkCycleXOffsetScale = .01f;
     walkCycleYOffsetScale = .014f;
+    walkCycleYOffsetPower = .75f;
     reloadAnimation = "Reload";
   }
 

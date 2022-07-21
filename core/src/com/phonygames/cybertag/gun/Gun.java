@@ -38,6 +38,8 @@ public abstract class Gun implements PRenderable {
   protected float walkCycleXOffsetScale = 1;
   /** How much to scale the y offset from walking; will be multiplied with [0, 1] */
   protected float walkCycleYOffsetScale = 1;
+  /** The power to raise the Y offset to. */
+  protected float walkCycleYOffsetPower = 1;
   private transient float reloadAnimationT = -1;
 
   protected Gun(String modelName, CharacterEntity characterEntity) {
@@ -100,7 +102,7 @@ public abstract class Gun implements PRenderable {
     float cycleTScaled = (PNumberUtils.clamp(walkCycleT, walkCycleShakeTEdgeInset, 1 - walkCycleShakeTEdgeInset) -
                           walkCycleShakeTEdgeInset) / (1 - 2 * walkCycleShakeTEdgeInset);
     float xFactor = ((cycleTScaled - .5f) * 2);
-    float yFactor = PNumberUtils.pow(Math.abs(cycleTScaled - .5f) * 2, .75f);
+    float yFactor = PNumberUtils.pow(Math.abs(cycleTScaled - .5f) * 2, walkCycleYOffsetPower);
     weaponPosOffsetSpring.goal().x(xFactor * walkCycleXOffsetScale); // Left.
     weaponPosOffsetSpring.goal().y(yFactor * walkCycleYOffsetScale); // Left.
   }
