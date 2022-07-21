@@ -17,6 +17,7 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PPool;
+import com.phonygames.pengine.util.PStringUtils;
 
 import java.nio.FloatBuffer;
 
@@ -107,11 +108,11 @@ public class PFloat4Texture extends Texture implements PPool.Poolable {
   }
 
   public void applyShader(PShader shader, String name, int lookupOffset, int vecsPerInstance) {
-    String uniform = "u_" + name + "Tex";
+    String uniform = PStringUtils.concat("u_", PStringUtils.concat(name, "Tex"));
     load();
     shader.setWithUniform(uniform, this);
-    shader.setI(uniform + "LookupOffset", lookupOffset);
-    shader.setI(uniform + "VecsPerI", vecsPerInstance);
+    shader.setI(PStringUtils.concat(uniform, "LookupOffset"), lookupOffset);
+    shader.setI(PStringUtils.concat(uniform, "VecsPerI"), vecsPerInstance);
   }
 
   public void load() {

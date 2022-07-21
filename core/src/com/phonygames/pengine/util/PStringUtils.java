@@ -2,7 +2,25 @@ package com.phonygames.pengine.util;
 
 import com.phonygames.pengine.math.PNumberUtils;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 public class PStringUtils {
+  private static final PStringMap<PStringMap<String>> staticConcatMap = new PStringMap<PStringMap<String>>() {
+    @Override public PStringMap<String> newUnpooled(String key) {
+      return new PStringMap<String>();
+    }
+  };
+
+  public static String concat(String a, String b) {
+    PStringMap<String> m = staticConcatMap.genUnpooled(a);
+    if (m.has(b)) { return m.get(b); }
+    String ret = a + b;
+    m.put(b, ret);
+    return ret;
+  }
+
   public static String appendSpacesToLength(String s, int length) {
     if (s == null) {
       return null;

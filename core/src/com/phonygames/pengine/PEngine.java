@@ -139,10 +139,12 @@ public class PEngine extends ApplicationAdapter {
   }
 
   private void frameUpdate() {
-    Gdx.graphics.setTitle(
-        "Cybertag: " + PStringUtils.prependSpacesToLength("" + Gdx.graphics.getFramesPerSecond(), 3) + "FPS, Mem: " +
-        PStringUtils.prependSpacesToLength(
-            PStringUtils.roundNearestHundredth(PApplicationUtils.runtimeUsedMemoryMb() / 1024), 5) + "GB");
+    if ((int)PEngine.uit > (int)(PEngine.uit - PEngine.uidt)) {
+      Gdx.graphics.setTitle(
+          "Cybertag: " + PStringUtils.prependSpacesToLength("" + Gdx.graphics.getFramesPerSecond(), 3) + "FPS, Mem: " +
+          PStringUtils.prependSpacesToLength(
+              PStringUtils.roundNearestHundredth(PApplicationUtils.runtimeUsedMemoryMb() / 1024), 5) + "GB");
+    }
     PApplicationWindow.preFrameUpdate();
     PAssetManager.preFrameUpdate();
     game.preFrameUpdate();

@@ -31,6 +31,8 @@ public class PEnvironment {
   public PEnvironment() {
     lightsFloatBuffer = PFloat4Texture.get(256 * 256, true);
     for (int a = 0; a < UniformConstants.NUM_DIRECTIONAL_LIGHTS; a++) {
+      UniformConstants.Vec4.u_directionalLightCol[a] = "u_directionalLightCol" + a;
+      UniformConstants.Vec4.u_directionalLightDir[a] = "u_directionalLightDir" + a;
       directionalLightDir[a] = PVec3.obtain();
       directionalLightCol[a] = PVec3.obtain();
     }
@@ -64,8 +66,8 @@ public class PEnvironment {
     ambientAndDirectionalLightShader.start(renderContext);
     ambientAndDirectionalLightShader.set("u_ambientLightCol", ambientLightCol);
     for (int a = 0; a < UniformConstants.NUM_DIRECTIONAL_LIGHTS; a++) {
-      ambientAndDirectionalLightShader.set("u_directionalLightCol" + a, directionalLightCol[a]);
-      ambientAndDirectionalLightShader.set("u_directionalLightDir" + a, directionalLightDir[a]);
+      ambientAndDirectionalLightShader.set(UniformConstants.Vec4.u_directionalLightCol[a], directionalLightCol[a]);
+      ambientAndDirectionalLightShader.set(UniformConstants.Vec4.u_directionalLightDir[a], directionalLightDir[a]);
     }
     setLightUniforms(ambientAndDirectionalLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex,
                      renderContext.viewProjInvTransform(), renderContext.cameraDir());
@@ -131,6 +133,11 @@ public class PEnvironment {
 
     public static class Vec3 {
       public static final String u_cameraDir = "u_cameraDir";
+    }
+
+    public static class Vec4 {
+      private static final String[] u_directionalLightCol = new String[NUM_DIRECTIONAL_LIGHTS];
+      private static final String[] u_directionalLightDir = new String[NUM_DIRECTIONAL_LIGHTS];
     }
 
     public static class Mat4 {

@@ -6,6 +6,7 @@ import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PDeepCopyable;
 import com.phonygames.pengine.util.PPool;
+import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -37,7 +38,7 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
 
   public void applyShaderWithUniform(String uniform, PShader shader) {
     shader.setWithUniform(uniform, getBackingTexture());
-    shader.set(uniform + "UVOS", getUvOS());
+    shader.set(PStringUtils.concat(uniform, "UVOS"), getUvOS());
   }
 
   public Texture getBackingTexture() {
