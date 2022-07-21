@@ -134,50 +134,6 @@ public class LasertagBuildingGenHallwayProcessor {
       PLog.i("Created hallway processor context with " + connectedGroups.size() + " connected groups");
     }
 
-    private void addInteriorWallsToNewHallwayRoomGen(PList<Hallway> hallways) {
-      for (int a = 0; a < hallways.size(); a++) {
-        Hallway hallway = hallways.get(a);
-        for (int b = a + 1; b < hallways.size(); b++) {
-          Hallway hallway2 = hallways.get(b);
-          if (hallway.connectsWithHallwayFlatOrSloped(hallway2)) {
-            // Two connected hallways shouldn't have interior walls between them.
-            continue;
-
-          }
-          // Check if the two hallways are neighbors. Since they dont connect, generate an interior wall.
-          for (int f = 0; f < FACINGS.length; f++) {
-            LasertagTileWall.Facing facing = FACINGS[f];
-            LasertagTileGen checkNeighbor = neighBor(hallway.tileGen, facing.normalX(), 0, facing.normalZ());
-            LasertagTileGen checkNeighborAbove = hallway.tileGenAbove == null ? null :
-                                                 neighBor(hallway.tileGenAbove, facing.normalX(), 0, facing.normalZ());
-            if (checkNeighbor != null && (checkNeighbor == hallway2.tileGen || checkNeighbor == hallway2.tileGenAbove)) {
-              hallway.tileGen.wallGen(facing.opposite()).wall.hasWall = true;
-              hallway.tileGen.wallGen(facing.opposite()).wall.isSolidWall = true;
-              hallway.tileGen.wallGen(facing.opposite()).wall.isValid = true;
-              checkNeighbor.wallGen(facing).wall.hasWall = true;
-              checkNeighbor.wallGen(facing).wall.isSolidWall = true;
-              checkNeighbor.wallGen(facing).wall.isValid = true;
-              PLog.i("\t\t\tAdding hallway interior wall");
-            }
-            if (checkNeighborAbove != null && (checkNeighborAbove == hallway2.tileGen || checkNeighborAbove == hallway2.tileGenAbove)) {
-              hallway.tileGenAbove.wallGen(facing.opposite()).wall.hasWall = true;
-              hallway.tileGenAbove.wallGen(facing.opposite()).wall.isSolidWall = true;
-              hallway.tileGenAbove.wallGen(facing.opposite()).wall.isValid = true;
-              checkNeighborAbove.wallGen(facing).wall.hasWall = true;
-              checkNeighborAbove.wallGen(facing).wall.isSolidWall = true;
-              checkNeighborAbove.wallGen(facing).wall.isValid = true;
-              PLog.i("\t\t\tAdding hallway interior wall");
-            }
-          }
-        }
-      }
-    }
-
-    public LasertagTileGen neighBor(LasertagTileGen tileGen, int xOffset, int yOffset, int zOffset) {
-      if (tileGen == null) {return null;}
-      return buildingGen.tileGens.get(tileGen.x + xOffset, tileGen.y + yOffset, tileGen.z + zOffset);
-    }
-
     /**
      * @return whether or not a hallway was generated.
      */
@@ -238,6 +194,11 @@ public class LasertagBuildingGenHallwayProcessor {
     private LasertagRoomGen getRoomGen(@Nullable LasertagTileGen tileGen) {
       if (tileGen == null) {return null;}
       return tileGen.roomGen;
+    }
+
+    public LasertagTileGen neighBor(LasertagTileGen tileGen, int xOffset, int yOffset, int zOffset) {
+      if (tileGen == null) {return null;}
+      return buildingGen.tileGens.get(tileGen.x + xOffset, tileGen.y + yOffset, tileGen.z + zOffset);
     }
 
     private boolean couldGenHallway(@Nullable LasertagTileGen tileGen, boolean sloped, int endOffsetY,
@@ -335,6 +296,46 @@ public class LasertagBuildingGenHallwayProcessor {
         }
       }
       return ret;
+    }
+
+    private void addInteriorWallsToNewHallwayRoomGen(PList<Hallway> hallways) {
+      for (int a = 0; a < hallways.size(); a++) {
+        Hallway hallway = hallways.get(a);
+        for (int b = a + 1; b < hallways.size(); b++) {
+          Hallway hallway2 = hallways.get(b);
+          if (hallway.connectsWithHallwayFlatOrSloped(hallway2)) {
+            // Two connected hallways shouldn't have interior walls between them.
+            continue;
+          }
+          // Check if the two hallways are neighbors. Since they dont connect, generate an interior wall.
+          for (int f = 0; f < FACINGS.length; f++) {
+            LasertagTileWall.Facing facing = FACINGS[f];
+            LasertagTileGen checkNeighbor = neighBor(hallway.tileGen, facing.normalX(), 0, facing.normalZ());
+            LasertagTileGen checkNeighborAbove = hallway.tileGenAbove == null ? null :
+                                                 neighBor(hallway.tileGenAbove, facing.normalX(), 0, facing.normalZ());
+            if (checkNeighbor != null &&
+                (checkNeighbor == hallway2.tileGen || checkNeighbor == hallway2.tileGenAbove)) {
+              hallway.tileGen.wallGen(facing.opposite()).wall.hasWall = true;
+              hallway.tileGen.wallGen(facing.opposite()).wall.isSolidWall = true;
+              hallway.tileGen.wallGen(facing.opposite()).wall.isValid = true;
+              checkNeighbor.wallGen(facing).wall.hasWall = true;
+              checkNeighbor.wallGen(facing).wall.isSolidWall = true;
+              checkNeighbor.wallGen(facing).wall.isValid = true;
+              PLog.i("\t\t\tAdding hallway interior wall");
+            }
+            if (checkNeighborAbove != null &&
+                (checkNeighborAbove == hallway2.tileGen || checkNeighborAbove == hallway2.tileGenAbove)) {
+              hallway.tileGenAbove.wallGen(facing.opposite()).wall.hasWall = true;
+              hallway.tileGenAbove.wallGen(facing.opposite()).wall.isSolidWall = true;
+              hallway.tileGenAbove.wallGen(facing.opposite()).wall.isValid = true;
+              checkNeighborAbove.wallGen(facing).wall.hasWall = true;
+              checkNeighborAbove.wallGen(facing).wall.isSolidWall = true;
+              checkNeighborAbove.wallGen(facing).wall.isValid = true;
+              PLog.i("\t\t\tAdding hallway interior wall");
+            }
+          }
+        }
+      }
     }
 
     public boolean fullyJoined() {
@@ -452,23 +453,38 @@ public class LasertagBuildingGenHallwayProcessor {
       tileGen.tile.floorTile10OffsetY = ((float) endOffsetY) / context.rampTiles;
       tileGen.tile.floorTile11OffsetY = ((float) endOffsetY) / context.rampTiles;
       tileGen.tile.floorTile01OffsetY = ((float) endOffsetY) / context.rampTiles;
+      if (tileGenAbove != null) {
+        tileGenAbove.tile.ceilTile00OffsetY = ((float) endOffsetY) / context.rampTiles;
+        tileGenAbove.tile.ceilTile10OffsetY = ((float) endOffsetY) / context.rampTiles;
+        tileGenAbove.tile.ceilTile11OffsetY = ((float) endOffsetY) / context.rampTiles;
+        tileGenAbove.tile.ceilTile01OffsetY = ((float) endOffsetY) / context.rampTiles;
+      }
       if (sloped) {
+        assert tileGenAbove != null;
         switch (facing) {
           case mX:
             tileGen.tile.floorTile10OffsetY += 1f / context.rampTiles;
             tileGen.tile.floorTile11OffsetY += 1f / context.rampTiles;
+            tileGenAbove.tile.ceilTile10OffsetY += 1f / context.rampTiles;
+            tileGenAbove.tile.ceilTile11OffsetY += 1f / context.rampTiles;
             break;
           case mZ:
             tileGen.tile.floorTile01OffsetY += 1f / context.rampTiles;
             tileGen.tile.floorTile11OffsetY += 1f / context.rampTiles;
+            tileGenAbove.tile.ceilTile01OffsetY += 1f / context.rampTiles;
+            tileGenAbove.tile.ceilTile11OffsetY += 1f / context.rampTiles;
             break;
           case X:
             tileGen.tile.floorTile00OffsetY += 1f / context.rampTiles;
             tileGen.tile.floorTile01OffsetY += 1f / context.rampTiles;
+            tileGenAbove.tile.ceilTile00OffsetY += 1f / context.rampTiles;
+            tileGenAbove.tile.ceilTile01OffsetY += 1f / context.rampTiles;
             break;
           case Z:
             tileGen.tile.floorTile00OffsetY += 1f / context.rampTiles;
             tileGen.tile.floorTile10OffsetY += 1f / context.rampTiles;
+            tileGenAbove.tile.ceilTile00OffsetY += 1f / context.rampTiles;
+            tileGenAbove.tile.ceilTile10OffsetY += 1f / context.rampTiles;
             break;
         }
       }
