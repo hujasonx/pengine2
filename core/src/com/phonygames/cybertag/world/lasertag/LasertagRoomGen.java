@@ -123,14 +123,14 @@ public class LasertagRoomGen extends PBuilder {
         PList<PGlNode> glNodes = new PList<>();
         PModel.Builder builder = new PModel.Builder();
         chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null, PGltf.Layer.PBR,
-                    true);
+                    true, false);
         emitStaticPhysicsPartIntoModelBuilder(builder);
         builder.addNode(basePart.name(), null, glNodes, PMat4.IDT);
         for (int a = 0; a < alphaBlendParts.size(); a++) {
           Part part = alphaBlendParts.get(a);
           glNodes.clear();
-          chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null,
-                      PGltf.Layer.AlphaBlend, true);
+          chainGlNode(glNodes, part, new PMaterial(part.name(), null).useVColIndex(true), null,
+                      PGltf.Layer.AlphaBlend, true, true);
           builder.addNode(part.name(), null, glNodes, PMat4.IDT);
         }
         lasertagRoom.modelInstance = new PModelInstance(builder.build());
@@ -151,7 +151,7 @@ public class LasertagRoomGen extends PBuilder {
 
   // Use actually placed door data, which should update directlyConnectedRooms.
   public void recalcRoomDistancesScores() {
-    PAssert.failNotImplemented("recalcRoomDistnacesScores");
+    PAssert.failNotImplemented("recalcRoomDistancesScores");
     connectedRoomConnectionSizes.clear();
     try (val it = directlyConnectedRooms.obtainIterator()) {
       while (it.hasNext()) {

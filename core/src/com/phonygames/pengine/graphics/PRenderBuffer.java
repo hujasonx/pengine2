@@ -132,6 +132,9 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     }
   }
 
+  public String getTextureName(int index) {
+    return attachmentSpecs.get(index).name;
+  }
   public PRenderBuffer renderQuad(PShader shader) {
     boolean wasActive = activeBuffer == this;
     if (!wasActive) {

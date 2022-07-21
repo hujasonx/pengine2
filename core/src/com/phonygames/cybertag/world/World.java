@@ -23,7 +23,7 @@ public class World {
   public World() {
     LasertagWorldGen worldGen = new LasertagWorldGen(this);
     LasertagBuildingGen buildingGen = new LasertagBuildingGen(worldGen);
-    buildingGen.setTileTranslation(0, 0, 0).setTileRotation(.2f).setTileScale(4, 4, 4);
+    buildingGen.setTileTranslation(0, 0, 0).setTileRotation(0).setTileScale(4, 4, 4);
     LasertagBuildingGenAABBPlacer.addAABBs(buildingGen);
     LasertagRoomGenRoomPlacer.reset();
     LasertagRoomGenRoomPlacer.roomHeightWeights = new float[]{.5f, .4f, .3f, .2f, .1f};

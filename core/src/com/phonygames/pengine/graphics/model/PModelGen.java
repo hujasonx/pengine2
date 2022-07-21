@@ -89,7 +89,7 @@ public class PModelGen implements PPostableTask {
    */
   protected PModelGen chainGlNode(@Nullable PList<PGlNode> list, @NonNull Part part, @NonNull PMaterial defaultMaterial,
                                   @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer,
-                                  boolean setOriginToMeshCenter) {
+                                  boolean setOriginToMeshCenter, boolean alphaBlend) {
     if (list == null) {
       list = new PList<>();
     }
@@ -99,6 +99,12 @@ public class PModelGen implements PPostableTask {
     glNode.drawCall().setLayer(layer);
     if (setOriginToMeshCenter) {
       glNode.drawCall().setOrigin(glNode.drawCall().mesh().center());
+    }
+    if (alphaBlend) {
+      glNode.drawCall().strictDepthOrder(true);
+      glNode.drawCall().setEnableBlend(true);
+      glNode.drawCall().setSrcFactor(GL20.GL_ONE);
+      glNode.drawCall().setDstFactor(GL20.GL_ONE);
     }
     // Set the occlusion radius to slightly more than half the bounds.
     glNode.drawCall().occludeRadius(

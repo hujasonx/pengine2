@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.lighting.PEnvironment;
@@ -30,21 +31,27 @@ public class PPbrPipeline {
     super();
     this.gBuffer =
         new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addFloatAttachment("normalR")
-                                   .addFloatAttachment("emissiveI").addDepthAttachment().build();
+                                   .addFloatAttachment("emissiveI").addFloatAttachment("alphaBlend").addDepthAttachment().build();
     this.lightedBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("lighted").build();
     this.finalBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("final").build();
     setPhases();
   }
 
   protected void setPhases() {
-    phases = new PRenderContext.PhaseHandler[]{new PRenderContext.PhaseHandler(PGltf.Layer.PBR, gBuffer) {
+    phases = new PRenderContext.PhaseHandler[]{new PRenderContext.PhaseHandler(PGltf.Layer.PBR, gBuffer, true) {
       @Override public void begin() {
         PGLUtils.clearScreen(0, 0, 0, 1);
       }
 
       @Override public void end() {
       }
-    }, new PRenderContext.PhaseHandler("Lights", lightedBuffer) {
+    }, new PRenderContext.PhaseHandler(PGltf.Layer.AlphaBlend, gBuffer, false) {
+      @Override public void begin() {
+      }
+
+      @Override public void end() {
+      }
+    }, new PRenderContext.PhaseHandler("Lights", lightedBuffer, true) {
       @Override public void begin() {
         PGLUtils.clearScreen(0, 0, 0, 1);
         if (environment == null) {

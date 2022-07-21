@@ -26,6 +26,7 @@ public class LasertagRoomGenTileEmitter {
                          PModelGen.StaticPhysicsPart staticPhysicsPart, int tileVColIndex,
                          PList<PModelGen.Part> alphaBlendParts) {
     LasertagTile tile = tileGen.tile;
+    tile.tileVColIndexStart = tileVColIndex;
     LasertagRoom lasertagRoom = tile.room;
     PAssert.isNotNull(lasertagRoom, "Tiles without owner rooms are not supported yet!");
     PModelGenTemplateOptions options = PModelGenTemplateOptions.obtainDefault();
@@ -64,7 +65,6 @@ public class LasertagRoomGenTileEmitter {
     emitWall(tileGen, tile.wallZ, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, options, pool);
     emitWall(tileGen, tile.wallMX, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, options, pool);
     emitWall(tileGen, tile.wallMZ, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, options, pool);
-    tile.tileVColIndexStart = tileVColIndex;
     tileVColIndex += LasertagTile.PER_TILE_VCOL_INDICES;
     pool.free();
     options.free();
@@ -100,6 +100,9 @@ public class LasertagRoomGenTileEmitter {
       extraTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     if (wall.isWindow) {
+      if (tileGen.x == 0 && tileGen.z == 0 && wall.facing == LasertagTileWall.Facing.X && tileGen.roomGen.buildingGen.building.id.equals("building0")) {
+        System.out.println(tileGen.tile.tileVColIndexStart);
+      }
       PModelGenTemplate windowTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.windowTemplate(tileGen));
       windowTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     } else if (wall.isSolidWall) {

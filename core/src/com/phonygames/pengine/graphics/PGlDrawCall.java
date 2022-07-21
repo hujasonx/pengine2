@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
@@ -81,6 +80,10 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private PShader shader;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private boolean strictDepthOrder = false, neverCull = false;
 
   private PGlDrawCall(boolean renderingDisabled) {
     reset();
@@ -102,6 +105,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     cullFace = GL20.GL_BACK;
     numInstances = 0;
     origin().setZero();
+    strictDepthOrder = false;
+    neverCull = false;
     occludeRadius = 0;
     shader = null;
     layer = null;
@@ -123,27 +128,27 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
 
   @Override public int compareTo(PGlDrawCall other) {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-//      PDebugRenderer.line(origin(), 0, 0, origin(), 0, 10, PVec4.ONE, PVec4.ONE, 4, 4);
-//      PVec3 p000 = pool.vec3(origin()).add(-occludeRadius, -occludeRadius, -occludeRadius);
-//      PVec3 p100 = pool.vec3(origin()).add(occludeRadius, -occludeRadius, -occludeRadius);
-//      PVec3 p001 = pool.vec3(origin()).add(-occludeRadius, -occludeRadius, occludeRadius);
-//      PVec3 p101 = pool.vec3(origin()).add(occludeRadius, -occludeRadius, occludeRadius);
-//      PVec3 p010 = pool.vec3(origin()).add(-occludeRadius, occludeRadius, -occludeRadius);
-//      PVec3 p110 = pool.vec3(origin()).add(occludeRadius, occludeRadius, -occludeRadius);
-//      PVec3 p011 = pool.vec3(origin()).add(-occludeRadius, occludeRadius, occludeRadius);
-//      PVec3 p111 = pool.vec3(origin()).add(occludeRadius, occludeRadius, occludeRadius);
-//      PDebugRenderer.line(p000, 0, 0, p100, 0, 10, PColor.RED, PColor.RED, 1, 1);
-//      PDebugRenderer.line(p010, 0, 0, p110, 0, 10, PColor.RED, PColor.RED, 1, 1);
-//      PDebugRenderer.line(p001, 0, 0, p101, 0, 10, PColor.RED, PColor.RED, 1, 1);
-//      PDebugRenderer.line(p011, 0, 0, p111, 0, 10, PColor.RED, PColor.RED, 1, 1);
-//      PDebugRenderer.line(p000, 0, 0, p001, 0, 10, PColor.GREEN, PColor.GREEN, 1, 1);
-//      PDebugRenderer.line(p010, 0, 0, p011, 0, 10, PColor.GREEN, PColor.GREEN, 1, 1);
-//      PDebugRenderer.line(p110, 0, 0, p111, 0, 10, PColor.GREEN, PColor.GREEN, 1, 1);
-//      PDebugRenderer.line(p010, 0, 0, p011, 0, 10, PColor.GREEN, PColor.GREEN, 1, 1);
-//      PDebugRenderer.line(p000, 0, 0, p010, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
-//      PDebugRenderer.line(p100, 0, 0, p110, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
-//      PDebugRenderer.line(p101, 0, 0, p111, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
-//      PDebugRenderer.line(p001, 0, 0, p011, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
+//            PDebugRenderer.line(origin(), 0, 0, origin(), 0, 10, PVec4.ONE, PVec4.ONE, 4, 4);
+      //      PVec3 p000 = pool.vec3(origin()).add(-occludeRadius, -occludeRadius, -occludeRadius);
+      //      PVec3 p100 = pool.vec3(origin()).add(occludeRadius, -occludeRadius, -occludeRadius);
+      //      PVec3 p001 = pool.vec3(origin()).add(-occludeRadius, -occludeRadius, occludeRadius);
+      //      PVec3 p101 = pool.vec3(origin()).add(occludeRadius, -occludeRadius, occludeRadius);
+      //      PVec3 p010 = pool.vec3(origin()).add(-occludeRadius, occludeRadius, -occludeRadius);
+      //      PVec3 p110 = pool.vec3(origin()).add(occludeRadius, occludeRadius, -occludeRadius);
+      //      PVec3 p011 = pool.vec3(origin()).add(-occludeRadius, occludeRadius, occludeRadius);
+      //      PVec3 p111 = pool.vec3(origin()).add(occludeRadius, occludeRadius, occludeRadius);
+      //      PDebugRenderer.line(p000, 0, 0, p100, 0, 10, PColor.RED, PColor.RED, 1, 1);
+      //      PDebugRenderer.line(p010, 0, 0, p110, 0, 10, PColor.RED, PColor.RED, 1, 1);
+      //      PDebugRenderer.line(p001, 0, 0, p101, 0, 10, PColor.RED, PColor.RED, 1, 1);
+      //      PDebugRenderer.line(p011, 0, 0, p111, 0, 10, PColor.RED, PColor.RED, 1, 1);
+      //      PDebugRenderer.line(p000, 0, 0, p001, 0, 10, PColor.GREEN, PColor.GREEN, 1, 1);
+      //      PDebugRenderer.line(p010, 0, 0, p011, 0, 10, PColor.GREEN, PColor.GREEN, 1, 1);
+      //      PDebugRenderer.line(p110, 0, 0, p111, 0, 10, PColor.GREEN, PColor.GREEN, 1, 1);
+      //      PDebugRenderer.line(p010, 0, 0, p011, 0, 10, PColor.GREEN, PColor.GREEN, 1, 1);
+      //      PDebugRenderer.line(p000, 0, 0, p010, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
+      //      PDebugRenderer.line(p100, 0, 0, p110, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
+      //      PDebugRenderer.line(p101, 0, 0, p111, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
+      //      PDebugRenderer.line(p001, 0, 0, p011, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
     }
     return 0;
   }
@@ -164,6 +169,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     cullFace = other.cullFace;
     numInstances = other.numInstances;
     origin().set(other.origin());
+    strictDepthOrder = other.strictDepthOrder;
+    neverCull = other.neverCull;
     occludeRadius = other.occludeRadius;
     shader = other.shader;
     layer = other.layer;

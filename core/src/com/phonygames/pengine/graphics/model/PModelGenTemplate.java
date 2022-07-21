@@ -100,7 +100,7 @@ public class PModelGenTemplate {
         int vColIndex = vColOffset == -1 ? (vColBaseOffset == -1 ? 0 : vColBaseOffset) : (vColIndexOffset + vColOffset);
         PModelGen.Part part = basePart;
         if (isAlphaBlend) {
-          part = modelGen.addPart(basePart.name() + ".alphaBlend" + ".id" + a + "_" + vColIndexOffset + "",
+          part = modelGen.addPart(basePart.name() + ".alphaBlend" + ".id" + a + "_" + alphaBlendParts.size() + "",
                                   basePart.vertexAttributes());
           alphaBlendParts.add(part);
         }

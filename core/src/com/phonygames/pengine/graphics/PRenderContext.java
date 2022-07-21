@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.g3d.utils.TextureBinder;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.shader.PShader;
@@ -79,6 +78,14 @@ public class PRenderContext {
       new PStringMap<>(glDrawCallListMapPool());
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
+  private final PStringMap<PList<PGlDrawCall>> enqueuedStrictOrderDrawCalls =
+      new PStringMap<>(new PPool<PList<PGlDrawCall>>() {
+        @Override protected PList<PGlDrawCall> newObject() {
+          return new PList<>();
+        }
+      });
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  @Accessors(fluent = true)
   private final OrthographicCamera orthographicCamera = new OrthographicCamera();
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
@@ -111,16 +118,6 @@ public class PRenderContext {
     return this;
   }
 
-  // Returns whether or not the projection was successful.
-  public boolean projectIf(PVec3 in) {
-    if (cameraDir().dot(in.x() - cameraPos().x(), in.y() - cameraPos().y(), in.z() - cameraPos().z()) < 0) {
-      return false;
-    }
-    perspectiveCamera().project(in.backingVec3());
-    in.y(perspectiveCamera().viewportHeight - in.y());
-    return true;
-  }
-
   public boolean isActive() {
     return activeContext() == this;
   }
@@ -149,6 +146,7 @@ public class PRenderContext {
     storedVecsPerInstance().clearRecursive();
     storedBufferOffsets().clearRecursive();
     enqueuedDrawCalls().clearRecursive();
+    enqueuedStrictOrderDrawCalls().clearRecursive();
   }
 
   public boolean enqueue(PShaderProvider shaderProvider, PGlDrawCall drawCall, int boneTransformsLookupOffset,
@@ -198,7 +196,11 @@ public class PRenderContext {
       }
     }
     addRenderContextDataBufferOffsetsToDrawCall(drawCall, boneTransformsLookupOffset, boneTransformsVecsPerInstance);
-    enqueuedDrawCalls().genPooled(layer).genPooled(shader).add(drawCall);
+    if (drawCall.strictDepthOrder()) {
+      enqueuedStrictOrderDrawCalls().genPooled(layer).add(drawCall);
+    } else {
+      enqueuedDrawCalls().genPooled(layer).genPooled(shader).add(drawCall);
+    }
     if (snapshotBufferOffsets) {
       snapshotBufferOffsets();
     }
@@ -206,6 +208,7 @@ public class PRenderContext {
 
   /**
    * Returns (either an existing or by creating a new) data buffer with the given name.
+   *
    * @param name
    * @return
    */
@@ -240,6 +243,7 @@ public class PRenderContext {
 
   /**
    * Returns the active PRenderBuffer.
+   *
    * @return
    */
   public PRenderBuffer getBuffer() {
@@ -255,10 +259,10 @@ public class PRenderContext {
    */
   public void glRenderQueue() {
     for (val e1 : phaseHandlers()) {
-      String key = e1.key;
+      String phaseName = e1.key;
       PhaseHandler phaseHandler = e1.value;
       if (phaseHandler.renderBuffer() != null) {
-        phaseHandler.renderBuffer().begin();
+        phaseHandler.renderBuffer().begin(phaseHandler.swapBuffersOnStart);
       }
       phaseHandler.begin();
       val queueMap = enqueuedDrawCalls().get(phaseHandler.layer());
@@ -278,11 +282,41 @@ public class PRenderContext {
           }
         }
       }
+      // Now, render the strict-draw-order drawcalls.
+      PList<PGlDrawCall> strictDepthCalls = enqueuedStrictOrderDrawCalls().get(phaseName);
+      if (strictDepthCalls != null) {
+        strictDepthCalls.sort();
+        PShader shader = null;
+        for (int a = 0; a < strictDepthCalls.size(); a++) {
+          PGlDrawCall drawCall = strictDepthCalls.get(a);
+          if (shader != drawCall.shader()) {
+            if (shader != null) {
+              shader.end();
+            }
+            shader = drawCall.shader();
+            shader.start(this);
+          }
+          drawCall.glDraw(this, drawCall.shader(), true);
+        }
+        if (shader != null) {
+          shader.end();
+        }
+      }
       phaseHandler.end();
       if (phaseHandler.renderBuffer() != null) {
         phaseHandler.renderBuffer().end();
       }
     }
+  }
+
+  // Returns whether or not the projection was successful.
+  public boolean projectIf(PVec3 in) {
+    if (cameraDir().dot(in.x() - cameraPos().x(), in.y() - cameraPos().y(), in.z() - cameraPos().z()) < 0) {
+      return false;
+    }
+    perspectiveCamera().project(in.backingVec3());
+    in.y(perspectiveCamera().viewportHeight - in.y());
+    return true;
   }
 
   public PRenderContext setBlending(final boolean enabled, final int sFactor, final int dFactor) {
@@ -425,10 +459,14 @@ public class PRenderContext {
     @Getter(value = AccessLevel.MODULE)
     @Accessors(fluent = true)
     protected final PRenderBuffer renderBuffer;
+    @Getter(value = AccessLevel.MODULE)
+    @Accessors(fluent = true)
+    protected final boolean swapBuffersOnStart;
 
-    public PhaseHandler(@NonNull String layer, PRenderBuffer renderBuffer) {
+    public PhaseHandler(@NonNull String layer, PRenderBuffer renderBuffer, boolean swapBuffersOnStart) {
       this.layer = layer;
       this.renderBuffer = renderBuffer;
+      this.swapBuffersOnStart = swapBuffersOnStart;
     }
 
     public abstract void begin();
