@@ -9,10 +9,13 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
 
 import lombok.AccessLevel;
@@ -53,31 +56,41 @@ public class PModel {
         modelInstance.getDataBufferEmitter().emitDataBuffersInto(renderContext);
       }
     }
-    // Next, enqueue the model instance glNodes, filling up the boneTransform buffer for each drawCall/glNode.
-    try (val it = nodes().obtainIterator()) {
-      while (it.hasNext()) {
-        val v = it.next();
-        Node node = v.v();
-        for (int a = 0; a < v.v().glNodes().size(); a++) {
-          PGlNode glNode = v.v().glNodes().get(a);
-          // Fill the bone transforms buffer.
-          PModelInstance firstInstance = null;
-          int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
-          for (int b = 0; b < instances.size(); b++) {
-            PModelInstance modelInstance = instances.get(b);
-            PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
-            modelInstance.outputBoneTransformsToBuffer(renderContext, glNode.id());
-            if (firstInstance == null) {
-              firstInstance = modelInstance;
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      // Next, enqueue the model instance glNodes, filling up the boneTransform buffer for each drawCall/glNode.
+      try (val it = nodes().obtainIterator()) {
+        while (it.hasNext()) {
+          val v = it.next();
+          Node node = v.v();
+          for (int a = 0; a < v.v().glNodes().size(); a++) {
+            PGlNode glNode = v.v().glNodes().get(a);
+            // Fill the bone transforms buffer.
+            PModelInstance firstInstance = null;
+            int currentBoneTransformsOffset = renderContext.boneTransformsBuffer().vecsWritten();
+            for (int b = 0; b < instances.size(); b++) {
+              PModelInstance modelInstance = instances.get(b);
+              PAssert.isTrue(this == modelInstance.model(), "Incompatible model type in instances list");
+              modelInstance.outputBoneTransformsToBuffer(renderContext, glNode.id());
+              if (firstInstance == null) {
+                firstInstance = modelInstance;
+              }
             }
+            assert firstInstance != null;
+            PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).setNumInstances(instances.size());
+            // The PModel.Node's drawcall origin is the model-space origin of the mesh.
+            drawCall.origin().mul(firstInstance.worldTransform(), 1);
+            // Scale the bounds.
+            PVec3 firstInstanceScale = firstInstance.worldTransform().getScale(pool.vec3());
+            drawCall.occludeRadius(drawCall.occludeRadius() *
+                                   PNumberUtils.max(firstInstanceScale.x(), firstInstanceScale.y(),
+                                                    firstInstanceScale.z()));
+            if (useMaterialOfFirstInstance) {
+              drawCall.material(firstInstance.glNodes().get(glNode.id()).drawCall().material());
+            }
+            renderContext.enqueue(shaderProvider, drawCall, currentBoneTransformsOffset,
+                                  Math.max(1 /* If no bones, we still output the world transform. */,
+                                           glNode.invBoneTransforms().size) * 4, false);
           }
-          PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).setNumInstances(instances.size());
-          if (useMaterialOfFirstInstance && firstInstance != null) {
-            drawCall.material(firstInstance.glNodes().get(glNode.id()).drawCall().material());
-          }
-          renderContext.enqueue(shaderProvider, drawCall, currentBoneTransformsOffset,
-                                Math.max(1 /* If no bones, we still output the world transform. */,
-                                         glNode.invBoneTransforms().size) * 4, false);
         }
       }
     }
@@ -184,20 +197,20 @@ public class PModel {
     private final Node parent;
     @Getter(value = AccessLevel.PUBLIC, lazy = true)
     @Accessors(fluent = true)
-    private final PMat4 transform = PMat4.obtain(), modelSpaceTransform = PMat4.obtain();
-    @Getter(value = AccessLevel.PUBLIC)
-    @Setter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    boolean inheritTransform;
-    protected @Nullable PPhysicsCollisionShape physicsCollisionShape;
-    @Getter(value = AccessLevel.PUBLIC, lazy = true)
-    @Accessors(fluent = true)
     private final PMat4 physicsCollisionShapeOffset = PMat4.obtain();
     @Getter(value = AccessLevel.PUBLIC, lazy = true)
     @Accessors(fluent = true)
     private final PMat4 physicsCollisionShapeOffsetInv = PMat4.obtain();
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
+    private final PMat4 transform = PMat4.obtain(), modelSpaceTransform = PMat4.obtain();
     protected float boneMass = 0;
-
+    protected @Nullable
+    PPhysicsCollisionShape physicsCollisionShape;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Setter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    boolean inheritTransform;
     private boolean modelSpaceTransformSet = false;
 
     private Node(String id, Node parent, PList<PGlNode> glNodes) {
@@ -210,8 +223,6 @@ public class PModel {
       // Dont let the user write to the model space transform; the model builder will set it.
       modelSpaceTransform().lockWriting();
     }
-
-
 
     private boolean hasParent() {
       return parent() != null;

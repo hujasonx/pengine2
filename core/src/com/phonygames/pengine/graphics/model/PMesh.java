@@ -29,7 +29,7 @@ public class PMesh {
   private float[] backingMeshFloats;
   private short[] backingMeshShorts;
   private BoundingBox boundingBox;
-  private PVec3 center;
+  private PVec3 center, bounds;
 
   public PMesh(Mesh mesh, PVertexAttributes vertexAttributes) {
     backingMesh = mesh;
@@ -129,7 +129,24 @@ public class PMesh {
     if (boundingBox == null) {
       boundingBox = backingMesh.calculateBoundingBox();
     }
-    return (center = PVec3.obtain()).set(boundingBox.getCenterX(), boundingBox.getCenterY(), boundingBox.getCenterZ());
+    center = PVec3.obtain();
+    boundingBox.getCenter(center.backingVec3());
+    return center;
+  }
+
+  public PVec3 bounds() {
+    if (bounds != null) {
+      return bounds;
+    }
+    if (backingMesh.getNumVertices() == 0) {
+      return bounds = PVec3.obtain().setZero();
+    }
+    if (boundingBox == null) {
+      boundingBox = backingMesh.calculateBoundingBox();
+    }
+    bounds = PVec3.obtain();
+    boundingBox.getDimensions(bounds.backingVec3());
+    return bounds;
   }
 
   public float[] getBackingMeshFloats() {

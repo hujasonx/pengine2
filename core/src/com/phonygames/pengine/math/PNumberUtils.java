@@ -25,6 +25,10 @@ public class PNumberUtils {
     return mod(radians, MathUtils.PI2) - MathUtils.PI;
   }
 
+
+  public static float max(float a, float b, float c) {
+    return Math.max(a, Math.max(b, c));
+  }
   /**
    * Returns the true modulus a mod b.
    *

@@ -34,9 +34,9 @@ import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PModelGen implements PPostableTask {
-  protected static final PList<PGlNode> tempGlNodesBuffer = new PList<>();
   @Getter
   private static final PPostableTaskQueue postableTaskQueue = new PPostableTaskQueue();
+  protected static final PList<PGlNode> tempGlNodesBuffer = new PList<>();
   private final PStringMap<Part> parts = new PStringMap<>();
   private final PStringMap<StaticPhysicsPart> staticPhysicsParts = new PStringMap<>();
   private boolean finished = false;
@@ -100,6 +100,10 @@ public class PModelGen implements PPostableTask {
     if (setOriginToMeshCenter) {
       glNode.drawCall().setOrigin(glNode.drawCall().mesh().center());
     }
+    // Set the occlusion radius to slightly more than half the bounds.
+    glNode.drawCall().occludeRadius(
+        PNumberUtils.max(glNode.drawCall().mesh().bounds().x(), glNode.drawCall().mesh().bounds().y(),
+                         glNode.drawCall().mesh().bounds().z()) * .55f);
     if (boneInvBindTransforms != null) {
       glNode.invBoneTransforms().putAll(boneInvBindTransforms);
     }
@@ -378,6 +382,11 @@ public class PModelGen implements PPostableTask {
     }
 
     public static class VertexProcessor implements PPool.Poolable {
+      // #pragma mark - PPool.Poolable
+      @Getter
+      @Setter
+      private PPool ownerPool, sourcePool;
+      // #pragma end - PPool.Poolable
       @Getter(value = AccessLevel.PUBLIC, lazy = true)
       @Accessors(fluent = true)
       private static final PPool<VertexProcessor> staticPool = new PPool<VertexProcessor>() {
@@ -395,13 +404,11 @@ public class PModelGen implements PPostableTask {
       @Getter(value = AccessLevel.PRIVATE, lazy = true)
       @Accessors(fluent = true)
       private final PVec4 wallCornerA = PVec4.obtain(), wallCornerB = PVec4.obtain();
-      @Getter
-      @Setter
-      private PPool ownerPool, sourcePool;
       private Strategy strategy = Strategy.Transform;
 
       /**
        * Processes the vector, applying whatever transform using the strategy supplied.
+       *
        * @param attribute
        * @param out
        * @return
