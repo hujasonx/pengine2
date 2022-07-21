@@ -9,8 +9,8 @@ import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PInt;
+import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PDeepCopyable;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PPool;
@@ -128,7 +128,15 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
 
   @Override public int compareTo(PGlDrawCall other) {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-//            PDebugRenderer.line(origin(), 0, 0, origin(), 0, 10, PVec4.ONE, PVec4.ONE, 4, 4);
+      if (!strictDepthOrder || !other.strictDepthOrder) {
+        return 0;
+      }
+      // Essentially, sort by distance to the camera.
+      assert PRenderContext.activeContext() != null;
+      float selfDistance = origin().dst(PRenderContext.activeContext().cameraPos());
+      float otherDistance = other.origin().dst(PRenderContext.activeContext().cameraPos());
+      return -PNumberUtils.compareTo(selfDistance, otherDistance);
+      //            PDebugRenderer.line(origin(), 0, 0, origin(), 0, 10, PVec4.ONE, PVec4.ONE, 4, 4);
       //      PVec3 p000 = pool.vec3(origin()).add(-occludeRadius, -occludeRadius, -occludeRadius);
       //      PVec3 p100 = pool.vec3(origin()).add(occludeRadius, -occludeRadius, -occludeRadius);
       //      PVec3 p001 = pool.vec3(origin()).add(-occludeRadius, -occludeRadius, occludeRadius);
@@ -150,7 +158,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
       //      PDebugRenderer.line(p101, 0, 0, p111, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
       //      PDebugRenderer.line(p001, 0, 0, p011, 0, 10, PColor.BLUE, PColor.BLUE, 1, 1);
     }
-    return 0;
+    //    return 0;
   }
 
   @Override public PGlDrawCall deepCopy() {
