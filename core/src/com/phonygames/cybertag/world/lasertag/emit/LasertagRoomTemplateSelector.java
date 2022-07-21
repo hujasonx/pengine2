@@ -30,6 +30,10 @@ public class LasertagRoomTemplateSelector {
     return "model/template/wall/basic.glb";
   }
 
+  public String windowTemplate(LasertagTileGen tileGen) {
+    return "model/template/window/basic.glb";
+  }
+
   public String wallTemplateExtras(LasertagTileGen tileGen) {
     return null;
   }

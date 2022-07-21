@@ -122,6 +122,7 @@ public class LasertagRoomGenTileProcessor {
 
   private static void emitWallGen(LasertagRoomGen roomGen, LasertagTileGen tileGen, LasertagTileWall.Facing facing) {
     LasertagRoomWallGen wallGen = createRoomWallGen(roomGen, tileGen, facing);
+
     roomGen.roomWallGens.add(wallGen);
   }
 

@@ -42,6 +42,11 @@ public class LasertagRoomWallGen {
       int searchTileYOffset = 0;
       while (needsWallInDirection(roomGen, nextTileGenTop, facing)) {
         searchTileGenTop = nextTileGenTop;
+        // Mark the wall as a window if it is on the edge of the building.
+        // If the wall on the edge of the building, make it a window.
+        if (roomGen.buildingGen.tileGens.get(searchTileGenTop.x - facing.normalX(), searchTileGenTop.y, searchTileGenTop.z - facing.normalZ()) == null) {
+          searchTileGenTop.tile.wall(facing).isWindow = true;
+        }
         // Mark all the walls for the visited tiles as valid, since we own them now.
         searchTileGenTop.tile.wall(facing).hasWall = true;
         searchTileGenTop.wallGen(facing).roomWallGen = this;
