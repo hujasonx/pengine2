@@ -47,10 +47,8 @@ public abstract class Gun implements PRenderable {
     modelInstance = new PModelInstance(PAssetManager.model(modelName, true));
     modelInstance.setDataBufferEmitter(renderContext -> {
       PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
-      // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
-      // the normal or the Index with this buffer.
       vColIndexBuffer.addData(.1f, .2f, .5f, 1); // Base color diffuseM.
-      vColIndexBuffer.addData(0, 0, 0, .3f); // Base color emissiveR.
+      vColIndexBuffer.addData(0, 0, 0, .3f); // Base color emissiveI.
     });
     modelInstance.material("matBase").useVColIndex(true);
   }

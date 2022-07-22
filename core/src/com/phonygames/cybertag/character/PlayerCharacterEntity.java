@@ -69,22 +69,20 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
       modelInstance.setDataBufferEmitter(renderContext -> {
         PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
-        // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit
-        // the normal or the Index with this buffer.
         vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveR.
+        vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveI.
         vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveR.
+        vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveI.
         vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveR.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveI.
         vColIndexBuffer.addData(52f / 255f, 136f / 255f, 232f / 255f, 1); // Iris diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveR.
+        vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveI.
         vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveR.
+        vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveI.
         vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveR.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveI.
         vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveR.
+        vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveI.
       });
       modelInstance.material("matBase").useVColIndex(true);
       modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
