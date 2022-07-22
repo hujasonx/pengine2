@@ -11,28 +11,17 @@ public class PGltf {
     @Override public PShader genShader(String fragmentLayout, String layer, PVertexAttributes vertexAttributes,
                                        PMaterial material) {
       if (Layer.PBR.equals(layer)) {
-        markForAnyMaterialId();
-        if (material.useVColIndex()) {
-          return new PShader("", fragmentLayout, vertexAttributes,
+          return new PShader(material.getShaderPrefix(), fragmentLayout, vertexAttributes,
                              Gdx.files.local("engine/shader/gltf/vcolindex.vert.glsl"),
                              Gdx.files.local("engine/shader/gltf/vcolindex.frag.glsl"));
-        }
-        return new PShader("", fragmentLayout, vertexAttributes,
-                           Gdx.files.local("engine/shader/gltf/default.vert.glsl"),
-                           Gdx.files.local("engine/shader/gltf/default.frag.glsl"));
       } else if (Layer.AlphaBlend.equals(layer)) {
-        markForAnyMaterialId();
-        if (material.useVColIndex()) {
-          return new PShader("", fragmentLayout, vertexAttributes,
+          return new PShader(material.getShaderPrefix(), fragmentLayout, vertexAttributes,
                              Gdx.files.local("engine/shader/gltf/vcolindex.vert.glsl"),
                              Gdx.files.local("engine/shader/gltf/vcolindex.alphablend.frag.glsl"));
-        }
       } else {
         PLog.w("PShaderProvider Unsupported layer: " + layer);
         return null;
       }
-      PLog.w("PShaderProvider Invalid");
-      return null;
     }
   };
 

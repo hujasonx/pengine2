@@ -50,16 +50,6 @@ public class LasertagRoomGen extends PBuilder {
     }
   }
 
-  public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PList<LasertagTileGen> tileGens) {
-    this.buildingGen = buildingGen;
-    lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size());
-    buildingGen.roomGens.add(this);
-    lasertagRoom.building = buildingGen.building;
-    for (int a = 0; a < tileGens.size(); a++) {
-      markTileWithSelf(tileGens.get(a));
-    }
-  }
-
   private void markTileWithSelf(@Nullable LasertagTileGen tileGen) {
     if (tileGen == null || tileGen.tile.room != null) {return;}
     tileGen.tile.room = lasertagRoom;
@@ -84,14 +74,20 @@ public class LasertagRoomGen extends PBuilder {
     (horizontal ? horizontallyAdjacentRooms : verticallyAdjacentRooms).add(otherTileGen.roomGen);
   }
 
+  public LasertagRoomGen(@NonNull LasertagBuildingGen buildingGen, PList<LasertagTileGen> tileGens) {
+    this.buildingGen = buildingGen;
+    lasertagRoom = new LasertagRoom(buildingGen.building.id + ":room" + buildingGen.roomGens.size());
+    buildingGen.roomGens.add(this);
+    lasertagRoom.building = buildingGen.building;
+    for (int a = 0; a < tileGens.size(); a++) {
+      markTileWithSelf(tileGens.get(a));
+    }
+  }
+
   public LasertagRoom build() {
     lockBuilder();
     buildModelInstance();
     return lasertagRoom;
-  }
-
-  private void createTemplateSelectorDefault() {
-    this.templateSelector = new LasertagRoomTemplateSelector(this);
   }
 
   private void buildModelInstance() {
@@ -129,10 +125,9 @@ public class LasertagRoomGen extends PBuilder {
         for (int a = 0; a < alphaBlendParts.size(); a++) {
           Part part = alphaBlendParts.get(a);
           glNodes.clear();
-          chainGlNode(glNodes, part, new PMaterial(part.name(), null).useVColIndex(true), null,
-                      PGltf.Layer.AlphaBlend, true, true);
+          chainGlNode(glNodes, part, new PMaterial(part.name(), null).useVColIndex(true), null, PGltf.Layer.AlphaBlend,
+                      true, true);
           builder.addNode(part.name(), null, glNodes, PMat4.IDT);
-          System.out.println("Alpha blend part : " + part.name());
         }
         lasertagRoom.modelInstance = new PModelInstance(builder.build());
         lasertagRoom.initialized = true;
@@ -148,6 +143,10 @@ public class LasertagRoomGen extends PBuilder {
         lasertagRoom.modelInstance.createAndAddStaticBodiesFromModelWithCurrentWorldTransform();
       }
     });
+  }
+
+  private void createTemplateSelectorDefault() {
+    this.templateSelector = new LasertagRoomTemplateSelector(this);
   }
 
   // Use actually placed door data, which should update directlyConnectedRooms.

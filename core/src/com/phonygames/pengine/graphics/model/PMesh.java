@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -38,6 +37,7 @@ public class PMesh {
 
   /**
    * Generates a new PMesh, doing any necessary renaming.
+   *
    * @param mesh
    */
   public PMesh(Mesh mesh) {
@@ -119,21 +119,6 @@ public class PMesh {
     return out;
   }
 
-  public PVec3 center() {
-    if (center != null) {
-      return center;
-    }
-    if (backingMesh.getNumVertices() == 0) {
-      return center = PVec3.obtain().setZero();
-    }
-    if (boundingBox == null) {
-      boundingBox = backingMesh.calculateBoundingBox();
-    }
-    center = PVec3.obtain();
-    boundingBox.getCenter(center.backingVec3());
-    return center;
-  }
-
   public PVec3 bounds() {
     if (bounds != null) {
       return bounds;
@@ -147,6 +132,21 @@ public class PMesh {
     bounds = PVec3.obtain();
     boundingBox.getDimensions(bounds.backingVec3());
     return bounds;
+  }
+
+  public PVec3 center() {
+    if (center != null) {
+      return center;
+    }
+    if (backingMesh.getNumVertices() == 0) {
+      return center = PVec3.obtain().setZero();
+    }
+    if (boundingBox == null) {
+      boundingBox = backingMesh.calculateBoundingBox();
+    }
+    center = PVec3.obtain();
+    boundingBox.getCenter(center.backingVec3());
+    return center;
   }
 
   public float[] getBackingMeshFloats() {
@@ -180,6 +180,18 @@ public class PMesh {
   public void setAutobind(boolean autobind) {
     backingMesh.setAutoBind(autobind);
     this.autobind = autobind;
+  }
+
+  public PMesh setIndices(short[] indices) {
+    backingMesh.setIndices(indices);
+    backingMeshShorts = null;
+    return this;
+  }
+
+  public PMesh setVertices(float[] vertices) {
+    backingMesh.setVertices(vertices);
+    backingMeshShorts = null;
+    return this;
   }
 
   public enum ShapeType {

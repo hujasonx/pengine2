@@ -6,9 +6,7 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PMat4;
-import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PStringMap;
 
@@ -22,7 +20,7 @@ public class PVertexAttributes {
   @Getter
   private static PVertexAttributes PHYSICS = new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position()});
   @Getter
-  private static PVertexAttributes POSITION, DEFAULT, GLTF_UNSKINNED, GLTF_UNSKINNED_NOCOLOR;
+  private static PVertexAttributes POSITION, DEFAULT, BILLBOARD_PARTICLE, GLTF_UNSKINNED, GLTF_UNSKINNED_NOCOLOR;
   @Getter
   private final VertexAttributes backingVertexAttributes;
 //  private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
@@ -129,6 +127,9 @@ public class PVertexAttributes {
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
                                 Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Attribute.Keys.uv[1])});
       POSITION = new PVertexAttributes(new VertexAttribute[]{Attribute.get(Attribute.Keys.pos)});
+      BILLBOARD_PARTICLE = new PVertexAttributes(
+          new VertexAttribute[]{Attribute.get(Attribute.Keys.pos),
+                                Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Keys.col[0])});
       GLTF_UNSKINNED = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
                                 Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Keys.col[0])});

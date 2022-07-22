@@ -45,7 +45,7 @@ public class PPbrPipeline {
   protected void setPhases() {
     phases = new PRenderContext.PhaseHandler[]{new PRenderContext.PhaseHandler(PGltf.Layer.PBR, gBuffer, true) {
       @Override public void begin() {
-        PGLUtils.clearScreen(0, 0, 0, 1);
+        PGLUtils.clearScreen(0, 0, 0, 0);
       }
 
       @Override public void end() {

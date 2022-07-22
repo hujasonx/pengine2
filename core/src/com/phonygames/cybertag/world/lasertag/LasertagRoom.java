@@ -62,7 +62,7 @@ public class LasertagRoom implements PRenderContext.DataBufferEmitter {
         if (a >= baseVColIndexForAlphaBlend) {
           // Alpha blend colors now.
           colorDataEmitter.colorData[a * 2 + 0].setHSVA(MathUtils.random(), MathUtils.random(.1f, .3f),
-                                                        MathUtils.random(.2f, .5f), .2f); // Diffuse;
+                                                        MathUtils.random(.2f, .5f), .6f); // Diffuse;
         } else {
           if (isHallway) {
             // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit

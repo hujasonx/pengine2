@@ -13,6 +13,7 @@ import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.PStringUtils;
 
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
@@ -116,6 +117,14 @@ public class PMaterial {
     ret.textures.tryDeepCopyAllFrom(textures);
     ret.useVColIndex = useVColIndex;
     return ret;
+  }
+
+  public String getShaderPrefix() {
+    String prefix = "";
+    if (useVColIndex) {
+      prefix = PStringUtils.concat(prefix, "#define vColIndexFlag\n");
+    }
+    return prefix;
   }
 
   public float getFloat(String uniform) {
