@@ -55,7 +55,7 @@ public class PBillboardParticleSource {
       }
       particle.pos().add(particle.vel(), PEngine.dt);
       float newVelMagInVelDir = Math.max(0, particle.vel().len() + PEngine.dt * (particle.accelVelocityDir()));
-      particle.vel().set(particle.vel()).nor().scl(newVelMagInVelDir);
+      particle.vel().nor().scl(newVelMagInVelDir);
       particle.vel().add(particle.accel(), PEngine.dt);
       if (particle.faceCamera()) {
         particle.faceCameraAngle(particle.faceCameraAngle() + particle.angVel() * PEngine.dt);
