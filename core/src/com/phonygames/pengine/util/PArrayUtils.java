@@ -13,6 +13,30 @@ public class PArrayUtils {
     return ret;
   }
 
+  public static float[] floatListToArray(PList<Float> f) {
+    float[] ret = new float[f.size()];
+    for (int a = 0; a < f.size(); a++) {
+      ret[a] = f.get(a);
+    }
+    return ret;
+  }
+
+  public static short[] shortListToArray(PList<Short> f) {
+    short[] ret = new short[f.size()];
+    for (int a = 0; a < f.size(); a++) {
+      ret[a] = f.get(a);
+    }
+    return ret;
+  }
+
+  public static int[] intListToArray(PList<Integer> f) {
+    int[] ret = new int[f.size()];
+    for (int a = 0; a < f.size(); a++) {
+      ret[a] = f.get(a);
+    }
+    return ret;
+  }
+
   public static int randomIndexWithWeights(float[] weights) {
     float r = MathUtils.random(sum(weights));
     float s = 0;

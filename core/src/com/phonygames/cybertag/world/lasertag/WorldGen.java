@@ -6,7 +6,6 @@ import com.phonygames.pengine.math.aabb.PIntAABB;
 
 public class WorldGen {
   public static LasertagWorld gen(World world) {
-
     LasertagWorldGen worldGen = new LasertagWorldGen(world);
     LasertagBuildingGen buildingGen = new LasertagBuildingGen(worldGen);
     buildingGen.setTileTranslation(0, 0, 0).setTileRotation(0).setTileScale(4, 4, 4);

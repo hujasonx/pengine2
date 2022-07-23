@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.util.PBuilder;
@@ -15,13 +16,18 @@ public class LasertagBuildingGen extends PBuilder {
   protected final PList<LasertagDoorGen> doorGens = new PList<>();
   protected final PList<LasertagDoorGen.PossibleWallDoor> possibleDoors = new PList<>();
   protected final PList<LasertagRoomGen> roomGens = new PList<>();
+  protected final LasertagWorldGen worldGen;
   protected final PIntMap3d<LasertagTileGen> tileGens = new PIntMap3d<LasertagTileGen>() {
     @Override protected LasertagTileGen newUnpooled(int x, int y, int z) {
-      return new LasertagTileGen(LasertagBuildingGen.this.building.id + "(" + x + "," + y + "," + z + ")", x, y, z);
-    }
+      return newUnpooledTileGen(x, y, z);}
   };
+  protected LasertagTileGen newUnpooledTileGen(int x, int y, int z) {
+    return new LasertagTileGen(this, LasertagBuildingGen.this.building.id + "(" + x + "," + y + "," + z + ")", x, y, z);
+  }
 
   public LasertagBuildingGen(LasertagWorldGen worldGen) {
+    this.worldGen = worldGen;
+    worldGen.addBlockingTask(this);
     building = new LasertagBuilding("building" + worldGen.buildingGens.size(), worldGen.lasertagWorld);
     worldGen.buildingGens.add(this);
   }
@@ -81,7 +87,12 @@ public class LasertagBuildingGen extends PBuilder {
   }
 
   private void buildModelInstance() {
-    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {});
+    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
+      @Override protected void modelEnd() {
+
+        worldGen.clearBlockingTask(LasertagBuildingGen.this);
+      }
+    });
   }
 
   public void processTiles() {

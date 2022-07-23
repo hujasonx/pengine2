@@ -35,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 
 public class PRecastMeshBuilder {
   private final static float precision = 1;
-  private final static float m_cellSize = 0.2f / precision;
-  private final static float m_cellHeight = 0.2f / precision;
+  private final static float m_cellSize = 0.4f / precision;
+  private final static float m_cellHeight = 0.4f / precision;
   private final static float m_agentHeight = 1.8f;
   private final static float m_agentRadius = 0.6f;
   private final static float m_agentMaxClimb = 0.5f;
@@ -44,7 +44,7 @@ public class PRecastMeshBuilder {
   private final static int m_regionMinSize = 8;
   private final static int m_regionMergeSize = 20;
   private final static float m_edgeMaxLen = 12.0f;
-  private final static float m_edgeMaxError = .8f / precision;
+  private final static float m_edgeMaxError = .9f / precision;
   private final static int m_vertsPerPoly = 3;
   private final static float m_detailSampleDist = 3.0f;
   private final static float m_detailSampleMaxError = 0.8f / precision;

@@ -97,6 +97,21 @@ public class PModelGen implements PPostableTask {
     }
   }
 
+  public void emitStaticPhysicsPartIntoVerticesAndIndices(PList<Float> v, PList<Integer> i) {
+    try (val it = staticPhysicsParts.obtainIterator()) {
+      int startIndex = v.size() / 3;
+      while (it.hasNext()) {
+        val e = it.next();
+        if (e.v().indices().isEmpty()) {continue;}
+        v.addAll(e.v().vertices());
+        for (int a = 0; a < e.v().indices().size(); a++) {
+          i.add(startIndex + e.v().indices().get(a));
+        }
+      }
+    }
+
+  }
+
   public static class Part {
     @Getter(value = AccessLevel.PROTECTED)
     @Accessors(fluent = true)
