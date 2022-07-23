@@ -118,14 +118,18 @@ public class LasertagRoomGen extends PBuilder {
       @Override protected void modelEnd() {
         PList<PGlNode> glNodes = new PList<>();
         PModel.Builder builder = new PModel.Builder();
-        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null, PGltf.Layer.PBR,
-                    true, false);
+        builder.chainGlNode(glNodes, basePart.name(), basePart.getMesh(),
+                            new PMaterial(basePart.name(), null).useVColIndex(true), null, PGltf.Layer.PBR, true,
+                            false);
+        //        chainGlNode(glNodes, basePart, new PMaterial(basePart.name(), null).useVColIndex(true), null, PGltf
+        //        .Layer.PBR,
+        //                    true, false);
         emitStaticPhysicsPartIntoModelBuilder(builder);
         builder.addNode(basePart.name(), null, glNodes, PMat4.IDT);
         for (int a = 0; a < alphaBlendParts.size(); a++) {
           Part part = alphaBlendParts.get(a);
           glNodes.clear();
-          chainGlNode(glNodes, part, new PMaterial(part.name(), null).useVColIndex(true), null, PGltf.Layer.AlphaBlend,
+          builder.chainGlNode(glNodes, part.name(), part.getMesh(), new PMaterial(part.name(), null).useVColIndex(true), null, PGltf.Layer.AlphaBlend,
                       true, true);
           builder.addNode(part.name(), null, glNodes, PMat4.IDT);
         }

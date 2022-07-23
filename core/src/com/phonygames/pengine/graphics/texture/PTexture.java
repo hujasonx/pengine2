@@ -11,18 +11,23 @@ import com.phonygames.pengine.util.PStringUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.val;
 
 public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
-  private static final PTexture WHITE_PIXEL = new PTexture(PFloat4Texture.getWHITE_PIXEL());
-  @Getter(lazy = true)
-  private final PVec4 uvOS = PVec4.obtain().set(0, 0, 1, 1);
-  @Setter
-  private Texture backingTexture;
+  // #pragma mark - PPool.Poolable
   @Getter
   @Setter
   private PPool ownerPool, sourcePool;
+  // #pragma end - PPool.Poolable
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private static final PTexture WHITE_PIXEL = new PTexture(PFloat4Texture.getWHITE_PIXEL());
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PVec4 uvOS = PVec4.obtain().set(0, 0, 1, 1);
+  @Setter
+  private Texture backingTexture;
 
   public PTexture() {
   }
@@ -38,7 +43,7 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
 
   public void applyShaderWithUniform(String uniform, PShader shader) {
     shader.setWithUniform(uniform, getBackingTexture());
-    shader.set(PStringUtils.concat(uniform, "UVOS"), getUvOS());
+    shader.set(PStringUtils.concat(uniform, "UVOS"), uvOS);
   }
 
   public Texture getBackingTexture() {
@@ -83,7 +88,8 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
     if (backingTexture == null) {
       return "[PTexture UNSET]";
     }
-    return "[PTexture ref:" + (backingTexture.toString().split("@")[1]) + " " + width() + "x" + height() + "]";
+    return "[PTexture ref:" + (backingTexture.toString().split("@")[1]) + " " + width() + "x" + height() + ", uvOS: " +
+           uvOS + "]";
   }
 
   public int width() {
@@ -96,6 +102,27 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
 
   @Override public void reset() {
     this.backingTexture = null;
+  }
+
+  /**
+   * @param x [0, width]
+   * @param y [0, height]
+   * @param w [0, width]
+   * @param h [0, height]
+   */
+  public void setRegionByPixel(int x, int y, int w, int h) {
+    uvOS.set(((float) x) * backingTexture.getWidth(), ((float) y) * backingTexture.getHeight(),
+             ((float) w) * backingTexture.getWidth(), ((float) h) * backingTexture.getHeight());
+  }
+
+  /**
+   * @param x [0, 1]
+   * @param y [0, 1]
+   * @param w [0, 1]
+   * @param h [0, 1]
+   */
+  public void setRegionByRatio(float x, float y, float w, float h) {
+    uvOS.set(x, y, w, h);
   }
 
   public PTexture tryDeepCopy() {

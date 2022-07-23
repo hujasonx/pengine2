@@ -11,6 +11,9 @@ import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PCollectionUtils;
 import com.phonygames.pengine.util.PList;
 
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -33,6 +36,14 @@ public class PMesh {
   public PMesh(Mesh mesh, PVertexAttributes vertexAttributes) {
     backingMesh = mesh;
     this.vertexAttributes = vertexAttributes;
+  }
+
+  public ShortBuffer getIndicesBuffer() {
+    return backingMesh.getIndicesBuffer();
+  }
+
+  public FloatBuffer getVerticesBuffer() {
+    return backingMesh.getVerticesBuffer();
   }
 
   /**
@@ -190,6 +201,12 @@ public class PMesh {
 
   public PMesh setVertices(float[] vertices) {
     backingMesh.setVertices(vertices);
+    backingMeshShorts = null;
+    return this;
+  }
+
+  public PMesh setVertices(float[] vertices, int offset, int count) {
+    backingMesh.setVertices(vertices, offset, count);
     backingMeshShorts = null;
     return this;
   }

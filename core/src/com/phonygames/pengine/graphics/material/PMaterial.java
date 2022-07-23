@@ -46,7 +46,7 @@ public class PMaterial {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private boolean useVColIndex = false;
+  private boolean useVColIndex = false, noModelTransform = false;
 
   public PMaterial(String id, PModelInstance owner) {
     this.id = id;
@@ -116,6 +116,7 @@ public class PMaterial {
     ret.vec4s.tryDeepCopyAllFrom(vec4s);
     ret.textures.tryDeepCopyAllFrom(textures);
     ret.useVColIndex = useVColIndex;
+    ret.noModelTransform = noModelTransform;
     return ret;
   }
 
@@ -123,6 +124,9 @@ public class PMaterial {
     String prefix = "";
     if (useVColIndex) {
       prefix = PStringUtils.concat(prefix, "#define vColIndexFlag\n");
+    }
+    if (noModelTransform) {
+      prefix = PStringUtils.concat(prefix, "#define noModelTransformFlag\n");
     }
     return prefix;
   }

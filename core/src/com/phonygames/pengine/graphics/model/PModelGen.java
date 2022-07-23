@@ -84,39 +84,6 @@ public class PModelGen implements PPostableTask {
   protected void modelEnd() {
   }
 
-  /**
-   * Creates or appends to a list of GLNodes, generating a new node using the given part.
-   */
-  protected PModelGen chainGlNode(@Nullable PList<PGlNode> list, @NonNull Part part, @NonNull PMaterial defaultMaterial,
-                                  @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer,
-                                  boolean setOriginToMeshCenter, boolean alphaBlend) {
-    if (list == null) {
-      list = new PList<>();
-    }
-    val glNode = new PGlNode(part.name);
-    glNode.drawCall().setMesh(part.getMesh());
-    glNode.drawCall().setMaterial(defaultMaterial);
-    glNode.drawCall().setLayer(layer);
-    if (setOriginToMeshCenter) {
-      glNode.drawCall().setOrigin(glNode.drawCall().mesh().center());
-    }
-    if (alphaBlend) {
-      glNode.drawCall().strictDepthOrder(true);
-      glNode.drawCall().setEnableBlend(true);
-      glNode.drawCall().setSrcFactor(GL20.GL_SRC_ALPHA);
-      glNode.drawCall().setDstFactor(GL20.GL_ONE_MINUS_SRC_ALPHA);
-    }
-    // Set the occlusion radius to slightly more than half the bounds.
-    glNode.drawCall().occludeRadius(
-        PNumberUtils.max(glNode.drawCall().mesh().bounds().x(), glNode.drawCall().mesh().bounds().y(),
-                         glNode.drawCall().mesh().bounds().z()) * .55f);
-    if (boneInvBindTransforms != null) {
-      glNode.invBoneTransforms().putAll(boneInvBindTransforms);
-    }
-    list.add(glNode);
-    return this;
-  }
-
   public void emitStaticPhysicsPartIntoModelBuilder(PModel.Builder builder) {
     try (val it = staticPhysicsParts.obtainIterator()) {
       while (it.hasNext()) {

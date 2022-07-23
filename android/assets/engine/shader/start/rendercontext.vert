@@ -23,6 +23,10 @@ mat4 renderContextModelTransformInvTra;
 // transform.
 renderContextModelTransform = boneTransformsMat4I(0);
 renderContextModelTransformInvTra = renderContextModelTransform;
+#elif defined(noModelTransformFlag)
+// Use identity matrices.
+renderContextModelTransform = mat4(1.0);
+renderContextModelTransformInvTra = mat4(1.0);
 #else
 // Otherwise, get the transform from uniforms.
 renderContextModelTransform = u_worldTransform;

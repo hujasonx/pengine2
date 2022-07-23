@@ -186,6 +186,22 @@ public class PVec4 extends PVec<PVec4> {
     return backingQuaterion.w;
   }
 
+  public float r() {
+    return backingQuaterion.x;
+  }
+
+  public float g() {
+    return backingQuaterion.y;
+  }
+
+  public float b() {
+    return backingQuaterion.z;
+  }
+
+  public float a() {
+    return backingQuaterion.w;
+  }
+
   public PVec3 applyAsQuat(PVec3 out) {
     backingQuaterion.transform(out.backingVec3());
     return out;
