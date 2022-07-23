@@ -81,6 +81,7 @@ public class PRigidBody implements PPool.Poolable {
                                                                  ret.localInertia().z()));
     ret.collisionShape = collisionShape;
     ret.rigidBody = new btRigidBody(constructionInfo);
+    constructionInfo.dispose();
     ret.rigidBody.userData = ret;
     ret.rigidBody.setCollisionShape(collisionShape.collisionShape);
     ret.group = group;
