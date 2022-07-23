@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics.texture;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec4;
@@ -102,6 +103,7 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
 
   @Override public void reset() {
     this.backingTexture = null;
+    this.uvOS.set(0, 0, 1, 1);
   }
 
   /**
@@ -127,5 +129,11 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
 
   public PTexture tryDeepCopy() {
     return new PTexture(backingTexture);
+  }
+
+  public PTexture set(TextureRegion region) {
+    this.backingTexture = region.getTexture();
+    this.uvOS.set(region.getU(), region.getV(), region.getU2() - region.getU(), region.getV2() - region.getV());
+    return this;
   }
 }

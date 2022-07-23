@@ -1,5 +1,6 @@
 package com.phonygames.cybertag.world;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.character.NpcHumanoidEntity;
 import com.phonygames.cybertag.character.PlayerCharacterEntity;
@@ -12,55 +13,25 @@ import com.phonygames.cybertag.world.lasertag.LasertagRoomGenRoomPlacer;
 import com.phonygames.cybertag.world.lasertag.LasertagRoomGenWalkwayProcessor;
 import com.phonygames.cybertag.world.lasertag.LasertagWorld;
 import com.phonygames.cybertag.world.lasertag.LasertagWorldGen;
+import com.phonygames.cybertag.world.lasertag.WorldGen;
+import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.particles.PBillboardParticle;
+import com.phonygames.pengine.graphics.particles.PBillboardParticleSource;
+import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.math.aabb.PIntAABB;
 
 public class World {
   public final LasertagWorld lasertagWorld;
   private PlayerCharacterEntity playerCharacter;
   private NpcHumanoidEntity npcHumanoidEntity;
+  private PBillboardParticleSource billboardParticleSource;
 
   public World() {
-    LasertagWorldGen worldGen = new LasertagWorldGen(this);
-    LasertagBuildingGen buildingGen = new LasertagBuildingGen(worldGen);
-    buildingGen.setTileTranslation(0, 0, 0).setTileRotation(0).setTileScale(4, 4, 4);
-    LasertagBuildingGenAABBPlacer.addAABBs(buildingGen);
-    LasertagRoomGenRoomPlacer.reset();
-    LasertagRoomGenRoomPlacer.roomHeightWeights = new float[]{.5f, .4f, .3f, .2f, .1f};
-    for (int a = 0; a < 20; a++) {
-      PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen);
-      if (roomAABB != null) {
-        LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen, roomAABB);
-      }
-    }
-    LasertagBuildingGenHallwayProcessor.processHallways(buildingGen);
-    buildingGen.processTiles();
-    LasertagBuildingGen buildingGen2 = new LasertagBuildingGen(worldGen);
-    buildingGen2.setTileTranslation(MathUtils.random(100f, 150f), MathUtils.random(-10f, 10f), MathUtils.random(100f, 150f)).setTileRotation(MathUtils.random(MathUtils.PI2)).setTileScale(4, 4, 4);
-    LasertagBuildingGenAABBPlacer.addAABBs(buildingGen2);
-    LasertagRoomGenRoomPlacer.reset();
-    for (int a = 0; a < 10; a++) {
-      PIntAABB roomAABB = LasertagRoomGenRoomPlacer.getValidAABBForRoomPlacement(buildingGen2);
-      if (roomAABB != null) {
-        LasertagRoomGen roomGen = new LasertagRoomGen(buildingGen2, roomAABB);
-      }
-    }
-    LasertagBuildingGenHallwayProcessor.processHallways(buildingGen2);
-    buildingGen2.processTiles();
-    // Process
-    LasertagBuildGenDoorProcessor.processPossibleDoorsIntoAcutal(buildingGen);
-    LasertagBuildGenDoorProcessor.processPossibleDoorsIntoAcutal(buildingGen2);
-    // Hallway Pass.
-    // Final wall pass.
-    LasertagBuildingGen.finalPassWalls(buildingGen);
-    LasertagBuildingGen.finalPassWalls(buildingGen2);
-    // Walkway Pass.
-
-    LasertagRoomGenWalkwayProcessor.processRoomWalkways(buildingGen);
-    LasertagRoomGenWalkwayProcessor.processRoomWalkways(buildingGen2);
-    this.lasertagWorld = worldGen.build();
+    lasertagWorld = WorldGen.gen(this);
     playerCharacter = new PlayerCharacterEntity();
     npcHumanoidEntity = new NpcHumanoidEntity();
+    billboardParticleSource = new PBillboardParticleSource();
   }
 
   public void logicUpdate() {
@@ -78,11 +49,22 @@ public class World {
     lasertagWorld.frameUpdate();
     playerCharacter.frameUpdate();
     npcHumanoidEntity.frameUpdate();
+    billboardParticleSource.frameUpdate();
+    if (PKeyboard.isFrameJustDown(Input.Keys.ALT_RIGHT)) {
+      PBillboardParticle particle = billboardParticleSource.spawnParticle();
+      particle.texture().set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Mist2", true));
+      particle.faceCamera(true);
+      particle.faceCameraXScale(1);
+      particle.faceCameraYScale(1);
+      particle.pos().set(MathUtils.random(10f), MathUtils.random(10f), MathUtils.random(10f));
+    }
   }
 
   public void render(PRenderContext renderContext) {
     lasertagWorld.render(renderContext);
     playerCharacter.render(renderContext);
     npcHumanoidEntity.render(renderContext);
+    billboardParticleSource.setOrigin(renderContext.cameraPos());
+    billboardParticleSource.render(renderContext);
   }
 }

@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -52,6 +53,7 @@ public class PPbrPipeline {
       }
     }, new PRenderContext.PhaseHandler(PGltf.Layer.AlphaBlend, gBuffer, false) {
       @Override public void begin() {
+        Gdx.gl.glBlendEquationSeparate(GL20.GL_FUNC_ADD, GL20.GL_FUNC_ADD);
       }
 
       @Override public void end() {

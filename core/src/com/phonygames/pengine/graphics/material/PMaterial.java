@@ -40,8 +40,6 @@ public class PMaterial {
   private final PStringMap<PVec2> vec2s = new PStringMap<PVec2>(PVec2.getStaticPool());
   private final PStringMap<PVec3> vec3s = new PStringMap<PVec3>(PVec3.getStaticPool());
   private final PStringMap<PVec4> vec4s = new PStringMap<PVec4>(PVec4.getStaticPool());
-  @Getter
-  private String shaderPrefix;
 
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)

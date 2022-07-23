@@ -3,7 +3,6 @@ package com.phonygames.pengine.graphics.model;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PGlDrawCall;
@@ -142,41 +141,6 @@ public class PModel {
   public static class Builder extends PBuilder {
     protected final PModel model = new PModel();
 
-
-    /**
-     * Creates or appends to a list of GLNodes, generating a new node using the given name and mesh.
-     */
-    public Builder chainGlNode(@Nullable PList<PGlNode> list, @NonNull String name, @NonNull PMesh mesh, @NonNull
-        PMaterial defaultMaterial,
-                                    @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer,
-                                    boolean setOriginToMeshCenter, boolean alphaBlend) {
-      if (list == null) {
-        list = new PList<>();
-      }
-      val glNode = new PGlNode(name);
-      glNode.drawCall().setMesh(mesh);
-      glNode.drawCall().setMaterial(defaultMaterial);
-      glNode.drawCall().setLayer(layer);
-      if (setOriginToMeshCenter) {
-        glNode.drawCall().setOrigin(glNode.drawCall().mesh().center());
-      }
-      if (alphaBlend) {
-        glNode.drawCall().strictDepthOrder(true);
-        glNode.drawCall().setEnableBlend(true);
-        glNode.drawCall().setSrcFactor(GL20.GL_SRC_ALPHA);
-        glNode.drawCall().setDstFactor(GL20.GL_ONE_MINUS_SRC_ALPHA);
-      }
-      // Set the occlusion radius to slightly more than half the bounds.
-      glNode.drawCall().occludeRadius(
-          PNumberUtils.max(glNode.drawCall().mesh().bounds().x(), glNode.drawCall().mesh().bounds().y(),
-                           glNode.drawCall().mesh().bounds().z()) * .55f);
-      if (boneInvBindTransforms != null) {
-        glNode.invBoneTransforms().putAll(boneInvBindTransforms);
-      }
-      list.add(glNode);
-      return this;
-    }
-
     public Node addNode(String id, Node parent, PList<PGlNode> glNodes, PMat4 transform) {
       checkLock();
       Node node = new Node(id, parent, glNodes);
@@ -196,6 +160,39 @@ public class PModel {
       lockBuilder();
       processNodes();
       return model;
+    }
+
+    /**
+     * Creates or appends to a list of GLNodes, generating a new node using the given name and mesh.
+     */
+    public Builder chainGlNode(@Nullable PList<PGlNode> list, @NonNull String name, @NonNull PMesh mesh,
+                               @NonNull PMaterial defaultMaterial,
+                               @Nullable ArrayMap<String, PMat4> boneInvBindTransforms, @NonNull String layer,
+                               boolean setOriginToMeshCenter, boolean alphaBlend) {
+      if (list == null) {
+        list = new PList<>();
+      }
+      val glNode = new PGlNode(name);
+      glNode.drawCall().setMesh(mesh);
+      glNode.drawCall().setMaterial(defaultMaterial);
+      glNode.drawCall().setLayer(layer);
+      if (setOriginToMeshCenter) {
+        glNode.drawCall().setOrigin(glNode.drawCall().mesh().center());
+      }
+      if (alphaBlend) {
+        glNode.drawCall().strictDepthOrder(true);
+        glNode.drawCall().setEnableBlend(true);
+        glNode.drawCall().setDepthMask(false);
+      }
+      // Set the occlusion radius to slightly more than half the bounds.
+      glNode.drawCall().occludeRadius(
+          PNumberUtils.max(glNode.drawCall().mesh().bounds().x(), glNode.drawCall().mesh().bounds().y(),
+                           glNode.drawCall().mesh().bounds().z()) * .55f);
+      if (boneInvBindTransforms != null) {
+        glNode.invBoneTransforms().putAll(boneInvBindTransforms);
+      }
+      list.add(glNode);
+      return this;
     }
 
     private void processNodeRecursive(Node node, @Nullable PMat4 parentTransform) {

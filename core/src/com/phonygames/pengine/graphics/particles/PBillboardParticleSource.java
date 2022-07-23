@@ -1,7 +1,6 @@
 package com.phonygames.pengine.graphics.particles;
 
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.math.Vector3;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -26,23 +25,17 @@ public class PBillboardParticleSource {
   private static int maxCapacity = 1000;
   private static Boolean modelGenStarted = false;
   private final PList<PBillboardParticle> particles = new PList<>();
-  private final Vector3 tempBitangent = new Vector3();
-  private final Vector3 tempNormal = new Vector3();
-  private final Vector3 tempPosOv = new Vector3();
-  private final Vector3 tempTangent = new Vector3();
-  private final Vector3 tempXChange = new Vector3();
-  private final Vector3 tempYChange = new Vector3();
+  private final PTexture texture = new PTexture();
   private final float[] vertices;
   // The index to insert the next particle into the vertices buffer at.
   private int currentBufferIndex = 0;
+  private PGlNode glNode;
   private PMaterial material;
   private PMesh mesh;
   private PModel model;
   private PModelInstance modelInstance;
-  private PTexture texture;
-  private boolean useAlphaBlend = true;
 
-  public PBillboardParticleSource(int capacity) {
+  public PBillboardParticleSource() {
     vertices = new float[FLOATS_PER_PARTICLE * maxCapacity];
   }
 
@@ -65,10 +58,11 @@ public class PBillboardParticleSource {
       particle.vel().set(particle.vel()).nor().scl(newVelMagInVelDir);
       particle.vel().add(particle.accel(), PEngine.dt);
       if (particle.faceCamera()) {
-        particle.faceCameraAngle(particle.faceCameraAngle() + particle.angVel());
+        particle.faceCameraAngle(particle.faceCameraAngle() + particle.angVel() * PEngine.dt);
       } else {
         PVec3 rotateAxis = PVec3.obtain().set(particle.xAxis()).crs(particle.yAxis());
         particle.xAxis().rotate(rotateAxis, particle.angVel() * PEngine.dt);
+        particle.yAxis().rotate(rotateAxis, particle.angVel() * PEngine.dt);
         rotateAxis.free();
       }
       float newAngVel = particle.angVel() + particle.angVelAccel() * PEngine.dt;
@@ -92,6 +86,8 @@ public class PBillboardParticleSource {
     }
     particles.sort();
     currentBufferIndex = 0;
+    texture.set(particles.get(0).texture().getBackingTexture());
+    material.setTexWithUniform(PMaterial.UniformConstants.Sampler2D.u_diffuseTex, texture);
     for (int a = 0; a < particles.size(); a++) {
       PBillboardParticle p = particles.get(a);
       setVerticesForParticle(p);
@@ -125,48 +121,52 @@ public class PBillboardParticleSource {
         particle.yAxis().set(particle.xAxis()).crs(PRenderContext.activeContext().cameraDir()).nor()
                 .scl(particle.faceCameraYScale());
       }
+      float u0 = particle.texture().uvOS().x();
+      float v0 = particle.texture().uvOS().y();
+      float u1 = particle.texture().uvOS().z() + particle.texture().uvOS().x();
+      float v1 = particle.texture().uvOS().w() + particle.texture().uvOS().y();
       // Positions.
-        PVec3 pos = pool.vec3(particle.pos).add(particle.xAxis(), -.5f).add(particle.yAxis(), -.5f);
-        vertices[currentBufferIndex + 0] = pos.x(); // x0;
-        vertices[currentBufferIndex + 1] = pos.y(); // y0;
-        vertices[currentBufferIndex + 2] = pos.z(); // z0;
-        pos = pool.vec3(particle.pos).add(particle.xAxis(), -.5f).add(particle.yAxis(), .5f);
-        vertices[currentBufferIndex + 9] = pos.x(); // x1;
-        vertices[currentBufferIndex + 10] = pos.y(); // y1;
-        vertices[currentBufferIndex + 11] = pos.z(); // z1;
+      PVec3 pos = pool.vec3(particle.pos).add(particle.xAxis(), -.5f).add(particle.yAxis(), -.5f);
+      vertices[currentBufferIndex + 0] = pos.x(); // x0;
+      vertices[currentBufferIndex + 1] = pos.y(); // y0;
+      vertices[currentBufferIndex + 2] = pos.z(); // z0;
+      vertices[currentBufferIndex + 3] = u0; // u0;
+      vertices[currentBufferIndex + 4] = v0; // v0;
+      vertices[currentBufferIndex + 5] = particle.col0().r(); // c0;
+      vertices[currentBufferIndex + 6] = particle.col0().g(); // c0;
+      vertices[currentBufferIndex + 7] = particle.col0().b(); // c0;
+      vertices[currentBufferIndex + 8] = particle.col0().a(); // c0;
+      pos = pool.vec3(particle.pos).add(particle.xAxis(), -.5f).add(particle.yAxis(), .5f);
+      vertices[currentBufferIndex + 9] = pos.x(); // x1;
+      vertices[currentBufferIndex + 10] = pos.y(); // y1;
+      vertices[currentBufferIndex + 11] = pos.z(); // z1;
+      vertices[currentBufferIndex + 12] = u0; // u0;
+      vertices[currentBufferIndex + 13] = v1; // v1;
+      vertices[currentBufferIndex + 14] = particle.col1().r(); // c1;
+      vertices[currentBufferIndex + 15] = particle.col1().g(); // c1;
+      vertices[currentBufferIndex + 16] = particle.col1().b(); // c1;
+      vertices[currentBufferIndex + 17] = particle.col1().a(); // c1;
       pos = pool.vec3(particle.pos).add(particle.xAxis(), .5f).add(particle.yAxis(), .5f);
-        vertices[currentBufferIndex + 18] = pos.x(); // x2;
-        vertices[currentBufferIndex + 19] = pos.y(); // y2;
-        vertices[currentBufferIndex + 20] = pos.z(); // z2;
-      pos = pool.vec3(particle.pos).add(particle.xAxis(), .5f).add(particle.yAxis(), .5f);1
-        vertices[currentBufferIndex + 27] = pos.x(); // x3;
-        vertices[currentBufferIndex + 28] = pos.y(); // y3;
-        vertices[currentBufferIndex + 29] = pos.z(); // z3;
-        // Other stuff.
-      vertices[currentBufferIndex + 3] = particle.col0().r(); // c0;
-      vertices[currentBufferIndex + 4] = particle.col0().g(); // c0;
-      vertices[currentBufferIndex + 5] = particle.col0().b(); // c0;
-      vertices[currentBufferIndex + 6] = particle.col0().a(); // c0;
-      vertices[currentBufferIndex + 7] = particle.uvOS().x(); // u0;
-      vertices[currentBufferIndex + 8] = 1 - particle.uvOS().y(); // v0;
-      vertices[currentBufferIndex + 12] = particle.col1().r(); // c1;
-      vertices[currentBufferIndex + 13] = particle.col1().g(); // c1;
-      vertices[currentBufferIndex + 14] = particle.col1().b(); // c1;
-      vertices[currentBufferIndex + 15] = particle.col1().a(); // c1;
-      vertices[currentBufferIndex + 16] = particle.uvOS().x(); // u0;
-      vertices[currentBufferIndex + 17] = 1 - (particle.uvOS().w() + particle.uvOS().y()); // v1;
-      vertices[currentBufferIndex + 21] = particle.col2().r(); // c2;
-      vertices[currentBufferIndex + 22] = particle.col2().g(); // c2;
-      vertices[currentBufferIndex + 23] = particle.col2().b(); // c2;
-      vertices[currentBufferIndex + 24] = particle.col2().a(); // c2;
-      vertices[currentBufferIndex + 25] = (particle.uvOS().z() + particle.uvOS().x()); // u1;
-      vertices[currentBufferIndex + 26] = 1 - (particle.uvOS().w() + particle.uvOS().y()); // v1;
-      vertices[currentBufferIndex + 30] = particle.col3().r(); // c3;
-      vertices[currentBufferIndex + 31] = particle.col3().g(); // c3;
-      vertices[currentBufferIndex + 32] = particle.col3().b(); // c3;
-      vertices[currentBufferIndex + 33] = particle.col3().a(); // c3;
-      vertices[currentBufferIndex + 34] = (particle.uvOS().z() + particle.uvOS().x()); // u1;
-      vertices[currentBufferIndex + 35] = 1 - particle.uvOS().y(); // v0;
+      vertices[currentBufferIndex + 18] = pos.x(); // x2;
+      vertices[currentBufferIndex + 19] = pos.y(); // y2;
+      vertices[currentBufferIndex + 20] = pos.z(); // z2;
+      vertices[currentBufferIndex + 21] = u1; // u1;
+      vertices[currentBufferIndex + 22] = v1; // v1;
+      vertices[currentBufferIndex + 23] = particle.col2().r(); // c2;
+      vertices[currentBufferIndex + 24] = particle.col2().g(); // c2;
+      vertices[currentBufferIndex + 25] = particle.col2().b(); // c2;
+      vertices[currentBufferIndex + 26] = particle.col2().a(); // c2;
+      pos = pool.vec3(particle.pos).add(particle.xAxis(), .5f).add(particle.yAxis(), -.5f);
+      vertices[currentBufferIndex + 27] = pos.x(); // x3;
+      vertices[currentBufferIndex + 28] = pos.y(); // y3;
+      vertices[currentBufferIndex + 29] = pos.z(); // z3;
+      vertices[currentBufferIndex + 30] = u1; // u1;
+      vertices[currentBufferIndex + 31] = v0; // v0;
+      vertices[currentBufferIndex + 32] = particle.col3().r(); // c3;
+      vertices[currentBufferIndex + 33] = particle.col3().g(); // c3;
+      vertices[currentBufferIndex + 34] = particle.col3().b(); // c3;
+      vertices[currentBufferIndex + 35] = particle.col3().a(); // c3;
+      // Other stuff.
       //    bufferData[8] = particle.getTextureRegion().getU();
       //    bufferData[9] = particle.getTextureRegion().getU2();
       //    bufferData[10] = 1 - particle.getTextureRegion().getV2();
@@ -196,18 +196,19 @@ public class PBillboardParticleSource {
     modelBuilder.begin();
     PList<PGlNode> glNodes = new PList<>();
     PModel.Builder builder = new PModel.Builder();
-    builder.chainGlNode(glNodes, PARTICLES, mesh, material = new PMaterial(PARTICLES, null).noModelTransform(true),
-                        null, PGltf.Layer.AlphaBlend, false, true);
+    builder.chainGlNode(glNodes, PARTICLES, mesh, new PMaterial(PARTICLES, null).noModelTransform(true), null,
+                        PGltf.Layer.AlphaBlend, false, true);
+    glNode = glNodes.get(0);
     builder.addNode("particles", null, glNodes, PMat4.IDT);
     modelInstance = new PModelInstance(builder.build());
+    material = modelInstance.material(PARTICLES);
   }
 
-  public void setUseAlphaBlend(boolean useAlphaBlend) {
-    this.useAlphaBlend = useAlphaBlend;
-    updateMaterialInternal();
-  }
-
-  private void updateMaterialInternal() {
+  public PBillboardParticleSource setOrigin(PVec3 vec3) {
+    if (modelInstance != null) {
+      modelInstance.worldTransform().setToTranslation(vec3);
+    }
+    return this;
   }
 
   public PBillboardParticle spawnParticle() {
@@ -215,9 +216,5 @@ public class PBillboardParticleSource {
     particles.add(particle);
     particle.isLive = true;
     return particle;
-  }
-
-  public boolean useAlphaBlend() {
-    return useAlphaBlend;
   }
 }

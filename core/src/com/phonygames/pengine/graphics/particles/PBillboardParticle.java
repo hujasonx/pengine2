@@ -20,9 +20,6 @@ public class PBillboardParticle extends PParticle {
   @Getter(value = AccessLevel.PROTECTED)
   @Accessors(fluent = true)
   private final PVec3 xAxis = PVec3.obtain(), yAxis = PVec3.obtain();
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  private final PVec3 normalAxis = PVec3.obtain();
 
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
@@ -40,10 +37,12 @@ public class PBillboardParticle extends PParticle {
   private final PVec4 col0 = PVec4.obtain(), col1 = PVec4.obtain(), col2 = PVec4.obtain(), col3 = PVec4.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final PVec4 uvOS = PVec4.obtain();
+  private final PTexture texture = new PTexture();
 
 
-  private PBillboardParticle() {}
+  private PBillboardParticle() {
+    reset();
+  }
 
   public static PBillboardParticle obtain() {
     PBillboardParticle ret = staticPool.obtain();
@@ -54,7 +53,6 @@ public class PBillboardParticle extends PParticle {
     super.reset();
     xAxis.set(PVec3.X);
     yAxis.set(PVec3.Y);
-    normalAxis.set(PVec3.Z);
     faceCamera = false;
     doubleSided = false;
     angVel= 0;
@@ -66,10 +64,10 @@ public class PBillboardParticle extends PParticle {
     faceCameraYScale = 1;
     vel.setZero();
     accel.setZero();
-    col0.setZero();
-    col1.setZero();
-    col2.setZero();
-    col3.setZero();
-    uvOS.setZero();
+    col0.set(PVec4.ONE);
+    col1.set(PVec4.ONE);
+    col2.set(PVec4.ONE);
+    col3.set(PVec4.ONE);
+    texture.reset();
   }
 }

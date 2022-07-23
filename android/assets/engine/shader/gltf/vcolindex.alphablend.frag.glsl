@@ -7,7 +7,7 @@ void main() {
     #include <engine/shader/start/rendercontext.frag>
     #include <engine/shader/start/pbr.frag>
 
-    alphaBlend = vec4(diffuseM.rgb * diffuseM.a + emissiveI.rgb * emissiveI.a, diffuseM.a);
+    alphaBlend = u_diffuseCol * diffuseTex(pbrUV0) * v_diffuseM;
     // Reset the non-alphaBlend components.
     diffuseM = vec4(0.0);
     normalR = vec4(0.0);

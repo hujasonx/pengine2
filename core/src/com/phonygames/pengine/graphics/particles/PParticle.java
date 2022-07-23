@@ -1,5 +1,6 @@
 package com.phonygames.pengine.graphics.particles;
 
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.math.PVec;
 import com.phonygames.pengine.math.PVec3;
@@ -34,6 +35,11 @@ public abstract class PParticle implements PPool.Poolable, PSortableByScore<PPar
     pos.setZero();
     isLive = false;
     userInt = 0;
+  }
+
+  public void kill() {
+    PAssert.isTrue(isLive);
+    isLive = false;
   }
 
   @Override public float score() {

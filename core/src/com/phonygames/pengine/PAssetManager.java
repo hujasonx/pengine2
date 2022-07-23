@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.phonygames.pengine.file.PFileHandleUtils;
 import com.phonygames.pengine.graphics.model.PGLBAssetLoader;
 import com.phonygames.pengine.graphics.model.PModel;
@@ -46,6 +47,20 @@ public class PAssetManager {
       return assetManager.finishLoadingAsset(filename);
     }
     return null;
+  }
+
+  public static TextureRegion textureRegion(String filename, String regionName, boolean blockIfUnloaded) {
+    if (!assetManager.isLoaded(filename) && !blockIfUnloaded) {
+      return null;
+    }
+    TextureAtlas atlas = null;
+    if (assetManager.isLoaded(filename)) {
+      atlas= assetManager.get(filename);
+    }
+    if (blockIfUnloaded) {
+      atlas= assetManager.finishLoadingAsset(filename);
+    }
+    return atlas.findRegion(regionName);
   }
 
   public static void preFrameUpdate() {

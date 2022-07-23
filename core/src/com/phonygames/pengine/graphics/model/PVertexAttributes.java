@@ -23,7 +23,7 @@ public class PVertexAttributes {
   private static PVertexAttributes POSITION, DEFAULT, BILLBOARD_PARTICLE, GLTF_UNSKINNED, GLTF_UNSKINNED_NOCOLOR;
   @Getter
   private final VertexAttributes backingVertexAttributes;
-//  private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
+  //  private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
   private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
   @Getter
   private int bytesPerVertex;
@@ -101,7 +101,7 @@ public class PVertexAttributes {
   public int indexForVertexAttribute(String alias) {
     PAssert.isTrue(vertexAttributeFloatIndexInVertex.containsKey(alias),
                    alias + " not found in vertexAttributeFloatIndexInVertex");
-    if (!vertexAttributeFloatIndexInVertex.containsKey(alias)) { return -1;}
+    if (!vertexAttributeFloatIndexInVertex.containsKey(alias)) {return -1;}
     return vertexAttributeFloatIndexInVertex.get(alias);
   }
 
@@ -129,7 +129,7 @@ public class PVertexAttributes {
       POSITION = new PVertexAttributes(new VertexAttribute[]{Attribute.get(Attribute.Keys.pos)});
       BILLBOARD_PARTICLE = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos),
-                                Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Keys.col[0])});
+                                Attribute.get(Keys.uv[0]), Attribute.get(Attribute.Keys.col[0])});
       GLTF_UNSKINNED = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
                                 Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Keys.col[0])});
@@ -147,7 +147,10 @@ public class PVertexAttributes {
     }
 
     public static VertexAttribute get(String key) {
-      return list.get(key);
+      VertexAttribute va = list.get(key);
+
+      // int usage, int numComponents, int type, boolean normalized, String alias, int unit
+      return new VertexAttribute(va.usage, va.numComponents, va.type, va.normalized, va.alias, va.unit);
     }
 
     public static final class Keys {
