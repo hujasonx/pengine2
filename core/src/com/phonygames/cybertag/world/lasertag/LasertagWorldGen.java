@@ -3,23 +3,13 @@ package com.phonygames.cybertag.world.lasertag;
 import android.support.annotation.NonNull;
 
 import com.phonygames.cybertag.world.World;
-import com.phonygames.pengine.graphics.PDebugRenderer;
-import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.logging.PLog;
-import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.navmesh.recast.PRecastMeshBuilder;
 import com.phonygames.pengine.util.PArrayUtils;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PSet;
 
-import org.recast4j.detour.MeshData;
-import org.recast4j.detour.MeshTile;
-import org.recast4j.detour.NavMesh;
-import org.recast4j.detour.Poly;
 import org.recast4j.recast.geom.SimpleInputGeomProvider;
 
 public class LasertagWorldGen extends PBuilder {
@@ -37,7 +27,6 @@ public class LasertagWorldGen extends PBuilder {
 
   protected LasertagWorldGen addBlockingTask(Object o) {
     genBlockers.add(o);
-    System.out.println("ADD " + o);
     return this;
   }
 
@@ -60,13 +49,8 @@ public class LasertagWorldGen extends PBuilder {
     });
   }
 
-  public boolean isLoaded() {
-    return genBlockers.isEmpty();
-  }
-
   protected LasertagWorldGen clearBlockingTask(Object o) {
     if (genBlockers.removeValue(o, true)) {
-      System.out.println("DEL " + o + ", " + genBlockers.size() + " remaining");
       if (genBlockers.isEmpty()) {
         onGenFinished();
       }
@@ -79,7 +63,11 @@ public class LasertagWorldGen extends PBuilder {
   private void onGenFinished() {
     float[] physicsVs = PArrayUtils.floatListToArray(lasertagWorld.physicsVertexPositions);
     int[] physicsIs = PArrayUtils.intListToArray(lasertagWorld.physicsVertexIndices);
-        PRecastMeshBuilder recastBuilder = new PRecastMeshBuilder(new SimpleInputGeomProvider(physicsVs, physicsIs));
-        lasertagWorld.tileCache = recastBuilder.getTileCache();
+    PRecastMeshBuilder recastBuilder = new PRecastMeshBuilder(new SimpleInputGeomProvider(physicsVs, physicsIs));
+    lasertagWorld.tileCache = recastBuilder.getTileCache();
+  }
+
+  public boolean isLoaded() {
+    return genBlockers.isEmpty();
   }
 }

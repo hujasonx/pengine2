@@ -2,7 +2,6 @@ package com.phonygames.cybertag.gun;
 
 import android.support.annotation.Nullable;
 
-import com.badlogic.gdx.Input;
 import com.phonygames.cybertag.character.CharacterEntity;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PEngine;
@@ -12,7 +11,6 @@ import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
-import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PSODynamics;
@@ -31,6 +29,11 @@ public abstract class Gun implements PRenderable {
   @Accessors(fluent = true)
   // Guns are placed based on their offset from the camera eyes.
   protected final PVec3 firstPersonStandardOffsetFromCamera = PVec3.obtain();
+  /** The FOV when aiming down sights. */
+  protected float adsFOV = PRenderContext.defaultFOV();
+  /** Spring used for things like ADS. */
+  protected PSODynamics.PSODynamics3 cameraOffsetSpring = PSODynamics.obtain3();
+  protected PSODynamics.PSODynamics1 fovSpring = PSODynamics.obtain1().setGoal(PRenderContext.defaultFOV());
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
@@ -40,9 +43,6 @@ public abstract class Gun implements PRenderable {
   protected PSODynamics.PSODynamics3 recoilEulRotSpring = PSODynamics.obtain3();
   protected PVec3 recoilOffsetImpulse = PVec3.obtain();
   protected PSODynamics.PSODynamics3 recoilOffsetSpring = PSODynamics.obtain3();
-  protected PSODynamics.PSODynamics1 fovSpring = PSODynamics.obtain1().setGoal(PRenderContext.defaultFOV());
-  /** Spring used for things like ADS. */
-  protected PSODynamics.PSODynamics3 cameraOffsetSpring = PSODynamics.obtain3();
   protected String reloadAnimation = null;
   /** The walk cycle will be scaled between [inset, 1 - inset] */
   protected float walkCycleShakeTEdgeInset = 1;
@@ -52,10 +52,8 @@ public abstract class Gun implements PRenderable {
   protected float walkCycleYOffsetPower = 1;
   /** How much to scale the y offset from walking; will be multiplied with [0, 1] */
   protected float walkCycleYOffsetScale = 1;
-  private transient float reloadAnimationT = -1;
   private float lifeT = 0;
-  /** The FOV when aiming down sights. */
-  protected float adsFOV = PRenderContext.defaultFOV();
+  private transient float reloadAnimationT = -1;
 
   protected Gun(String modelName, CharacterEntity characterEntity) {
     this.characterEntity = characterEntity;
@@ -75,10 +73,6 @@ public abstract class Gun implements PRenderable {
     }
   }
 
-  public PVec3 recoilCameraEulRot() {
-    return recoilCameraEulRotSpring.pos();
-  }
-
   public float desiredFOV() {
     return fovSpring.pos().x();
   }
@@ -94,7 +88,8 @@ public abstract class Gun implements PRenderable {
     fovSpring.frameUpdate();
     if (modelInstance != null) {
       PVec4 recoilRotation = pool.vec4().setToRotationEuler(recoilEulRotSpring.pos());
-      modelInstance.worldTransform().set(cameraTransform).translate(cameraOffsetSpring.pos()).translate(recoilOffsetSpring.pos()).rotate(recoilRotation);
+      modelInstance.worldTransform().set(cameraTransform).translate(cameraOffsetSpring.pos())
+                   .translate(recoilOffsetSpring.pos()).rotate(recoilRotation);
       modelInstance.recalcTransforms();
       if (reloadAnimationT != -1 && reloadAnimation != null) {
         PAnimation reloadPAnimation = modelInstance.model().animations().get(reloadAnimation);
@@ -111,46 +106,27 @@ public abstract class Gun implements PRenderable {
     lifeT += PEngine.t;
   }
 
+  public PMat4 getBoneWorldTransform(String name) {
+    return modelInstance.nodes().get(name).worldTransform();
+  }
+
+  public abstract String name();
+
+  public void primaryTriggerDown() {
+  }
+
   public void primaryTriggerJustDown() {
     recoilEulRotSpring.vel().add(recoilEulRotImpulse);
     recoilOffsetSpring.vel().add(recoilOffsetImpulse);
     recoilCameraEulRotSpring.vel().add(recoilCameraEulRotImpulse);
   }
 
-  public void primaryTriggerDown() {
-  }
-
   public void primaryTriggerJustUp() {
   }
 
-  public void secondaryTriggerJustDown() {
-    if (modelInstance == null) { return; }
-    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-    }
-    float eyeDirOffset = 0.09f;
-    PModelInstance.Node ironSightsNode = modelInstance.getNode("IronSights");
-    if (ironSightsNode != null) {
-      ironSightsNode.templateNode().modelSpaceTransform().getTranslation(cameraOffsetSpring.goal()).scl(-1).add(0, 0, eyeDirOffset);
-      System.out.println(cameraOffsetSpring.goal());
-    }
-    fovSpring.setGoal(adsFOV);
+  public PVec3 recoilCameraEulRot() {
+    return recoilCameraEulRotSpring.pos();
   }
-
-  public void secondaryTriggerDown() {
-
-  }
-
-  public void secondaryTriggerJustUp() {
-    cameraOffsetSpring.goal().set(firstPersonStandardOffsetFromCamera);
-    fovSpring.setGoal(PRenderContext.defaultFOV());
-    System.out.println(cameraOffsetSpring.goal());
-  }
-
-  public PMat4 getBoneWorldTransform(String name) {
-    return modelInstance.nodes().get(name).worldTransform();
-  }
-
-  public abstract String name();
 
   public void reload() {
     reloadAnimationT = 0;
@@ -160,6 +136,28 @@ public abstract class Gun implements PRenderable {
     if (this.modelInstance != null) {
       this.modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
     }
+  }
+
+  public void secondaryTriggerDown() {
+  }
+
+  public void secondaryTriggerJustDown() {
+    if (modelInstance == null) {return;}
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+    }
+    float eyeDirOffset = 0.09f;
+    PModelInstance.Node ironSightsNode = modelInstance.getNode("IronSights");
+    if (ironSightsNode != null) {
+      ironSightsNode.templateNode().modelSpaceTransform().getTranslation(cameraOffsetSpring.goal()).scl(-1)
+                    .add(0, 0, eyeDirOffset);
+    }
+    fovSpring.setGoal(adsFOV);
+  }
+
+  public void secondaryTriggerJustUp() {
+    cameraOffsetSpring.goal().set(firstPersonStandardOffsetFromCamera);
+    fovSpring.setGoal(PRenderContext.defaultFOV());
+    System.out.println(cameraOffsetSpring.goal());
   }
 
   public void setGoalsForOffsetSprings(float walkCycleT, PSODynamics.PSODynamics3 weaponPosOffsetSpring,

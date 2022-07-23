@@ -65,10 +65,12 @@ public class PDebugRenderer {
   }
 
   public static void render(PRenderContext renderContext) {
+    PApplicationWindow.windowSpriteBatch().begin();
     for (int a = 0; a < queuedLines.size(); a++) {
       Line line = queuedLines.get(a);
       line.render(renderContext);
     }
+    PApplicationWindow.windowSpriteBatch().end();
   }
 
   private static class Line implements PPool.Poolable {
@@ -85,12 +87,10 @@ public class PDebugRenderer {
     public void render(PRenderContext renderContext) {
       PVec3 aOut = PVec3.obtain().set(a);
       PVec3 bOut = PVec3.obtain().set(b);
-      PApplicationWindow.windowSpriteBatch().begin();
       if (renderContext.projectIf(aOut) && renderContext.projectIf(bOut)) {
         render2d(aOut.x() + offsetA.x(), aOut.y() + offsetA.y(), bOut.x() + offsetB.x(), bOut.y() + offsetB.y(),
                  widthA.x(), widthB.x(), colA, colB);
       }
-      PApplicationWindow.windowSpriteBatch().end();
       aOut.free();
       bOut.free();
     }

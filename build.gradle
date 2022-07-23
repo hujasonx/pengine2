@@ -7,7 +7,6 @@ buildscript {
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
         maven { url "https://jitpack.io" }
-
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.4'
@@ -59,7 +58,7 @@ project(":desktop") {
         api "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx-controllers:gdx-controllers-desktop:$gdxControllersVersion"
 //        api "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
-        compile ("com.badlogicgames.gdx:gdx-tools:$gdxVersion") {
+        compile("com.badlogicgames.gdx:gdx-tools:$gdxVersion") {
             exclude group: 'com.badlogicgames.gdx', module: 'gdx-backend-lwjgl'
         }
 
@@ -134,7 +133,7 @@ project(":core") {
         api group: 'org.recast4j', name: 'recast', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour-crowd', version: "$recastVersion"
-        api group: 'org.recast4j', name: 'detour-tile-cache', version: "$recastVersion"
+//        api group: 'org.recast4j', name: 'detour-tile-cache', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour-extras', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour-dynamic', version: "$recastVersion"
         implementation fileTree(dir: "../libs", include: "*.jar")
