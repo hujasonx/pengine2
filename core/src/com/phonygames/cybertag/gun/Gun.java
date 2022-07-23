@@ -94,7 +94,7 @@ public abstract class Gun implements PRenderable {
     fovSpring.frameUpdate();
     if (modelInstance != null) {
       PVec4 recoilRotation = pool.vec4().setToRotationEuler(recoilEulRotSpring.pos());
-      modelInstance.worldTransform().set(cameraTransform).translate(cameraOffsetSpring.pos()).rotate(recoilRotation);
+      modelInstance.worldTransform().set(cameraTransform).translate(cameraOffsetSpring.pos()).translate(recoilOffsetSpring.pos()).rotate(recoilRotation);
       modelInstance.recalcTransforms();
       if (reloadAnimationT != -1 && reloadAnimation != null) {
         PAnimation reloadPAnimation = modelInstance.model().animations().get(reloadAnimation);

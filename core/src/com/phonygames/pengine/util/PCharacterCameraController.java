@@ -44,7 +44,7 @@ public class PCharacterCameraController {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private float rotateSpeed = 2;
+  private float rotateSpeed = 1.6f;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PVec3 eulRotOffset = PVec3.obtain();

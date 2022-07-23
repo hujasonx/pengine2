@@ -281,6 +281,9 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     }
     if (PMouse.isDown(Input.Buttons.RIGHT)) {
       gun.secondaryTriggerDown();
+      cameraController.rotateSpeed(.7f);
+    } else {
+      cameraController.rotateSpeed(1.6f);
     }
     if (PMouse.isFrameJustUp(Input.Buttons.RIGHT)) {
       gun.secondaryTriggerJustUp();
