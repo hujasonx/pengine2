@@ -45,6 +45,13 @@ public class PCharacterCameraController {
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private float rotateSpeed = 2;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PVec3 eulRotOffset = PVec3.obtain();
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private float fov = PRenderContext.defaultFOV();
 
   public PCharacterCameraController(@NonNull Delegate delegate) {
     this.delegate = delegate;
@@ -55,6 +62,7 @@ public class PCharacterCameraController {
     renderContext.cameraDir().set(smoothDir());
     renderContext.cameraPos().set(pos());
     renderContext.cameraUp().set(0, 1, 0);
+    renderContext.cameraFov().set(fov);
   }
 
   public void frameUpdate() {
@@ -81,7 +89,7 @@ public class PCharacterCameraController {
     goalYaw += yawRotateAmount;
     pitchYawSpring.setGoal(goalPitch, goalYaw);
     pitchYawSpring.frameUpdate();
-    smoothDir().setToSpherical(pitchYawSpring.pos().y(), pitchYawSpring.pos().x(), 1);
+    smoothDir().setToSpherical(pitchYawSpring.pos().y(), pitchYawSpring.pos().x() + eulRotOffset.y(), 1);
     delegate.getFirstPersonCameraPosition(pos(), smoothDir());
     PVec3 smoothLeft = pool.vec3().set(smoothDir()).crs(0, -1, 0).nor();
     PVec3 smoothUp = pool.vec3().set(smoothDir()).crs(smoothLeft).nor();

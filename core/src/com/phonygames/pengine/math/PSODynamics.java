@@ -82,7 +82,7 @@ public abstract class PSODynamics<T extends PVec<T>> implements PPool.Poolable {
     if (freq == 0) { // If omega is infinity, the spring has no mass and moves instantly.
       return 1;
     }
-    return zetaFromMagnitudeRemainingPerTime(magReduceFraction, 1 / freq);
+    return zetaFromMagnitudeRemainingPerTime(magReduceFraction, 1f / freq);
   }
 
   public static float zetaFromMagnitudeRemainingPerTime(float magReduceFraction, float time) {

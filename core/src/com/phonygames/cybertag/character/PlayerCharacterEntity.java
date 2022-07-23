@@ -14,6 +14,7 @@ import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.input.PKeyboard;
+import com.phonygames.pengine.input.PMouse;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PSODynamics;
@@ -174,6 +175,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     if (modelInstance == null) {return;}
     PPool.PoolBuffer pool = PPool.getBuffer();
     float facingDirAng = PNumberUtils.angle(0, 0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
+
     worldTransform().setToTranslation(characterController.getPos(pool.vec3())).rotate(0, -1, 0, facingDirAng);
     modelInstance.worldTransform().set(worldTransform());
     modelInstance.resetTransformsFromTemplates();
@@ -208,20 +210,8 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     // Apply the hand animations to this model instance.
     gun.applyTransformsToCharacterModelInstance(modelInstance);
     modelInstance.recalcTransforms();
+    triggerGun();
     pool.free();
-    try (val it = modelInstance.nodes().obtainIterator()) {
-      while (it.hasNext()) {
-        val e = it.next();
-        PModelInstance.Node node = e.v();
-        if (node.rigidBody() != null) {
-          PMat4 tempMat = PMat4.obtain().set(node.worldTransform()).mul(node.templateNode().physicsCollisionShapeOffset());
-          node.rigidBody().getWorldTransform(tempMat);
-//          PDebugRenderer.line(node.worldTransform().getTranslation(PVec3.obtain()), tempMat.getTranslation(PVec3.obtain()),
-//                              PVec4.ONE, PVec4.ZERO, 2, 2);
-          tempMat.free();
-        }
-      }
-    }
   }
 
   private void frameUpdateSpine(PPool.PoolBuffer pool) {
@@ -276,6 +266,27 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     rightLegLimb.setModelSpaceKneePoleTarget(legBindPole);
   }
 
+  private void triggerGun() {
+    if (PMouse.isFrameJustDown(Input.Buttons.LEFT)) {
+      gun.primaryTriggerJustDown();
+    }
+    if (PMouse.isDown(Input.Buttons.LEFT)) {
+      gun.primaryTriggerDown();
+    }
+    if (PMouse.isFrameJustUp(Input.Buttons.LEFT)) {
+      gun.primaryTriggerJustUp();
+    }
+    if (PMouse.isFrameJustDown(Input.Buttons.RIGHT)) {
+      gun.secondaryTriggerJustDown();
+    }
+    if (PMouse.isDown(Input.Buttons.RIGHT)) {
+      gun.secondaryTriggerDown();
+    }
+    if (PMouse.isFrameJustUp(Input.Buttons.RIGHT)) {
+      gun.secondaryTriggerJustUp();
+    }
+  }
+
   private PMat4 frameUpdateWeaponOffsetSprings(PPool.PoolBuffer pool) {
     gun.setGoalsForOffsetSprings(walkCycleTSpring.pos().x(), weaponPosOffsetSpring, weaponPosEulRotSpring);
     PMat4 out = pool.mat4();
@@ -286,6 +297,9 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
         camRotNudgeFactorPos,
         PNumberUtils.powNeg(cameraController.pitchYawSpring().vel().x(), camRotNudgeFactorPosPow) *
         camRotNudgeFactorPos, 0);
+    cameraController.eulRotOffset().set(gun.recoilCameraEulRot());
+    cameraController.fov(gun.desiredFOV());
+
     weaponPosOffsetSpring.frameUpdate();
     weaponPosEulRotSpring.frameUpdate();
     PVec4 tempRot = pool.vec4().setToRotationEuler(weaponPosEulRotSpring.pos());

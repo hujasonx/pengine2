@@ -48,11 +48,17 @@ public class PInput {
 
     @Override public boolean touchDown(int screenX, int screenY, int pointer, int button) {
       PMouse.Button mouseButton = PMouse.Button.get(button);
+      if (button > 0) {
+        pointer = button;
+      }
       return PMouse.touchDown(screenX, screenY, pointer, mouseButton);
     }
 
     @Override public boolean touchUp(int screenX, int screenY, int pointer, int button) {
       PMouse.Button mouseButton = PMouse.Button.get(button);
+      if (button > 0) {
+        pointer = button;
+      }
       return PMouse.touchUp(screenX, screenY, pointer, mouseButton);
     }
 

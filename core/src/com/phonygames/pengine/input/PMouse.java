@@ -93,7 +93,7 @@ public class PMouse {
   }
 
   public static boolean isFrameJustUp(int pointer) {
-    return frameButtonStatus[pointer] == ButtonStatus.JustDown;
+    return frameButtonStatus[pointer] == ButtonStatus.JustUp;
   }
 
   public static boolean isFrameJustUp(Button button) {
@@ -117,7 +117,7 @@ public class PMouse {
   }
 
   public static boolean isLogicJustUp(int pointer) {
-    return logicButtonStatus[pointer] == ButtonStatus.JustDown;
+    return logicButtonStatus[pointer] == ButtonStatus.JustUp;
   }
 
   public static boolean isLogicJustUp(Button button) {

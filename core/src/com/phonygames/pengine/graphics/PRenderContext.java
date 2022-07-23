@@ -59,7 +59,7 @@ public class PRenderContext {
   private final PVec3 cameraDir = PVec3.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final PVec1 cameraFov = PVec1.obtain().set(70);
+  private final PVec1 cameraFov = PVec1.obtain().set(defaultFOV());
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PVec3 cameraPos = PVec3.obtain();
@@ -113,6 +113,10 @@ public class PRenderContext {
   private int width = 1, height = 1;
 
   private int drawCallCt = 0;
+
+  public static float defaultFOV() {
+    return 70;
+  }
 
   public PRenderContext disableDepthTest() {
     PAssert.isTrue(isActive());
