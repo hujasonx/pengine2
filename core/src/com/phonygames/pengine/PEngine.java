@@ -116,6 +116,9 @@ public class PEngine extends ApplicationAdapter {
     if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.HOME)) {
       timeScale = 1;
     }
+    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.INSERT)) {
+      System.gc();
+    }
 
   }
 

@@ -131,7 +131,7 @@ public class NpcHumanoidEntity extends CharacterEntity {
       // Apply the leg placer.
       legPlacer.frameUpdate(characterController.getVel(pool.vec3()), characterController.isOnGround());
       PDebugRenderer.line(pos, 0, 0, pos, 10, 0, PVec4.ONE, PVec4.ONE, 2, 2);
-      if (PKeyboard.isFrameJustDown(Input.Keys.BACKSLASH)) {
+      if (PKeyboard.isFrameJustDown(Input.Keys.BACKSLASH) && ! modelInstance.isRagdoll()) {
         modelInstance.ragdoll(PVec3.Y);
         characterController.removeFromDynamicsWorld();
       }

@@ -42,11 +42,11 @@ public class PRecastMeshBuilder {
   private final static float m_edgeMaxLen = 12.0f;
   private final static int m_regionMergeSize = 20;
   private final static int m_regionMinSize = 4;
-  private final static int m_tileSize = 64;
+  private final static int m_tileSize = 24;
   private final static int m_vertsPerPoly = 8;
   private final static float precision = 1;
-  private final static float m_cellSize = 0.2f / precision;
-  private final static float m_cellHeight = 0.2f / precision;
+  private final static float m_cellSize = 0.25f / precision;
+  private final static float m_cellHeight = 0.25f / precision;
   private final static float m_edgeMaxError = 1.3f / precision;
   private final static float m_detailSampleMaxError = 0.8f / precision;
   protected final InputGeomProvider m_geom;
@@ -205,8 +205,8 @@ public class PRecastMeshBuilder {
     params.walkableRadius = m_agentRadius;
     params.walkableClimb = m_agentMaxClimb;
     params.maxSimplificationError = m_edgeMaxError;
-    params.maxTiles = tw * th * 8;
-    params.maxObstacles = 128;
+    params.maxTiles = tw * th * 32;
+    params.maxObstacles = 256;
     NavMeshParams navMeshParams = new NavMeshParams();
     copy(navMeshParams.orig, geom.getMeshBoundsMin());
     navMeshParams.tileWidth = m_tileSize * m_cellSize;

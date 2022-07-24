@@ -5,8 +5,8 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.gun.Gun;
 import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.character.PLegPlacer;
-import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -27,13 +27,12 @@ import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
 
-import lombok.val;
-
 public class PlayerCharacterEntity extends CharacterEntity implements PCharacterCameraController.Delegate {
   private final PPhysicsCharacterController characterController;
   private final PVec3 facingDir = PVec3.obtain().set(1, 0, 0), cameraOffsetFromOrigin =
       PVec3.obtain().set(0, 1.6f, .15f);
   private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
+  private final PVec3 pos = PVec3.obtain();
   private PCharacterCameraController cameraController;
   private Gun gun;
   private PSODynamics.PSODynamics1 hipYawSpring = PSODynamics.obtain1();
@@ -124,64 +123,10 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     }
   }
 
-  @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
-    if (characterController == null) {return;}
-    facingDir.set(dir);
-    if (!PNumberUtils.epsilonEquals(0, dir.x()) || !PNumberUtils.epsilonEquals(0, dir.z())) {
-      facingDirFlat.set(dir.x(), dir.z()).nor();
-    }
-    facingLeftFlat.set(facingDirFlat.y(), -facingDirFlat.x());
-    characterController.getPos(out).add(0, cameraOffsetFromOrigin.y(), 0)
-                       .add(facingLeftFlat.x() * cameraOffsetFromOrigin.x(), 0,
-                            facingLeftFlat.y() * cameraOffsetFromOrigin.x())
-                       .add(facingDirFlat.x() * cameraOffsetFromOrigin.z(), 0,
-                            facingDirFlat.y() * cameraOffsetFromOrigin.z());
-  }
-
-  @Override public void preLogicUpdate() {
-    characterController.preLogicUpdate();
-  }
-
-  @Override public void logicUpdate() {
-    PPool.PoolBuffer pool = PPool.getBuffer();
-    PVec2 inputVelocity = pool.vec2();
-    PVec2 outputVelocity = pool.vec2();
-    characterController.velXZ(0, 0);
-    float forwardSpeed = PKeyboard.isDown(Input.Keys.SHIFT_LEFT) ? 12 : 4.2f;
-    // Keyboard movement.
-    if (PKeyboard.isDown(Input.Keys.W)) {
-      inputVelocity.add(0, 1);
-    }
-    if (PKeyboard.isDown(Input.Keys.S)) {
-      inputVelocity.add(0, -1);
-    }
-    if (PKeyboard.isDown(Input.Keys.A)) {
-      inputVelocity.add(1, 0);
-    }
-    if (PKeyboard.isDown(Input.Keys.D)) {
-      inputVelocity.add(-1, 0);
-    }
-    if (!inputVelocity.isZero()) {
-      inputVelocity.nor();
-    }
-    // TODO: add controller input here.
-    outputVelocity.add(facingDirFlat, forwardSpeed * inputVelocity.y());
-    outputVelocity.add(facingLeftFlat, forwardSpeed * inputVelocity.x());
-    characterController.velXZ(outputVelocity.x(), outputVelocity.y());
-    pool.free();
-  }
-
-  private final PVec3 pos = PVec3.obtain();
-
-  @Override public PVec3 pos() {
-    return characterController.getPos(pos);
-  }
-
   @Override public void frameUpdate() {
     if (modelInstance == null) {return;}
     PPool.PoolBuffer pool = PPool.getBuffer();
     float facingDirAng = PNumberUtils.angle(0, 0, facingDir.x(), facingDir.z()) - MathUtils.HALF_PI;
-
     worldTransform().setToTranslation(characterController.getPos(pool.vec3())).rotate(0, -1, 0, facingDirAng);
     modelInstance.worldTransform().set(worldTransform());
     modelInstance.resetTransformsFromTemplates();
@@ -218,6 +163,50 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     modelInstance.recalcTransforms();
     triggerGun();
     pool.free();
+  }
+
+  @Override public void logicUpdate() {
+    PPool.PoolBuffer pool = PPool.getBuffer();
+    PVec2 inputVelocity = pool.vec2();
+    PVec2 outputVelocity = pool.vec2();
+    characterController.velXZ(0, 0);
+    float forwardSpeed = PKeyboard.isDown(Input.Keys.SHIFT_LEFT) ? 12 : 4.2f;
+    // Keyboard movement.
+    if (PKeyboard.isDown(Input.Keys.W)) {
+      inputVelocity.add(0, 1);
+    }
+    if (PKeyboard.isDown(Input.Keys.S)) {
+      inputVelocity.add(0, -1);
+    }
+    if (PKeyboard.isDown(Input.Keys.A)) {
+      inputVelocity.add(1, 0);
+    }
+    if (PKeyboard.isDown(Input.Keys.D)) {
+      inputVelocity.add(-1, 0);
+    }
+    if (!inputVelocity.isZero()) {
+      inputVelocity.nor();
+    }
+    // TODO: add controller input here.
+    outputVelocity.add(facingDirFlat, forwardSpeed * inputVelocity.y());
+    outputVelocity.add(facingLeftFlat, forwardSpeed * inputVelocity.x());
+    characterController.velXZ(outputVelocity.x(), outputVelocity.y());
+    pool.free();
+  }
+
+  @Override public PVec3 pos() {
+    return characterController.getPos(pos);
+  }
+
+  @Override public void preLogicUpdate() {
+    characterController.preLogicUpdate();
+  }
+
+  @Override public void render(PRenderContext renderContext) {
+    if (modelInstance != null) {
+      modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+    }
+    gun.render(renderContext);
   }
 
   private void frameUpdateSpine(PPool.PoolBuffer pool) {
@@ -272,6 +261,25 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     rightLegLimb.setModelSpaceKneePoleTarget(legBindPole);
   }
 
+  private PMat4 frameUpdateWeaponOffsetSprings(PPool.PoolBuffer pool) {
+    gun.setGoalsForOffsetSprings(walkCycleTSpring.pos().x(), weaponPosOffsetSpring, weaponPosEulRotSpring);
+    PMat4 out = pool.mat4();
+    float camRotNudgeFactorPos = .012f;
+    float camRotNudgeFactorPosPow = .5f;
+    weaponPosOffsetSpring.vel().add(
+        PNumberUtils.powNeg(-cameraController.pitchYawSpring().vel().y(), camRotNudgeFactorPosPow) *
+        camRotNudgeFactorPos,
+        PNumberUtils.powNeg(cameraController.pitchYawSpring().vel().x(), camRotNudgeFactorPosPow) *
+        camRotNudgeFactorPos, 0);
+    cameraController.eulRotOffset().set(gun.recoilCameraEulRot());
+    cameraController.fov(gun.desiredFOV());
+    weaponPosOffsetSpring.frameUpdate();
+    weaponPosEulRotSpring.frameUpdate();
+    PVec4 tempRot = pool.vec4().setToRotationEuler(weaponPosEulRotSpring.pos());
+    out.set(weaponPosOffsetSpring.pos(), tempRot, PVec3.ONE);
+    return out;
+  }
+
   private void triggerGun() {
     if (PMouse.isFrameJustDown(Input.Buttons.LEFT)) {
       gun.primaryTriggerJustDown();
@@ -296,26 +304,6 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     }
   }
 
-  private PMat4 frameUpdateWeaponOffsetSprings(PPool.PoolBuffer pool) {
-    gun.setGoalsForOffsetSprings(walkCycleTSpring.pos().x(), weaponPosOffsetSpring, weaponPosEulRotSpring);
-    PMat4 out = pool.mat4();
-    float camRotNudgeFactorPos = .012f;
-    float camRotNudgeFactorPosPow = .5f;
-    weaponPosOffsetSpring.vel().add(
-        PNumberUtils.powNeg(-cameraController.pitchYawSpring().vel().y(), camRotNudgeFactorPosPow) *
-        camRotNudgeFactorPos,
-        PNumberUtils.powNeg(cameraController.pitchYawSpring().vel().x(), camRotNudgeFactorPosPow) *
-        camRotNudgeFactorPos, 0);
-    cameraController.eulRotOffset().set(gun.recoilCameraEulRot());
-    cameraController.fov(gun.desiredFOV());
-
-    weaponPosOffsetSpring.frameUpdate();
-    weaponPosEulRotSpring.frameUpdate();
-    PVec4 tempRot = pool.vec4().setToRotationEuler(weaponPosEulRotSpring.pos());
-    out.set(weaponPosOffsetSpring.pos(), tempRot, PVec3.ONE);
-    return out;
-  }
-
   /** Calculates the walkRunCycleT [0, 1] based on the leg cycleT values. */
   public float rawWalkRunCycleTFrameUpdate() {
     float leftT = leftLegPlacerLeg.inCycle() ? leftLegPlacerLeg.cycleT() : 0;
@@ -328,10 +316,17 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     return PNumberUtils.clamp(walkCycleTSpring.pos().x(), 0, 1);
   }
 
-  @Override public void render(PRenderContext renderContext) {
-    if (modelInstance != null) {
-      modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
+  @Override public void getFirstPersonCameraPosition(PVec3 out, PVec3 dir) {
+    if (characterController == null) {return;}
+    facingDir.set(dir);
+    if (!PNumberUtils.epsilonEquals(0, dir.x()) || !PNumberUtils.epsilonEquals(0, dir.z())) {
+      facingDirFlat.set(dir.x(), dir.z()).nor();
     }
-    gun.render(renderContext);
+    facingLeftFlat.set(facingDirFlat.y(), -facingDirFlat.x());
+    characterController.getPos(out).add(0, cameraOffsetFromOrigin.y(), 0)
+                       .add(facingLeftFlat.x() * cameraOffsetFromOrigin.x(), 0,
+                            facingLeftFlat.y() * cameraOffsetFromOrigin.x())
+                       .add(facingDirFlat.x() * cameraOffsetFromOrigin.z(), 0,
+                            facingDirFlat.y() * cameraOffsetFromOrigin.z());
   }
 }

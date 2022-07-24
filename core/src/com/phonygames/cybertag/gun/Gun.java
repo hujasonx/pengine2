@@ -2,6 +2,7 @@ package com.phonygames.cybertag.gun;
 
 import android.support.annotation.Nullable;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.character.CharacterEntity;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PEngine;
@@ -14,6 +15,8 @@ import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PSODynamics;
+import com.phonygames.pengine.math.PVec;
+import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PPool;
@@ -54,6 +57,9 @@ public abstract class Gun implements PRenderable {
   protected float walkCycleYOffsetScale = 1;
   private float lifeT = 0;
   private transient float reloadAnimationT = -1;
+  /** [scale, period] */
+  protected final PVec2 weaponIdleSwayLeftSettings = PVec2.obtain(), weaponIdleSwayUpSettings = PVec2.obtain(),
+      weaponIdleSwayDirSettings = PVec2.obtain();
 
   protected Gun(String modelName, CharacterEntity characterEntity) {
     this.characterEntity = characterEntity;
@@ -167,6 +173,19 @@ public abstract class Gun implements PRenderable {
     float xFactor = ((cycleTScaled - .5f) * 2);
     float yFactor = PNumberUtils.pow(Math.abs(cycleTScaled - .5f) * 2, walkCycleYOffsetPower);
     weaponPosOffsetSpring.goal().x(xFactor * walkCycleXOffsetScale); // Left.
-    weaponPosOffsetSpring.goal().y(yFactor * walkCycleYOffsetScale); // Left.
+    weaponPosOffsetSpring.goal().y(yFactor * walkCycleYOffsetScale); // Up.
+    weaponPosOffsetSpring.goal().z(0);
+    weaponPosOffsetSpring.goal().add(weaponIdleSwayLeftSettings.y() == 0 ? 0 : weaponIdleSwayLeftSettings.x() *
+                                                                               MathUtils.sin(MathUtils.PI2 /
+                                                                                             weaponIdleSwayLeftSettings.y() *
+                                                                                             PEngine.t),
+                                     weaponIdleSwayUpSettings.y() == 0 ? 0 : weaponIdleSwayUpSettings.x() *
+                                                                             MathUtils.sin(MathUtils.PI2 /
+                                                                                           weaponIdleSwayUpSettings.y() *
+                                                                                           PEngine.t),
+                                     weaponIdleSwayDirSettings.y() == 0 ? 0 : weaponIdleSwayDirSettings.x() *
+                                                                              MathUtils.sin(MathUtils.PI2 /
+                                                                                            weaponIdleSwayDirSettings.y() *
+                                                                                            PEngine.t));
   }
 }

@@ -68,7 +68,7 @@ public class PTileCache {
   public void previewNavmesh() {
     PVec3 v0 = PVec3.obtain();
     PVec3 v1 = PVec3.obtain();
-    PVec4 c = PVec4.obtain().set(1, 0, 0, .1f);
+    PVec4 c = PVec4.obtain().set(1, 0, 0, .025f);
     if (tileCache != null) {
       NavMesh navMesh = tileCache.getNavMesh();
       int max = navMesh.getMaxTiles();

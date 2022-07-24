@@ -21,6 +21,9 @@ public class Pistol0 extends Gun {
     recoilOffsetImpulse.set(0, 0, -1.3f);
     fovSpring.setDynamicsParams(3,1,0);
     adsFOV = 40;
+    weaponIdleSwayLeftSettings.set(.001f, 8);
+    weaponIdleSwayUpSettings.set(.003f, 3.28f);
+    weaponIdleSwayDirSettings.set(.001f, 9.2f);
   }
 
   @Override public String name() {
