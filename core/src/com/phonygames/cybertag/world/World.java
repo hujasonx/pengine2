@@ -2,6 +2,7 @@ package com.phonygames.cybertag.world;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.MathUtils;
+import com.phonygames.cybertag.character.HeadGunnerEntity;
 import com.phonygames.cybertag.character.NpcHumanoidEntity;
 import com.phonygames.cybertag.character.PlayerCharacterEntity;
 import com.phonygames.cybertag.world.lasertag.LasertagWorld;
@@ -25,6 +26,7 @@ public class World {
   private PBillboardParticleSource billboardParticleSource;
   private NpcHumanoidEntity npcHumanoidEntity;
   public PlayerCharacterEntity playerCharacter;
+  public HeadGunnerEntity headGunnerEntity;
   public PTileCache tileCache;
   public final PList<Integer> physicsVertexIndices = new PList<>();
   public final PList<Float> physicsVertexPositions = new PList<>();
@@ -33,6 +35,7 @@ public class World {
     lasertagWorld = WorldGen.gen(this);
     playerCharacter = new PlayerCharacterEntity();
     npcHumanoidEntity = new NpcHumanoidEntity(this);
+    headGunnerEntity = new HeadGunnerEntity(this);
     billboardParticleSource = new PBillboardParticleSource();
   }
 
@@ -60,6 +63,7 @@ public class World {
     playerCharacter.frameUpdate();
     npcHumanoidEntity.frameUpdate();
     billboardParticleSource.frameUpdate();
+    headGunnerEntity.frameUpdate();
     if (PKeyboard.isFrameJustDown(Input.Keys.ALT_RIGHT)) {
       PBillboardParticle particle = billboardParticleSource.spawnParticle();
       particle.texture().set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Glow", true));
@@ -82,11 +86,13 @@ public class World {
     lasertagWorld.logicUpdate();
     playerCharacter.logicUpdate();
     npcHumanoidEntity.logicUpdate();
+    headGunnerEntity.logicUpdate();
   }
 
   public void preLogicUpdate() {
     playerCharacter.preLogicUpdate();
     npcHumanoidEntity.preLogicUpdate();
+    headGunnerEntity.preLogicUpdate();
   }
 
   public void render(PRenderContext renderContext) {
@@ -95,5 +101,6 @@ public class World {
     npcHumanoidEntity.render(renderContext);
     billboardParticleSource.setOrigin(renderContext.cameraPos());
     billboardParticleSource.render(renderContext);
+    headGunnerEntity.render(renderContext);
   }
 }

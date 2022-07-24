@@ -3,6 +3,8 @@ package com.phonygames.pengine.character;
 import android.support.annotation.NonNull;
 
 import com.phonygames.pengine.PEngine;
+import com.phonygames.pengine.graphics.PDebugRenderer;
+import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PParametricCurve;
@@ -316,6 +318,7 @@ public class PLegPlacer implements PPool.Poolable {
               rayCastHitNor.set(0, 1, 0);
             }
             expectedFootPositionAtEnd.set(rayCastHitPos);
+            PDebugRenderer.line(expectedFootPositionAtEnd, curEEPos, PColor.BLUE, PColor.BLUE, 2, 2);
             // The EEPosGoal lets us smooth out the goal.
             curEEPosGoal.setGoal(expectedFootPositionAtEnd);
             // Initialize the deltas; this should only be done once per cycle.
@@ -376,6 +379,9 @@ public class PLegPlacer implements PPool.Poolable {
         endEffector.worldTransform().getTranslation(curCalcedEEPos);
       }
       modelWasOnGroundPrev = isOnGround;
+      PVec3 tempP = pool.vec3();
+      endEffector.worldTransform().getTranslation(tempP);
+      PDebugRenderer.line(tempP, curEEPos, PColor.YELLOW, PColor.YELLOW, 2, 2);
       return justFinishedCycle;
     }
 

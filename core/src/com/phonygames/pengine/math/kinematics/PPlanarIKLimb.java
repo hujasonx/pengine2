@@ -62,11 +62,18 @@ public class PPlanarIKLimb implements PPool.Poolable {
   }
 
   public PPlanarIKLimb addNode(String nodeName) {
+    return addNode(nodeName, false);
+  }
+
+  public PPlanarIKLimb addNode(String nodeName, boolean markKnee) {
     PAssert.isNotNull(modelInstance);
     PModelInstance.Node node = modelInstance.getNode(nodeName);
     nodeRotationOffsets.genPooledAndAdd();
     PAssert.isNotNull(node, "No node found with name: " + nodeName);
     nodes.add(node);
+    if (markKnee) {
+      kneeNodeName = nodeName;
+    }
     return this;
   }
 
@@ -163,8 +170,16 @@ public class PPlanarIKLimb implements PPool.Poolable {
     if (modelSpaceKneePoleTarget.isZero()) {
       worldSpaceGoalPole = null;
     }
-    PInverseKinematicsUtils.twoJointIK(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
-                                       worldSpaceBindPole, worldSpaceGoalPole);
+    if (kneeNode != nodes.peek()) {
+      PMat4 lastNodeTransformFromKneeNode =
+          pool.mat4(kneeNode.worldTransform()).inv().mul(nodes.peek().worldTransform());
+      PInverseKinematicsUtils.twoJointIK(baseNode, kneeNode, pool.vec3(endLocalTranslationFromLastNode())
+                                                                 .mul(lastNodeTransformFromKneeNode, 1), t, .001f,
+                                         worldSpaceBindPole, worldSpaceGoalPole);
+    } else {
+      PInverseKinematicsUtils.twoJointIK(baseNode, kneeNode, endLocalTranslationFromLastNode(), t, .001f,
+                                         worldSpaceBindPole, worldSpaceGoalPole);
+    }
     if (endEffectorTransform != null && endEffectorBindMSTransform != null) {
       PMat4 bcLocalTransform = pool.mat4(kneeNode.worldTransform()).inv().mul(endEffectorTransform);
       PVec4 bcLocalRot = bcLocalTransform.getRotation(pool.vec4());
