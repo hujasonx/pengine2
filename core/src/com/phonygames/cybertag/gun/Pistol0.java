@@ -12,7 +12,7 @@ public class Pistol0 extends Gun {
     walkCycleYOffsetScale = .014f;
     walkCycleYOffsetPower = .75f;
     reloadAnimation = "Reload";
-    cameraOffsetSpring.setDynamicsParams(3, 1, 0);
+    cameraOffsetSpring.setDynamicsParams(5, 1, 0);
     recoilCameraEulRotSpring.setDynamicsParams(3, 1, 0);
     recoilCameraEulRotImpulse.set(0, 3, 0);
     recoilEulRotSpring.setDynamicsParams(5, PSODynamics.zetaFromMagnitudeRemainingPerPeriod(5, .4f), 0);

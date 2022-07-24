@@ -41,13 +41,13 @@ public class PRecastMeshBuilder {
   private final static float m_detailSampleDist = 3.0f;
   private final static float m_edgeMaxLen = 12.0f;
   private final static int m_regionMergeSize = 20;
-  private final static int m_regionMinSize = 8;
+  private final static int m_regionMinSize = 4;
   private final static int m_tileSize = 64;
   private final static int m_vertsPerPoly = 8;
   private final static float precision = 1;
-  private final static float m_cellSize = 0.3f / precision;
+  private final static float m_cellSize = 0.2f / precision;
   private final static float m_cellHeight = 0.2f / precision;
-  private final static float m_edgeMaxError = .8f / precision;
+  private final static float m_edgeMaxError = 1.3f / precision;
   private final static float m_detailSampleMaxError = 0.8f / precision;
   protected final InputGeomProvider m_geom;
   private final RecastConfig rcConfig;
@@ -83,7 +83,7 @@ public class PRecastMeshBuilder {
     int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize, m_tileSize);
     tw = twh[0];
     th = twh[1];
-    List<byte[]> layers = buildLayers(ByteOrder.LITTLE_ENDIAN, true, 1);
+    List<byte[]> layers = buildLayers(ByteOrder.LITTLE_ENDIAN, true, 7);
     TileCache tc = getTileCache(m_geom, ByteOrder.LITTLE_ENDIAN, true);
     for (byte[] data : layers) {
       try {

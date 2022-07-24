@@ -2,6 +2,7 @@ package com.phonygames.cybertag.character;
 
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.math.PVec3;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -13,14 +14,11 @@ public abstract class CharacterEntity {
   private final PMat4 worldTransform = PMat4.obtain();
 
   public CharacterEntity() {
-
   }
 
-  public abstract void preLogicUpdate();
-
-  public abstract void logicUpdate();
-
   public abstract void frameUpdate();
-
+  public abstract void logicUpdate();
+  public abstract PVec3 pos();
+  public abstract void preLogicUpdate();
   public abstract void render(PRenderContext renderContext);
 }

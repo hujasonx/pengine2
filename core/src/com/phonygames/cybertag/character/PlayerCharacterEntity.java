@@ -171,6 +171,12 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     pool.free();
   }
 
+  private final PVec3 pos = PVec3.obtain();
+
+  @Override public PVec3 pos() {
+    return characterController.getPos(pos);
+  }
+
   @Override public void frameUpdate() {
     if (modelInstance == null) {return;}
     PPool.PoolBuffer pool = PPool.getBuffer();

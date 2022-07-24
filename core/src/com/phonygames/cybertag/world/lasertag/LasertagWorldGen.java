@@ -22,7 +22,7 @@ public class LasertagWorldGen extends PBuilder {
   public LasertagWorldGen(@NonNull final World world) {
     this.world = world;
     addBlockingTask(this);
-    this.lasertagWorld = new LasertagWorld();
+    this.lasertagWorld = new LasertagWorld(world);
   }
 
   protected LasertagWorldGen addBlockingTask(Object o) {
@@ -61,10 +61,10 @@ public class LasertagWorldGen extends PBuilder {
   }
 
   private void onGenFinished() {
-    float[] physicsVs = PArrayUtils.floatListToArray(lasertagWorld.physicsVertexPositions);
-    int[] physicsIs = PArrayUtils.intListToArray(lasertagWorld.physicsVertexIndices);
+    float[] physicsVs = PArrayUtils.floatListToArray(lasertagWorld.world.physicsVertexPositions);
+    int[] physicsIs = PArrayUtils.intListToArray(lasertagWorld.world.physicsVertexIndices);
     PRecastMeshBuilder recastBuilder = new PRecastMeshBuilder(new SimpleInputGeomProvider(physicsVs, physicsIs));
-    lasertagWorld.tileCache = recastBuilder.getTileCache();
+    lasertagWorld.world.tileCache = recastBuilder.getTileCache();
   }
 
   public boolean isLoaded() {

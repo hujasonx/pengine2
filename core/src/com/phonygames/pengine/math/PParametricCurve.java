@@ -1,6 +1,7 @@
 package com.phonygames.pengine.math;
 
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 
@@ -27,7 +28,13 @@ public class PParametricCurve<T extends PVec<T>> implements PPool.Poolable {
           return new PParametricCurve.PParametricCurve2();
         }
       };
-  private final PList<KeyFrame<T>> keyFrames;
+  private static final PPool<PParametricCurve.PParametricCurve3> pool3 =
+      new PPool<PParametricCurve.PParametricCurve3>() {
+        @Override protected PParametricCurve.PParametricCurve3 newObject() {
+          return new PParametricCurve.PParametricCurve3();
+        }
+      };
+  protected final PList<KeyFrame<T>> keyFrames;
   private final PPool<T> tPool;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
@@ -55,6 +62,10 @@ public class PParametricCurve<T extends PVec<T>> implements PPool.Poolable {
 
   public static PParametricCurve.PParametricCurve2 obtain2() {
     return pool2.obtain();
+  }
+
+  public static PParametricCurve.PParametricCurve3 obtain3() {
+    return pool3.obtain();
   }
 
   public PParametricCurve<T> addKeyFrame(float time, T t) {
@@ -109,16 +120,16 @@ public class PParametricCurve<T extends PVec<T>> implements PPool.Poolable {
     int higherIndex = keyFrames.size() - 1;
     while (lowerIndex < higherIndex) {
       int guessIndex = (lowerIndex + higherIndex) / 2;
+      if (guessIndex == keyFrames.size() - 1) { return guessIndex; }
       float guessTime = (keyFrames.get(guessIndex)).t;
-      if (guessTime > time) {
-        higherIndex = guessIndex - 1;
-      } else if (guessTime < time) {
-        lowerIndex = guessIndex;
-      } else {
+      float nextTime = (keyFrames.get(guessIndex + 1)).t;
+      if (guessTime <= time && nextTime > time) {
         return guessIndex;
       }
-      if (lowerIndex >= higherIndex - 1) {
-        return lowerIndex;
+      if (guessTime > time) {
+        higherIndex = guessIndex;
+      } else {
+        lowerIndex = guessIndex;
       }
     }
     return keyFrames.size() - 1;
@@ -218,6 +229,53 @@ public class PParametricCurve<T extends PVec<T>> implements PPool.Poolable {
     static class KeyFrame extends PParametricCurve.KeyFrame<PVec2> {
       private KeyFrame() {
         super(PVec2.getStaticPool());
+      }
+    }
+  }
+
+  public static class PParametricCurve3 extends PParametricCurve<PVec3> {
+    private static PPool<PParametricCurve.KeyFrame<PVec3>> keyFramePool =
+        new PPool<PParametricCurve.KeyFrame<PVec3>>() {
+          @Override protected PParametricCurve3.KeyFrame newObject() {
+            return new KeyFrame();
+          }
+        };
+    private static PVec3 temp = PVec3.obtain();
+
+    private PParametricCurve3() {
+      super(PVec3.getStaticPool(), keyFramePool);
+    }
+
+    public PParametricCurve3 addKeyFrame(float time, float x, float y, float z) {
+      addKeyFrame(time, temp.set(x, y, z));
+      return this;
+    }
+
+    public void debugRender() {
+      try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+        PVec3 p0 = pool.vec3();
+        PVec3 p1 = pool.vec3();
+        PVec4 c0 = pool.vec4(.5f, .5f, .5f, .5f);
+        PVec4 c1 = pool.vec4();
+        for (int a = 0; a < this.keyFrames.size() - 1; a++) {
+          p0.set(keyFrames.get(a).value);
+          p1.set(keyFrames.get(a + 1).value);
+          PDebugRenderer.line(p0, p1, c0, c0, 2, 2);
+        }
+        float step = .01f;
+        for (float t = 0; t <= length() - step; t+= step) {
+          get(p0,t);
+          get(p1,t + step);
+          c0.setHSVA(t,1,1,.3f);
+          c1.setHSVA(t + step,1,1,.3f);
+          PDebugRenderer.line(p0,p1,c0, c1, 2, 2);
+        }
+      }
+    }
+
+    static class KeyFrame extends PParametricCurve.KeyFrame<PVec3> {
+      private KeyFrame() {
+        super(PVec3.getStaticPool());
       }
     }
   }
