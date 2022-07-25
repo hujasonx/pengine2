@@ -136,7 +136,7 @@ public class LasertagRoomGen extends PBuilder {
                       true, true);
           builder.addNode(part.name(), null, glNodes, PMat4.IDT);
         }
-        lasertagRoom.modelInstance = new PModelInstance(builder.build());
+        lasertagRoom.modelInstance = PModelInstance.obtain(builder.build());
         lasertagRoom.initialized = true;
         // Create the color data emitter buffer.
         int numVCols = lasertagRoom.numBaseVCols;

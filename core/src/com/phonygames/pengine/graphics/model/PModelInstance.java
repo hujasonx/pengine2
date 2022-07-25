@@ -15,6 +15,7 @@ import com.phonygames.pengine.physics.PRigidBody;
 import com.phonygames.pengine.physics.PStaticBody;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
 
 import lombok.AccessLevel;
@@ -23,27 +24,39 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
 
-public class PModelInstance {
+public class PModelInstance implements PPool.Poolable {
+// #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
+// #pragma end - PPool.Poolable
+  private static final PPool<Node> staticNodePool = new PPool<Node>() {
+    @Override protected Node newObject() {
+      return new Node();
+    }
+  };
+  private static final PPool<PModelInstance> staticPool = new PPool<PModelInstance>() {
+    @Override protected PModelInstance newObject() {
+      return new PModelInstance();
+    }
+  };
   private static final PList<PModelInstance> tempModelInstanceList = new PList<>();
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PStringMap<PGlNode> glNodes = new PStringMap<>();
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PStringMap<PMaterial> materials = new PStringMap<>();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final PModel model;
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
-  @Accessors(fluent = true)
-  private final PStringMap<Node> nodes = new PStringMap<>();
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  private final PStringMap<Node> nodes = new PStringMap<>(staticNodePool);
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PList<Node> rootNodes = new PList<>();
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PStringMap<PStaticBody> staticBodies = new PStringMap<>();
-  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PMat4 worldTransform = PMat4.obtain();
   @Getter
@@ -53,8 +66,20 @@ public class PModelInstance {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private boolean isRagdoll = false;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private PModel model;
 
-  public PModelInstance(PModel model) {
+  private PModelInstance() {
+  }
+
+  public static PModelInstance obtain(PModel model) {
+    PModelInstance ret = staticPool.obtain();
+    ret.set(model);
+    return ret;
+  }
+
+  private void set(PModel model) {
     this.model = model;
     PMap<PModel.Node, Node> childToParentNodeMap = new PMap<>();
     PList<PModel.Node> modelNodesToProcess = new PList<>();
@@ -65,12 +90,12 @@ public class PModelInstance {
     while (modelNodesToProcess.size() > 0) {
       PModel.Node modelNode = modelNodesToProcess.removeLast();
       Node parent = childToParentNodeMap.get(modelNode);
-      Node node = new Node(this, modelNode, parent);
+      Node node = nodes.genPooled(modelNode.id());
+      node.set(this, modelNode, parent);
       for (int a = 0; a < node.glNodes().size(); a++) {
         PGlNode glNode = node.glNodes().get(a);
         glNodes().put(glNode.id(), glNode);
       }
-      nodes().put(modelNode.id(), node);
       if (parent == null) {
         rootNodes().add(node);
       }
@@ -212,6 +237,17 @@ public class PModelInstance {
     }
   }
 
+  @Override public void reset() {
+    isRagdoll = false;
+    worldTransform.idt();
+    materials.clear();
+    glNodes.clear();
+    model = null;
+    rootNodes.clear();
+    nodes.clearRecursive();
+    staticBodies.clear();
+  }
+
   public void resetTransformsFromTemplates() {
     try (val it = nodes().obtainIterator()) {
       while (it.hasNext()) {
@@ -244,38 +280,43 @@ public class PModelInstance {
     return map;
   }
 
-  public class Node {
+  public static class Node implements PPool.Poolable {
+// #pragma mark - PPool.Poolable
+    @Getter
+    @Setter
+    private PPool ownerPool, sourcePool;
+// #pragma end - PPool.Poolable
     @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    final PModelInstance owner;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    final Node parent;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    final PModel.Node templateNode;
-    @Getter(value = AccessLevel.PUBLIC, lazy = true)
     @Accessors(fluent = true)
     private final PList<Node> children = new PList<>();
-    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private final PList<PGlNode> glNodes = new PList<>();
-    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private final PMat4 transform = PMat4.obtain();
-    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private final PMat4 worldTransform = PMat4.obtain();
-    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private final PMat4 worldTransformInvTra = PMat4.obtain();
     @Getter
     boolean inheritTransform = true, enabled = true;
     @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    PModelInstance owner;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    Node parent;
+    @Getter(value = AccessLevel.PUBLIC)
     @Setter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     // If Set, this node will not recurse on its children when recalculating world transforms.
     boolean stopWorldTransformRecursionAt = false;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    PModel.Node templateNode;
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private PRigidBody rigidBody;
@@ -284,36 +325,7 @@ public class PModelInstance {
     @Accessors(fluent = true)
     private boolean rigidBodyDrivesMovement = false;
 
-    private Node(PModelInstance owner, PModel.Node templateNode, Node parent) {
-      this.owner = owner;
-      this.templateNode = templateNode;
-      this.parent = parent;
-      transform().set(templateNode.transform());
-      for (int a = 0; a < templateNode.glNodes().size(); a++) {
-        PGlNode node = templateNode.glNodes().get(a);
-        PGlNode newNode = node.deepCopy();
-        newNode.ownerModelInstanceNode(this);
-        materials().put(newNode.drawCall().material().id(), newNode.drawCall().material());
-        this.glNodes().add(newNode);
-      }
-      if (parent != null) {
-        parent.children().add(this);
-      }
-      genRigidBodyFromTemplate();
-    }
-
-    /** Returns true if the rigid body is not null. */
-    private boolean genRigidBodyFromTemplate() {
-      if (templateNode.physicsCollisionShape != null && rigidBody == null) {
-        rigidBody =
-            PRigidBody.obtain(templateNode.physicsCollisionShape, templateNode.boneMass, PPhysicsEngine.BONE_FLAG,
-                              PPhysicsEngine.ALL_FLAG);
-        rigidBody.setLinearFactor(0, 0, 0);
-        rigidBody.setAngularFactor(0, 0, 0);
-        rigidBody.modelInstanceNode(this);
-      }
-      return rigidBody != null;
-    }
+    private Node() {}
 
     /**
      * @param other
@@ -382,8 +394,57 @@ public class PModelInstance {
       }
     }
 
+    @Override public void reset() {
+      enabled = true;
+      inheritTransform = true;
+      stopWorldTransformRecursionAt = false;
+      if (rigidBody != null) {
+        rigidBody.free();
+        rigidBody = null;
+      }
+      rigidBodyDrivesMovement = false;
+      templateNode = null;
+      transform.idt();
+      worldTransform.idt();
+      worldTransformInvTra.idt();
+      children.clear();
+      parent = null;
+      owner = null;
+    }
+
     public void resetTransformFromTemplate() {
       transform().set(templateNode.transform());
+    }
+
+    private void set(PModelInstance owner, PModel.Node templateNode, Node parent) {
+      this.owner = owner;
+      this.templateNode = templateNode;
+      this.parent = parent;
+      transform().set(templateNode.transform());
+      for (int a = 0; a < templateNode.glNodes().size(); a++) {
+        PGlNode node = templateNode.glNodes().get(a);
+        PGlNode newNode = node.deepCopy();
+        newNode.ownerModelInstanceNode(this);
+        owner.materials.put(newNode.drawCall().material().id(), newNode.drawCall().material());
+        this.glNodes().add(newNode);
+      }
+      if (parent != null) {
+        parent.children().add(this);
+      }
+      genRigidBodyFromTemplate();
+    }
+
+    /** Returns true if the rigid body is not null. */
+    private boolean genRigidBodyFromTemplate() {
+      if (templateNode.physicsCollisionShape != null && rigidBody == null) {
+        rigidBody =
+            PRigidBody.obtain(templateNode.physicsCollisionShape, templateNode.boneMass, PPhysicsEngine.BONE_FLAG,
+                              PPhysicsEngine.ALL_FLAG);
+        rigidBody.setLinearFactor(0, 0, 0);
+        rigidBody.setAngularFactor(0, 0, 0);
+        rigidBody.modelInstanceNode(this);
+      }
+      return rigidBody != null;
     }
 
     public Node setEnabled(boolean enabled) {

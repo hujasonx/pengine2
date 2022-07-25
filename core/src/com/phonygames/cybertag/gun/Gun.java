@@ -63,7 +63,7 @@ public abstract class Gun implements PRenderable {
 
   protected Gun(String modelName, CharacterEntity characterEntity) {
     this.characterEntity = characterEntity;
-    modelInstance = new PModelInstance(PAssetManager.model(modelName, true));
+    modelInstance = PModelInstance.obtain(PAssetManager.model(modelName, true));
     modelInstance.setDataBufferEmitter(renderContext -> {
       PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
       vColIndexBuffer.addData(.1f, .2f, .5f, 1); // Base color diffuseM.

@@ -58,7 +58,7 @@ public class HeadGunnerEntity extends CharacterEntity {
 
   private void initModelInstance() {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-      modelInstance = new PModelInstance(PAssetManager.model("model/robot/headgunner.glb", true));
+      modelInstance = PModelInstance.obtain(PAssetManager.model("model/robot/headgunner.glb", true));
       final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
       modelInstance.setDataBufferEmitter(renderContext -> {
         PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");

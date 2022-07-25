@@ -200,7 +200,7 @@ public class PBillboardParticleSource {
                         PGltf.Layer.AlphaBlend, false, true);
     glNode = glNodes.get(0);
     builder.addNode("particles", null, glNodes, PMat4.IDT);
-    modelInstance = new PModelInstance(builder.build());
+    modelInstance = PModelInstance.obtain(builder.build());
     material = modelInstance.material(PARTICLES);
   }
 

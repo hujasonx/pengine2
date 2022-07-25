@@ -205,11 +205,11 @@ public class CybertagGame implements PGame {
   @Override public void init() {
     catModel = PAssetManager.model("engine/model/Persian.glb", true);
     for (int a = 0; a < 10; a++) {
-      catModelInstances.add(new PModelInstance(catModel));
+      catModelInstances.add(PModelInstance.obtain(catModel));
     }
     duckModel = PAssetManager.model("engine/model/duck.glb", true);
     for (int a = 0; a < 10; a++) {
-      duckModelInstances.add(new PModelInstance(duckModel));
+      duckModelInstances.add(PModelInstance.obtain(duckModel));
     }
     renderContext = new PRenderContext();
     renderContext.cameraRange().set(.1f, 1000);
@@ -227,7 +227,7 @@ public class CybertagGame implements PGame {
     world = new World();
     gbufferPreviewRenderBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse").build();
     gbufferPreviewShader = gbufferPreviewRenderBuffer.getQuadShader(Gdx.files.local("shader/previewgbuffer.quad.glsl"));
-    testikModelInstance = new PModelInstance(PAssetManager.model("model/testik.glb", true));
+    testikModelInstance = PModelInstance.obtain(PAssetManager.model("model/testik.glb", true));
     testikModelInstance.material("matBase").useVColIndex(true);
     testikModelInstance.setDataBufferEmitter(renderContext -> {
       PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
