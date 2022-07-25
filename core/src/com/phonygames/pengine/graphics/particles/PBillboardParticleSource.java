@@ -116,16 +116,20 @@ public class PBillboardParticleSource implements PPool.Poolable {
     currentBufferIndex = 0;
     texture.set(particles.get(0).texture().getBackingTexture());
     material.setTexWithUniform(PMaterial.UniformConstants.Sampler2D.u_diffuseTex, texture);
+    int maxIndex = 0;
     for (int a = 0; a < particles.size(); a++) {
       PBillboardParticle p = particles.get(a);
-      setVerticesForParticle(p);
+      if (!setVerticesForParticle(p)) {
+        break;
+      }
+      maxIndex += 6;
     }
     if (currentBufferIndex == 0) {
       return;
     }
     mesh.setVertices(vertices, 0, currentBufferIndex);
     ((Buffer) mesh.getIndicesBuffer()).position(0);
-    ((Buffer) mesh.getIndicesBuffer()).limit(particles.size() * 6);
+    ((Buffer) mesh.getIndicesBuffer()).limit(maxIndex);
     modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
   }
 
@@ -134,9 +138,9 @@ public class PBillboardParticleSource implements PPool.Poolable {
   }
 
   /** Should be called by render() */
-  private void setVerticesForParticle(PBillboardParticle particle) {
+  private boolean setVerticesForParticle(PBillboardParticle particle) {
     if (currentBufferIndex + FLOATS_PER_PARTICLE >= vertices.length) {
-      return;
+      return false;
     }
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       if (particle.faceCamera()) {
@@ -201,6 +205,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
       //    bufferData[11] = 1 - particle.getTextureRegion().getV();
       currentBufferIndex += 36;
     }
+    return true;
   }
 
   private void makeModelIfNeeded() {

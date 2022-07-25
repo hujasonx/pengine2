@@ -41,8 +41,8 @@ public class PPbrPipeline implements PPostProcessor.Delegate{
     setPhases();
   }
 
-  @Override public Texture getTextureForPostProcessing() {
-    return combineBuffer.texture();
+  @Override public Texture getLightedTextureForPostProcessing() {
+    return environment.getTexture();
   }
 
   @Override public Texture getDepthTextureForPostProcessing() {
@@ -50,6 +50,9 @@ public class PPbrPipeline implements PPostProcessor.Delegate{
   }
   @Override public Texture getNormalRTextureForPostProcessing() {
     return gBuffer.texture("normalR");
+  }
+  @Override public Texture getAlphaBlendTextureForPostProcessing() {
+    return gBuffer.texture("alphaBlend");
   }
 
   protected void setPhases() {
@@ -80,25 +83,6 @@ public class PPbrPipeline implements PPostProcessor.Delegate{
         // TODO: Lock the camera of the context, to prevent bugs.
         environment.renderLights(PRenderContext.activeContext(), depthTex, diffuseMTex, normalRTex, emissiveITex);
         // TODO: unlock
-      }
-
-      @Override public void end() {
-      }
-    }, new PRenderContext.PhaseHandler("Combine", null, true) {
-      @Override public void begin() {
-        PGLUtils.clearScreen(0, 0, 0, 1);
-        if (environment == null) {
-          return;
-        }
-        Texture lightedTex = environment.getTexture();
-        Texture alphaBlendTex = gBuffer.texture("alphaBlend");
-        combineBuffer.begin(true);
-        postprocessingcombineshader.start(PRenderContext.activeContext());
-        postprocessingcombineshader.setWithUniform("u_lightedTex", lightedTex);
-        postprocessingcombineshader.setWithUniform("u_alphaBlendTex", alphaBlendTex);
-        combineBuffer.renderQuad(postprocessingcombineshader);
-        postprocessingcombineshader.end();
-        combineBuffer.end();
       }
 
       @Override public void end() {

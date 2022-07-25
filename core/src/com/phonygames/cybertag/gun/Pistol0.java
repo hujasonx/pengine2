@@ -3,10 +3,8 @@ package com.phonygames.cybertag.gun;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.character.PlayerCharacterEntity;
 import com.phonygames.pengine.PAssetManager;
-import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.particles.PBillboardParticle;
-import com.phonygames.pengine.graphics.particles.PBillboardParticleSource;
 import com.phonygames.pengine.math.PSODynamics;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PPool;
@@ -27,7 +25,7 @@ public class Pistol0 extends Gun {
     recoilEulRotImpulse.set(0, -24f, 0);
     recoilOffsetSpring.setDynamicsParams(1f / .3f, PSODynamics.zetaFromMagnitudeRemainingPerPeriod(1f / .3f, .2f), 0);
     recoilOffsetImpulse.set(0, 0, -1.3f);
-    fovSpring.setDynamicsParams(3,1,0);
+    fovSpring.setDynamicsParams(3, 1, 0);
     adsFOV = 40;
     weaponIdleSwayLeftSettings.set(.001f, 8);
     weaponIdleSwayUpSettings.set(.003f, 3.28f);
@@ -38,25 +36,33 @@ public class Pistol0 extends Gun {
 
   private void setMuzzleParticleSourceDelegate() {
     muzzleParticleSource.delegate(particle -> {
-
     });
   }
 
+  @Override public String name() {
+    return "Pistol0";
+  }
+
+  @Override public void render(PRenderContext renderContext) {super.render(renderContext);}
+
   @Override public void onShoot() {
     super.onShoot();
-
     spawnShootParticles();
   }
 
   private void spawnShootParticles() {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       PVec3 firePointPos = modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3());
-      for (int a = 0; a < 8; a++) {
+      for (int a = 0; a < 128; a++) {
         PBillboardParticle particle = muzzleParticleSource.spawnParticle();
         particle.accelVelocityDir(-1);
         particle.faceCamera(true);
         particle.faceCameraXScale(.2f);
         particle.faceCameraYScale(.2f);
+        particle.col0().setHSVA(MathUtils.random(), 1, 1, .2f);
+        particle.col1().set(particle.col0());
+        particle.col2().set(particle.col0());
+        particle.col3().set(particle.col0());
         particle.texture().set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Glow", true));
         particle.angVel(MathUtils.random(-3f, 3f));
         particle.angVelDecel(.6f);
@@ -65,10 +71,4 @@ public class Pistol0 extends Gun {
       }
     }
   }
-
-  @Override public String name() {
-    return "Pistol0";
-  }
-
-  @Override public void render(PRenderContext renderContext) {super.render(renderContext);}
 }

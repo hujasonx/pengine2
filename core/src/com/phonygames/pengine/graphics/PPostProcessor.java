@@ -51,13 +51,15 @@ public class PPostProcessor {
   }
 
   private void bloomStep() {
-    Texture sourceTex = delegate.getTextureForPostProcessing();
+    Texture lighted = delegate.getLightedTextureForPostProcessing();
+    Texture alphaBlendTex = delegate.getAlphaBlendTextureForPostProcessing();
     bloomBuffer.begin(true);
     PGLUtils.clearScreen(0, 0, 0, 0);
     bloomShader.start(PRenderContext.activeContext());
     bloomShader.set("u_bloomThreshold", bloomThreshold);
     bloomShader.set("u_bloomScale", bloomScale);
-    bloomShader.setWithUniform("u_sourceTex", sourceTex);
+    bloomShader.setWithUniform("u_lightedTex", lighted);
+    bloomShader.setWithUniform("u_alphaBlendTex", alphaBlendTex);
     bloomBuffer.renderQuad(bloomShader);
     bloomShader.end();
     bloomBuffer.end();
@@ -65,7 +67,7 @@ public class PPostProcessor {
   }
 
   private void outlineStep() {
-    Texture sourceTex = delegate.getTextureForPostProcessing();
+    Texture sourceTex = delegate.getLightedTextureForPostProcessing();
     Texture depthTex = delegate.getDepthTextureForPostProcessing();
     Texture normalRTex = delegate.getNormalRTextureForPostProcessing();
     outlineBuffer.begin(true);
@@ -83,13 +85,15 @@ public class PPostProcessor {
   }
 
   private void finalStep() {
-    Texture sourceTex = delegate.getTextureForPostProcessing();
+    Texture lightedTex = delegate.getLightedTextureForPostProcessing();
+    Texture alphaBlendTex = delegate.getAlphaBlendTextureForPostProcessing();
     // Combine step.
     fxaaBuffer.begin();
     finalShader.start(PRenderContext.activeContext());
-    finalShader.setWithUniform("u_sourceTex", sourceTex);
+    finalShader.setWithUniform("u_lightedTex", lightedTex);
     finalShader.setWithUniform("u_outlineTex", outlineBuffer.texture());
     finalShader.setWithUniform("u_bloomTex", bloomBuffer.texture());
+    finalShader.setWithUniform("u_alphaBlendTex", alphaBlendTex);
     fxaaBuffer.renderQuad(finalShader);
     finalShader.end();
     fxaaBuffer.end();
@@ -102,8 +106,9 @@ public class PPostProcessor {
   }
 
   public interface Delegate {
-    Texture getTextureForPostProcessing();
+    Texture getAlphaBlendTextureForPostProcessing();
     Texture getDepthTextureForPostProcessing();
+    Texture getLightedTextureForPostProcessing();
     Texture getNormalRTextureForPostProcessing();
   }
 }
