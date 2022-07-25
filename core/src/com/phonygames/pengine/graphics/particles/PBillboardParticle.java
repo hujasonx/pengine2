@@ -5,12 +5,16 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PPool;
 
+import java.util.Arrays;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 public class PBillboardParticle extends PParticle {
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private static final PPool<PBillboardParticle> staticPool = new PPool<PBillboardParticle>() {
     @Override protected PBillboardParticle newObject() {
       return new PBillboardParticle();
@@ -38,15 +42,13 @@ public class PBillboardParticle extends PParticle {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PTexture texture = new PTexture();
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final float[] userData = new float[16];
 
 
   private PBillboardParticle() {
     reset();
-  }
-
-  public static PBillboardParticle obtain() {
-    PBillboardParticle ret = staticPool.obtain();
-    return ret;
   }
 
   @Override public void reset() {
@@ -68,6 +70,7 @@ public class PBillboardParticle extends PParticle {
     col1.set(PVec4.ONE);
     col2.set(PVec4.ONE);
     col3.set(PVec4.ONE);
+    Arrays.fill(userData,0f);
     texture.reset();
   }
 }

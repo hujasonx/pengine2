@@ -18,17 +18,36 @@ import com.phonygames.pengine.util.PPool;
 
 import java.nio.Buffer;
 
-public class PBillboardParticleSource {
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
+public class PBillboardParticleSource implements PPool.Poolable {
+  // #pragma mark - PPool.Poolable
+  @Getter
+  @Setter
+  private PPool ownerPool, sourcePool;
+  // #pragma end - PPool.Poolable
   // 4 x 3 Position, 4 x 2 UV, 4 x 4 color. Only one color per billboard.
   public static final int FLOATS_PER_PARTICLE = 12 + 8 + 16;
   private static final String PARTICLES = "particles";
+  private static final PPool<PBillboardParticleSource> staticPool = new PPool<PBillboardParticleSource>() {
+    @Override protected PBillboardParticleSource newObject() {
+      return new PBillboardParticleSource();
+    }
+  };
   private static int maxCapacity = 1000;
   private static Boolean modelGenStarted = false;
-  private final PList<PBillboardParticle> particles = new PList<>();
+  private final PList<PBillboardParticle> particles = new PList<>(PBillboardParticle.staticPool());
   private final PTexture texture = new PTexture();
   private final float[] vertices;
   // The index to insert the next particle into the vertices buffer at.
   private int currentBufferIndex = 0;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private Delegate delegate;
   private PGlNode glNode;
   private PMaterial material;
   private PMesh mesh;
@@ -37,6 +56,12 @@ public class PBillboardParticleSource {
 
   public PBillboardParticleSource() {
     vertices = new float[FLOATS_PER_PARTICLE * maxCapacity];
+  }
+
+  public static PBillboardParticleSource obtain() {
+    PBillboardParticleSource ret = staticPool.obtain();
+    ;
+    return ret;
   }
 
   public void clear() {
@@ -72,6 +97,9 @@ public class PBillboardParticleSource {
         newAngVel = Math.min(0, newAngVel + particle.angVelDecel() * PEngine.dt);
       }
       particle.angVel(newAngVel);
+      if (delegate != null) {
+        delegate.processBillboardParticle(particle);
+      }
       checkIndex++;
     }
   }
@@ -204,6 +232,12 @@ public class PBillboardParticleSource {
     material = modelInstance.material(PARTICLES);
   }
 
+  @Override public void reset() {
+    texture.reset();
+    delegate = null;
+    particles.clearAndFreePooled();
+  }
+
   public PBillboardParticleSource setOrigin(PVec3 vec3) {
     if (modelInstance != null) {
       modelInstance.worldTransform().setToTranslation(vec3);
@@ -212,9 +246,12 @@ public class PBillboardParticleSource {
   }
 
   public PBillboardParticle spawnParticle() {
-    PBillboardParticle particle = PBillboardParticle.obtain();
-    particles.add(particle);
+    PBillboardParticle particle = particles.genPooledAndAdd();
     particle.isLive = true;
     return particle;
+  }
+
+  public interface Delegate {
+    void processBillboardParticle(PBillboardParticle particle);
   }
 }

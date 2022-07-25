@@ -41,7 +41,6 @@ void main() {
     light += albedo * u_directionalLightCol0 * pow(specularStrength, 24.0) * (1.0 - normalR.w);
 
     light.rgb += emissive;
-
     lighted = vec4(light, 1.0);
 
     #include <engine/shader/end/light.frag>

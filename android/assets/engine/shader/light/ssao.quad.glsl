@@ -34,42 +34,46 @@ void main() {
 
     #include <engine/shader/template/decodelocation>[worldPos, depth, bufferUV, u_cameraViewProInv];
     vec3 normal = normalRTex(bufferUV).xyz;
+    if (length(normal) < 0.1) {
+        ssao = vec4(1.0);
+    } else {
 
-    int  noiseX = int(gl_FragCoord.x - 0.5) % 4;
-    int  noiseY = int(gl_FragCoord.y - 0.5) % 4;
-    vec3 randomVec = u_noise[noiseX + (noiseY * 4)];
-    vec3 tangent  = normalizeSafe(randomVec - normal * dot(randomVec, normal));
-    vec3 binormal = cross(normal, tangent);
-    mat3 tbn      = mat3(tangent, binormal, normal);
+            int  noiseX = int(gl_FragCoord.x - 0.5) % 4;
+            int  noiseY = int(gl_FragCoord.y - 0.5) % 4;
+            vec3 randomVec = u_noise[noiseX + (noiseY * 4)];
+            vec3 tangent  = normalizeSafe(randomVec - normal * dot(randomVec, normal));
+            vec3 binormal = cross(normal, tangent);
+            mat3 tbn      = mat3(tangent, binormal, normal);
 
-    float occlusion = float(NUM_SAMPLES);
-    float samplesTaken = 0.0;
+            float occlusion = float(NUM_SAMPLES);
+            float samplesTaken = 0.0;
 
-    for (int i = 0; i < NUM_SAMPLES; ++i) {
-        vec3 samplePosition = tbn * u_samples[i];
-        samplePosition = worldPos.xyz + samplePosition * u_ssaoRadius;
-        float samplePositionDepth = getDepthFromWorldLocation(samplePosition);
-        vec2 sampleProjected = getUVFromWorldSpaceCoordinates(samplePosition);
-        #include <engine/shader/template/decodelocation>[worldLocationOfSample, depth, sampleProjected, u_cameraViewProInv];
-        float worldLocationOfSampleDepth = getDepthFromWorldLocation(worldLocationOfSample);
+            for (int i = 0; i < NUM_SAMPLES; ++i) {
+                vec3 samplePosition = tbn * u_samples[i];
+                samplePosition = worldPos.xyz + samplePosition * u_ssaoRadius;
+                float samplePositionDepth = getDepthFromWorldLocation(samplePosition);
+                vec2 sampleProjected = getUVFromWorldSpaceCoordinates(samplePosition);
+                #include <engine/shader/template/decodelocation>[worldLocationOfSample, depth, sampleProjected, u_cameraViewProInv];
 
-        float occluded = 0.0;
-        // TODO: use a smoothstep or something here.
-        if (samplePositionDepth + u_ssaoBias <= worldLocationOfSampleDepth) { occluded = 0.0; } else { occluded = 1.0; }
-        float intensity = smoothstep(0.0, 1.0, u_ssaoRadius / abs(samplePositionDepth - worldLocationOfSampleDepth));
-        occluded *= intensity;
-        occlusion -= occluded;
+                float worldLocationOfSampleDepth = getDepthFromWorldLocation(worldLocationOfSample);
+
+            float occluded = 0.0;
+            // TODO: use a smoothstep or something here.
+            if (samplePositionDepth + u_ssaoBias <= worldLocationOfSampleDepth) { occluded = 0.0; } else { occluded = 1.0; }
+            float intensity = smoothstep(0.0, 1.0, u_ssaoRadius / abs(samplePositionDepth - worldLocationOfSampleDepth));
+            occluded *= intensity;
+            occlusion -= occluded;
+        }
+
+        occlusion /= float(NUM_SAMPLES);
+        occlusion  = pow(occlusion, u_ssaoMagnitude);
+        occlusion  = u_ssaoContrast * (occlusion - 0.5) + 0.5;
+        float rampBottom = 0.1;
+        occlusion = smoothstep(0.0, 1.0, clamp((occlusion - rampBottom) / (1.0 - rampBottom), 0.0, 1.0));
+
+        ssao = vec4(vec3(occlusion), 1.0);
     }
 
-
-    occlusion /= float(NUM_SAMPLES);
-    occlusion  = pow(occlusion, u_ssaoMagnitude);
-    occlusion  = u_ssaoContrast * (occlusion - 0.5) + 0.5;
-    float rampBottom = 0.1;
-    occlusion = smoothstep(0.0, 1.0, clamp((occlusion - rampBottom) / (1.0 - rampBottom), 0.0, 1.0));
-
-    ssao = vec4(vec3(occlusion), 1.0);
-    //    ssao = vec4(vec3(getDepthFromWorldLocation(worldPos.xyz)), 1.0);
 
     #include <engine/shader/end/shared.frag>
 }

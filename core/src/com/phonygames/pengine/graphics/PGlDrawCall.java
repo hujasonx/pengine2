@@ -53,10 +53,12 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PVec3 origin = PVec3.obtain(), bounds = PVec3.obtain();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final boolean renderingDisabled;
   @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private boolean enableBlend, depthTest, depthMask;
   @Getter(value = AccessLevel.PUBLIC)
@@ -67,17 +69,20 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Accessors(fluent = true)
   private PMaterial material;
   @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private PMesh mesh;
   @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private int numInstances, dstFactor, srcFactor, dptTest, cullFace, boneTransformsLookupOffset,
+  private int numInstances, dstRGBFactor, dstAFactor, srcRGBFactor, srcAFactor, dptTest, cullFace, boneTransformsLookupOffset,
       boneTransformsVecsPerInstance;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private float occludeRadius = 0;
   @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private PShader shader;
   @Getter(value = AccessLevel.PUBLIC)
@@ -99,8 +104,10 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     enableBlend = false;
     depthTest = true;
     depthMask = true;
-    srcFactor = GL20.GL_SRC_ALPHA;
-    dstFactor = GL20.GL_ONE_MINUS_SRC_ALPHA;
+    srcRGBFactor = GL20.GL_SRC_ALPHA;
+    srcAFactor = GL20.GL_ONE;
+    dstRGBFactor = GL20.GL_ONE_MINUS_SRC_ALPHA;
+    dstAFactor = GL20.GL_ONE;
     dptTest = GL20.GL_LESS;
     cullFace = GL20.GL_BACK;
     numInstances = 0;
@@ -171,8 +178,10 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     enableBlend = other.enableBlend;
     depthTest = other.depthTest;
     depthMask = other.depthMask;
-    srcFactor = other.srcFactor;
-    dstFactor = other.dstFactor;
+    srcRGBFactor = other.srcRGBFactor;
+    srcAFactor = other.srcAFactor;
+    dstRGBFactor = other.dstRGBFactor;
+    dstAFactor = other.dstAFactor;
     dptTest = other.dptTest;
     cullFace = other.cullFace;
     numInstances = other.numInstances;
@@ -212,7 +221,7 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
 
   public void prepRenderContext(@NonNull PRenderContext renderContext) {
     PAssert.isTrue(renderContext.isActive());
-    renderContext.setBlending(enableBlend, srcFactor, dstFactor);
+    renderContext.setBlending(enableBlend, srcRGBFactor, srcAFactor, dstRGBFactor, dstAFactor);
     renderContext.setDepthTest(dptTest);
     renderContext.setDepthMask(depthMask);
     renderContext.setCullFace(cullFace);
@@ -222,12 +231,6 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     PAssert.isFalse(renderingDisabled, "Cannot freeTemp() a renderingDisabled PGlDrawCall");
     staticPool().free(this);
   }
-
-  public PGlDrawCall setCullFace(int cullFace) {
-    this.cullFace = cullFace;
-    return this;
-  }
-
   public PGlDrawCall setDataBufferInfo(PMap<String, PInt> dataBufferLookupVecsPerInstance,
                                        PMap<String, PInt> dataBufferLookupOffsets, int boneTransformsLookupOffset,
                                        int boneTransformsVecsPerInstance) {
@@ -251,63 +254,8 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
     return this;
   }
 
-  public PGlDrawCall setDepthMask(boolean depthMask) {
-    this.depthMask = depthMask;
-    return this;
-  }
-
-  public PGlDrawCall setDepthTest(boolean depthTest) {
-    this.depthTest = depthTest;
-    return this;
-  }
-
-  public PGlDrawCall setDptTest(int dptTest) {
-    this.dptTest = dptTest;
-    return this;
-  }
-
-  public PGlDrawCall setDstFactor(int dstFactor) {
-    this.dstFactor = dstFactor;
-    return this;
-  }
-
-  public PGlDrawCall setEnableBlend(boolean enableBlend) {
-    this.enableBlend = enableBlend;
-    return this;
-  }
-
   public PGlDrawCall setLayer(String layer) {
     this.layer = layer != null ? layer : "";
-    return this;
-  }
-
-  public PGlDrawCall setMaterial(PMaterial material) {
-    this.material = material;
-    return this;
-  }
-
-  public PGlDrawCall setMesh(PMesh mesh) {
-    this.mesh = mesh;
-    return this;
-  }
-
-  public PGlDrawCall setNumInstances(int numInstances) {
-    this.numInstances = numInstances;
-    return this;
-  }
-
-  public PGlDrawCall setOrigin(PVec3 origin) {
-    origin().set(origin);
-    return this;
-  }
-
-  public PGlDrawCall setShader(PShader shader) {
-    this.shader = shader;
-    return this;
-  }
-
-  public PGlDrawCall setSrcFactor(int srcFactor) {
-    this.srcFactor = srcFactor;
     return this;
   }
 }

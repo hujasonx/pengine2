@@ -7,7 +7,8 @@ void main() {
     #include <engine/shader/start/shared.frag>
 
     vec4 outlineCol = outlineTex(bufferUV);
-    fxaa = mix(sourceTex(bufferUV), outlineCol, outlineCol.a) + bloomTex(bufferUV);
+    fxaa = mix(sourceTex(bufferUV), outlineCol, outlineCol.a);
+    fxaa += bloomTex(bufferUV);
 
     #include <engine/shader/end/shared.frag>
 }

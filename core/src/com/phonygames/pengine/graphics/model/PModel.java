@@ -78,7 +78,7 @@ public class PModel {
               }
             }
             assert firstInstance != null;
-            PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).setNumInstances(instances.size());
+            PGlDrawCall drawCall = PGlDrawCall.getTemp(glNode.drawCall()).numInstances(instances.size());
             // The PModel.Node's drawcall origin is the model-space origin of the mesh.
             drawCall.origin().mul(firstInstance.worldTransform(), 1);
             // Scale the bounds.
@@ -173,16 +173,16 @@ public class PModel {
         list = new PList<>();
       }
       val glNode = new PGlNode(name);
-      glNode.drawCall().setMesh(mesh);
-      glNode.drawCall().setMaterial(defaultMaterial);
+      glNode.drawCall().mesh(mesh);
+      glNode.drawCall().material(defaultMaterial);
       glNode.drawCall().setLayer(layer);
       if (setOriginToMeshCenter) {
-        glNode.drawCall().setOrigin(glNode.drawCall().mesh().center());
+        glNode.drawCall().origin().set(glNode.drawCall().mesh().center());
       }
       if (alphaBlend) {
         glNode.drawCall().strictDepthOrder(true);
-        glNode.drawCall().setEnableBlend(true);
-        glNode.drawCall().setDepthMask(false);
+        glNode.drawCall().enableBlend(true);
+        glNode.drawCall().depthMask(false);
       }
       // Set the occlusion radius to slightly more than half the bounds.
       glNode.drawCall().occludeRadius(

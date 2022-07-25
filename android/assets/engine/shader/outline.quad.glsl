@@ -43,11 +43,14 @@ void main() {
     vec4 uNorR = normalRTex(lookUV);
     float uDep = dot(uPos - u_cameraPos, u_cameraDir);
 
-    outlineAmount += step(pixelDepthDeltaForOutline, abs(rDep - lDep));
-    outlineAmount += step(pixelNormalDotForOutline, 1. - abs(dot(rNorR.xyz, lNorR.xyz)));
+    // Multiply by the combiend length to prevent outlines from appearing if both normals are 0.
+    float lrInclude = step(.5, length(rNorR.xyz + lNorR.xyz));
+    outlineAmount += step(pixelDepthDeltaForOutline, abs(rDep - lDep)) * lrInclude;
+    outlineAmount += step(pixelNormalDotForOutline, 1. - abs(dot(rNorR.xyz, lNorR.xyz))) * lrInclude;
 
-    outlineAmount += step(pixelDepthDeltaForOutline, abs(uDep - dDep));
-    outlineAmount += step(pixelNormalDotForOutline, 1. - abs(dot(uNorR.xyz, dNorR.xyz)));
+    float udInclude = step(.5, length(uNorR.xyz + dNorR.xyz));
+    outlineAmount += step(pixelDepthDeltaForOutline, abs(uDep - dDep)) * udInclude;
+    outlineAmount += step(pixelNormalDotForOutline, 1. - abs(dot(uNorR.xyz, dNorR.xyz))) * udInclude;
 
 
     outline = vec4(vec3(.01), clamp(outlineAmount, 0., 1.));

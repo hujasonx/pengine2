@@ -143,17 +143,24 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
   }
 
   public E removeIndex(int index) {
-    return backingArray.removeIndex(index);
+    E e = backingArray.removeIndex(index);
+    if (e instanceof PPool.Poolable && sourcePool != null) {
+      sourcePool.free((PPool.Poolable)e);
+    }
+    return e;
   }
 
   public E removeLast() {
     if (backingArray.size == 0) {
       return null;
     }
-    return backingArray.removeIndex(size() - 1);
+    return removeIndex(size() - 1);
   }
 
   public boolean removeValue(E e, boolean identity) {
+    if (e instanceof PPool.Poolable && sourcePool != null) {
+      sourcePool.free((PPool.Poolable)e);
+    }
     return backingArray.removeValue(e, identity);
   }
 

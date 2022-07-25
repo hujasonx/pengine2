@@ -1,5 +1,6 @@
 package com.phonygames.pengine.graphics;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -167,7 +168,7 @@ public class PRenderContext {
           val layer = e.key;
           val phaseHandler = e.value;
           if (drawCall.layer().equals(layer) && drawCall.mesh().vertexAttributes() != null) {
-            drawCall.setShader(shaderProvider.provide(phaseHandler.renderBuffer().fragmentLayout(), layer,
+            drawCall.shader(shaderProvider.provide(phaseHandler.renderBuffer().fragmentLayout(), layer,
                                                       drawCall.mesh().vertexAttributes(), drawCall.material()));
             break;
           }
@@ -326,10 +327,28 @@ public class PRenderContext {
     in.y(perspectiveCamera().viewportHeight - in.y());
     return true;
   }
+  private int blendSRGBFactor;
+  private int blendDRGBFactor;
+  private int blendSAFactor;
+  private int blendDAFactor;
+  private int activeBlendSRGBFactor;
+  private int activeBlendDRGBFactor;
+  private int activeBlendSAFactor;
+  private int activeBlendDAFactor;
+  private boolean blending = false;
 
-  public PRenderContext setBlending(final boolean enabled, final int sFactor, final int dFactor) {
+  public PRenderContext setBlending(final boolean enabled, final int sRGBFactor, final int sAFactor, final int dRGBFactor, final int dAFactor) {
     PAssert.isTrue(isActive());
-    backingRenderContext().setBlending(enabled, sFactor, dFactor);
+    if (enabled != blending) {
+      blending = enabled;
+      if (enabled)
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+      else
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+    }
+    if (enabled && (activeBlendSRGBFactor != sRGBFactor || activeBlendSAFactor != sAFactor || activeBlendDRGBFactor != dRGBFactor || activeBlendDAFactor != dAFactor)) {
+      Gdx.gl.glBlendFuncSeparate(activeBlendSRGBFactor = sRGBFactor,activeBlendDRGBFactor = dRGBFactor, activeBlendSAFactor = sAFactor, activeBlendDAFactor = dAFactor);
+    }
     return this;
   }
 
@@ -440,6 +459,10 @@ public class PRenderContext {
   public void start() {
     PAssert.isNull(activeContext);
     activeContext = this;
+    activeBlendSRGBFactor = -1;
+    activeBlendDRGBFactor = -1;
+    activeBlendSAFactor = -1;
+    activeBlendDAFactor = -1;
     resetDefaults();
     backingRenderContext().begin();
   }

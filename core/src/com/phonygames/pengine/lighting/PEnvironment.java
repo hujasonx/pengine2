@@ -70,7 +70,7 @@ public class PEnvironment {
     lightedBuffer.begin();
     PGLUtils.clearScreen(0, 0, 0, 1);
     // Lights should be added to each other, and should not fill the depth buffer.
-    renderContext.setBlending(true, GL20.GL_ONE, GL20.GL_ONE);
+    renderContext.setBlending(true, GL20.GL_ONE, GL20.GL_ONE , GL20.GL_ONE, GL20.GL_ONE);
     renderContext.setDepthMask(false);
     renderContext.setDepthTest(0);
     // Ambient and directional lights.
@@ -149,6 +149,7 @@ public class PEnvironment {
   }
 
   private void ssaoPass(Texture normalRTex, Texture depthTex, PRenderContext renderContext) {
+    renderContext.resetDefaults();
     ssaoBuffer.begin();
     ssaoShader.start(PRenderContext.activeContext());
     ssaoShader.set("u_ssaoRadius", .5f);

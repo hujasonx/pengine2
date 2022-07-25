@@ -6,11 +6,13 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.character.CharacterEntity;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PEngine;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.PRenderable;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.graphics.particles.PBillboardParticleSource;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
@@ -27,6 +29,8 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 
 public abstract class Gun implements PRenderable {
+
+  protected PBillboardParticleSource muzzleParticleSource;
   protected final CharacterEntity characterEntity;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -60,6 +64,7 @@ public abstract class Gun implements PRenderable {
   /** [scale, period] */
   protected final PVec2 weaponIdleSwayLeftSettings = PVec2.obtain(), weaponIdleSwayUpSettings = PVec2.obtain(),
       weaponIdleSwayDirSettings = PVec2.obtain();
+  protected String firePointNodeName;
 
   protected Gun(String modelName, CharacterEntity characterEntity) {
     this.characterEntity = characterEntity;
@@ -70,6 +75,7 @@ public abstract class Gun implements PRenderable {
       vColIndexBuffer.addData(0, 0, 0, .3f); // Base color emissiveI.
     });
     modelInstance.material("matBase").useVColIndex(true);
+    muzzleParticleSource = PBillboardParticleSource.obtain();
   }
 
   public void applyTransformsToCharacterModelInstance(PModelInstance modelInstance) {
@@ -109,6 +115,9 @@ public abstract class Gun implements PRenderable {
         if (reloadAnimationT > reloadPAnimation.getLength()) {reloadAnimationT = -1;}
       }
     }
+    PAssert.isNotNull(firePointNodeName, "firePointNodeName must be set first!");
+    muzzleParticleSource.setOrigin(modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3()));
+    muzzleParticleSource.frameUpdate();
     lifeT += PEngine.t;
   }
 
@@ -122,9 +131,7 @@ public abstract class Gun implements PRenderable {
   }
 
   public void primaryTriggerJustDown() {
-    recoilEulRotSpring.vel().add(recoilEulRotImpulse);
-    recoilOffsetSpring.vel().add(recoilOffsetImpulse);
-    recoilCameraEulRotSpring.vel().add(recoilCameraEulRotImpulse);
+    onShoot();
   }
 
   public void primaryTriggerJustUp() {
@@ -142,6 +149,13 @@ public abstract class Gun implements PRenderable {
     if (this.modelInstance != null) {
       this.modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
     }
+    muzzleParticleSource.render(renderContext);
+  }
+
+  public void onShoot() {
+    recoilEulRotSpring.vel().add(recoilEulRotImpulse);
+    recoilOffsetSpring.vel().add(recoilOffsetImpulse);
+    recoilCameraEulRotSpring.vel().add(recoilCameraEulRotImpulse);
   }
 
   public void secondaryTriggerDown() {
