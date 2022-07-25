@@ -17,7 +17,6 @@ import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PSODynamics;
-import com.phonygames.pengine.math.PVec;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -29,28 +28,32 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 
 public abstract class Gun implements PRenderable {
-
-  protected PBillboardParticleSource muzzleParticleSource;
   protected final CharacterEntity characterEntity;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   // Guns are placed based on their offset from the camera eyes.
   protected final PVec3 firstPersonStandardOffsetFromCamera = PVec3.obtain();
+  /** [scale, period] */
+  protected final PVec2 weaponIdleSwayLeftSettings = PVec2.obtain(), weaponIdleSwayUpSettings = PVec2.obtain(),
+      weaponIdleSwayDirSettings = PVec2.obtain();
   /** The FOV when aiming down sights. */
   protected float adsFOV = PRenderContext.defaultFOV();
   /** Spring used for things like ADS. */
   protected PSODynamics.PSODynamics3 cameraOffsetSpring = PSODynamics.obtain3();
+  protected String firePointNodeName;
   protected PSODynamics.PSODynamics1 fovSpring = PSODynamics.obtain1().setGoal(PRenderContext.defaultFOV());
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
+  protected PBillboardParticleSource muzzleParticleSource;
   protected PVec3 recoilCameraEulRotImpulse = PVec3.obtain();
   protected PSODynamics.PSODynamics3 recoilCameraEulRotSpring = PSODynamics.obtain3();
   protected PVec3 recoilEulRotImpulse = PVec3.obtain();
   protected PSODynamics.PSODynamics3 recoilEulRotSpring = PSODynamics.obtain3();
   protected PVec3 recoilOffsetImpulse = PVec3.obtain();
   protected PSODynamics.PSODynamics3 recoilOffsetSpring = PSODynamics.obtain3();
-  protected String reloadAnimation = null;
+  protected String reloadAnimation = null, shootAnimation = null, defaultAnimation = null, triggerAnimation = null;
+  protected PSODynamics.PSODynamics1 triggerTSpring = PSODynamics.obtain1().setGoal(0);
   /** The walk cycle will be scaled between [inset, 1 - inset] */
   protected float walkCycleShakeTEdgeInset = 1;
   /** How much to scale the x offset from walking; will be multiplied with [-1, 1] */
@@ -60,11 +63,7 @@ public abstract class Gun implements PRenderable {
   /** How much to scale the y offset from walking; will be multiplied with [0, 1] */
   protected float walkCycleYOffsetScale = 1;
   private float lifeT = 0;
-  private transient float reloadAnimationT = -1;
-  /** [scale, period] */
-  protected final PVec2 weaponIdleSwayLeftSettings = PVec2.obtain(), weaponIdleSwayUpSettings = PVec2.obtain(),
-      weaponIdleSwayDirSettings = PVec2.obtain();
-  protected String firePointNodeName;
+  private transient float reloadAnimationT = -1, shootAnimationT = -1, defaultAnimationT = 0;
 
   protected Gun(String modelName, CharacterEntity characterEntity) {
     this.characterEntity = characterEntity;
@@ -98,25 +97,46 @@ public abstract class Gun implements PRenderable {
     recoilCameraEulRotSpring.frameUpdate();
     cameraOffsetSpring.frameUpdate();
     fovSpring.frameUpdate();
+    triggerTSpring.frameUpdate();
     if (modelInstance != null) {
       PVec4 recoilRotation = pool.vec4().setToRotationEuler(recoilEulRotSpring.pos());
       modelInstance.worldTransform().set(cameraTransform).translate(cameraOffsetSpring.pos())
                    .translate(recoilOffsetSpring.pos()).rotate(recoilRotation);
       modelInstance.recalcTransforms();
+      PStringMap<PMat4> transformMap = PMat4.getMat4StringMapsPool().obtain();
+      modelInstance.outputNodeTransformsToMap(transformMap, true, 1);
+      // Start off with the default pose.
+      if (defaultAnimationT != -1 && defaultAnimation != null) {
+        PAnimation defaultPAnimation = modelInstance.model().animations().get(defaultAnimation);
+        defaultPAnimation.apply(transformMap, (defaultPAnimation.getLength() == 0 || defaultAnimationT < 0) ? 0 :
+                                              (defaultAnimationT % defaultPAnimation.getLength()), 1);
+        defaultAnimationT += PEngine.dt;
+        if (defaultAnimationT > defaultPAnimation.getLength()) {defaultAnimationT = -1;}
+      }
       if (reloadAnimationT != -1 && reloadAnimation != null) {
         PAnimation reloadPAnimation = modelInstance.model().animations().get(reloadAnimation);
-        PStringMap<PMat4> transformMap =
-            modelInstance.outputNodeTransformsToMap(PMat4.getMat4StringMapsPool().obtain(), true, 1);
         reloadPAnimation.apply(transformMap, reloadAnimationT % reloadPAnimation.getLength(), 1f);
-        modelInstance.setNodeTransformsFromMap(transformMap, 1f);
-        transformMap.free();
-        modelInstance.recalcTransforms();
         reloadAnimationT += PEngine.dt;
         if (reloadAnimationT > reloadPAnimation.getLength()) {reloadAnimationT = -1;}
+      } else {
+        if (triggerAnimation != null) {
+          PAnimation triggerPAnimation = modelInstance.model().animations().get(triggerAnimation);
+          triggerPAnimation.apply(transformMap, triggerTSpring.pos().x(), 1);
+        }
+        if (shootAnimationT != -1 && shootAnimation != null) {
+          PAnimation shootPAnimation = modelInstance.model().animations().get(shootAnimation);
+          shootPAnimation.apply(transformMap, shootAnimationT, 1);
+          shootAnimationT += PEngine.dt;
+          if (shootAnimationT > shootPAnimation.getLength()) {shootAnimationT = -1;}
+        }
       }
+      modelInstance.setNodeTransformsFromMap(transformMap, 1f);
+      transformMap.free();
+      modelInstance.recalcTransforms();
     }
     PAssert.isNotNull(firePointNodeName, "firePointNodeName must be set first!");
-    muzzleParticleSource.setOrigin(modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3()));
+    muzzleParticleSource.setOrigin(
+        modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3()));
     muzzleParticleSource.frameUpdate();
     lifeT += PEngine.t;
   }
@@ -131,10 +151,21 @@ public abstract class Gun implements PRenderable {
   }
 
   public void primaryTriggerJustDown() {
+    triggerTSpring.setGoal(1);
     onShoot();
   }
 
+  public void onShoot() {
+    recoilEulRotSpring.vel().add(recoilEulRotImpulse);
+    recoilOffsetSpring.vel().add(recoilOffsetImpulse);
+    recoilCameraEulRotSpring.vel().add(recoilCameraEulRotImpulse);
+    if (shootAnimation != null) {
+      shootAnimationT = 0;
+    }
+  }
+
   public void primaryTriggerJustUp() {
+    triggerTSpring.setGoal(0);
   }
 
   public PVec3 recoilCameraEulRot() {
@@ -150,12 +181,6 @@ public abstract class Gun implements PRenderable {
       this.modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
     }
     muzzleParticleSource.render(renderContext);
-  }
-
-  public void onShoot() {
-    recoilEulRotSpring.vel().add(recoilEulRotImpulse);
-    recoilOffsetSpring.vel().add(recoilOffsetImpulse);
-    recoilCameraEulRotSpring.vel().add(recoilCameraEulRotImpulse);
   }
 
   public void secondaryTriggerDown() {

@@ -1,8 +1,10 @@
 package com.phonygames.pengine.graphics.animation;
 
+import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringMap;
 
 import lombok.Getter;
@@ -36,6 +38,33 @@ public class PAnimation {
           continue;
         }
         nodeAnimation.apply(e.v(), t, alpha);
+      }
+    }
+    return;
+  }
+
+  /**
+   * Multiplicitavely applys the animation with the given weight.
+   *
+   * @param transforms
+   * @param t
+   * @param alpha
+   */
+  public void mul(PStringMap<PMat4> transforms, PModel model, float t, float alpha) {
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      try (val it = transforms.obtainIterator()) {
+        while (it.hasNext()) {
+          PMap.Entry<String, PMat4> e = it.next();
+          PNodeAnimation nodeAnimation = getNodeAnimations().get(e.k());
+          if (nodeAnimation == null) {
+            continue;
+          }
+
+          PMat4 animationOutput = pool.mat4(model.nodes().get(e.k()).transform());
+          nodeAnimation.apply(animationOutput, t, alpha);
+          PMat4 animationOutputRelative = pool.mat4(model.nodes().get(e.k()).transform()).inv().mul(animationOutput);
+          e.v().mul(animationOutputRelative);
+        }
       }
     }
     return;

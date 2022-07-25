@@ -19,6 +19,8 @@ public class Pistol0 extends Gun {
     walkCycleYOffsetScale = .014f;
     walkCycleYOffsetPower = .75f;
     reloadAnimation = "Reload";
+    triggerAnimation = "PullTrigger";
+    defaultAnimation = "Default";
     cameraOffsetSpring.setDynamicsParams(5, 1, 0);
     recoilCameraEulRotSpring.setDynamicsParams(3, 1, 0);
     recoilCameraEulRotImpulse.set(0, 3, 0);
@@ -32,6 +34,7 @@ public class Pistol0 extends Gun {
     weaponIdleSwayUpSettings.set(.003f, 3.28f);
     weaponIdleSwayDirSettings.set(.001f, 9.2f);
     firePointNodeName = "Firepoint";
+    triggerTSpring.setDynamicsParams(5,1,0);
     setMuzzleParticleSourceDelegate();
   }
 
