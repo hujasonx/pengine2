@@ -1,3 +1,5 @@
+#include <engine/shader/header/shared>
+
 uniform vec4 u_tdtuituidt;
 uniform vec4 u_renderBufferSize;
 

@@ -2,6 +2,7 @@
 #include <engine/shader/header/light.frag>
 
 #include <engine/shader/header/texture2D>[depth]
+#include <engine/shader/header/texture2D>[ssao]
 
 uniform vec3 u_ambientLightCol;
 uniform vec3 u_directionalLightCol0;
@@ -15,6 +16,7 @@ uniform vec3 u_directionalLightDir2;
 uniform vec3 u_directionalLightDir3;
 
 uniform mat4 u_cameraViewProInv;
+uniform vec3 u_cameraPos;
 uniform vec3 u_cameraDir;
 
 void main() {
@@ -27,7 +29,7 @@ void main() {
 
     vec3 albedo = diffuse;// Metalness is not being used because it relies on reflection. However,
     // it would go here, subtracting from the diffuse.
-    light += albedo * u_ambientLightCol;
+    light += albedo * u_ambientLightCol * ssaoTex(bufferUV).rgb;
 
     float diffuseStrength = clamp(-dot(u_directionalLightDir0, normal), 0.0, 1.0);
     light += albedo * u_directionalLightCol0 * celShadeStrength(diffuseStrength, .2, .4, .01, .7);// TODO: use a uniform for the cel shade settings.
@@ -39,6 +41,7 @@ void main() {
     light += albedo * u_directionalLightCol0 * pow(specularStrength, 24.0) * (1.0 - normalR.w);
 
     light.rgb += emissive;
+
     lighted = vec4(light, 1.0);
 
     #include <engine/shader/end/light.frag>

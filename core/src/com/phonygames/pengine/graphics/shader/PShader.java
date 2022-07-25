@@ -354,6 +354,38 @@ public class PShader implements Disposable, Comparable<PShader> {
     return this;
   }
 
+  public PShader set(String uniform, float[] fs, int size) {
+    return set(uniform, fs, size, 0, fs.length);
+  }
+
+  public PShader set(String uniform, float[] fs, int size, int offset, int count) {
+    if (!checkValid()) {
+      return this;
+    }
+    uniform = PStringUtils.concat(uniform, "[0]");
+    PAssert.isTrue(isActive());
+    if (shaderProgram.hasUniform(uniform)) {
+      switch (size) {
+        case 1:
+          shaderProgram.setUniform1fv(uniform, fs, offset, count);
+          break;
+        case 2:
+          shaderProgram.setUniform2fv(uniform, fs, offset, count);
+          break;
+        case 3:
+          shaderProgram.setUniform3fv(uniform, fs, offset, count);
+          break;
+        case 4:
+          shaderProgram.setUniform4fv(uniform, fs, offset, count);
+          break;
+        case 16:
+          shaderProgram.setUniformMatrix4fv(uniform, fs, offset, count);
+          break;
+      }
+    }
+    return this;
+  }
+
   public PShader set(String uniform, PVec3 v) {
     return set(uniform, v.x(), v.y(), v.z());
   }
@@ -400,7 +432,7 @@ public class PShader implements Disposable, Comparable<PShader> {
       return this;
     }
     PAssert.isTrue(isActive());
-    if (shaderProgram.hasUniform(uniform)) {
+    if (texture != null && shaderProgram.hasUniform(uniform)) {
       int bindTarget = PRenderContext.activeContext().getTextureBinder().bind(texture);
       shaderProgram.setUniformi(uniform, bindTarget);
       set(PStringUtils.concat(uniform, "Size"), texture.getWidth(), texture.getHeight(), 1f / texture.getWidth(),

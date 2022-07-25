@@ -19,8 +19,6 @@ import com.phonygames.pengine.navmesh.PTileCache;
 import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PPool;
 
-import org.recast4j.detour.tilecache.TileCache;
-
 public class World {
   public final LasertagWorld lasertagWorld;
   private PBillboardParticleSource billboardParticleSource;
@@ -76,10 +74,10 @@ public class World {
       particle.accelVelocityDir(-.1f);
       particle.pos().set(MathUtils.random(10f), MathUtils.random(10f), MathUtils.random(10f));
     }
-    if (tileCache != null) {
-      tileCache.previewNavmesh();
-      //      previewNavMeshData();
-    }
+    //    if (tileCache != null) {
+    //      tileCache.previewNavmesh();
+    //      //      previewNavMeshData();
+    //    }
   }
 
   public void logicUpdate() {

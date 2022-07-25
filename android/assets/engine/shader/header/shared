@@ -1,0 +1,6 @@
+vec3 normalizeSafe(vec3 vec, float minLength) {
+    float length = clamp(length(vec), minLength, 1.0);
+    return vec3(vec.x / length, vec.y / length, vec.z / length);
+}
+
+vec3 normalizeSafe(vec3 vec) { return normalizeSafe(vec, .01); }

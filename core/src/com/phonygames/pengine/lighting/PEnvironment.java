@@ -1,8 +1,13 @@
 package com.phonygames.pengine.lighting;
 
+import static com.phonygames.pengine.graphics.PPostProcessor.totalTexScale;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
@@ -25,8 +30,13 @@ public class PEnvironment {
   private final PSet<PPointLight> pointLights = new PSet<>();
   @Getter
   @Setter
-  private PShader ambientAndDirectionalLightShader, pointLightShader;
+  private PShader ambientAndDirectionalLightShader, pointLightShader, ssaoShader;
   private String fragmentLayoutString = "";
+  private PRenderBuffer ssaoBuffer, lightedBuffer;
+  private float ssaoTexScale = .25f, lightedTexScale = 1;
+
+  private float[] ssaoNoise = getRandomNoiseVectorsForSSAO(4);
+  private float[] ssaoVecs = getRandomVectorsForSSAO(10);
 
   public PEnvironment() {
     lightsFloatBuffer = PFloat4Texture.get(256 * 256, true);
@@ -36,27 +46,28 @@ public class PEnvironment {
       directionalLightDir[a] = PVec3.obtain();
       directionalLightCol[a] = PVec3.obtain();
     }
+    this.ssaoBuffer =
+        new PRenderBuffer.Builder().setWindowScale(totalTexScale * ssaoTexScale).addFloatAttachment("ssao").build();
+    this.ssaoShader =
+        ssaoBuffer.getQuadShader(Gdx.files.local("engine/shader/light/ssao.quad.glsl"));
+    this.lightedBuffer =
+        new PRenderBuffer.Builder().setWindowScale(totalTexScale * lightedTexScale).addFloatAttachment("lighted").build();
+    this.ambientAndDirectionalLightShader = lightedBuffer.getQuadShader(Gdx.files.local("engine/shader/light/ambient_and_directional_light.quad.glsl"));
+    this.pointLightShader = lightedBuffer.getQuadShader(Gdx.files.local("engine/shader/light/pointlight.frag.glsl"));
   }
 
   public void addLight(PLight light) {
     pointLights.add((PPointLight) light);
   }
 
+  public Texture getTexture() {
+    return lightedBuffer.texture();
+  }
+
   public void renderLights(PRenderContext renderContext, Texture depthTex, Texture diffuseMTex, Texture normalRTex,
                            Texture emissiveITex) {
-    if (!fragmentLayoutString.equals(PRenderBuffer.activeBuffer().fragmentLayout())) {
-      if (fragmentLayoutString.length() > 0) {
-        PLog.w("Making new shader, as fragment layout changed [\n" + fragmentLayoutString + "\n -> \n" +
-               PRenderBuffer.activeBuffer().fragmentLayout() + "]");
-      }
-      fragmentLayoutString = PRenderBuffer.activeBuffer().fragmentLayout();
-      // Generate new shaders.
-      ambientAndDirectionalLightShader = PRenderBuffer.activeBuffer().getQuadShader(
-          Gdx.files.local("engine/shader/light/ambient_and_directional_light.quad.glsl"));
-      pointLightShader = new PShader("", fragmentLayoutString, PPointLight.MESH().vertexAttributes(),
-                                     Gdx.files.local("engine/shader/light/light.vert.glsl"),
-                                     Gdx.files.local("engine/shader/light/pointlight.frag.glsl"), null);
-    }
+    ssaoPass(normalRTex,depthTex, renderContext);
+    lightedBuffer.begin();
     PGLUtils.clearScreen(0, 0, 0, 1);
     // Lights should be added to each other, and should not fill the depth buffer.
     renderContext.setBlending(true, GL20.GL_ONE, GL20.GL_ONE);
@@ -65,12 +76,14 @@ public class PEnvironment {
     // Ambient and directional lights.
     ambientAndDirectionalLightShader.start(renderContext);
     ambientAndDirectionalLightShader.set("u_ambientLightCol", ambientLightCol);
+    ssaoBuffer.texture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+    ambientAndDirectionalLightShader.setWithUniform("u_ssaoTex",ssaoBuffer.texture());
     for (int a = 0; a < UniformConstants.NUM_DIRECTIONAL_LIGHTS; a++) {
       ambientAndDirectionalLightShader.set(UniformConstants.Vec4.u_directionalLightCol[a], directionalLightCol[a]);
       ambientAndDirectionalLightShader.set(UniformConstants.Vec4.u_directionalLightDir[a], directionalLightDir[a]);
     }
     setLightUniforms(ambientAndDirectionalLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex,
-                     renderContext.viewProjInvTransform(), renderContext.cameraDir());
+                     renderContext);
     PRenderBuffer.activeBuffer().renderQuad(ambientAndDirectionalLightShader);
     ambientAndDirectionalLightShader.end();
     // Point lights.
@@ -91,22 +104,76 @@ public class PEnvironment {
     if (numLights > 0) {
       pointLightShader.start(renderContext);
       setLightUniforms(pointLightShader, depthTex, diffuseMTex, normalRTex, emissiveITex,
-                       renderContext.viewProjInvTransform(), renderContext.cameraDir());
+                       renderContext);
       lightsFloatBuffer.applyShader(pointLightShader, "lightBuffer", 0, vecsPerInstance);
       PPointLight.MESH().glRenderInstanced(pointLightShader, numLights);
       pointLightShader.end();
     }
     renderContext.resetDefaults();
+    lightedBuffer.end();
+  }
+
+  private static float[] getRandomVectorsForSSAO(int size) {
+    Vector3[] vecs = new Vector3[size];
+
+    for (int a = 0; a < size; a++) {
+      vecs[a] = new Vector3(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(.25f, 1f)).nor().scl(MathUtils.random(.2f, 1f));
+      //      float scl = ((float)a) / ((float)size);
+      //      scl = PMx.lerp(0.1f, 1.0f, scl * scl);
+      //      vecs[a].scl(scl);
+    }
+
+    float[] ret = new float[size * 3];
+    for (int a = 0; a < size; a++) {
+      ret[a * 3 + 0] = vecs[a].x;
+      ret[a * 3 + 1] = vecs[a].y;
+      ret[a * 3 + 2] = vecs[a].z;
+    }
+    return ret;
+  }
+
+  private static float[] getRandomNoiseVectorsForSSAO(int size) {
+    Vector3[] vecs = new Vector3[size];
+
+    for (int a = 0; a < size; a++) {
+      vecs[a] = new Vector3(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), 0);
+    }
+
+    float[] ret = new float[size * 3];
+    for (int a = 0; a < size; a++) {
+      ret[a * 3 + 0] = vecs[a].x;
+      ret[a * 3 + 1] = vecs[a].y;
+      ret[a * 3 + 2] = vecs[a].z;
+    }
+    return ret;
+  }
+
+  private void ssaoPass(Texture normalRTex, Texture depthTex, PRenderContext renderContext) {
+    ssaoBuffer.begin();
+    ssaoShader.start(PRenderContext.activeContext());
+    ssaoShader.set("u_ssaoRadius", .5f);
+    ssaoShader.set("u_ssaoBias", .01f);
+    ssaoShader.set("u_ssaoMagnitude", 1.1f);
+    ssaoShader.set("u_ssaoContrast", 1.5f);
+    setLightUniforms(ssaoShader, depthTex,null, normalRTex, null,renderContext);
+    ssaoShader.set("u_noise", ssaoNoise, 3);
+    ssaoShader.set("u_samples", ssaoVecs, 3);
+    ssaoBuffer.renderQuad(ssaoShader);
+    ssaoShader.end();
+    ssaoBuffer.end();
+    ssaoBuffer.blurSelf(1, 1);
   }
 
   private void setLightUniforms(PShader shader, Texture depthTex, Texture diffuseMTex, Texture normalRTex,
-                                Texture emissiveITex, PMat4 viewProjInv, PVec3 cameraDir) {
+                                Texture emissiveITex, PRenderContext renderContext) {
     shader.setWithUniform(UniformConstants.Sampler2D.u_depthTex, depthTex);
     shader.setWithUniform(UniformConstants.Sampler2D.u_diffuseMTex, diffuseMTex);
     shader.setWithUniform(UniformConstants.Sampler2D.u_normalRTex, normalRTex);
     shader.setWithUniform(UniformConstants.Sampler2D.u_emissiveITex, emissiveITex);
-    shader.set(UniformConstants.Mat4.u_cameraViewProInv, viewProjInv);
-    shader.set(UniformConstants.Vec3.u_cameraDir, cameraDir);
+    shader.set(UniformConstants.Mat4.u_cameraViewPro, renderContext.viewProjTransform());
+    shader.set(UniformConstants.Mat4.u_cameraViewProInv, renderContext.viewProjInvTransform());
+    shader.set(UniformConstants.Vec3.u_cameraPos, renderContext.cameraPos());
+    shader.set(UniformConstants.Vec3.u_cameraDir, renderContext.cameraDir());
   }
 
   public PEnvironment setAmbientLightCol(float r, float g, float b) {
@@ -133,6 +200,7 @@ public class PEnvironment {
 
     public static class Vec3 {
       public static final String u_cameraDir = "u_cameraDir";
+      public static final String u_cameraPos = "u_cameraPos";
     }
 
     public static class Vec4 {
@@ -141,6 +209,7 @@ public class PEnvironment {
     }
 
     public static class Mat4 {
+      public static final String u_cameraViewPro = "u_cameraViewPro";
       public static final String u_cameraViewProInv = "u_cameraViewProInv";
     }
 

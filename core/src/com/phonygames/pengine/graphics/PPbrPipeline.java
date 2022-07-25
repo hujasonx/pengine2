@@ -21,9 +21,6 @@ public class PPbrPipeline implements PPostProcessor.Delegate{
   @Accessors(fluent = true)
   protected final PRenderBuffer gBuffer;
   @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  protected final PRenderBuffer lightedBuffer;
-  @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PEnvironment environment;
@@ -37,7 +34,6 @@ public class PPbrPipeline implements PPostProcessor.Delegate{
         new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuseM").addFloatAttachment("normalR")
                                    .addFloatAttachment("emissiveI").addFloatAttachment("alphaBlend")
                                    .addDepthAttachment().build();
-    this.lightedBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("lighted").build();
     this.combineBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("combine").build();
     this.postprocessingcombineshader =
         combineBuffer.getQuadShader(Gdx.files.local("engine/shader/postprocessingcombine.quad.glsl"));
@@ -64,7 +60,7 @@ public class PPbrPipeline implements PPostProcessor.Delegate{
 
       @Override public void end() {
       }
-    }, new PRenderContext.PhaseHandler("Lights", lightedBuffer, true) {
+    }, new PRenderContext.PhaseHandler("Lights", null, true) {
       @Override public void begin() {
         PGLUtils.clearScreen(0, 0, 0, 0);
         if (environment == null) {
@@ -87,7 +83,7 @@ public class PPbrPipeline implements PPostProcessor.Delegate{
         if (environment == null) {
           return;
         }
-        Texture lightedTex = lightedBuffer.texture("lighted");
+        Texture lightedTex = environment.getTexture();
         Texture alphaBlendTex = gBuffer.texture("alphaBlend");
         combineBuffer.begin(true);
         postprocessingcombineshader.start(PRenderContext.activeContext());

@@ -12,7 +12,7 @@ public class PPostProcessor {
   private float fxaaTexScale = 1;
   private float outlineTexScale = 1;
   private float ssaoTexScale = .2f;
-  private float totalTexScale = 1;
+  public static float totalTexScale = 1;
   private float bloomScale = 1, bloomThreshold =.9f;
   private final PShader bloomShader, finalShader;
 
@@ -38,6 +38,7 @@ public class PPostProcessor {
         bloomBuffer.begin(true);
         Texture sourceTex = delegate.getTextureForPostProcessing();
         PGLUtils.clearScreen(0,0,0,0);
+        // Bloom.
         bloomShader.start(PRenderContext.activeContext());
         bloomShader.set("u_bloomThreshold", bloomThreshold);
         bloomShader.set("u_bloomScale", bloomScale);
@@ -45,7 +46,9 @@ public class PPostProcessor {
         bloomBuffer.renderQuad(bloomShader);
         bloomShader.end();
         bloomBuffer.end();
-        bloomBuffer.blurSelf();
+        bloomBuffer.blurSelf(1, 1);
+
+        // Combine step.
         fxaaBuffer.begin();
         finalShader.start(PRenderContext.activeContext());
         finalShader.setWithUniform("u_sourceTex", sourceTex);

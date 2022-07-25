@@ -163,10 +163,10 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     activeBuffer = null;
   }
 
-  public void blurSelf() {
+  public void blurSelf(float spreadH, float spreadV) {
     PAssert.isFalse(active);
     PBlurShader blurShader = PBlurShader.gen(this);
-    blurShader.apply(this, 1, 1);
+    blurShader.apply(this, spreadH, spreadV);
   }
 
   public void begin(boolean swapBuffers) {
