@@ -7,7 +7,7 @@ import com.phonygames.pengine.graphics.shader.PShader;
 
 public class PPostProcessor {
   public static float totalTexScale = 1;
-  private final PShader bloomShader, outlineShader, finalShader;
+  private final PShader bloomShader, outlineShader, finalShader, fxaaShader;
   private final Delegate delegate;
   private PRenderBuffer bloomBuffer, ssaoBuffer, fxaaBuffer, outlineBuffer;
   private float bloomScale = 1, bloomThreshold = .9f;
@@ -30,6 +30,7 @@ public class PPostProcessor {
                                    .build();
     this.outlineShader = outlineBuffer.getQuadShader(Gdx.files.local("engine/shader/outline.quad.glsl"));
     this.finalShader = fxaaBuffer.getQuadShader(Gdx.files.local("engine/shader/final.quad.glsl"));
+    this.fxaaShader = fxaaBuffer.getQuadShader(Gdx.files.local("engine/shader/fxaa.quad.glsl"));
   }
 
   public Texture getFinalTexture() {
@@ -91,6 +92,12 @@ public class PPostProcessor {
     finalShader.setWithUniform("u_bloomTex", bloomBuffer.texture());
     fxaaBuffer.renderQuad(finalShader);
     finalShader.end();
+    fxaaBuffer.end();
+    fxaaBuffer.begin();
+    fxaaShader.start(PRenderContext.activeContext());
+    fxaaShader.setWithUniform("u_sourceTex", fxaaBuffer.getTexturePrev("fxaa"));
+    fxaaBuffer.renderQuad(fxaaShader);
+    fxaaShader.end();
     fxaaBuffer.end();
   }
 
