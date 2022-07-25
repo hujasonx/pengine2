@@ -100,6 +100,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
       if (delegate != null) {
         delegate.processBillboardParticle(particle);
       }
+      particle.lifeT += PEngine.dt;
       checkIndex++;
     }
   }

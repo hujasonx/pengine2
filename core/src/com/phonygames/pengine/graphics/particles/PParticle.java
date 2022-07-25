@@ -1,5 +1,6 @@
 package com.phonygames.pengine.graphics.particles;
 
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.math.PVec;
@@ -21,7 +22,9 @@ public abstract class PParticle implements PPool.Poolable, PSortableByScore<PPar
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected final PVec3 pos = PVec3.obtain();
-  protected float radius;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  protected float radius, lifeT;
   protected boolean isLive = false;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
@@ -35,6 +38,7 @@ public abstract class PParticle implements PPool.Poolable, PSortableByScore<PPar
     pos.setZero();
     isLive = false;
     userInt = 0;
+    lifeT = 0;
   }
 
   public void kill() {

@@ -5,6 +5,7 @@ import com.phonygames.cybertag.character.PlayerCharacterEntity;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.particles.PBillboardParticle;
+import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PSODynamics;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PPool;
@@ -36,6 +37,13 @@ public class Pistol0 extends Gun {
 
   private void setMuzzleParticleSourceDelegate() {
     muzzleParticleSource.delegate(particle -> {
+      float a = .6f - PNumberUtils.pow(particle.lifeT(), 3) * .3f;
+      if (a < 0) {
+        particle.kill();
+        return;
+      }
+      particle.col0().a(a);
+      particle.setColFrom0();
     });
   }
 
@@ -53,20 +61,18 @@ public class Pistol0 extends Gun {
   private void spawnShootParticles() {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       PVec3 firePointPos = modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3());
-      for (int a = 0; a < 128; a++) {
+      for (int a = 0; a < 6; a++) {
         PBillboardParticle particle = muzzleParticleSource.spawnParticle();
         particle.accelVelocityDir(-1);
         particle.faceCamera(true);
         particle.faceCameraXScale(.2f);
         particle.faceCameraYScale(.2f);
-        particle.col0().setHSVA(MathUtils.random(), 1, 1, .2f);
-        particle.col1().set(particle.col0());
-        particle.col2().set(particle.col0());
-        particle.col3().set(particle.col0());
+        particle.col0().setHSVA(MathUtils.random(), 1, 1, .6f);
+        particle.setColFrom0();
         particle.texture().set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Glow", true));
         particle.angVel(MathUtils.random(-3f, 3f));
-        particle.angVelDecel(.6f);
-        particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f));
+        particle.angVelDecel(3f);
+        particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)).nor().scl(MathUtils.random(4f));
         particle.pos().set(firePointPos);
       }
     }

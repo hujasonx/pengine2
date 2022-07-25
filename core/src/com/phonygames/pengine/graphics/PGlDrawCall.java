@@ -54,7 +54,6 @@ public class PGlDrawCall implements PPool.Poolable, Comparable<PGlDrawCall>, PDe
   @Accessors(fluent = true)
   private final PVec3 origin = PVec3.obtain(), bounds = PVec3.obtain();
   @Getter(value = AccessLevel.PUBLIC)
-  @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final boolean renderingDisabled;
   @Getter(value = AccessLevel.PUBLIC)

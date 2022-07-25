@@ -46,6 +46,12 @@ public class PBillboardParticle extends PParticle {
   @Accessors(fluent = true)
   private final float[] userData = new float[16];
 
+  public PBillboardParticle setColFrom0() {
+    col1.set(col0);
+    col2.set(col0);
+    col3.set(col0);
+    return this;
+  }
 
   private PBillboardParticle() {
     reset();
