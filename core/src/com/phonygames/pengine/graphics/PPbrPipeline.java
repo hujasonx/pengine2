@@ -45,6 +45,13 @@ public class PPbrPipeline implements PPostProcessor.Delegate{
     return combineBuffer.texture();
   }
 
+  @Override public Texture getDepthTextureForPostProcessing() {
+    return gBuffer.texture("depth");
+  }
+  @Override public Texture getNormalRTextureForPostProcessing() {
+    return gBuffer.texture("normalR");
+  }
+
   protected void setPhases() {
     phases = new PRenderContext.PhaseHandler[]{new PRenderContext.PhaseHandler(PGltf.Layer.PBR, gBuffer, true) {
       @Override public void begin() {
