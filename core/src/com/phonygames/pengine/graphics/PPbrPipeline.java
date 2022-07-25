@@ -13,10 +13,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-public class PPbrPipeline {
+public class PPbrPipeline implements PPostProcessor.Delegate{
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  protected final PRenderBuffer finalBuffer;
+  protected final PRenderBuffer combineBuffer;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected final PRenderBuffer gBuffer;
@@ -29,6 +29,7 @@ public class PPbrPipeline {
   protected PEnvironment environment;
   private PRenderContext.PhaseHandler[] phases;
   private PShader postprocessingcombineshader;
+  private PPostProcessor postProcessor;
 
   public PPbrPipeline() {
     super();
@@ -37,10 +38,15 @@ public class PPbrPipeline {
                                    .addFloatAttachment("emissiveI").addFloatAttachment("alphaBlend")
                                    .addDepthAttachment().build();
     this.lightedBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("lighted").build();
-    this.finalBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("final").build();
+    this.combineBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("combine").build();
     this.postprocessingcombineshader =
-        finalBuffer.getQuadShader(Gdx.files.local("engine/shader/postprocessingcombine.quad.glsl"));
+        combineBuffer.getQuadShader(Gdx.files.local("engine/shader/postprocessingcombine.quad.glsl"));
+    this.postProcessor = new PPostProcessor(this);
     setPhases();
+  }
+
+  @Override public Texture getTextureForPostProcessing() {
+    return combineBuffer.texture();
   }
 
   protected void setPhases() {
@@ -75,7 +81,7 @@ public class PPbrPipeline {
 
       @Override public void end() {
       }
-    }, new PRenderContext.PhaseHandler("PostProcess", null, true) {
+    }, new PRenderContext.PhaseHandler("Combine", null, true) {
       @Override public void begin() {
         PGLUtils.clearScreen(0, 0, 0, 1);
         if (environment == null) {
@@ -83,18 +89,18 @@ public class PPbrPipeline {
         }
         Texture lightedTex = lightedBuffer.texture("lighted");
         Texture alphaBlendTex = gBuffer.texture("alphaBlend");
-        finalBuffer.begin(true);
+        combineBuffer.begin(true);
         postprocessingcombineshader.start(PRenderContext.activeContext());
         postprocessingcombineshader.setWithUniform("u_lightedTex", lightedTex);
         postprocessingcombineshader.setWithUniform("u_alphaBlendTex", alphaBlendTex);
-        finalBuffer.renderQuad(postprocessingcombineshader);
+        combineBuffer.renderQuad(postprocessingcombineshader);
         postprocessingcombineshader.end();
-        finalBuffer.end();
+        combineBuffer.end();
       }
 
       @Override public void end() {
       }
-    }};
+    }, postProcessor.getPhaseHandler()};
   }
 
   public void attach(PRenderContext renderContext) {
@@ -102,6 +108,6 @@ public class PPbrPipeline {
   }
 
   public Texture getTexture() {
-    return finalBuffer.texture();
+    return postProcessor.getFinalTexture();
   }
 }

@@ -20,3 +20,8 @@ in vec3 v_skinnedNor;
 
 // Uniforms for skinning or instancing.
 #include <engine/shader/header/texture2D>[boneTransforms]
+const vec3 grayScaleRatios = vec3(0.3, 0.59, 0.11);
+
+float grayScale(vec3 inCol) {
+    return dot(vec3(1.0), grayScaleRatios * inCol);
+}

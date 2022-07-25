@@ -28,20 +28,20 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   private static PRenderBuffer activeBuffer = null;
   private static Texture testTexture = null;
   private final List<AttachmentSpec> attachmentSpecs = new ArrayList<>();
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private boolean active;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private String fragmentLayout = "// LAYOUT\n";
   private PFrameBuffer frameBuffer, frameBufferPrev;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private SizeMode sizeMode;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private int staticWidth, staticHeight;
-  @Getter
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private float windowScale = 1;
 
@@ -155,6 +155,18 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     active = false;
     frameBuffer.end();
     activeBuffer = null;
+  }
+
+  public void blurSelf() {
+    boolean wasActive = active;
+    if (!wasActive) {
+      begin(false);
+    }
+
+
+    if (!wasActive) {
+      end();
+    }
   }
 
   public void begin(boolean swapBuffers) {

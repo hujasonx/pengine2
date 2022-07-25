@@ -221,7 +221,7 @@ public class CybertagGame implements PGame {
     pPbrPipeline.environment(environment);
     for (int a = 0; a < testLights.length; a++) {
       environment.addLight(testLights[a] = new PPointLight());
-      testLights[a].setColor(1, 1, 1, 1);
+      testLights[a].setColor(30, 30, 30, 1);
     }
     flyingCameraController = new PFlyingCameraController(renderContext);
     world = new World();

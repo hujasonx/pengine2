@@ -210,7 +210,13 @@ public class PFloat4Texture extends Texture implements PPool.Poolable {
           if (shouldUseSubArea) {
             Gdx.gl.glTexSubImage2D(target, 0, subX, subY, subW, subH, GL30.GL_RGBA, GL20.GL_FLOAT, owner.floatBuffer);
           } else {
-            Gdx.gl.glTexSubImage2D(target, 0, 0, 0, owner.sideLength, owner.sideLength, GL30.GL_RGBA, GL20.GL_FLOAT,
+            // Still subImage this shit, to speed things up.
+            int rowsUsed = Math.min(owner.vecsWritten() / owner.sideLength + 1, owner.sideLength);
+            int colsUsed = owner.sideLength;
+            if (rowsUsed == 1) {
+              colsUsed = owner.vecsWritten();
+            }
+            Gdx.gl.glTexSubImage2D(target, 0, 0, 0, colsUsed, rowsUsed, GL30.GL_RGBA, GL20.GL_FLOAT,
                                    owner.floatBuffer);
           }
         } else {

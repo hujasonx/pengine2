@@ -57,6 +57,7 @@ public class PEngine extends ApplicationAdapter {
     }
     initStatic();
     game.init();
+    Gdx.graphics.setVSync(false);
   }
 
   private static void initStatic() {
