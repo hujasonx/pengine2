@@ -1,5 +1,6 @@
 package com.phonygames.pengine.graphics.shader;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -38,8 +39,12 @@ public class PShader implements Disposable, Comparable<PShader> {
   @Getter
   private static PShader activeShader;
   private final String fragmentLayout;
+  /** The inputs passed to the shader filehandler loader system */
+  private final String[] inputs;
   private final String prefix;
   private final FileHandle vsSourceFH, fsSourceFH;
+  /** Takes precedences over the filehandles. */
+  private final String rawVSCode, rawFSCode;
   private float checkValidLoggingThrottleNextCheckTime = 0;
   private String combinedStaticStringResult;
   @Getter
@@ -49,12 +54,35 @@ public class PShader implements Disposable, Comparable<PShader> {
   private String vertexShaderSource, fragmentShaderSource;
 
   public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
-                 FileHandle vert, FileHandle frag) {
+                 FileHandle vert, FileHandle frag, String[] inputs) {
+    this(prefix, fragmentLayout,vertexAttributes,vert,frag,null, null, inputs);
+  }
+
+  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
+                 String vert, FileHandle frag, String[] inputs) {
+    this(prefix, fragmentLayout,vertexAttributes,null,frag,vert, null, inputs);
+  }
+
+  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
+                 String vert, String frag, String[] inputs) {
+    this(prefix, fragmentLayout,vertexAttributes,null,null,vert, frag, inputs);
+  }
+
+  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
+                 FileHandle vert, String frag, String[] inputs) {
+    this(prefix, fragmentLayout,vertexAttributes,vert,null,null, frag, inputs);
+  }
+
+  private PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
+                 FileHandle vertFH, FileHandle fragFH, String vert, String frag, String[] inputs) {
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     this.fragmentLayout = fragmentLayout;
-    vsSourceFH = vert;
-    fsSourceFH = frag;
+    vsSourceFH = vertFH;
+    fsSourceFH = fragFH;
     staticShaders.add(this);
+    this.inputs = inputs == null ? new String[0] : inputs;
+    rawVSCode = vert;
+    rawFSCode = frag;
     reloadFromSources(false);
   }
 
@@ -63,8 +91,16 @@ public class PShader implements Disposable, Comparable<PShader> {
     StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder =
         new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
-    vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR));
-    fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR));
+    if (rawVSCode != null) {
+      vertexStringBuilder.append(PFileHandleUtils.loadRecursive(rawVSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR));
+    } else {
+      vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR));
+    }
+    if (rawFSCode != null) {
+      fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(rawFSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR));
+    } else {
+      fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR));
+    }
     int oldCombinedSourceHash = (vertexShaderSource == null ? 0 : vertexShaderSource.hashCode()) +
                                 (fragmentShaderSource == null ? 0 : fragmentShaderSource.hashCode());
     vertexShaderSource = vertexStringBuilder.toString();
@@ -90,11 +126,16 @@ public class PShader implements Disposable, Comparable<PShader> {
     try {
       StringBuilder stringBuilder = new StringBuilder();
       stringBuilder.append("[PShader]\n\n");
-      stringBuilder.append("V: ");
-      stringBuilder.append(vsSourceFH.path()).append("\n");
+      if (vsSourceFH != null) {
+        stringBuilder.append("V: ");
+        stringBuilder.append(vsSourceFH.path()).append("\n");
+      }
       printSource(stringBuilder, "V: ", PStringUtils.splitByLine(vertexShaderSource));
-      stringBuilder.append("F: ");
-      stringBuilder.append(fsSourceFH.path()).append("\n");
+
+      if (fsSourceFH != null) {
+        stringBuilder.append("F: ");
+        stringBuilder.append(fsSourceFH.path()).append("\n");
+      }
       printSource(stringBuilder, "F: ", PStringUtils.splitByLine(fragmentShaderSource));
       if (shaderProgram.isCompiled()) {
         stringBuilder.append("\nNo errors!\n");
@@ -133,6 +174,10 @@ public class PShader implements Disposable, Comparable<PShader> {
               previousOffendingLineNo = offendingLineNo;
             }
           }
+        }
+        if (previousOffendingLineNo == -1) {
+          // No error was emitted, but somehow; the shader still couldnt be compiled, so just add the raw log.
+          stringBuilder.append(shaderProgram.getLog());
         }
       }
       stringBuilder.append("\n[/PShader compile error]\n");
@@ -204,7 +249,17 @@ public class PShader implements Disposable, Comparable<PShader> {
 
   private String combinedStaticString() {
     if (combinedStaticStringResult == null) {
-      combinedStaticStringResult = (prefix + fragmentLayout + vsSourceFH.path() + fsSourceFH.path());
+      combinedStaticStringResult = prefix + "\n" + fragmentLayout;
+      combinedStaticStringResult += " [ ";
+      if (inputs != null) {
+        for (int a = 0; a < inputs.length; a++) {
+          combinedStaticStringResult += inputs[a] + (a == inputs.length - 1 ? "" : ", ");
+        }
+      }
+      combinedStaticStringResult += " ]\n";
+      combinedStaticStringResult += vsSourceFH == null ? rawVSCode : vsSourceFH.path();
+      combinedStaticStringResult += "\n";
+      combinedStaticStringResult += fsSourceFH == null ? rawFSCode : fsSourceFH.path();
     }
     return combinedStaticStringResult;
   }

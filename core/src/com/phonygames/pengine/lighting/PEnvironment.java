@@ -55,7 +55,7 @@ public class PEnvironment {
           Gdx.files.local("engine/shader/light/ambient_and_directional_light.quad.glsl"));
       pointLightShader = new PShader("", fragmentLayoutString, PPointLight.MESH().vertexAttributes(),
                                      Gdx.files.local("engine/shader/light/light.vert.glsl"),
-                                     Gdx.files.local("engine/shader/light/pointlight.frag.glsl"));
+                                     Gdx.files.local("engine/shader/light/pointlight.frag.glsl"), null);
     }
     PGLUtils.clearScreen(0, 0, 0, 1);
     // Lights should be added to each other, and should not fill the depth buffer.

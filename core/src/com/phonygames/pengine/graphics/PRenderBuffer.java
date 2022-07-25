@@ -11,6 +11,7 @@ import com.phonygames.pengine.graphics.framebuffer.PFrameBuffer;
 import com.phonygames.pengine.graphics.framebuffer.PGLFrameBuffer;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.shader.PBlurShader;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.util.PBuilder;
 
@@ -65,7 +66,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
 
   public PShader getQuadShader(FileHandle frag) {
     return new PShader("", fragmentLayout(), PVertexAttributes.getPOSITION(),
-                       Gdx.files.local("engine/shader/quad.vert.glsl"), frag);
+                       Gdx.files.local("engine/shader/quad.vert.glsl"), frag, null);
   }
 
   public Texture texture() {
@@ -117,6 +118,11 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     return null;
   }
 
+  public Texture getTexturePrev(int index) {
+    createFrameBuffersIfNeeded();
+    return frameBufferPrev.getTextureAttachments().get(index);
+  }
+
   public int height() {
     return frameBuffer.getHeight();
   }
@@ -158,15 +164,9 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   }
 
   public void blurSelf() {
-    boolean wasActive = active;
-    if (!wasActive) {
-      begin(false);
-    }
-
-
-    if (!wasActive) {
-      end();
-    }
+    PAssert.isFalse(active);
+    PBlurShader blurShader = PBlurShader.gen(this);
+    blurShader.apply(this, 1, 1);
   }
 
   public void begin(boolean swapBuffers) {

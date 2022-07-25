@@ -13,11 +13,11 @@ public class PGltf {
       if (Layer.PBR.equals(layer)) {
           return new PShader(material.getShaderPrefix(), fragmentLayout, vertexAttributes,
                              Gdx.files.local("engine/shader/gltf/vcolindex.vert.glsl"),
-                             Gdx.files.local("engine/shader/gltf/vcolindex.frag.glsl"));
+                             Gdx.files.local("engine/shader/gltf/vcolindex.frag.glsl"), null);
       } else if (Layer.AlphaBlend.equals(layer)) {
           return new PShader(material.getShaderPrefix(), fragmentLayout, vertexAttributes,
                              Gdx.files.local("engine/shader/gltf/vcolindex.vert.glsl"),
-                             Gdx.files.local("engine/shader/gltf/vcolindex.alphablend.frag.glsl"));
+                             Gdx.files.local("engine/shader/gltf/vcolindex.alphablend.frag.glsl"), null);
       } else {
         PLog.w("PShaderProvider Unsupported layer: " + layer);
         return null;

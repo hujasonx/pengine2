@@ -31,8 +31,9 @@ public class PPostProcessor {
   }
 
   public PRenderContext.PhaseHandler getPhaseHandler() {
-    return new PRenderContext.PhaseHandler("PostProcess", bloomBuffer, true) {
+    return new PRenderContext.PhaseHandler("PostProcess", null, true) {
       @Override public void begin() {
+        bloomBuffer.begin(true);
         Texture sourceTex = delegate.getTextureForPostProcessing();
         PGLUtils.clearScreen(0,0,0,0);
         bloomShader.start(PRenderContext.activeContext());
@@ -41,6 +42,8 @@ public class PPostProcessor {
         bloomShader.setWithUniform("u_sourceTex", sourceTex);
         bloomBuffer.renderQuad(bloomShader);
         bloomShader.end();
+        bloomBuffer.end();
+        bloomBuffer.blurSelf();
       }
 
       @Override public void end() {

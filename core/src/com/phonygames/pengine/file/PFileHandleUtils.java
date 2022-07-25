@@ -48,6 +48,17 @@ public class PFileHandleUtils {
     return stringBuilder.toString();
   }
 
+  public static String loadRecursive(FileHandle fileHandle, RecursiveLoadProcessor loadProcessor, String[] inputs) {
+    StringBuilder stringBuilder = new StringBuilder();
+    loadRecursive(stringBuilder, fileHandle, loadProcessor, "", 0, inputs);
+    return stringBuilder.toString();
+  }
+
+  public static String loadRecursive(String s, FileHandle baseDir, RecursiveLoadProcessor loadProcessor) {
+    StringBuilder stringBuilder = new StringBuilder();
+    loadRecursive(stringBuilder, PStringUtils.splitByLine(s), baseDir, loadProcessor, "", 0, null);
+    return stringBuilder.toString();
+  }
   // Returns the total line number.
   private static int loadRecursive(StringBuilder stringBuilder, FileHandle fileHandle,
                                    RecursiveLoadProcessor loadProcessor, String prefix, int totalLineNo,
@@ -57,6 +68,13 @@ public class PFileHandleUtils {
     if (lines.length == 0) {
       return totalLineNo;
     }
+    return loadRecursive(stringBuilder, lines, fileHandle, loadProcessor, prefix, totalLineNo, inputs);
+  }
+
+  // Returns the total line number.
+  private static int loadRecursive(StringBuilder stringBuilder, String[] lines, FileHandle fileHandle,
+                                   RecursiveLoadProcessor loadProcessor, String prefix, int totalLineNo,
+                                   String[] inputs) {
     // Get the params.
     String[] params = null;
     for (int rawLineNo = 0; rawLineNo < lines.length; rawLineNo++) {
