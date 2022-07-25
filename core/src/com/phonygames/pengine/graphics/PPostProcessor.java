@@ -14,7 +14,7 @@ public class PPostProcessor {
   private float ssaoTexScale = .2f;
   private float totalTexScale = 1;
   private float bloomScale = 1, bloomThreshold =.9f;
-  private final PShader bloomShader;
+  private final PShader bloomShader, finalShader;
 
   public PPostProcessor(Delegate delegate) {
     this.delegate = delegate;
@@ -28,6 +28,8 @@ public class PPostProcessor {
         new PRenderBuffer.Builder().setWindowScale(totalTexScale * fxaaTexScale).addFloatAttachment("fxaa").build();
     this.outlineBuffer =
         new PRenderBuffer.Builder().setWindowScale(totalTexScale * outlineTexScale).addFloatAttachment("outline").build();
+    this.finalShader =
+        fxaaBuffer.getQuadShader(Gdx.files.local("engine/shader/final.quad.glsl"));
   }
 
   public PRenderContext.PhaseHandler getPhaseHandler() {
@@ -44,6 +46,13 @@ public class PPostProcessor {
         bloomShader.end();
         bloomBuffer.end();
         bloomBuffer.blurSelf();
+        fxaaBuffer.begin();
+        finalShader.start(PRenderContext.activeContext());
+        finalShader.setWithUniform("u_sourceTex", sourceTex);
+        finalShader.setWithUniform("u_bloomTex", bloomBuffer.texture());
+        fxaaBuffer.renderQuad(finalShader);
+        finalShader.end();
+        fxaaBuffer.end();
       }
 
       @Override public void end() {
@@ -52,7 +61,7 @@ public class PPostProcessor {
   }
 
   public Texture getFinalTexture() {
-    return bloomBuffer.texture();
+    return fxaaBuffer.texture();
   }
 
   public interface Delegate {
