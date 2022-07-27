@@ -12,7 +12,7 @@ public class DesktopLauncher {
     Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
     config.setOpenGLEmulation(Lwjgl3ApplicationConfiguration.GLEmulation.GL30, 3, 3);
     config.setAudioConfig(64, 1024, 9);
-    config.setWindowedMode(1600, 900);
+    config.setWindowedMode(1920, 1080);
     application = new Lwjgl3Application(new PEngine(new CybertagGame()), config);
   }
 }

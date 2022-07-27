@@ -165,7 +165,7 @@ public class PEngine extends ApplicationAdapter {
     glProfiler.reset();
     if (PKeyboard.isDown(Input.Keys.ALT_RIGHT) && PKeyboard.isFrameJustDown(Input.Keys.ENTER)) {
       if (Gdx.graphics.isFullscreen()) {
-        Gdx.graphics.setWindowedMode(1600, 900);
+        Gdx.graphics.setWindowedMode(1920, 1080);
       } else {
         Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
       }

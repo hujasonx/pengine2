@@ -121,7 +121,7 @@ public abstract class Gun implements PRenderable {
       } else {
         if (triggerAnimation != null) {
           PAnimation triggerPAnimation = modelInstance.model().animations().get(triggerAnimation);
-          triggerPAnimation.apply(transformMap, triggerTSpring.pos().x(), 1);
+          triggerPAnimation.apply(transformMap, PNumberUtils.clamp(triggerTSpring.pos().x(), 0, 1), 1);
         }
         if (shootAnimationT != -1 && shootAnimation != null) {
           PAnimation shootPAnimation = modelInstance.model().animations().get(shootAnimation);

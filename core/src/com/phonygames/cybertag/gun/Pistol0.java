@@ -64,9 +64,10 @@ public class Pistol0 extends Gun {
   private void spawnShootParticles() {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       PVec3 firePointPos = modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3());
-      for (int a = 0; a < 6; a++) {
+      PVec3 fireDir = modelInstance.getNode(firePointNodeName).worldTransform().getYAxis(pool.vec3());
+      for (int a = 0; a < 60; a++) {
         PBillboardParticle particle = muzzleParticleSource.spawnParticle();
-        particle.accelVelocityDir(-1);
+        particle.accelVelocityDir(-18);
         particle.faceCamera(true);
         particle.faceCameraXScale(.2f);
         particle.faceCameraYScale(.2f);
@@ -76,6 +77,7 @@ public class Pistol0 extends Gun {
         particle.angVel(MathUtils.random(-3f, 3f));
         particle.angVelDecel(3f);
         particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)).nor().scl(MathUtils.random(4f));
+        particle.vel().add(fireDir, 10);
         particle.pos().set(firePointPos);
       }
     }
