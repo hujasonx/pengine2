@@ -318,7 +318,7 @@ public class PLegPlacer implements PPool.Poolable {
               rayCastHitNor.set(0, 1, 0);
             }
             expectedFootPositionAtEnd.set(rayCastHitPos);
-            PDebugRenderer.line(expectedFootPositionAtEnd, curEEPos, PColor.BLUE, PColor.BLUE, 2, 2);
+//            PDebugRenderer.line(expectedFootPositionAtEnd, curEEPos, PColor.BLUE, PColor.BLUE, 2, 2);
             // The EEPosGoal lets us smooth out the goal.
             curEEPosGoal.setGoal(expectedFootPositionAtEnd);
             // Initialize the deltas; this should only be done once per cycle.
@@ -381,7 +381,7 @@ public class PLegPlacer implements PPool.Poolable {
       modelWasOnGroundPrev = isOnGround;
       PVec3 tempP = pool.vec3();
       endEffector.worldTransform().getTranslation(tempP);
-      PDebugRenderer.line(tempP, curEEPos, PColor.YELLOW, PColor.YELLOW, 2, 2);
+//      PDebugRenderer.line(tempP, curEEPos, PColor.YELLOW, PColor.YELLOW, 2, 2);
       return justFinishedCycle;
     }
 
