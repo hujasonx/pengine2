@@ -38,7 +38,6 @@ public class PBillboardParticleSource implements PPool.Poolable {
     }
   };
   private static int maxCapacity = 1000;
-  private static Boolean modelGenStarted = false;
   private final PList<PBillboardParticle> particles = new PList<>(PBillboardParticle.staticPool());
   private final PTexture texture = new PTexture();
   private final float[] vertices;
@@ -97,7 +96,6 @@ public class PBillboardParticleSource implements PPool.Poolable {
       if (delegate != null) {
         delegate.processBillboardParticle(particle);
       }
-      particle.lifeT += PEngine.dt;
       checkIndex++;
     }
   }
@@ -144,7 +142,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
       if (particle.faceCamera()) {
         PVec3 cameraLeft =
             pool.vec3(PRenderContext.activeContext().cameraUp()).crs(PRenderContext.activeContext().cameraDir()).nor();
-        // The particle xAxis and yAxis are 2d, so x goes up towards the right.
+        // The particle xAxis and yAxis are 2d, so x increases towards the right.
         particle.xAxis().set(cameraLeft).scl(-1)
                 .rotate(PRenderContext.activeContext().cameraDir(), particle.faceCameraAngle()).nor()
                 .scl(particle.faceCameraXScale());
@@ -196,11 +194,6 @@ public class PBillboardParticleSource implements PPool.Poolable {
       vertices[currentBufferIndex + 33] = particle.col3().g(); // c3;
       vertices[currentBufferIndex + 34] = particle.col3().b(); // c3;
       vertices[currentBufferIndex + 35] = particle.col3().a(); // c3;
-      // Other stuff.
-      //    bufferData[8] = particle.getTextureRegion().getU();
-      //    bufferData[9] = particle.getTextureRegion().getU2();
-      //    bufferData[10] = 1 - particle.getTextureRegion().getV2();
-      //    bufferData[11] = 1 - particle.getTextureRegion().getV();
       currentBufferIndex += 36;
     }
     return true;

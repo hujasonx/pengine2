@@ -199,15 +199,21 @@ public class PMesh {
     return this;
   }
 
+  public PMesh setIndices(short[] indices, int offset, int count) {
+    backingMesh.setIndices(indices, offset, count);
+    backingMeshShorts = null;
+    return this;
+  }
+
   public PMesh setVertices(float[] vertices) {
     backingMesh.setVertices(vertices);
-    backingMeshShorts = null;
+    backingMeshFloats = null;
     return this;
   }
 
   public PMesh setVertices(float[] vertices, int offset, int count) {
     backingMesh.setVertices(vertices, offset, count);
-    backingMeshShorts = null;
+    backingMeshFloats = null;
     return this;
   }
 

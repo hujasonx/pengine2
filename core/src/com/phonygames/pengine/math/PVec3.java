@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PFloatList;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
 
@@ -242,6 +243,14 @@ public class PVec3 extends PVec<PVec3> {
     out[offset + 0] = backingVec3.x;
     out[offset + 1] = backingVec3.y;
     out[offset + 2] = backingVec3.z;
+    return out;
+  }
+
+  public PFloatList emit(PFloatList out, int offset) {
+    PAssert.isTrue(out.size() >= offset + 3);
+    out.set(offset + 0, backingVec3.x);
+    out.set(offset + 1, backingVec3.y);
+    out.set(offset + 2, backingVec3.z);
     return out;
   }
 

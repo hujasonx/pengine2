@@ -10,15 +10,15 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-public class PFloatList implements PPool.Poolable {
+public class PShortList implements PPool.Poolable {
   // #pragma mark - PPool.Poolable
   @Getter
   @Setter
   private PPool ownerPool, sourcePool;
   // #pragma end - PPool.Poolable
-  private static final PPool<PFloatList> staticPool = new PPool<PFloatList>() {
-    @Override protected PFloatList newObject() {
-      return new PFloatList();
+  private static final PPool<PShortList> staticPool = new PPool<PShortList>() {
+    @Override protected PShortList newObject() {
+      return new PShortList();
     }
   };
 
@@ -27,42 +27,42 @@ public class PFloatList implements PPool.Poolable {
   private int size = 0;
   private static final int MIN_ARRAY_SIZE = 64;
   private static final int MIN_ARRAY_SIZE_FOR_REGEN_ON_RESET = 256 * 256;
-  private float[] values = new float[MIN_ARRAY_SIZE];
+  private short[] values = new short[MIN_ARRAY_SIZE];
 
-  private PFloatList() {
+  private PShortList() {
   }
 
-  public PFloatList add(float f) {
+  public PShortList add(short f) {
     ensureCapacity(size + 1);
     values[size] = f;
     size++;
     return this;
   }
 
-  public float get(int index) {
+  public short get(int index) {
     if (index >= size) {
       throw new ArrayIndexOutOfBoundsException();
     }
     return values[PNumberUtils.mod(index, size)];
   }
 
-  public float getOrDefault(int index, float defaultValue) {
+  public short getOrDefault(int index, short defaultValue) {
     if (index >= size || index < 0) {
       return defaultValue;
     }
     return values[PNumberUtils.mod(index, size)];
   }
 
-  public boolean contains(float value, float epsilon) {
+  public boolean contains(short value) {
     for (int a = 0; a < size; a++) {
-      if (value - epsilon < values[a] && value + epsilon > values[a]) {
+      if (value == values[a]) {
         return true;
       }
     }
     return false;
   }
 
-  public PFloatList del(int index) {
+  public PShortList del(int index) {
     if (index < 0 || index >= size) { return this; }
     for (int a = index + 1; a < size; a++) {
       values[a - 1] = values[a];
@@ -72,7 +72,7 @@ public class PFloatList implements PPool.Poolable {
     return this;
   }
 
-  public PFloatList add(int index, float value) {
+  public PShortList add(int index, short value) {
     PAssert.isFalse(index < 0);
     ensureCapacity(index + 1);
     for (int a = size; a > index; a--) {
@@ -83,29 +83,29 @@ public class PFloatList implements PPool.Poolable {
     return this;
   }
 
-  public PFloatList set(int index, float value) {
+  public PShortList set(int index, short value) {
     PAssert.isFalse(index < 0);
     ensureCapacity(index + 1);
     values[index] = value;
     return this;
   }
 
-  public PFloatList sortAscending() {
+  public PShortList sortAscending() {
     Arrays.sort(values,0,size);
     return this;
   }
 
-  public PFloatList clear() {
+  public PShortList clear() {
     if (values.length >= MIN_ARRAY_SIZE_FOR_REGEN_ON_RESET) {
-      values = new float[MIN_ARRAY_SIZE];
+      values = new short[MIN_ARRAY_SIZE];
     } else {
-      Arrays.fill(values,0);
+      Arrays.fill(values,(short)0);
     }
     size = 0;
     return this;
   }
 
-  public PFloatList addAll(PFloatList other) {
+  public PShortList addAll(PShortList other) {
     ensureCapacity(size + other.size());
     System.arraycopy(other.values,0, values,size(), other.size());
     this.size = size + other.size();
@@ -114,21 +114,21 @@ public class PFloatList implements PPool.Poolable {
 
   private void ensureCapacity(int capacity) {
     if (capacity >= size) {
-      float[] curValues = values;
-      values = new float[capacity * 3 / 2];
+      short[] curValues = values;
+      values = new short[capacity * 3 / 2];
       System.arraycopy(values,0,curValues,0,size);
     }
   }
 
-  public float[] emit() {
-    return emitTo(new float[size()], 0);
+  public short[] emit() {
+    return emitTo(new short[size()], 0);
   }
 
-  public float[] emitTo(float[] arr, int offsetInArray) {
+  public short[] emitTo(short[] arr, int offsetInArray) {
     return emitTo(arr, offsetInArray,0,size);
   }
 
-  public float[] emitTo(float[] arr, int offsetInArray, int offsetInSelf, int count) {
+  public short[] emitTo(short[] arr, int offsetInArray, int offsetInSelf, int count) {
     int lastIndexInSelfToEmit = Math.min(arr.length + offsetInSelf, Math.min(size, offsetInSelf + count));
     int indexInArray = offsetInArray;
     for (int a = offsetInSelf; a < lastIndexInSelfToEmit; a++) {
@@ -137,7 +137,7 @@ public class PFloatList implements PPool.Poolable {
     return arr;
   }
 
-  public static PFloatList obtain() {
+  public static PShortList obtain() {
     return staticPool.obtain();
   }
 
