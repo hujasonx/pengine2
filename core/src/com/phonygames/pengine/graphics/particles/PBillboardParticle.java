@@ -32,19 +32,13 @@ public class PBillboardParticle extends PParticle {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private float faceCameraAngle, faceCameraXScale, faceCameraYScale, angVel, angVelAccel, angVelDecel, accelVelocityDir;
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  private final PVec3 vel = PVec3.obtain(), accel = PVec3.obtain();
+  private float faceCameraAngle, faceCameraXScale, faceCameraYScale, angVel, angVelAccel, angVelDecel;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PVec4 col0 = PVec4.obtain(), col1 = PVec4.obtain(), col2 = PVec4.obtain(), col3 = PVec4.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PTexture texture = new PTexture();
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  private final float[] userData = new float[16];
 
   public PBillboardParticle setColFrom0() {
     col1.set(col0);
@@ -66,17 +60,13 @@ public class PBillboardParticle extends PParticle {
     angVel= 0;
     angVelAccel = 0;
     angVelDecel = 0;
-    accelVelocityDir = 0;
     faceCameraAngle = 0;
     faceCameraXScale = 1;
     faceCameraYScale = 1;
-    vel.setZero();
-    accel.setZero();
     col0.set(PVec4.ONE);
     col1.set(PVec4.ONE);
     col2.set(PVec4.ONE);
     col3.set(PVec4.ONE);
-    Arrays.fill(userData,0f);
     texture.reset();
   }
 }

@@ -1,5 +1,6 @@
 package com.phonygames.pengine.util;
 
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PNumberUtils;
 
 import java.util.Arrays;
@@ -39,6 +40,16 @@ public class PFloatList implements PPool.Poolable {
   }
 
   public float get(int index) {
+    if (index >= size) {
+      throw new ArrayIndexOutOfBoundsException();
+    }
+    return values[PNumberUtils.mod(index, size)];
+  }
+
+  public float getOrDefault(int index, float defaultValue) {
+    if (index >= size || index < 0) {
+      return defaultValue;
+    }
     return values[PNumberUtils.mod(index, size)];
   }
 
@@ -61,13 +72,21 @@ public class PFloatList implements PPool.Poolable {
     return this;
   }
 
-  public PFloatList add(float value, int index) {
-    if (index < 0 || index >= size) { return this; }
+  public PFloatList add(int index, float value) {
+    PAssert.isFalse(index < 0);
+    ensureCapacity(index + 1);
     for (int a = size; a > index; a--) {
       values[a] = values[a - 1];
     }
     values[index] = value;
     size++;
+    return this;
+  }
+
+  public PFloatList set(int index, float value) {
+    PAssert.isFalse(index < 0);
+    ensureCapacity(index + 1);
+    values[index] = value;
     return this;
   }
 

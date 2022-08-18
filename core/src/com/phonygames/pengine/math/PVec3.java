@@ -237,6 +237,14 @@ public class PVec3 extends PVec<PVec3> {
     return out;
   }
 
+  public float[] emit(float[] out, int offset) {
+    PAssert.isTrue(out.length >= offset + 3);
+    out[offset + 0] = backingVec3.x;
+    out[offset + 1] = backingVec3.y;
+    out[offset + 2] = backingVec3.z;
+    return out;
+  }
+
   @Override public boolean equalsT(PVec3 vec3) {
     return this.backingVec3.equals(vec3);
   }

@@ -78,10 +78,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
         particles.removeIndex(checkIndex);
         continue;
       }
-      particle.pos().add(particle.vel(), PEngine.dt);
-      float newVelMagInVelDir = Math.max(0, particle.vel().len() + PEngine.dt * (particle.accelVelocityDir()));
-      particle.vel().nor().scl(newVelMagInVelDir);
-      particle.vel().add(particle.accel(), PEngine.dt);
+      particle.frameUpdateShared();
       if (particle.faceCamera()) {
         particle.faceCameraAngle(particle.faceCameraAngle() + particle.angVel() * PEngine.dt);
       } else {

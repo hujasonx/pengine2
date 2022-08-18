@@ -29,8 +29,10 @@ public class PPipeParticleSource implements PPool.Poolable {
   @Setter
   private PPool ownerPool, sourcePool;
   // #pragma end - PPool.Poolable
-  // 4 x 3 Position, 4 x 2 UV, 4 x 4 color. Only one color per billboard.
-  public static final int FLOATS_PER_PARTICLE = 12 + 8 + 16;
+  // 3 Position, 2 UV, 4 color.
+  public static final int MAX_FLOATS = 9 * 1024;
+  public static final int MAX_SHORTS = 3 * 1024;
+  private static final int FLOATS_PER_PARTICLE = 2; // TODO: WRONG
   private static final String PARTICLES = "particles";
   private static final PPool<PPipeParticleSource> staticPool = new PPool<PPipeParticleSource>() {
     @Override protected PPipeParticleSource newObject() {
@@ -41,7 +43,8 @@ public class PPipeParticleSource implements PPool.Poolable {
   private static Boolean modelGenStarted = false;
   private final PList<PBillboardParticle> particles = new PList<>(PBillboardParticle.staticPool());
   private final PTexture texture = new PTexture();
-  private final float[] vertices;
+  private final float[] vertices = new float[MAX_FLOATS];
+  private final short[] indices = new short[MAX_SHORTS];
   // The index to insert the next particle into the vertices buffer at.
   private int currentBufferIndex = 0;
   @Getter(value = AccessLevel.PUBLIC)
@@ -55,12 +58,11 @@ public class PPipeParticleSource implements PPool.Poolable {
   private PModelInstance modelInstance;
 
   public PPipeParticleSource() {
-    vertices = new float[FLOATS_PER_PARTICLE * maxCapacity];
+
   }
 
   public static PPipeParticleSource obtain() {
     PPipeParticleSource ret = staticPool.obtain();
-    ;
     return ret;
   }
 
