@@ -127,7 +127,7 @@ public class PPipeParticleSource implements PPool.Poolable {
 
   /** Should be called by render() */
   private boolean setVerticesForParticle(PPipeParticle particle) {
-    return particle.setVertexAndIndexData(vertices, currentBufferVerticesIndex, indices, currentBufferIndicesIndex);
+    return particle.outputVertexAndIndexData(vertices, currentBufferVerticesIndex, indices, currentBufferIndicesIndex);
   }
 
   private void makeModelIfNeeded() {
@@ -141,7 +141,7 @@ public class PPipeParticleSource implements PPool.Poolable {
     PList<PGlNode> glNodes = new PList<>();
     PModel.Builder builder = new PModel.Builder();
     builder.chainGlNode(glNodes, PARTICLES, mesh, new PMaterial(PARTICLES, null).noModelTransform(true), null,
-                        PGltf.Layer.AlphaBlend, false, true);
+                        PGltf.Layer.PBR, false, false);
     glNode = glNodes.get(0);
     builder.addNode("particles", null, glNodes, PMat4.IDT);
     modelInstance = PModelInstance.obtain(builder.build());

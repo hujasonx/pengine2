@@ -63,16 +63,16 @@ public class PVecTracker<T extends PVec<T>> {
 //          PDebugRenderer.line(previousPositionA, previousPositionB, colA, colB, 2, 2);
 //        }
 //      }
-      for (float a = 0; a < 1; a += .1f) {
-        float b = .1f + a;
-        PVec3 previousPositionA = (PVec3)getPreviousPositionNormalizedTime((T)pool.vec3(), a);
-        PVec3 previousPositionB = (PVec3)getPreviousPositionNormalizedTime((T)pool.vec3(), b);
-        PVec4 colA = pool.vec4().setHSVA(1f / previousPositionsToKeep * a, 1, 1, 1);
-        PVec4 colB = pool.vec4().setHSVA(1f / previousPositionsToKeep * b,1, 1, 1);
-        if (previousPositionA != null && previousPositionB != null) {
-          PDebugRenderer.line(previousPositionA, previousPositionB, colA, colB, 2, 2);
-        }
-      }
+//      for (float a = 0; a < 1; a += .1f) {
+//        float b = .1f + a;
+//        PVec3 previousPositionA = (PVec3)getPreviousPositionNormalizedTime((T)pool.vec3(), a);
+//        PVec3 previousPositionB = (PVec3)getPreviousPositionNormalizedTime((T)pool.vec3(), b);
+//        PVec4 colA = pool.vec4().setHSVA(1f / previousPositionsToKeep * a, 1, 1, 1);
+//        PVec4 colB = pool.vec4().setHSVA(1f / previousPositionsToKeep * b,1, 1, 1);
+//        if (previousPositionA != null && previousPositionB != null) {
+//          PDebugRenderer.line(previousPositionA, previousPositionB, colA, colB, 2, 2);
+//        }
+//      }
     }
   }
 
