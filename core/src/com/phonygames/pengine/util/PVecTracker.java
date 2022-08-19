@@ -1,5 +1,7 @@
 package com.phonygames.pengine.util;
 
+import android.support.annotation.NonNull;
+
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PDebugRenderer;
@@ -32,9 +34,11 @@ public class PVecTracker<T extends PVec<T>> {
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private T trackedVec;
+  private T startVal;
 
-  public PVecTracker(PPool pool) {
+  public PVecTracker(@NonNull PPool pool) {
     this.pool = pool;
+    startVal = (T)pool.obtain();
     this.samples = new PList<>(pool);
     reset();
   }
@@ -73,12 +77,8 @@ public class PVecTracker<T extends PVec<T>> {
   }
 
   private void addSamplePoint(T value) {
-    if (samples.size() < previousPositionsToKeep) {
-      // Add a new sample.
-      samples.genPooledAndAdd().set(value);
-    } else {
-      this.samples.get(headIndex).set(value);
-    }
+    PAssert.isFalse(this.samples.isEmpty(), "Empty samples for PVecTracker (Call beginTracking first)");
+    this.samples.get(headIndex).set(value);
     headIndex = PNumberUtils.mod(headIndex + 1, previousPositionsToKeep);
     if (tailIndex == headIndex) {
       tailIndex = PNumberUtils.mod(tailIndex + 1, previousPositionsToKeep);
@@ -112,6 +112,18 @@ public class PVecTracker<T extends PVec<T>> {
     T p1 = getSamplePointFromLast(lowerIndex + 1);
     if (p0 == null || p1 == null) {return null;}
     return out.set(p0).lerp(p1, lerpAmount);
+  }
+
+  public PVecTracker<T> beginTracking(T trackedVec, float previousPositionsTrackingDuration, int previousPositionsToKeep) {
+    this.trackedVec = trackedVec;
+    this.previousPositionsTrackingDuration = previousPositionsTrackingDuration;
+    this.previousPositionsToKeep = previousPositionsToKeep;
+    this.samples.clearAndFreePooled();
+    // Set initial values to the initial position.
+    for (int a = 0; a < previousPositionsToKeep; a++) {
+      this.samples.genPooledAndAdd().set(trackedVec);
+    }
+    return this;
   }
 
   /** Returns null if it was not found. */

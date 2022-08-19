@@ -90,6 +90,11 @@ public class PPipeParticle extends PParticle {
     previousPositionTracker.trackedVec(pos);
   }
 
+  public PPipeParticle beginTracking(float previousPositionsTrackingDuration, int previousPositionsToKeep) {
+    previousPositionTracker.beginTracking(pos,previousPositionsTrackingDuration, previousPositionsToKeep);
+    return this;
+  }
+
   @Override public void frameUpdateShared() {
     super.frameUpdateShared();
     if (lastMeshDataUpdateFrame != PEngine.frameCount) {
@@ -134,7 +139,7 @@ public class PPipeParticle extends PParticle {
     topology = null;
   }
 
-  public int indicesShortCount() {
+  protected int indicesShortCount() {
     return rawIndexData.size();
   }
 
@@ -145,7 +150,7 @@ public class PPipeParticle extends PParticle {
     return this;
   }
 
-  public boolean setVertexAndIndexData(float[] vertices, int vertexOffset, short[] indices, int indexOffset) {
+  protected boolean setVertexAndIndexData(float[] vertices, int vertexOffset, short[] indices, int indexOffset) {
     // Buffer is full!
     if (vertexOffset + rawVertexData.size() >= vertices.length || indexOffset + rawIndexData.size() >= indices.length) {
       return false;
