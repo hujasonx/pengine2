@@ -70,6 +70,7 @@ public class PMeshTopology {
         short canonical = indicesData.get(a).getKey();
         canonicalIndices[arrayIndex ++] = canonical;
         canonicalIndices[arrayIndex ++] = (short)indicesData.get(a).getValue().size();
+        canonicalMap.put(canonical, canonical);
         for (int b = 0; b < indicesData.get(a).getValue().size(); b++) {
           short shared = indicesData.get(a).getValue().get(b);
           canonicalIndices[arrayIndex ++] = shared;

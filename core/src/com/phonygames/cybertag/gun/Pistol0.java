@@ -3,8 +3,10 @@ package com.phonygames.cybertag.gun;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.character.PlayerCharacterEntity;
 import com.phonygames.pengine.PAssetManager;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.particles.PBillboardParticle;
+import com.phonygames.pengine.graphics.particles.PPipeParticle;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PSODynamics;
 import com.phonygames.pengine.math.PVec3;
@@ -36,11 +38,26 @@ public class Pistol0 extends Gun {
     firePointNodeName = "Firepoint";
     triggerTSpring.setDynamicsParams(5,1,0);
     setMuzzleParticleSourceDelegate();
+    setPipeParticleSourceDelegate();
   }
 
   private void setMuzzleParticleSourceDelegate() {
     muzzleParticleSource.delegate(particle -> {
       float a = .6f - PNumberUtils.pow(particle.lifeT(), 3) * .3f;
+      if (a < 0) {
+        particle.kill();
+        return;
+      }
+      particle.col0().a(a);
+      particle.setColFrom0();
+    });
+  }
+
+  private void setPipeParticleSourceDelegate() {
+    pipeParticleSource.delegate(particle -> {
+      float a = .6f - PNumberUtils.pow(particle.lifeT(), 3) * .03f;
+      // Apply gravity.
+      particle.vel().y(particle.vel().y() - PEngine.dt * 9.81f);
       if (a < 0) {
         particle.kill();
         return;
@@ -65,7 +82,7 @@ public class Pistol0 extends Gun {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       PVec3 firePointPos = modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3());
       PVec3 fireDir = modelInstance.getNode(firePointNodeName).worldTransform().getYAxis(pool.vec3());
-      for (int a = 0; a < 60; a++) {
+      for (int a = 0; a < 1; a++) {
         PBillboardParticle particle = muzzleParticleSource.spawnParticle();
         particle.accelVelocityDir(-18);
         particle.faceCamera(true);
@@ -76,6 +93,14 @@ public class Pistol0 extends Gun {
         particle.texture().set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Glow", true));
         particle.angVel(MathUtils.random(-3f, 3f));
         particle.angVelDecel(3f);
+        particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)).nor().scl(MathUtils.random(4f));
+        particle.vel().add(fireDir, 10);
+        particle.pos().set(firePointPos);
+      }
+      for (int a = 0; a < 10; a++) {
+        PPipeParticle particle = pipeParticleSource.spawnParticle();
+        particle.updateTopology(10, 10);
+        particle.previousPositionTracker().previousPositionsTrackingDuration(1);
         particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)).nor().scl(MathUtils.random(4f));
         particle.vel().add(fireDir, 10);
         particle.pos().set(firePointPos);

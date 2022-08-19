@@ -18,9 +18,11 @@ import lombok.val;
 
 public class PVertexAttributes {
   @Getter
+  /** Pos, nor, uv, col */ private static PVertexAttributes GLTF_UNSKINNED;
+  @Getter
   private static PVertexAttributes PHYSICS = new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position()});
   @Getter
-  private static PVertexAttributes POSITION, DEFAULT, BILLBOARD_PARTICLE, GLTF_UNSKINNED, GLTF_UNSKINNED_NOCOLOR;
+  private static PVertexAttributes POSITION, DEFAULT, BILLBOARD_PARTICLE, GLTF_UNSKINNED_NOCOLOR;
   @Getter
   private final VertexAttributes backingVertexAttributes;
   //  private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
@@ -128,8 +130,8 @@ public class PVertexAttributes {
                                 Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Attribute.Keys.uv[1])});
       POSITION = new PVertexAttributes(new VertexAttribute[]{Attribute.get(Attribute.Keys.pos)});
       BILLBOARD_PARTICLE = new PVertexAttributes(
-          new VertexAttribute[]{Attribute.get(Attribute.Keys.pos),
-                                Attribute.get(Keys.uv[0]), Attribute.get(Attribute.Keys.col[0])});
+          new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Keys.uv[0]),
+                                Attribute.get(Attribute.Keys.col[0])});
       GLTF_UNSKINNED = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
                                 Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Keys.col[0])});
@@ -148,7 +150,6 @@ public class PVertexAttributes {
 
     public static VertexAttribute get(String key) {
       VertexAttribute va = list.get(key);
-
       // int usage, int numComponents, int type, boolean normalized, String alias, int unit
       return new VertexAttribute(va.usage, va.numComponents, va.type, va.normalized, va.alias, va.unit);
     }

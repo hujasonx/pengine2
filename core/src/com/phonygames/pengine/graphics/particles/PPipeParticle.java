@@ -1,7 +1,10 @@
 package com.phonygames.pengine.graphics.particles;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.PDebugRenderer;
+import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.model.PMeshTopology;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.texture.PTexture;
@@ -12,6 +15,7 @@ import com.phonygames.pengine.util.PList;
 import com.phonygames.pengine.util.PMap;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PShortList;
+import com.phonygames.pengine.util.PVecTracker;
 import com.phonygames.pengine.util.Tuple3;
 
 import java.util.Arrays;
@@ -29,9 +33,9 @@ public class PPipeParticle extends PParticle {
    * indices.
    */
   private static final PMap<Integer, PMap<Integer, Tuple3<PMeshTopology, PFloatList, PShortList>>>
-      staticMeshAndTopologyMap = new PMap<>() {
+      staticMeshAndTopologyMap = new PMap<Integer, PMap<Integer, Tuple3<PMeshTopology, PFloatList, PShortList>>>() {
     @Override public PMap<Integer, Tuple3<PMeshTopology, PFloatList, PShortList>> newUnpooled(Integer i) {
-      return null;
+      return new PMap<>();
     }
   };
   @Getter(value = AccessLevel.PUBLIC)
@@ -41,6 +45,8 @@ public class PPipeParticle extends PParticle {
       return new PPipeParticle();
     }
   };
+  /** An array used to store canonical topology vertex positions. */
+  private final PList<PVec3> canonicalTopologyVertices = new PList<>(PVec3.getStaticPool());
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PVec4 col0 = PVec4.obtain(), col1 = PVec4.obtain(), col2 = PVec4.obtain(), col3 = PVec4.obtain();
@@ -54,8 +60,10 @@ public class PPipeParticle extends PParticle {
   private final PList<PVec3> intermediateNormal1Data = new PList<>(PVec3.getStaticPool());
   /** The center positions. */
   private final PList<PVec3> intermediatePositionData = new PList<>(PVec3.getStaticPool());
-  /** An array used to store canonical topology vertex positions. */
-  private final PList<PVec3> canonicalTopologyVertices = new PList<>(PVec3.getStaticPool());
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  /** Helper to track the position of the particle. */ private final PVecTracker<PVec3> previousPositionTracker =
+      new PVecTracker(PVec3.getStaticPool());
   private final PShortList rawIndexData = PShortList.obtain();
   private final PFloatList rawVertexData = PFloatList.obtain();
   @Getter(value = AccessLevel.PUBLIC)
@@ -71,14 +79,15 @@ public class PPipeParticle extends PParticle {
   private final float[] userData = new float[16];
   private int lastMeshDataUpdateFrame = -1;
   /** The number of intermediate values. */
-  private int numRings;
+  private int numRings = -1;
   /** The number of faces that make up a ring. */
-  private int ringSteps;
+  private int ringSteps = -1;
   /** The topology object for this particle; should not modify them - so we should get them from a static context. */
   private PMeshTopology topology;
 
   private PPipeParticle() {
     reset();
+    previousPositionTracker.trackedVec(pos);
   }
 
   @Override public void frameUpdateShared() {
@@ -87,10 +96,17 @@ public class PPipeParticle extends PParticle {
       lastMeshDataUpdateFrame = PEngine.frameCount;
       updateRawMeshData();
     }
+    PDebugRenderer.line(pos,0,0,pos,0,10, PColor.RED, PColor.RED, 10, 1);
+    previousPositionTracker.frameUpdate();
   }
 
   /** Updates the rawVertexData and rawIndexData lists with values based on the head, intermediate, and tail data. */
   protected void updateRawMeshData() {
+    PAssert.isFalse(numRings == -1 || ringSteps == -1, "Ring settings not applied!");
+    // The first two canonical vertices are the head and tail. Then, vertices wrap around per ring, then to the next.
+    // The edge where the ring connects to the beginning shares canonical vertices (at theta 0 and 2 pi.)
+    canonicalTopologyVertices.get(0).set(pos);
+    canonicalTopologyVertices.get(1).set(tail);
   }
 
   @Override public void reset() {
@@ -114,6 +130,7 @@ public class PPipeParticle extends PParticle {
     rawVertexData.clear();
     rawIndexData.clear();
     canonicalTopologyVertices.clearAndFreePooled();
+    previousPositionTracker.reset();
     topology = null;
   }
 
@@ -128,14 +145,13 @@ public class PPipeParticle extends PParticle {
     return this;
   }
 
-  public boolean setVertexAndIndexData(float[] vertices, int vertexOffset, short[] indices,
-                                       int indexOffset) {
+  public boolean setVertexAndIndexData(float[] vertices, int vertexOffset, short[] indices, int indexOffset) {
     // Buffer is full!
     if (vertexOffset + rawVertexData.size() >= vertices.length || indexOffset + rawIndexData.size() >= indices.length) {
       return false;
     }
     PAssert.isNotNull(topology, "Call updateTopology first!");
-    topology.apply(canonicalTopologyVertices,rawVertexData, PVertexAttributes.getGLTF_UNSKINNED());
+    topology.apply(canonicalTopologyVertices, rawVertexData, PVertexAttributes.getGLTF_UNSKINNED());
     rawVertexData.emitTo(vertices, vertexOffset);
     rawIndexData.emitTo(indices, indexOffset);
     return true;
@@ -154,8 +170,66 @@ public class PPipeParticle extends PParticle {
     if (meshAndTopologyData == null) {
       PFloatList newVertexData = PFloatList.obtain();
       PShortList newIndexData = PShortList.obtain();
-      // TODO: add the topology data here.
       PMeshTopology.Builder topologyBuilder = new PMeshTopology.Builder();
+      // Add the vertices and indices.
+      // We include an extra edge here so that u can equal 1.
+      int verticesPerRing = ringSteps + 1;
+      float dU = MathUtils.PI2 / ringSteps;
+      float dV = 1f / (numRings + 1);
+      int vertexIndex = 0;
+      // The head and tail are actually rings themselves, but with 0 radius.
+      for (float v = 0, vIndex = 0; vIndex < numRings + 2; vIndex++, v += dV) {
+        boolean isHead = vIndex == 0;
+        boolean isTail = vIndex == numRings + 1;
+        for (float u = 0, uIndex = 0; uIndex < verticesPerRing; uIndex++, u += dU) {
+          // Pos, nor, uv, color. The only things that need to be set is the uv.
+          newVertexData.add(0); // Pos x.
+          newVertexData.add(0); // Pos y.
+          newVertexData.add(0); // Pos z.
+          newVertexData.add(0); // Nor x.
+          newVertexData.add(0); // Nor y.
+          newVertexData.add(0); // Nor z.
+          newVertexData.add(u); // U.
+          newVertexData.add(v); // V.
+          newVertexData.add(1); // Col r.
+          newVertexData.add(1); // Col g.
+          newVertexData.add(1); // Col b.
+          newVertexData.add(1); // Col a.
+          // Add the indices for the quad that has this vertex as its last corner.
+          if (!isHead && uIndex != 0) {
+            newIndexData.add((short) (vertexIndex));
+            newIndexData.add((short) (vertexIndex - 1));
+            newIndexData.add((short) (vertexIndex - 1 - verticesPerRing));
+            newIndexData.add((short) (vertexIndex));
+            newIndexData.add((short) (vertexIndex - 1 - verticesPerRing));
+            newIndexData.add((short) (vertexIndex - verticesPerRing));
+          }
+          vertexIndex++;
+        }
+      }
+      // Add the shared index data for the head.
+      topologyBuilder.addCanonicalIndex((short) 0);
+      for (int a = 1; a <= ringSteps; a++) {
+        topologyBuilder.addSharedVertexIndex(0, (short) a);
+      }
+      // Add the shared index data for the tail.
+      topologyBuilder.addCanonicalIndex((short) ((numRings + 1) * verticesPerRing));
+      for (int a = 1; a <= ringSteps; a++) {
+        topologyBuilder.addSharedVertexIndex(1, (short) ((numRings + 1) * verticesPerRing + a));
+      }
+      // Add the shared index data for the intermediate rings.
+      int canonicalIndexIndex = 2;
+      for (int ringNo = 0; ringNo < numRings; ringNo++) {
+        for (int ringStep = 0; ringStep < ringSteps; ringStep++) {
+          // The first vertex of each intermediate ring is canonical for the last.
+          topologyBuilder.addCanonicalIndex((short) ((ringNo + 1) * verticesPerRing + ringStep));
+          if (ringStep == 0) {
+            topologyBuilder.addSharedVertexIndex(canonicalIndexIndex, (short) ((ringNo + 2) * verticesPerRing - 1));
+          }
+          canonicalIndexIndex++;
+        }
+      }
+      PAssert.isTrue(canonicalIndexIndex == 2 + numRings * ringSteps);
       // Create the mesh and topology data if necessary.
       meshAndTopologyData =
           new Tuple3<>(topologyBuilder.buildWithOriginalTriangles(newIndexData.emit()), newVertexData, newIndexData);
@@ -167,6 +241,8 @@ public class PPipeParticle extends PParticle {
     rawVertexData.addAll(meshAndTopologyData.b());
     rawIndexData.clear();
     rawIndexData.addAll(meshAndTopologyData.c());
+    canonicalTopologyVertices.clearAndFreePooled();
+    canonicalTopologyVertices.fillToCapacityWithPooledValues(2 + numRings * ringSteps);
   }
 
   public int verticesFloatCount() {

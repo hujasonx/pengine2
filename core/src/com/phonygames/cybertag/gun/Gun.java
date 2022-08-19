@@ -13,6 +13,7 @@ import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.particles.PBillboardParticleSource;
+import com.phonygames.pengine.graphics.particles.PPipeParticleSource;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
@@ -46,6 +47,7 @@ public abstract class Gun implements PRenderable {
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
   protected PBillboardParticleSource muzzleParticleSource;
+  protected PPipeParticleSource pipeParticleSource;
   protected PVec3 recoilCameraEulRotImpulse = PVec3.obtain();
   protected PSODynamics.PSODynamics3 recoilCameraEulRotSpring = PSODynamics.obtain3();
   protected PVec3 recoilEulRotImpulse = PVec3.obtain();
@@ -75,6 +77,7 @@ public abstract class Gun implements PRenderable {
     });
     modelInstance.material("matBase").useVColIndex(true);
     muzzleParticleSource = PBillboardParticleSource.obtain();
+    pipeParticleSource = PPipeParticleSource.obtain();
   }
 
   public void applyTransformsToCharacterModelInstance(PModelInstance modelInstance) {
@@ -138,6 +141,9 @@ public abstract class Gun implements PRenderable {
     muzzleParticleSource.setOrigin(
         modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3()));
     muzzleParticleSource.frameUpdate();
+    pipeParticleSource.setOrigin(
+        modelInstance.getNode(firePointNodeName).worldTransform().getTranslation(pool.vec3()));
+    pipeParticleSource.frameUpdate();
     lifeT += PEngine.t;
   }
 
@@ -181,6 +187,7 @@ public abstract class Gun implements PRenderable {
       this.modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
     }
     muzzleParticleSource.render(renderContext);
+    pipeParticleSource.render(renderContext);
   }
 
   public void secondaryTriggerDown() {

@@ -116,7 +116,7 @@ public class PShortList implements PPool.Poolable {
     if (capacity >= size) {
       short[] curValues = values;
       values = new short[capacity * 3 / 2];
-      System.arraycopy(values,0,curValues,0,size);
+      System.arraycopy(curValues,0,values,0,size);
     }
   }
 

@@ -113,10 +113,10 @@ public class PFloatList implements PPool.Poolable {
   }
 
   private void ensureCapacity(int capacity) {
-    if (capacity >= size) {
+    if (capacity >= values.length) {
       float[] curValues = values;
       values = new float[capacity * 3 / 2];
-      System.arraycopy(values,0,curValues,0,size);
+      System.arraycopy(curValues,0,values,0,size);
     }
   }
 

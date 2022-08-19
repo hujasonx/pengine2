@@ -81,6 +81,7 @@ public class PPipeParticleSource implements PPool.Poolable {
         particles.removeIndex(checkIndex);
         continue;
       }
+      particle.frameUpdateShared();
       if (delegate != null) {
         delegate.processPipeParticle(particle);
       }

@@ -11,9 +11,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
-import com.badlogic.gdx.utils.ArrayMap;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec2;
@@ -25,7 +23,7 @@ import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PPostableTask;
 import com.phonygames.pengine.util.PPostableTaskQueue;
 import com.phonygames.pengine.util.PStringMap;
-import com.phonygames.pengine.util.PWindowedBuffer;
+import com.phonygames.pengine.util.PWindowedIntBuffer;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -121,7 +119,7 @@ public class PModelGen implements PPostableTask {
     private final PList<Short> indices = new PList<>();
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     @Accessors(fluent = true)
-    private final PWindowedBuffer latestIndices = new PWindowedBuffer(4);
+    private final PWindowedIntBuffer latestIndices = new PWindowedIntBuffer(4);
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     @Accessors(fluent = true)
     private final PVec3 minPos = PVec3.obtain(), maxPos = PVec3.obtain();
