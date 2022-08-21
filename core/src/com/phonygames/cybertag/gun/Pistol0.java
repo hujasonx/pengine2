@@ -99,7 +99,7 @@ public class Pistol0 extends Gun {
       }
       for (int a = 0; a < 10; a++) {
         PPipeParticle particle = pipeParticleSource.spawnParticle();
-        particle.updateTopology(4, 10);
+        particle.updateTopology(4, 5);
         particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)).nor().scl(MathUtils.random(4f));
         particle.vel().add(fireDir, 10);
         particle.pos().set(firePointPos);

@@ -41,16 +41,32 @@ public abstract class PParticle implements PPool.Poolable, PSortableByScore<PPar
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final float[] userData = new float[16];
+  /** Particle frameupdate should be called automatically when needed by the render functions, since we want to make
+   * sure particles that were just added are still processed.
+   */
+  private int lastFrameUpdateFrame = -1;
+
+  /** Returns true if we needed to frameupdate, and marks the particle as updated for this frame. */
+  public boolean prepFrameUpdate() {
+    if (lastFrameUpdateFrame == PEngine.frameCount) {
+      return false;
+    }
+    lastFrameUpdateFrame = PEngine.frameCount;
+    return true;
+  }
+
 
   protected PParticle() {}
 
-  public void frameUpdateShared() {
-    if (!isLive) {return;}
+  protected boolean frameUpdateSharedIfNeeded() {
+    if (!isLive) {return false;}
+    if (!prepFrameUpdate()) {return false;}
     pos().add(vel(), PEngine.dt);
     float newVelMagInVelDir = Math.max(0, vel().len() + PEngine.dt * (accelVelocityDir()));
     vel().nor().scl(newVelMagInVelDir);
     vel().add(accel(), PEngine.dt);
     lifeT += PEngine.dt;
+    return true;
   }
 
   public void kill() {

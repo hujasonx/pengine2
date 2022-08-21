@@ -200,7 +200,7 @@ public class PMeshTopology {
       for (int a = minVertexIndex; a < maxVertexIndex; a++) {
         normal.set(vertices.get(a * floatsPV + norOffset + 0), vertices.get(a * floatsPV + norOffset + 1),
                    vertices.get(a * floatsPV + norOffset + 2));
-        normal.scl(1f / weights.getOrDefault(a, 1f));
+        normal.scl(1f / weights.getOrDefault(a, 1f)).nor();
         normal.emit(vertices, a * floatsPV + norOffset);
       }
     }

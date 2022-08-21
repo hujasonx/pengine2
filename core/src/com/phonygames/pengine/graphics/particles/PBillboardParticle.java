@@ -1,5 +1,8 @@
 package com.phonygames.pengine.graphics.particles;
 
+import android.support.annotation.Nullable;
+
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -47,6 +50,29 @@ public class PBillboardParticle extends PParticle {
     return this;
   }
 
+  public boolean frameUpdateIfNeeded(@Nullable Delegate delegate) {
+    if (!super.frameUpdateSharedIfNeeded()) { return false;}
+    if (faceCamera()) {
+      faceCameraAngle(faceCameraAngle() + angVel() * PEngine.dt);
+    } else {
+      PVec3 rotateAxis = PVec3.obtain().set(xAxis()).crs(yAxis());
+      xAxis().rotate(rotateAxis, angVel() * PEngine.dt);
+      yAxis().rotate(rotateAxis, angVel() * PEngine.dt);
+      rotateAxis.free();
+    }
+    float newAngVel = angVel() + angVelAccel() * PEngine.dt;
+    if (newAngVel > 0) {
+      newAngVel = Math.max(0, newAngVel - angVelDecel() * PEngine.dt);
+    } else {
+      newAngVel = Math.min(0, newAngVel + angVelDecel() * PEngine.dt);
+    }
+    angVel(newAngVel);
+    if (delegate != null) {
+      delegate.processBillboardParticle(this);
+    }
+    return true;
+  }
+
   private PBillboardParticle() {
     reset();
   }
@@ -68,5 +94,9 @@ public class PBillboardParticle extends PParticle {
     col2.set(PVec4.ONE);
     col3.set(PVec4.ONE);
     texture.reset();
+  }
+
+  public interface Delegate {
+    void processBillboardParticle(PBillboardParticle particle);
   }
 }

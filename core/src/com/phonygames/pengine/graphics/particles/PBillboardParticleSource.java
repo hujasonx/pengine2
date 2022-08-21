@@ -1,7 +1,6 @@
 package com.phonygames.pengine.graphics.particles;
 
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
@@ -46,7 +45,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private Delegate delegate;
+  private PBillboardParticle.Delegate delegate;
   private PGlNode glNode;
   private PMaterial material;
   private PMesh mesh;
@@ -77,25 +76,6 @@ public class PBillboardParticleSource implements PPool.Poolable {
         particles.removeIndex(checkIndex);
         continue;
       }
-      particle.frameUpdateShared();
-      if (particle.faceCamera()) {
-        particle.faceCameraAngle(particle.faceCameraAngle() + particle.angVel() * PEngine.dt);
-      } else {
-        PVec3 rotateAxis = PVec3.obtain().set(particle.xAxis()).crs(particle.yAxis());
-        particle.xAxis().rotate(rotateAxis, particle.angVel() * PEngine.dt);
-        particle.yAxis().rotate(rotateAxis, particle.angVel() * PEngine.dt);
-        rotateAxis.free();
-      }
-      float newAngVel = particle.angVel() + particle.angVelAccel() * PEngine.dt;
-      if (newAngVel > 0) {
-        newAngVel = Math.max(0, newAngVel - particle.angVelDecel() * PEngine.dt);
-      } else {
-        newAngVel = Math.min(0, newAngVel + particle.angVelDecel() * PEngine.dt);
-      }
-      particle.angVel(newAngVel);
-      if (delegate != null) {
-        delegate.processBillboardParticle(particle);
-      }
       checkIndex++;
     }
   }
@@ -115,6 +95,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
     int maxIndex = 0;
     for (int a = 0; a < particles.size(); a++) {
       PBillboardParticle p = particles.get(a);
+      p.frameUpdateIfNeeded(delegate);
       if (!setVerticesForParticle(p)) {
         break;
       }
@@ -245,9 +226,5 @@ public class PBillboardParticleSource implements PPool.Poolable {
     PBillboardParticle particle = particles.genPooledAndAdd();
     particle.isLive = true;
     return particle;
-  }
-
-  public interface Delegate {
-    void processBillboardParticle(PBillboardParticle particle);
   }
 }

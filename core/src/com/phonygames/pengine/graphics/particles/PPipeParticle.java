@@ -1,5 +1,8 @@
 package com.phonygames.pengine.graphics.particles;
 
+import android.support.annotation.Nullable;
+
+import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
@@ -95,10 +98,12 @@ public class PPipeParticle extends PParticle {
   private int ringSteps = -1;
   /** The topology object for this particle; should not modify them - so we should get them from a static context. */
   private PMeshTopology topology;
+  private PVertexAttributes vertexAttributes;
 
   private PPipeParticle() {
     reset();
     previousPositionTracker.trackedVec(pos);
+    vertexAttributes = PVertexAttributes.getGLTF_UNSKINNED();
   }
 
   public PPipeParticle beginTracking(float previousPositionsTrackingDuration, int previousPositionsToKeep) {
@@ -106,13 +111,17 @@ public class PPipeParticle extends PParticle {
     return this;
   }
 
-  @Override public void frameUpdateShared() {
-    super.frameUpdateShared();
+  public boolean frameUpdateIfNeeded(@Nullable Delegate delegate) {
+    if (!super.frameUpdateSharedIfNeeded()) { return false;}
     previousPositionTracker.frameUpdate();
     if (lastMeshDataUpdateFrame != PEngine.frameCount) {
       lastMeshDataUpdateFrame = PEngine.frameCount;
       updateRawMeshData();
     }
+    if (delegate != null) {
+      delegate.processPipeParticle(this);
+    }
+    return true;
   }
 
   /** Updates the rawVertexData and rawIndexData lists with values based on the head, intermediate, and tail data. */
@@ -163,7 +172,7 @@ public class PPipeParticle extends PParticle {
       PAssert.isTrue(canonicalIndexIndex == 2 + numRings * ringSteps);
     }
     PAssert.isNotNull(topology, "Call updateTopology first!");
-    topology.apply(canonicalTopologyVertices, rawVertexData, PVertexAttributes.getGLTF_UNSKINNED());
+    topology.apply(canonicalTopologyVertices, rawVertexData, vertexAttributes);
   }
 
   @Override public void reset() {
@@ -203,6 +212,7 @@ public class PPipeParticle extends PParticle {
     if (vertexOffset + rawVertexData.size() >= vertices.length || indexOffset + rawIndexData.size() >= indices.length) {
       return false;
     }
+
     rawVertexData.emitTo(vertices, vertexOffset);
     rawIndexData.emitTo(indices, indexOffset);
     return true;
@@ -232,7 +242,7 @@ public class PPipeParticle extends PParticle {
       // Add the vertices and indices.
       // We include an extra edge here so that u can equal 1.
       int verticesPerRing = ringSteps + 1;
-      float dU = MathUtils.PI2 / ringSteps;
+      float dU = 1f / ringSteps;
       float dV = 1f / (numRings + 1);
       int vertexIndex = 0;
       // The head and tail are actually rings themselves, but with 0 radius.
@@ -240,19 +250,23 @@ public class PPipeParticle extends PParticle {
         boolean isHead = vIndex == 0;
         boolean isTail = vIndex == numRings + 1;
         for (float u = 0, uIndex = 0; uIndex < verticesPerRing; uIndex++, u += dU) {
-          // Pos, nor, uv, color. The only things that need to be set is the uv.
-          newVertexData.add(0); // Pos x.
-          newVertexData.add(0); // Pos y.
-          newVertexData.add(0); // Pos z.
-          newVertexData.add(0); // Nor x.
-          newVertexData.add(0); // Nor y.
-          newVertexData.add(0); // Nor z.
-          newVertexData.add(u); // U.
-          newVertexData.add(v); // V.
-          newVertexData.add(1); // Col r.
-          newVertexData.add(1); // Col g.
-          newVertexData.add(1); // Col b.
-          newVertexData.add(1); // Col a.
+          // The only things that need to be set is the uv and a default color.
+          for (int vaI = 0;vaI < vertexAttributes.getBackingVertexAttributes().size(); vaI++) {
+            VertexAttribute attr = vertexAttributes.getBackingVertexAttributes().get(vaI);
+            if (PVertexAttributes.Attribute.Keys.uv[0].equals(attr.alias)) {
+              newVertexData.add(u); // U.
+              newVertexData.add(v); // V.
+            }else if (PVertexAttributes.Attribute.Keys.col[0].equals(attr.alias)) {
+              newVertexData.add(1); // Col r.
+              newVertexData.add(1); // Col g.
+              newVertexData.add(1); // Col b.
+              newVertexData.add(1); // Col a.
+            } else {
+              for (int a = 0; a < attr.getSizeInBytes() / 4; a++) {
+                newVertexData.add(0);
+              }
+            }
+          }
           // Add the indices for the quad that has this vertex as its last corner.
           if (!isHead && uIndex != 0) {
             newIndexData.add((short) (vertexIndex));
@@ -305,5 +319,9 @@ public class PPipeParticle extends PParticle {
 
   public int verticesFloatCount() {
     return rawVertexData.size();
+  }
+
+  public interface Delegate {
+    void processPipeParticle(PPipeParticle particle);
   }
 }

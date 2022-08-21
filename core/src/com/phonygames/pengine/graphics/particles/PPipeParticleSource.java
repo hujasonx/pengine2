@@ -1,7 +1,6 @@
 package com.phonygames.pengine.graphics.particles;
 
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
@@ -51,7 +50,7 @@ public class PPipeParticleSource implements PPool.Poolable {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private Delegate delegate;
+  private PPipeParticle.Delegate delegate;
   private PGlNode glNode;
   private PMaterial material;
   private PMesh mesh;
@@ -81,10 +80,6 @@ public class PPipeParticleSource implements PPool.Poolable {
         particles.removeIndex(checkIndex);
         continue;
       }
-      particle.frameUpdateShared();
-      if (delegate != null) {
-        delegate.processPipeParticle(particle);
-      }
       checkIndex++;
     }
   }
@@ -104,8 +99,9 @@ public class PPipeParticleSource implements PPool.Poolable {
     material.setTexWithUniform(PMaterial.UniformConstants.Sampler2D.u_diffuseTex, texture);
     for (int a = 0; a < particles.size(); a++) {
       PPipeParticle p = particles.get(a);
+      p.frameUpdateIfNeeded(delegate);
       if (!setVerticesForParticle(p)) {
-        break;
+        continue;
       }
       currentBufferVerticesIndex += p.verticesFloatCount();
       currentBufferIndicesIndex += p.indicesShortCount();
@@ -165,9 +161,5 @@ public class PPipeParticleSource implements PPool.Poolable {
     PPipeParticle particle = particles.genPooledAndAdd();
     particle.isLive = true;
     return particle;
-  }
-
-  public interface Delegate {
-    void processPipeParticle(PPipeParticle particle);
   }
 }

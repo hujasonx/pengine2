@@ -4,11 +4,8 @@ import android.support.annotation.NonNull;
 
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec;
-import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.math.PVec4;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,6 +17,7 @@ public class PVecTracker<T extends PVec<T>> {
   private final PPool pool;
   private final PList<T> samples;
   private int headIndex = 0, tailIndex = 0;
+  private float lastSampleT;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -29,18 +27,40 @@ public class PVecTracker<T extends PVec<T>> {
   @Accessors(fluent = true)
   /** The length of time the previous position tracking should track. */ private float
       previousPositionsTrackingDuration;
-  private float lastSampleT;
+  private T startVal;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private T trackedVec;
-  private T startVal;
 
   public PVecTracker(@NonNull PPool pool) {
     this.pool = pool;
-    startVal = (T)pool.obtain();
+    startVal = (T) pool.obtain();
     this.samples = new PList<>(pool);
     reset();
+  }
+
+  public void reset() {
+    headIndex = 0;
+    tailIndex = 0;
+    lastSampleT = -1;
+    trackedVec = null;
+    previousPositionsTrackingDuration = 1;
+    previousPositionsToKeep = 10;
+    samples.clearAndFreePooled();
+  }
+
+  public PVecTracker<T> beginTracking(T trackedVec, float previousPositionsTrackingDuration,
+                                      int previousPositionsToKeep) {
+    this.trackedVec = trackedVec;
+    this.previousPositionsTrackingDuration = previousPositionsTrackingDuration;
+    this.previousPositionsToKeep = previousPositionsToKeep;
+    this.samples.clearAndFreePooled();
+    // Set initial values to the initial position.
+    for (int a = 0; a < previousPositionsToKeep; a++) {
+      this.samples.genPooledAndAdd().set(trackedVec);
+    }
+    return this;
   }
 
   public void frameUpdate() {
@@ -50,29 +70,27 @@ public class PVecTracker<T extends PVec<T>> {
       lastSampleT = PEngine.t;
       addSamplePoint(trackedVec);
     }
-
-
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-//      for (int a = 0; a < previousPositionsToKeep - 1; a++) {
-//        int b = a + 1;
-//        PVec3 previousPositionA = (PVec3)getSamplePointFromLast(a);
-//        PVec3 previousPositionB = (PVec3)getSamplePointFromLast(b);
-//        PVec4 colA = pool.vec4().setHSVA(1f / previousPositionsToKeep * a, 1, 1, 1);
-//        PVec4 colB = pool.vec4().setHSVA(1f / previousPositionsToKeep * b,1, 1, 1);
-//        if (previousPositionA != null && previousPositionB != null) {
-//          PDebugRenderer.line(previousPositionA, previousPositionB, colA, colB, 2, 2);
-//        }
-//      }
-//      for (float a = 0; a < 1; a += .1f) {
-//        float b = .1f + a;
-//        PVec3 previousPositionA = (PVec3)getPreviousPositionNormalizedTime((T)pool.vec3(), a);
-//        PVec3 previousPositionB = (PVec3)getPreviousPositionNormalizedTime((T)pool.vec3(), b);
-//        PVec4 colA = pool.vec4().setHSVA(1f / previousPositionsToKeep * a, 1, 1, 1);
-//        PVec4 colB = pool.vec4().setHSVA(1f / previousPositionsToKeep * b,1, 1, 1);
-//        if (previousPositionA != null && previousPositionB != null) {
-//          PDebugRenderer.line(previousPositionA, previousPositionB, colA, colB, 2, 2);
-//        }
-//      }
+      //      for (int a = 0; a < previousPositionsToKeep - 1; a++) {
+      //        int b = a + 1;
+      //        PVec3 previousPositionA = (PVec3)getSamplePointFromLast(a);
+      //        PVec3 previousPositionB = (PVec3)getSamplePointFromLast(b);
+      //        PVec4 colA = pool.vec4().setHSVA(1f / previousPositionsToKeep * a, 1, 1, 1);
+      //        PVec4 colB = pool.vec4().setHSVA(1f / previousPositionsToKeep * b,1, 1, 1);
+      //        if (previousPositionA != null && previousPositionB != null) {
+      //          PDebugRenderer.line(previousPositionA, previousPositionB, colA, colB, 2, 2);
+      //        }
+      //      }
+      //      for (float a = 0; a < 1; a += .1f) {
+      //        float b = .1f + a;
+      //        PVec3 previousPositionA = (PVec3)getPreviousPositionNormalizedTime((T)pool.vec3(), a);
+      //        PVec3 previousPositionB = (PVec3)getPreviousPositionNormalizedTime((T)pool.vec3(), b);
+      //        PVec4 colA = pool.vec4().setHSVA(1f / previousPositionsToKeep * a, 1, 1, 1);
+      //        PVec4 colB = pool.vec4().setHSVA(1f / previousPositionsToKeep * b,1, 1, 1);
+      //        if (previousPositionA != null && previousPositionB != null) {
+      //          PDebugRenderer.line(previousPositionA, previousPositionB, colA, colB, 2, 2);
+      //        }
+      //      }
     }
   }
 
@@ -104,7 +122,7 @@ public class PVecTracker<T extends PVec<T>> {
     if (indexOffset < 0) {
       T p0 = getSamplePointFromLast(0);
       if (p0 == null) {return null;}
-      return out.set(trackedVec).lerp(p0,timeAgo / (PEngine.t - lastSampleT));
+      return out.set(trackedVec).lerp(p0, timeAgo / (PEngine.t - lastSampleT));
     }
     int lowerIndex = (int) indexOffset;
     float lerpAmount = indexOffset - lowerIndex;
@@ -114,33 +132,17 @@ public class PVecTracker<T extends PVec<T>> {
     return out.set(p0).lerp(p1, lerpAmount);
   }
 
-  public PVecTracker<T> beginTracking(T trackedVec, float previousPositionsTrackingDuration, int previousPositionsToKeep) {
-    this.trackedVec = trackedVec;
-    this.previousPositionsTrackingDuration = previousPositionsTrackingDuration;
-    this.previousPositionsToKeep = previousPositionsToKeep;
-    this.samples.clearAndFreePooled();
-    // Set initial values to the initial position.
-    for (int a = 0; a < previousPositionsToKeep; a++) {
-      this.samples.genPooledAndAdd().set(trackedVec);
-    }
-    return this;
-  }
-
   /** Returns null if it was not found. */
   private T getSamplePointFromLast(int sampleIndexOffsetFromLast) {
-    if (sampleIndexOffsetFromLast < 0 || sampleIndexOffsetFromLast >= samples.size()) {
-      return null;
+    if (trackedVec == null) {return null;}
+    if (sampleIndexOffsetFromLast < 0) {
+      // Return the current value.
+      return trackedVec;
+    }
+    if (sampleIndexOffsetFromLast >= samples.size()) {
+      // Return the first recorded value.
+      return samples.get(tailIndex);
     }
     return this.samples.get(PNumberUtils.mod(headIndex - 1 - sampleIndexOffsetFromLast, this.samples.size()));
-  }
-
-  public void reset() {
-    headIndex = 0;
-    tailIndex = 0;
-    lastSampleT = -1;
-    trackedVec = null;
-    previousPositionsTrackingDuration = 1;
-    previousPositionsToKeep = 10;
-    samples.clearAndFreePooled();
   }
 }
