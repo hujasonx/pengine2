@@ -130,7 +130,7 @@ public class PPipeParticleSource implements PPool.Poolable {
     if (modelInstance != null) {
       return;
     }
-    mesh = new PMesh(false, MAX_FLOATS, MAX_SHORTS, PVertexAttributes.getBILLBOARD_PARTICLE());
+    mesh = new PMesh(false, MAX_FLOATS, MAX_SHORTS, PVertexAttributes.getGLTF_UNSKINNED());
 //    mesh.setIndices(indices);
     ModelBuilder modelBuilder = new ModelBuilder();
     modelBuilder.begin();

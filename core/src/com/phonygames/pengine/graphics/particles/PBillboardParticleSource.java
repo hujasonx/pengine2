@@ -41,7 +41,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
   private final PTexture texture = new PTexture();
   private final float[] vertices;
   // The index to insert the next particle into the vertices buffer at.
-  private int currentBufferIndex = 0;
+  private int currentFloatBufferIndex = 0;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -89,7 +89,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
       return;
     }
     particles.sort();
-    currentBufferIndex = 0;
+    currentFloatBufferIndex = 0;
     texture.set(particles.get(0).texture().getBackingTexture());
     material.setTexWithUniform(PMaterial.UniformConstants.Sampler2D.u_diffuseTex, texture);
     int maxIndex = 0;
@@ -101,10 +101,10 @@ public class PBillboardParticleSource implements PPool.Poolable {
       }
       maxIndex += 6;
     }
-    if (currentBufferIndex == 0) {
+    if (currentFloatBufferIndex == 0) {
       return;
     }
-    mesh.setVertices(vertices, 0, currentBufferIndex);
+    mesh.setVertices(vertices, 0, currentFloatBufferIndex);
     ((Buffer) mesh.getIndicesBuffer()).position(0);
     ((Buffer) mesh.getIndicesBuffer()).limit(maxIndex);
     modelInstance.enqueue(renderContext, PGltf.DEFAULT_SHADER_PROVIDER);
@@ -116,7 +116,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
 
   /** Should be called by render() */
   private boolean setVerticesForParticle(PBillboardParticle particle) {
-    if (currentBufferIndex + FLOATS_PER_PARTICLE >= vertices.length) {
+    if (currentFloatBufferIndex + FLOATS_PER_PARTICLE >= vertices.length) {
       return false;
     }
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
@@ -136,46 +136,46 @@ public class PBillboardParticleSource implements PPool.Poolable {
       float v1 = particle.texture().uvOS().w() + particle.texture().uvOS().y();
       // Positions.
       PVec3 pos = pool.vec3(particle.pos).add(particle.xAxis(), -.5f).add(particle.yAxis(), -.5f);
-      vertices[currentBufferIndex + 0] = pos.x(); // x0;
-      vertices[currentBufferIndex + 1] = pos.y(); // y0;
-      vertices[currentBufferIndex + 2] = pos.z(); // z0;
-      vertices[currentBufferIndex + 3] = u0; // u0;
-      vertices[currentBufferIndex + 4] = v0; // v0;
-      vertices[currentBufferIndex + 5] = particle.col0().r(); // c0;
-      vertices[currentBufferIndex + 6] = particle.col0().g(); // c0;
-      vertices[currentBufferIndex + 7] = particle.col0().b(); // c0;
-      vertices[currentBufferIndex + 8] = particle.col0().a(); // c0;
+      vertices[currentFloatBufferIndex + 0] = pos.x(); // x0;
+      vertices[currentFloatBufferIndex + 1] = pos.y(); // y0;
+      vertices[currentFloatBufferIndex + 2] = pos.z(); // z0;
+      vertices[currentFloatBufferIndex + 3] = u0; // u0;
+      vertices[currentFloatBufferIndex + 4] = v0; // v0;
+      vertices[currentFloatBufferIndex + 5] = particle.col0().r(); // c0;
+      vertices[currentFloatBufferIndex + 6] = particle.col0().g(); // c0;
+      vertices[currentFloatBufferIndex + 7] = particle.col0().b(); // c0;
+      vertices[currentFloatBufferIndex + 8] = particle.col0().a(); // c0;
       pos = pool.vec3(particle.pos).add(particle.xAxis(), -.5f).add(particle.yAxis(), .5f);
-      vertices[currentBufferIndex + 9] = pos.x(); // x1;
-      vertices[currentBufferIndex + 10] = pos.y(); // y1;
-      vertices[currentBufferIndex + 11] = pos.z(); // z1;
-      vertices[currentBufferIndex + 12] = u0; // u0;
-      vertices[currentBufferIndex + 13] = v1; // v1;
-      vertices[currentBufferIndex + 14] = particle.col1().r(); // c1;
-      vertices[currentBufferIndex + 15] = particle.col1().g(); // c1;
-      vertices[currentBufferIndex + 16] = particle.col1().b(); // c1;
-      vertices[currentBufferIndex + 17] = particle.col1().a(); // c1;
+      vertices[currentFloatBufferIndex + 9] = pos.x(); // x1;
+      vertices[currentFloatBufferIndex + 10] = pos.y(); // y1;
+      vertices[currentFloatBufferIndex + 11] = pos.z(); // z1;
+      vertices[currentFloatBufferIndex + 12] = u0; // u0;
+      vertices[currentFloatBufferIndex + 13] = v1; // v1;
+      vertices[currentFloatBufferIndex + 14] = particle.col1().r(); // c1;
+      vertices[currentFloatBufferIndex + 15] = particle.col1().g(); // c1;
+      vertices[currentFloatBufferIndex + 16] = particle.col1().b(); // c1;
+      vertices[currentFloatBufferIndex + 17] = particle.col1().a(); // c1;
       pos = pool.vec3(particle.pos).add(particle.xAxis(), .5f).add(particle.yAxis(), .5f);
-      vertices[currentBufferIndex + 18] = pos.x(); // x2;
-      vertices[currentBufferIndex + 19] = pos.y(); // y2;
-      vertices[currentBufferIndex + 20] = pos.z(); // z2;
-      vertices[currentBufferIndex + 21] = u1; // u1;
-      vertices[currentBufferIndex + 22] = v1; // v1;
-      vertices[currentBufferIndex + 23] = particle.col2().r(); // c2;
-      vertices[currentBufferIndex + 24] = particle.col2().g(); // c2;
-      vertices[currentBufferIndex + 25] = particle.col2().b(); // c2;
-      vertices[currentBufferIndex + 26] = particle.col2().a(); // c2;
+      vertices[currentFloatBufferIndex + 18] = pos.x(); // x2;
+      vertices[currentFloatBufferIndex + 19] = pos.y(); // y2;
+      vertices[currentFloatBufferIndex + 20] = pos.z(); // z2;
+      vertices[currentFloatBufferIndex + 21] = u1; // u1;
+      vertices[currentFloatBufferIndex + 22] = v1; // v1;
+      vertices[currentFloatBufferIndex + 23] = particle.col2().r(); // c2;
+      vertices[currentFloatBufferIndex + 24] = particle.col2().g(); // c2;
+      vertices[currentFloatBufferIndex + 25] = particle.col2().b(); // c2;
+      vertices[currentFloatBufferIndex + 26] = particle.col2().a(); // c2;
       pos = pool.vec3(particle.pos).add(particle.xAxis(), .5f).add(particle.yAxis(), -.5f);
-      vertices[currentBufferIndex + 27] = pos.x(); // x3;
-      vertices[currentBufferIndex + 28] = pos.y(); // y3;
-      vertices[currentBufferIndex + 29] = pos.z(); // z3;
-      vertices[currentBufferIndex + 30] = u1; // u1;
-      vertices[currentBufferIndex + 31] = v0; // v0;
-      vertices[currentBufferIndex + 32] = particle.col3().r(); // c3;
-      vertices[currentBufferIndex + 33] = particle.col3().g(); // c3;
-      vertices[currentBufferIndex + 34] = particle.col3().b(); // c3;
-      vertices[currentBufferIndex + 35] = particle.col3().a(); // c3;
-      currentBufferIndex += 36;
+      vertices[currentFloatBufferIndex + 27] = pos.x(); // x3;
+      vertices[currentFloatBufferIndex + 28] = pos.y(); // y3;
+      vertices[currentFloatBufferIndex + 29] = pos.z(); // z3;
+      vertices[currentFloatBufferIndex + 30] = u1; // u1;
+      vertices[currentFloatBufferIndex + 31] = v0; // v0;
+      vertices[currentFloatBufferIndex + 32] = particle.col3().r(); // c3;
+      vertices[currentFloatBufferIndex + 33] = particle.col3().g(); // c3;
+      vertices[currentFloatBufferIndex + 34] = particle.col3().b(); // c3;
+      vertices[currentFloatBufferIndex + 35] = particle.col3().a(); // c3;
+      currentFloatBufferIndex += 36;
     }
     return true;
   }

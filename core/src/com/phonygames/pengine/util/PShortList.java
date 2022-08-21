@@ -129,11 +129,12 @@ public class PShortList implements PPool.Poolable {
   }
 
   public short[] emitTo(short[] arr, int offsetInArray, int offsetInSelf, int count) {
-    int lastIndexInSelfToEmit = Math.min(arr.length + offsetInSelf, Math.min(size, offsetInSelf + count));
-    int indexInArray = offsetInArray;
-    for (int a = offsetInSelf; a < lastIndexInSelfToEmit; a++) {
-      arr[indexInArray++] = get(a);
-    }
+//    int lastIndexInSelfToEmit = Math.min(arr.length + offsetInSelf, Math.min(size, offsetInSelf + count));
+//    int indexInArray = offsetInArray;
+//    for (int a = offsetInSelf; a < lastIndexInSelfToEmit; a++) {
+//      arr[indexInArray++] = get(a);
+//    }
+    System.arraycopy(values,offsetInSelf, arr, offsetInArray, count);
     return arr;
   }
 
