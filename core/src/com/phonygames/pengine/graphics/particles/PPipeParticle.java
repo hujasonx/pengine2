@@ -207,14 +207,16 @@ public class PPipeParticle extends PParticle {
     return rawIndexData.size();
   }
 
-  protected boolean outputVertexAndIndexData(float[] vertices, int vertexOffset, short[] indices, int indexOffset) {
+  protected boolean outputVertexAndIndexData(float[] vertices, int vertexOffset, int precedingVerticesCount, short[] indices, int indexOffset) {
     // Buffer is full!
     if (vertexOffset + rawVertexData.size() >= vertices.length || indexOffset + rawIndexData.size() >= indices.length) {
       return false;
     }
 
     rawVertexData.emitTo(vertices, vertexOffset);
-    rawIndexData.emitTo(indices, indexOffset);
+    for (int a = 0; a < rawIndexData.size(); a++) {
+      indices[a + indexOffset] = (short)(precedingVerticesCount +  rawIndexData.get(a));
+    }
     return true;
   }
 

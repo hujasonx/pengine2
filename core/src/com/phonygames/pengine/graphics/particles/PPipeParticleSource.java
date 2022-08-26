@@ -29,8 +29,8 @@ public class PPipeParticleSource implements PPool.Poolable {
   private PPool ownerPool, sourcePool;
   // #pragma end - PPool.Poolable
   // 3 Position, 2 UV, 4 color.
-  public static final int MAX_FLOATS = 9 * 1024;
-  public static final int MAX_SHORTS = 3 * 1024;
+  public static final int MAX_FLOATS = 9 * 1024 * 4;
+  public static final int MAX_SHORTS = 3 * 1024 * 4;
   private static final String PARTICLES = "particles";
   private static final PPool<PPipeParticleSource> staticPool = new PPool<PPipeParticleSource>() {
     @Override protected PPipeParticleSource newObject() {
@@ -39,14 +39,14 @@ public class PPipeParticleSource implements PPool.Poolable {
   };
   private static int maxCapacity = 1000;
   private static Boolean modelGenStarted = false;
+  private final short[] indices = new short[MAX_SHORTS];
   private final PList<PPipeParticle> particles = new PList<>(PPipeParticle.staticPool());
   private final PTexture texture = new PTexture();
   private final float[] vertices = new float[MAX_FLOATS];
-  private final short[] indices = new short[MAX_SHORTS];
-  // The index to insert the next particle into the vertices buffer at.
-  private int currentBufferVerticesIndex = 0;
   // The index to insert the next particle into the indices buffer at.
   private int currentBufferIndicesIndex = 0;
+  // The index to insert the next particle into the vertices buffer at.
+  private int currentBufferVerticesIndex = 0;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -58,7 +58,6 @@ public class PPipeParticleSource implements PPool.Poolable {
   private PModelInstance modelInstance;
 
   public PPipeParticleSource() {
-
   }
 
   public static PPipeParticleSource obtain() {
@@ -105,9 +104,9 @@ public class PPipeParticleSource implements PPool.Poolable {
       }
       currentBufferVerticesIndex += p.verticesFloatCount();
       currentBufferIndicesIndex += p.indicesShortCount();
+      System.out.println(a + ", " + p.pos());
     }
     if (currentBufferVerticesIndex == 0 || currentBufferIndicesIndex == 0) {
-
       return;
     }
     mesh.setVertices(vertices, 0, currentBufferVerticesIndex);
@@ -123,7 +122,8 @@ public class PPipeParticleSource implements PPool.Poolable {
 
   /** Should be called by render() */
   private boolean setVerticesForParticle(PPipeParticle particle) {
-    return particle.outputVertexAndIndexData(vertices, currentBufferVerticesIndex, indices, currentBufferIndicesIndex);
+    int floatsPerV = PVertexAttributes.getGLTF_UNSKINNED().getNumFloatsPerVertex();
+    return particle.outputVertexAndIndexData(vertices, currentBufferVerticesIndex, currentBufferVerticesIndex / floatsPerV, indices, currentBufferIndicesIndex);
   }
 
   private void makeModelIfNeeded() {
@@ -131,7 +131,7 @@ public class PPipeParticleSource implements PPool.Poolable {
       return;
     }
     mesh = new PMesh(false, MAX_FLOATS, MAX_SHORTS, PVertexAttributes.getGLTF_UNSKINNED());
-//    mesh.setIndices(indices);
+    //    mesh.setIndices(indices);
     ModelBuilder modelBuilder = new ModelBuilder();
     modelBuilder.begin();
     PList<PGlNode> glNodes = new PList<>();

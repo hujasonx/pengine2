@@ -2,6 +2,7 @@ package com.phonygames.pengine.graphics.model;
 
 import android.support.annotation.NonNull;
 
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.phonygames.pengine.exception.PAssert;
@@ -141,7 +142,10 @@ public class PVertexAttributes {
     }
 
     private static void registerAttribute(String id, int numComponents, int usage) {
-      list.put(id, new VertexAttribute(usage /* unused */, numComponents, id));
+      boolean normalized = usage == VertexAttributes.Usage.Normal;
+      list.put(id, new VertexAttribute(usage /* unused */, numComponents,
+                                       usage == VertexAttributes.Usage.ColorPacked ? GL20.GL_UNSIGNED_BYTE :
+                                       GL20.GL_FLOAT, normalized, id));
     }
 
     private static void registerAttribute(String id, int numComponents) {
