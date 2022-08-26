@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.utils.NumberUtils;
+import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PFloatList;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
 
@@ -41,6 +43,33 @@ public class PVec4 extends PVec<PVec4> {
   @Override public PVec4 add(@NonNull PVec4 other) {
     backingQuaterion.add(other.backingQuaterion);
     return this;
+  }
+
+  public float[] emit(float[] out) {
+    PAssert.isTrue(out.length == 4);
+    out[0] = backingQuaterion.x;
+    out[1] = backingQuaterion.y;
+    out[2] = backingQuaterion.z;
+    out[3] = backingQuaterion.w;
+    return out;
+  }
+
+  public float[] emit(float[] out, int offset) {
+    PAssert.isTrue(out.length == 4);
+    out[offset + 0] = backingQuaterion.x;
+    out[offset + 1] = backingQuaterion.y;
+    out[offset + 2] = backingQuaterion.z;
+    out[offset + 3] = backingQuaterion.w;
+    return out;
+  }
+
+  public PFloatList emit(PFloatList out, int offset) {
+    PAssert.isTrue(out.size() >= offset + 4);
+    out.set(offset + 0, backingQuaterion.x);
+    out.set(offset + 1, backingQuaterion.y);
+    out.set(offset + 2, backingQuaterion.z);
+    out.set(offset + 3, backingQuaterion.w);
+    return out;
   }
 
   @Override public PVec4 add(@NonNull PVec4 other, float scl) {

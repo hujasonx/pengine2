@@ -6,8 +6,6 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.PDebugRenderer;
-import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.model.PMeshTopology;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.texture.PTexture;
@@ -50,10 +48,9 @@ public class PPipeParticle extends PParticle {
   };
   /** An array used to store canonical topology vertex positions. */
   private final PList<PVec3> canonicalTopologyVertices = new PList<>(PVec3.getStaticPool());
+  /** The color of the head. */
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final PVec4 col0 = PVec4.obtain(), col1 = PVec4.obtain(), col2 = PVec4.obtain(), col3 = PVec4.obtain();
-  /** The color of the head. */
   private final PVec4 headCol = PVec4.obtain();
   /** The intermediate color data. */
   private final PList<PVec4> intermediateColorData = new PList<>(PVec4.getStaticPool());
@@ -84,6 +81,8 @@ public class PPipeParticle extends PParticle {
   @Accessors(fluent = true)
   /** The last vertex. */ private final PVec3 tail = PVec3.obtain();
   /** The color of the tail. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PVec4 tailCol = PVec4.obtain();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -106,82 +105,9 @@ public class PPipeParticle extends PParticle {
     vertexAttributes = PVertexAttributes.getGLTF_UNSKINNED();
   }
 
-  public PPipeParticle beginTracking(float previousPositionsTrackingDuration, int previousPositionsToKeep) {
-    previousPositionTracker.beginTracking(pos, previousPositionsTrackingDuration, previousPositionsToKeep);
-    return this;
-  }
-
-  public boolean frameUpdateIfNeeded(@Nullable Delegate delegate) {
-    if (!super.frameUpdateSharedIfNeeded()) { return false;}
-    previousPositionTracker.frameUpdate();
-    if (lastMeshDataUpdateFrame != PEngine.frameCount) {
-      lastMeshDataUpdateFrame = PEngine.frameCount;
-      updateRawMeshData();
-    }
-    if (delegate != null) {
-      delegate.processPipeParticle(this);
-    }
-    return true;
-  }
-
-  /** Updates the rawVertexData and rawIndexData lists with values based on the head, intermediate, and tail data. */
-  protected void updateRawMeshData() {
-    PAssert.isFalse(numRings == -1 || ringSteps == -1, "Ring settings not applied!");
-    // The first two canonical vertices are the head and tail. Then, vertices wrap around per ring, then to the next.
-    // The edge where the ring connects to the beginning shares canonical vertices (at theta 0 and 2 pi.)
-    canonicalTopologyVertices.get(0).set(pos);
-    previousPositionTracker.getPreviousPositionNormalizedTime(tail, 1);
-    canonicalTopologyVertices.get(1).set(tail);
-    if (intermediatePointNormalizedTimes.size() != numRings || intermediateRingRadii.size() != numRings) {
-      PAssert.warn(
-          "Intermediate point normalized time or radii buffers were not initialized with the correct size (numRings): " +
-          numRings);
-      return;
-    }
-    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-      final float thetaPerStep = MathUtils.PI2 / ringSteps;
-      PVec3 normalTheta0 = pool.vec3(startNormal);
-      PVec3 centerDelta = pool.vec3();
-      PVec3 nor0 = pool.vec3();
-      PVec3 nor1 = pool.vec3();
-      PDebugRenderer.line(pos, 0, 0, pos, 0, 10, PColor.GREEN, PColor.GREEN, 10, 1);
-      int canonicalIndexIndex = 2;
-      for (int ringNo = 0; ringNo < numRings; ringNo++) {
-        PVec3 ringCenter = previousPositionTracker.getPreviousPositionNormalizedTime(pool.vec3(),
-                                                                                     intermediatePointNormalizedTimes().get(
-                                                                                         ringNo));
-        centerDelta.set(ringCenter);
-        if (ringNo == 0) {
-          centerDelta.sub(pos);
-        } else {
-          centerDelta.sub(previousPositionTracker.getPreviousPositionNormalizedTime(pool.vec3(),
-                                                                                    intermediatePointNormalizedTimes().get(
-                                                                                        ringNo - 1)));
-        }
-//        PDebugRenderer.line(ringCenter, pool.vec3(ringCenter).add(centerDelta), PColor.RED, PColor.CYAN, 2, 2);
-        PDebugRenderer.line(ringCenter, 0, 0, ringCenter, 0, 10, PColor.RED, PColor.CYAN, 2 + 8 * ringNo, 2 + 8 * ringNo);
-        for (float theta = 0; theta < MathUtils.PI2 - thetaPerStep * .5f; theta += thetaPerStep) {
-          nor0.set(normalTheta0).crs(centerDelta).crs(centerDelta).nor().scl(intermediateRingRadii().get(ringNo));
-          nor1.set(nor0).rotate(centerDelta, MathUtils.HALF_PI).nor().scl(intermediateRingRadii().get(ringNo));
-          canonicalTopologyVertices.get(canonicalIndexIndex).set(ringCenter)
-                                   .add(nor0, MathUtils.cos(theta))
-                                   .add(nor1, MathUtils.sin(theta));
-          canonicalIndexIndex++;
-        }
-      }
-      PAssert.isTrue(canonicalIndexIndex == 2 + numRings * ringSteps);
-    }
-    PAssert.isNotNull(topology, "Call updateTopology first!");
-    topology.apply(canonicalTopologyVertices, rawVertexData, vertexAttributes);
-  }
-
   @Override public void reset() {
     super.reset();
     lastMeshDataUpdateFrame = -1;
-    col0.set(PVec4.ONE);
-    col1.set(PVec4.ONE);
-    col2.set(PVec4.ONE);
-    col3.set(PVec4.ONE);
     Arrays.fill(userData, 0f);
     texture.reset();
     headCol.set(PVec4.ONE);
@@ -203,28 +129,113 @@ public class PPipeParticle extends PParticle {
     topology = null;
   }
 
-  protected int indicesShortCount() {
-    return rawIndexData.size();
+  public PPipeParticle applyColorToVertices() {
+    int verticesPerRing = ringSteps + 1;
+    int colOffset = vertexAttributes.indexForVertexAttribute(PVertexAttributes.Attribute.Keys.col[0]);
+    int fPerV = vertexAttributes.getNumFloatsPerVertex();
+    PVec4 tempCol = PVec4.obtain();
+    for (int ringStep = 0; ringStep < verticesPerRing; ringStep++) {
+      // Apply the color to the head ring.
+      headCol.emit(rawVertexData, ringStep * fPerV + colOffset);
+
+      // Apply the color to the tail ring.
+      tailCol.emit(rawVertexData, (ringStep + (1 + numRings) * verticesPerRing) * fPerV + colOffset);
+
+      // Apply the color to the intermediate rings.
+      for (int ring = 0; ring < numRings; ring++) {
+        tempCol.set(headCol).lerp(tailCol,intermediatePointNormalizedTimes.get(ring));
+        tempCol.emit(rawVertexData, (ringStep + (1 + ring) * verticesPerRing) * fPerV + colOffset);
+      }
+    }
+    tempCol.free();
+    return this;
   }
 
-  protected boolean outputVertexAndIndexData(float[] vertices, int vertexOffset, int precedingVerticesCount, short[] indices, int indexOffset) {
-    // Buffer is full!
-    if (vertexOffset + rawVertexData.size() >= vertices.length || indexOffset + rawIndexData.size() >= indices.length) {
-      return false;
-    }
+  public PPipeParticle beginTracking(float previousPositionsTrackingDuration, int previousPositionsToKeep) {
+    previousPositionTracker.beginTracking(pos, previousPositionsTrackingDuration, previousPositionsToKeep);
+    return this;
+  }
 
-    rawVertexData.emitTo(vertices, vertexOffset);
-    for (int a = 0; a < rawIndexData.size(); a++) {
-      indices[a + indexOffset] = (short)(precedingVerticesCount +  rawIndexData.get(a));
+  public boolean frameUpdateIfNeeded(@Nullable Delegate delegate) {
+    if (!super.frameUpdateSharedIfNeeded()) {return false;}
+    previousPositionTracker.frameUpdate();
+    if (lastMeshDataUpdateFrame != PEngine.frameCount) {
+      lastMeshDataUpdateFrame = PEngine.frameCount;
+      updateRawMeshData();
+    }
+    if (delegate != null) {
+      delegate.processPipeParticle(this);
     }
     return true;
   }
 
-  public PPipeParticle setColFrom0() {
-    col1.set(col0);
-    col2.set(col0);
-    col3.set(col0);
-    return this;
+  /** Updates the rawVertexData and rawIndexData lists with values based on the head, intermediate, and tail data. */
+  protected void updateRawMeshData() {
+    PAssert.isFalse(numRings == -1 || ringSteps == -1, "Ring settings not applied!");
+    // The first two canonical vertices are the head and tail. Then, vertices wrap around per ring, then to the next.
+    // The edge where the ring connects to the beginning shares canonical vertices (at theta 0 and 2 pi.)
+    canonicalTopologyVertices.get(0).set(pos);
+    previousPositionTracker.getPreviousPositionNormalizedTime(tail, 1);
+    canonicalTopologyVertices.get(1).set(tail);
+    if (intermediatePointNormalizedTimes.size() != numRings || intermediateRingRadii.size() != numRings) {
+      PAssert.warn(
+          "Intermediate point normalized time or radii buffers were not initialized with the correct size (numRings):" +
+          " " + numRings);
+      return;
+    }
+    try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      final float thetaPerStep = MathUtils.PI2 / ringSteps;
+      PVec3 normalTheta0 = pool.vec3(startNormal);
+      PVec3 centerDelta = pool.vec3();
+      PVec3 nor0 = pool.vec3();
+      PVec3 nor1 = pool.vec3();
+      //      PDebugRenderer.line(pos, 0, 0, pos, 0, 10, PColor.GREEN, PColor.GREEN, 10, 1);
+      int canonicalIndexIndex = 2;
+      for (int ringNo = 0; ringNo < numRings; ringNo++) {
+        PVec3 ringCenter = previousPositionTracker.getPreviousPositionNormalizedTime(pool.vec3(),
+                                                                                     intermediatePointNormalizedTimes().get(
+                                                                                         ringNo));
+        centerDelta.set(ringCenter);
+        if (ringNo == 0) {
+          centerDelta.sub(pos);
+        } else {
+          centerDelta.sub(previousPositionTracker.getPreviousPositionNormalizedTime(pool.vec3(),
+                                                                                    intermediatePointNormalizedTimes().get(
+                                                                                        ringNo - 1)));
+        }
+        //        PDebugRenderer.line(ringCenter, pool.vec3(ringCenter).add(centerDelta), PColor.RED, PColor.CYAN, 2,
+        //        2);
+        //        PDebugRenderer.line(ringCenter, 0, 0, ringCenter, 0, 10, PColor.RED, PColor.CYAN, 2 + 8 * ringNo, 2
+        //        + 8 * ringNo);
+        for (float theta = 0; theta < MathUtils.PI2 - thetaPerStep * .5f; theta += thetaPerStep) {
+          nor0.set(normalTheta0).crs(centerDelta).crs(centerDelta).nor().scl(intermediateRingRadii().get(ringNo));
+          nor1.set(nor0).rotate(centerDelta, MathUtils.HALF_PI).nor().scl(intermediateRingRadii().get(ringNo));
+          canonicalTopologyVertices.get(canonicalIndexIndex).set(ringCenter).add(nor0, MathUtils.cos(theta))
+                                   .add(nor1, MathUtils.sin(theta));
+          canonicalIndexIndex++;
+        }
+      }
+      PAssert.isTrue(canonicalIndexIndex == 2 + numRings * ringSteps);
+    }
+    PAssert.isNotNull(topology, "Call updateTopology first!");
+    topology.apply(canonicalTopologyVertices, rawVertexData, vertexAttributes);
+  }
+
+  protected int indicesShortCount() {
+    return rawIndexData.size();
+  }
+
+  protected boolean outputVertexAndIndexData(float[] vertices, int vertexOffset, int precedingVerticesCount,
+                                             short[] indices, int indexOffset) {
+    // Buffer is full!
+    if (vertexOffset + rawVertexData.size() >= vertices.length || indexOffset + rawIndexData.size() >= indices.length) {
+      return false;
+    }
+    rawVertexData.emitTo(vertices, vertexOffset);
+    for (int a = 0; a < rawIndexData.size(); a++) {
+      indices[a + indexOffset] = (short) (precedingVerticesCount + rawIndexData.get(a));
+    }
+    return true;
   }
 
   public void updateTopology(int numRings, int ringSteps) {
@@ -253,12 +264,12 @@ public class PPipeParticle extends PParticle {
         boolean isTail = vIndex == numRings + 1;
         for (float u = 0, uIndex = 0; uIndex < verticesPerRing; uIndex++, u += dU) {
           // The only things that need to be set is the uv and a default color.
-          for (int vaI = 0;vaI < vertexAttributes.getBackingVertexAttributes().size(); vaI++) {
+          for (int vaI = 0; vaI < vertexAttributes.getBackingVertexAttributes().size(); vaI++) {
             VertexAttribute attr = vertexAttributes.getBackingVertexAttributes().get(vaI);
             if (PVertexAttributes.Attribute.Keys.uv[0].equals(attr.alias)) {
               newVertexData.add(u); // U.
               newVertexData.add(v); // V.
-            }else if (PVertexAttributes.Attribute.Keys.col[0].equals(attr.alias)) {
+            } else if (PVertexAttributes.Attribute.Keys.col[0].equals(attr.alias)) {
               newVertexData.add(1); // Col r.
               newVertexData.add(1); // Col g.
               newVertexData.add(1); // Col b.
