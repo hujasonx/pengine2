@@ -175,6 +175,8 @@ public abstract class PPool<T extends PPool.Poolable> {
     private final PList<PVec3> vec3s = new PList<>(PVec3.getStaticPool());
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     private final PList<PVec4> vec4s = new PList<>(PVec4.getStaticPool());
+    @Getter(value = AccessLevel.PRIVATE, lazy = true)
+    private final PList<PString> strings = new PList<>(PString.getStaticPool());
 
     private PoolBuffer() {
     }
@@ -198,6 +200,7 @@ public abstract class PPool<T extends PPool.Poolable> {
       getVec2s().clearAndFreePooled();
       getVec3s().clearAndFreePooled();
       getVec4s().clearAndFreePooled();
+      getStrings().clearAndFreePooled();
     }
 
     public PVec1 vec1() {
@@ -248,6 +251,15 @@ public abstract class PPool<T extends PPool.Poolable> {
 
     public PMat4 mat4(PMat4 mat) {
       return getMat4s().genPooledAndAdd().set(mat);
+    }
+
+    public PString string() {
+      return getStrings().genPooledAndAdd();
+    }
+    public PString string(String s) {
+      PString string = getStrings().genPooledAndAdd();
+      string.set(s);
+      return string;
     }
   }
 }
