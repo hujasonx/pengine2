@@ -98,15 +98,15 @@ public class Pistol0 extends Gun {
       for (int a = 0; a < 1; a++) {
         PPipeParticle particle = pipeParticleSource.spawnParticle();
         particle.updateTopology(4, 4);
-        particle.headCol().setHSVA(0, 1, 20, 1);
-//        particle.tailCol().setHSVA(MathUtils.random(), 1, 10, 1);
+        particle.headCol().setHSVA(.15f, 1, 3, 1);
+        //        particle.tailCol().setHSVA(MathUtils.random(), 1, 10, 1);
         particle.tailCol().set(particle.headCol());
         particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)).nor()
                 .scl(MathUtils.random(.5f));
-        particle.vel().add(fireDir, 140);
+        particle.vel().add(fireDir, 250);
         particle.pos().set(firePointPos);
         particle.intermediatePointNormalizedTimes().add(.05f).add(.22f).add(.5f).add(.7f);
-        particle.intermediateRingRadii().add(.03f).add(.05f).add(.03f).add(.015f);
+        particle.intermediateRingRadii().add(.02f).add(.04f).add(.02f).add(.01f);
         particle.beginTracking(.02f, 10);
         particle.applyColorToVertices();
       }
