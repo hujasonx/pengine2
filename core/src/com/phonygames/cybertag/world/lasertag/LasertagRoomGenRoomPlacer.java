@@ -5,9 +5,9 @@ import android.support.annotation.Nullable;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.aabb.PIntAABB;
-import com.phonygames.pengine.util.PArrayUtils;
-import com.phonygames.pengine.util.PIntMap3d;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PArrayUtils;
+import com.phonygames.pengine.util.collection.PIntMap3d;
+import com.phonygames.pengine.util.collection.PList;
 
 public class LasertagRoomGenRoomPlacer {
   // The edgeShiftBoundary is added to the range edges of the location random() call. The location is then clamped

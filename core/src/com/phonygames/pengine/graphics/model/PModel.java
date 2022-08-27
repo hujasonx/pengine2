@@ -16,9 +16,9 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PBuilder;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 import lombok.AccessLevel;
 import lombok.Getter;

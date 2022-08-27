@@ -6,8 +6,8 @@ import static com.phonygames.cybertag.world.lasertag.LasertagRoomGenTileProcesso
 import static com.phonygames.cybertag.world.lasertag.LasertagRoomGenTileProcessor.otherTileForWall;
 
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.util.PIntMap3d;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PIntMap3d;
+import com.phonygames.pengine.util.collection.PList;
 
 /** Helper class to handle wall-scale wall generation. */
 public class LasertagRoomWallGen {

@@ -1,8 +1,6 @@
-package com.phonygames.pengine.util;
+package com.phonygames.pengine.util.collection;
 
 import com.badlogic.gdx.math.MathUtils;
-
-import java.lang.reflect.Array;
 
 public class PArrayUtils {
   public static float sum(float[] floats) {

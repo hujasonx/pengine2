@@ -5,7 +5,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.world.World;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.character.PLegPlacer;
-import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -22,7 +21,7 @@ import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.navmesh.PPath;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 public class HeadGunnerEntity extends CharacterEntity {
   /** The character controller should be reused between instances. */

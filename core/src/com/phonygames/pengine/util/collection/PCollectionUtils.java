@@ -1,4 +1,4 @@
-package com.phonygames.pengine.util;
+package com.phonygames.pengine.util.collection;
 
 import java.util.List;
 

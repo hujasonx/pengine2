@@ -12,7 +12,7 @@ import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
 
 import java.nio.Buffer;

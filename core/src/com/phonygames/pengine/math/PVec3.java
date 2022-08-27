@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.util.PFloatList;
+import com.phonygames.pengine.util.collection.PFloatList;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
 

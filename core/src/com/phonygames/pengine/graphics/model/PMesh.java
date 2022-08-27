@@ -8,8 +8,8 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.PCollectionUtils;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PCollectionUtils;
+import com.phonygames.pengine.util.collection.PList;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;

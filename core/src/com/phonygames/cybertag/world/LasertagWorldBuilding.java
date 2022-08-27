@@ -1,12 +1,5 @@
 package com.phonygames.cybertag.world;
 
-import com.phonygames.pengine.graphics.texture.PFloat4Texture;
-import com.phonygames.pengine.util.PList;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.experimental.Accessors;
-
 /**
  * A building in a level consisting of one or more rooms made of tiles arranged in a local axis-aligned grid.
  */

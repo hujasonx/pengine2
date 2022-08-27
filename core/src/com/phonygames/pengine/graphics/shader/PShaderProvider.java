@@ -2,9 +2,8 @@ package com.phonygames.pengine.graphics.shader;
 
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
-import com.phonygames.pengine.logging.PLog;
-import com.phonygames.pengine.util.PMap;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 import lombok.Getter;
 import lombok.NonNull;

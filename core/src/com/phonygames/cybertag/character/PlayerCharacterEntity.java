@@ -5,7 +5,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.gun.Gun;
 import com.phonygames.cybertag.gun.Pistol0;
 import com.phonygames.pengine.PAssetManager;
-import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.character.PLegPlacer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
@@ -25,7 +24,7 @@ import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
 import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 public class PlayerCharacterEntity extends CharacterEntity implements PCharacterCameraController.Delegate {
   private final PPhysicsCharacterController characterController;

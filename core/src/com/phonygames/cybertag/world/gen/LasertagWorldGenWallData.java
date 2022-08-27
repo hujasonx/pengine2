@@ -4,8 +4,8 @@ import android.support.annotation.Nullable;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.util.PArrayUtils;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PArrayUtils;
+import com.phonygames.pengine.util.collection.PList;
 
 public class LasertagWorldGenWallData {
     protected final int baseX, baseY, baseZ;

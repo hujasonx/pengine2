@@ -23,7 +23,7 @@ import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.navmesh.PPath;
 import com.phonygames.pengine.physics.PPhysicsCharacterController;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 public class NpcHumanoidEntity extends CharacterEntity {
   /** The character controller should be reused between instances. */

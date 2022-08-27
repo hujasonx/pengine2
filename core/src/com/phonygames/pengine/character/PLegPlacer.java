@@ -3,8 +3,6 @@ package com.phonygames.pengine.character;
 import android.support.annotation.NonNull;
 
 import com.phonygames.pengine.PEngine;
-import com.phonygames.pengine.graphics.PDebugRenderer;
-import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PParametricCurve;
@@ -15,7 +13,7 @@ import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
 import com.phonygames.pengine.physics.PPhysicsEngine;
 import com.phonygames.pengine.physics.PPhysicsRayCast;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;

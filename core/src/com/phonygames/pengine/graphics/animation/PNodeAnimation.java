@@ -10,7 +10,7 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PBuilder;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 
 import lombok.AccessLevel;
 import lombok.Getter;

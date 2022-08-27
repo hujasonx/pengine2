@@ -1,9 +1,11 @@
-package com.phonygames.pengine.util;
+package com.phonygames.pengine.util.collection;
 
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.StringBuilder;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.util.PDeepCopyable;
+import com.phonygames.pengine.util.PPool;
 
 import java.util.Iterator;
 

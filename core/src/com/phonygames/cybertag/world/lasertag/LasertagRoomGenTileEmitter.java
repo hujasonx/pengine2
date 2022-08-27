@@ -5,7 +5,7 @@ import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PModelGenTemplate;
 import com.phonygames.pengine.graphics.model.PModelGenTemplateOptions;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
 
 public class LasertagRoomGenTileEmitter {

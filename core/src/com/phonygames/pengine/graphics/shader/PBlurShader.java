@@ -5,7 +5,7 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 import com.phonygames.pengine.util.PStringUtils;
 
 /** Helper class for blurring RenderBuffers. */

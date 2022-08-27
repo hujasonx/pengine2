@@ -8,8 +8,8 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PList;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 import java.util.HashMap;
 import java.util.Map;

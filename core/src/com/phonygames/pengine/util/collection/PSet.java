@@ -1,7 +1,8 @@
-package com.phonygames.pengine.util;
+package com.phonygames.pengine.util.collection;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.util.PPool;
 
 import java.util.Collection;
 
@@ -33,7 +34,7 @@ public class PSet<E> extends PPooledIterable<E> {
                 1555588997, 1711147927, 1882262803, 2070489097};
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
-  private final PPool<PPooledIterable.PPoolableIterator<E>> iteratorPool =
+  private final PPool<PPoolableIterator<E>> iteratorPool =
       new PPool<PPooledIterable.PPoolableIterator<E>>() {
         @Override protected PPooledIterable.PPoolableIterator<E> newObject() {
           return new PSetIterator<>();

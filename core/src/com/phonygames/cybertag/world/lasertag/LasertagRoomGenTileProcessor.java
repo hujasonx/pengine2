@@ -4,7 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.util.PIntMap3d;
+import com.phonygames.pengine.util.collection.PIntMap3d;
 
 import lombok.val;
 

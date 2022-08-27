@@ -6,8 +6,8 @@ import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.collection.PList;
+import com.phonygames.pengine.util.collection.PMap;
 import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.val;

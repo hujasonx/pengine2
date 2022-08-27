@@ -13,10 +13,10 @@ import com.phonygames.pengine.physics.PPhysicsEngine;
 import com.phonygames.pengine.physics.PRagdollUtils;
 import com.phonygames.pengine.physics.PRigidBody;
 import com.phonygames.pengine.physics.PStaticBody;
-import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.collection.PList;
+import com.phonygames.pengine.util.collection.PMap;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 import lombok.AccessLevel;
 import lombok.Getter;

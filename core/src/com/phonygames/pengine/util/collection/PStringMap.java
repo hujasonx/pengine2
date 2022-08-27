@@ -1,4 +1,6 @@
-package com.phonygames.pengine.util;
+package com.phonygames.pengine.util.collection;
+
+import com.phonygames.pengine.util.PPool;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -3,16 +3,14 @@ package com.phonygames.pengine.graphics.material;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PTexture;
-import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 import com.phonygames.pengine.util.PStringUtils;
 
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute;

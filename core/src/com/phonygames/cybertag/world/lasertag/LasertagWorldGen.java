@@ -6,9 +6,9 @@ import com.phonygames.cybertag.world.World;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.navmesh.recast.PRecastMeshBuilder;
-import com.phonygames.pengine.util.PArrayUtils;
+import com.phonygames.pengine.util.collection.PArrayUtils;
 import com.phonygames.pengine.util.PBuilder;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 
 import org.recast4j.recast.geom.SimpleInputGeomProvider;
 

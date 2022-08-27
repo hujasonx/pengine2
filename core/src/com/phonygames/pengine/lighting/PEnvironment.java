@@ -13,7 +13,7 @@ import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.util.PSet;
+import com.phonygames.pengine.util.collection.PSet;
 
 import lombok.Getter;
 import lombok.Setter;

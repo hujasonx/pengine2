@@ -2,10 +2,8 @@ package com.phonygames.pengine.navmesh;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PDebugRenderer;
-import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.PList;
 
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;

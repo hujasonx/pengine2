@@ -1,6 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 
 public class LasertagBuildGenDoorProcessor {
   public static void processPossibleDoorsIntoAcutal(LasertagBuildingGen buildingGen) {

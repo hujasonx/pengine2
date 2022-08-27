@@ -3,8 +3,8 @@ package com.phonygames.pengine.graphics.model;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.collection.PList;
+import com.phonygames.pengine.util.collection.PMap;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
 

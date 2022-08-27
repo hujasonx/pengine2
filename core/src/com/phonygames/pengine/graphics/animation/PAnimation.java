@@ -3,9 +3,9 @@ package com.phonygames.pengine.graphics.animation;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.util.PBuilder;
-import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.collection.PMap;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 import lombok.Getter;
 import lombok.val;

@@ -12,7 +12,7 @@ import com.phonygames.pengine.math.PInt;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PDeepCopyable;
-import com.phonygames.pengine.util.PMap;
+import com.phonygames.pengine.util.collection.PMap;
 import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;

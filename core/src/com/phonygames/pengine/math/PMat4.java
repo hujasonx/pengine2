@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PBasic;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 import com.phonygames.pengine.util.PStringUtils;
 import com.phonygames.pengine.util.PWriteLockable;
 

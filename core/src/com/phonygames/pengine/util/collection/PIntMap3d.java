@@ -1,9 +1,10 @@
-package com.phonygames.pengine.util;
+package com.phonygames.pengine.util.collection;
 
 import android.support.annotation.Nullable;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.aabb.PIntAABB;
+import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,7 +30,7 @@ public class PIntMap3d<T> extends PPooledIterable<PIntMap3d.Entry<T>> {
       };
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   @Accessors(fluent = true)
-  private final PPool<PPooledIterable.PPoolableIterator<PIntMap3d.Entry<T>>> iteratorPool =
+  private final PPool<PPoolableIterator<Entry<T>>> iteratorPool =
       new PPool<PPooledIterable.PPoolableIterator<PIntMap3d.Entry<T>>>() {
         @Override protected Iterator<T> newObject() {
           return new Iterator<>();

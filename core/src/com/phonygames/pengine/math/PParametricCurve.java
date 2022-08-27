@@ -2,7 +2,7 @@ package com.phonygames.pengine.math;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PDebugRenderer;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
 
 import lombok.AccessLevel;

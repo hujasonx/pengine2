@@ -17,10 +17,10 @@ import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.util.PBuilder;
-import com.phonygames.pengine.util.PIntMap3d;
-import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PMap;
-import com.phonygames.pengine.util.PSet;
+import com.phonygames.pengine.util.collection.PIntMap3d;
+import com.phonygames.pengine.util.collection.PList;
+import com.phonygames.pengine.util.collection.PMap;
+import com.phonygames.pengine.util.collection.PSet;
 
 import lombok.val;
 

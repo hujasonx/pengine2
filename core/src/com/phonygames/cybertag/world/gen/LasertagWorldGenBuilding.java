@@ -5,8 +5,8 @@ import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec3;
-import com.phonygames.pengine.util.PArrayUtils;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PArrayUtils;
+import com.phonygames.pengine.util.collection.PList;
 
 public class LasertagWorldGenBuilding {
   protected final int index;

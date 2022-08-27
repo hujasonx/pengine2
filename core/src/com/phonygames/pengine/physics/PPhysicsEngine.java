@@ -17,8 +17,8 @@ import com.badlogic.gdx.physics.bullet.dynamics.btMultiBodyDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.util.PList;
-import com.phonygames.pengine.util.PSet;
+import com.phonygames.pengine.util.collection.PList;
+import com.phonygames.pengine.util.collection.PSet;
 
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -16,7 +16,7 @@ import com.phonygames.pengine.graphics.particles.PBillboardParticleSource;
 import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.navmesh.PTileCache;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
 
 public class World {

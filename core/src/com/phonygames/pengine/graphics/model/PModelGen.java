@@ -18,11 +18,11 @@ import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PPostableTask;
 import com.phonygames.pengine.util.PPostableTaskQueue;
-import com.phonygames.pengine.util.PStringMap;
+import com.phonygames.pengine.util.collection.PStringMap;
 import com.phonygames.pengine.util.PWindowedIntBuffer;
 
 import lombok.AccessLevel;

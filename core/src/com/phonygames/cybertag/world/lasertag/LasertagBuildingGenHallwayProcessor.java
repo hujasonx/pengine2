@@ -10,7 +10,7 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.util.PImplementsEquals;
-import com.phonygames.pengine.util.PList;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PSortableByScore;
 
 import lombok.val;
