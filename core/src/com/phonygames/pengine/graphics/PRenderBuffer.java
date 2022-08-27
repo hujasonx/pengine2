@@ -4,7 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Disposable;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.framebuffer.PFrameBuffer;
@@ -45,8 +47,14 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private float windowScale = 1;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final SpriteBatch spriteBatch;
+  private final OrthographicCamera orthoCamera;
 
   private PRenderBuffer() {
+    this.spriteBatch = new SpriteBatch();
+    this.orthoCamera = new OrthographicCamera();
   }
 
   @Override public void dispose() {
@@ -89,6 +97,10 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     }
     frameBuffer = frameBufferBuilder.build();
     frameBufferPrev = frameBufferBuilderPrev.build();
+    // Set the spritebatch.
+    this.orthoCamera.setToOrtho(false, desiredW, desiredH);
+    this.orthoCamera.update(true);
+    this.spriteBatch.setProjectionMatrix(this.orthoCamera.combined);
   }
 
   public Texture texture(int index) {

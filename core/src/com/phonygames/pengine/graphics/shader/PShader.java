@@ -25,6 +25,7 @@ import lombok.NonNull;
 import lombok.val;
 
 public class PShader implements Disposable, Comparable<PShader> {
+  public static final String GL_VERSION = "330";
   private static final String PSHADER_COMMENT_END = " */ ";
   private static final String PSHADER_COMMENT_START = "/** PSHADER ";
   private static final PFileHandleUtils.RecursiveLoadProcessor RECURSIVE_LOAD_PROCESSOR =
@@ -88,9 +89,9 @@ public class PShader implements Disposable, Comparable<PShader> {
 
   public void reloadFromSources(boolean logAlwaysIfSourcesChanged) {
     combinedStaticStringResult = null;
-    StringBuilder vertexStringBuilder = new StringBuilder("#version 330\n// VERTEX SHADER\n").append(this.prefix);
+    StringBuilder vertexStringBuilder = new StringBuilder("#version " + GL_VERSION + "\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder =
-        new StringBuilder("#version 330\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
+        new StringBuilder("#version " + GL_VERSION + "\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
     if (rawVSCode != null) {
       vertexStringBuilder.append(PFileHandleUtils.loadRecursive(rawVSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR));
     } else {

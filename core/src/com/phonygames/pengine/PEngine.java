@@ -97,6 +97,10 @@ public class PEngine extends ApplicationAdapter {
     frameCount++;
     processLogicUpdateForFrame();
     frameUpdate();
+    debugInputs();
+  }
+
+  private void debugInputs() {
     // Ctrl + S + R to reload all shaders.
     if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyPressed(Input.Keys.S) &&
         Gdx.input.isKeyJustPressed(Input.Keys.R)) {
@@ -119,7 +123,6 @@ public class PEngine extends ApplicationAdapter {
     if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.INSERT)) {
       System.gc();
     }
-
   }
 
   private void processLogicUpdateForFrame() {
