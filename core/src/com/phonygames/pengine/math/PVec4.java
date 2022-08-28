@@ -8,15 +8,22 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.utils.NumberUtils;
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.util.collection.PFloatList;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
+import com.phonygames.pengine.util.PWriteLockable;
+import com.phonygames.pengine.util.collection.PFloatList;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
-public class PVec4 extends PVec<PVec4> {
+public class PVec4 extends PVec<PVec4> implements PWriteLockable<PVec4> {
+  // #pragma mark - PWriteLockable
+  @Getter
+  @Setter
+  private boolean lockWriting = false;
+  // #pragma end - PWriteLockable
   public static final PVec4 ONE = new PVec4().set(1, 1, 1, 1);
   public static final PVec4 REAL = new PVec4().set(0, 0, 0, 1);
   public static final PVec4 X = new PVec4().set(1, 0, 0, 0);
@@ -40,45 +47,20 @@ public class PVec4 extends PVec<PVec4> {
     return getStaticPool().obtain();
   }
 
+  public PVec4 a(float a) {
+    this.forWriting();
+    backingQuaterion.w = a;
+    return this;
+  }
+
   @Override public PVec4 add(@NonNull PVec4 other) {
+    this.forWriting();
     backingQuaterion.add(other.backingQuaterion);
     return this;
   }
 
-  /** Packs the color components into a 32-bit integer with the format ABGR.
-   * @return the packed color as a 32-bit int. */
-  public int toIntBits () {
-    return ((int)(255 * a()) << 24) | ((int)(255 * b()) << 16) | ((int)(255 * g()) << 8) | ((int)(255 * r()));
-  }
-
-  public float[] emit(float[] out) {
-    PAssert.isTrue(out.length == 4);
-    out[0] = backingQuaterion.x;
-    out[1] = backingQuaterion.y;
-    out[2] = backingQuaterion.z;
-    out[3] = backingQuaterion.w;
-    return out;
-  }
-
-  public float[] emit(float[] out, int offset) {
-    PAssert.isTrue(out.length == 4);
-    out[offset + 0] = backingQuaterion.x;
-    out[offset + 1] = backingQuaterion.y;
-    out[offset + 2] = backingQuaterion.z;
-    out[offset + 3] = backingQuaterion.w;
-    return out;
-  }
-
-  public PFloatList emit(PFloatList out, int offset) {
-    PAssert.isTrue(out.size() >= offset + 4);
-    out.set(offset + 0, backingQuaterion.x);
-    out.set(offset + 1, backingQuaterion.y);
-    out.set(offset + 2, backingQuaterion.z);
-    out.set(offset + 3, backingQuaterion.w);
-    return out;
-  }
-
   @Override public PVec4 add(@NonNull PVec4 other, float scl) {
+    this.forWriting();
     backingQuaterion.x += other.backingQuaterion.x * scl;
     backingQuaterion.y += other.backingQuaterion.y * scl;
     backingQuaterion.z += other.backingQuaterion.z * scl;
@@ -154,6 +136,7 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   @Override public PVec4 mul(@NonNull PVec4 other) {
+    this.forWriting();
     backingQuaterion.x *= other.backingQuaterion.x;
     backingQuaterion.y *= other.backingQuaterion.y;
     backingQuaterion.z *= other.backingQuaterion.z;
@@ -162,15 +145,18 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   @Override public PVec4 nor() {
+    this.forWriting();
     backingQuaterion.nor();
     return this;
   }
 
   @Override public PVec4 setZero() {
+    this.forWriting();
     return set(0, 0, 0, 0);
   }
 
   @Override public PVec4 roundComponents(float factor) {
+    this.forWriting();
     this.backingQuaterion.x = (Math.round(this.backingQuaterion.x * factor) / factor);
     this.backingQuaterion.y = (Math.round(this.backingQuaterion.y * factor) / factor);
     this.backingQuaterion.z = (Math.round(this.backingQuaterion.z * factor) / factor);
@@ -179,6 +165,7 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   @Override public PVec4 scl(float scl) {
+    this.forWriting();
     backingQuaterion.x *= scl;
     backingQuaterion.y *= scl;
     backingQuaterion.z *= scl;
@@ -193,6 +180,7 @@ public class PVec4 extends PVec<PVec4> {
    * @return caller for chaining
    */
   @Override public PVec4 sub(@NonNull PVec4 other) {
+    this.forWriting();
     backingQuaterion.x -= other.backingQuaterion.x;
     backingQuaterion.y -= other.backingQuaterion.y;
     backingQuaterion.z -= other.backingQuaterion.z;
@@ -201,6 +189,7 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   public PVec4 set(float x, float y, float z, float w) {
+    this.forWriting();
     backingQuaterion.set(x, y, z, w);
     return this;
   }
@@ -221,44 +210,41 @@ public class PVec4 extends PVec<PVec4> {
     return backingQuaterion.w;
   }
 
-  public PVec4 r(float r) {
-    backingQuaterion.x = r;
-    return this;
-  }
-
-  public PVec4 g(float g) {
-    backingQuaterion.y = g;
-    return this;
+  public PVec3 applyAsQuat(PVec3 out) {
+    backingQuaterion.transform(out.backingVec3());
+    return out;
   }
 
   public PVec4 b(float b) {
+    this.forWriting();
     backingQuaterion.z = b;
     return this;
   }
 
-  public PVec4 a(float a) {
-    backingQuaterion.w = a;
-    return this;
+  public float[] emit(float[] out) {
+    PAssert.isTrue(out.length == 4);
+    out[0] = backingQuaterion.x;
+    out[1] = backingQuaterion.y;
+    out[2] = backingQuaterion.z;
+    out[3] = backingQuaterion.w;
+    return out;
   }
 
-  public float r() {
-    return backingQuaterion.x;
+  public float[] emit(float[] out, int offset) {
+    PAssert.isTrue(out.length == 4);
+    out[offset + 0] = backingQuaterion.x;
+    out[offset + 1] = backingQuaterion.y;
+    out[offset + 2] = backingQuaterion.z;
+    out[offset + 3] = backingQuaterion.w;
+    return out;
   }
 
-  public float g() {
-    return backingQuaterion.y;
-  }
-
-  public float b() {
-    return backingQuaterion.z;
-  }
-
-  public float a() {
-    return backingQuaterion.w;
-  }
-
-  public PVec3 applyAsQuat(PVec3 out) {
-    backingQuaterion.transform(out.backingVec3());
+  public PFloatList emit(PFloatList out, int offset) {
+    PAssert.isTrue(out.size() >= offset + 4);
+    out.set(offset + 0, backingQuaterion.x);
+    out.set(offset + 1, backingQuaterion.y);
+    out.set(offset + 2, backingQuaterion.z);
+    out.set(offset + 3, backingQuaterion.w);
     return out;
   }
 
@@ -271,11 +257,18 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  public PVec4 g(float g) {
+    this.forWriting();
+    backingQuaterion.y = g;
+    return this;
+  }
+
   public float getAxisAngle(PVec3 outAxis) {
     return backingQuaterion.getAxisAngleRad(outAxis.backingVec3());
   }
 
   public PVec4 invQuat() {
+    this.forWriting();
     float d = this.dot(this);
     backingQuaterion.x /= -d;
     backingQuaterion.y /= -d;
@@ -285,6 +278,7 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   @Override public PVec4 lerp(PVec4 other, float mix) {
+    this.forWriting();
     backingQuaterion.x += (other.backingQuaterion.x - backingQuaterion.x) * mix;
     backingQuaterion.y += (other.backingQuaterion.y - backingQuaterion.y) * mix;
     backingQuaterion.z += (other.backingQuaterion.z - backingQuaterion.z) * mix;
@@ -293,6 +287,7 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   public PVec4 mul(@NonNull PMat4 mat4) {
+    this.forWriting();
     float[] l_mat = mat4.values();
     return this.set(backingQuaterion.x * l_mat[Matrix4.M00] + backingQuaterion.y * l_mat[Matrix4.M01] +
                     backingQuaterion.z * l_mat[Matrix4.M02] + backingQuaterion.w * l_mat[Matrix4.M03],
@@ -305,16 +300,25 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   public PVec4 mulQuat(PVec4 other) {
+    this.forWriting();
     backingQuaterion.mul(other.backingQuaterion);
     return this;
   }
 
+  public PVec4 r(float r) {
+    this.forWriting();
+    backingQuaterion.x = r;
+    return this;
+  }
+
   public PVec4 set(@NonNull Quaternion quaternion) {
+    this.forWriting();
     backingQuaterion.set(quaternion);
     return this;
   }
 
   public PVec4 setHSVA(float hue, float saturation, float value, float a) {
+    this.forWriting();
     hue = hue % 1;
     int h = (int) (hue * 6);
     float f = hue * 6 - h;
@@ -349,6 +353,7 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   public PVec4 setIdentityQuaternion() {
+    this.forWriting();
     backingQuaterion.idt();
     return this;
   }
@@ -358,6 +363,7 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   public PVec4 setToRotation(float axisX, float axisY, float axisZ, float rad) {
+    this.forWriting();
     PMat4 temp = PMat4.obtain().setToRotation(axisX, axisY, axisZ, rad);
     backingQuaterion.setFromMatrix(temp.getBackingMatrix4());
     temp.free();
@@ -369,16 +375,19 @@ public class PVec4 extends PVec<PVec4> {
    * @return
    */
   public PVec4 setToRotationEuler(PVec3 in) {
+    this.forWriting();
     backingQuaterion.setEulerAnglesRad(in.x(), in.y(), in.z());
     return this;
   }
 
   public PVec4 setToRotationEuler(float yaw, float pitch, float roll) {
+    this.forWriting();
     backingQuaterion.setEulerAnglesRad(yaw, pitch, roll);
     return this;
   }
 
   public PVec4 slerp(PVec4 other, float mix) {
+    this.forWriting();
     backingQuaterion.slerp(other.backingQuaterion, mix);
     return this;
   }
@@ -388,6 +397,7 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   @Override public PVec4 set(@NonNull PVec4 other) {
+    this.forWriting();
     this.backingQuaterion.set(other.backingQuaterion);
     return this;
   }
@@ -419,17 +429,46 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   public PVec4 conjugate() {
+    this.forWriting();
     backingQuaterion.conjugate();
     return this;
   }
 
-  /** Packs the color components into a 32-bit integer with the format ABGR and then converts it to a float. Alpha is compressed
-   * from 0-255 to use only even numbers between 0-254 to avoid using float bits in the NaN range (see
-   * {@link NumberUtils#intToFloatColor(int)}). Converting a color to a float and back can be lossy for alpha.
-   * @return the packed color as a 32-bit float */
-  public float toFloatBits () {
-    int color = ((int)(255 * a()) << 24) | ((int)(255 * b()) << 16) | ((int)(255 * g()) << 8) | ((int)(255 * r()));
+  /**
+   * Packs the color components into a 32-bit integer with the format ABGR and then converts it to a float. Alpha is
+   * compressed from 0-255 to use only even numbers between 0-254 to avoid using float bits in the NaN range (see {@link
+   * NumberUtils#intToFloatColor(int)}). Converting a color to a float and back can be lossy for alpha.
+   *
+   * @return the packed color as a 32-bit float
+   */
+  public float toFloatBits() {
+    int color = ((int) (255 * a()) << 24) | ((int) (255 * b()) << 16) | ((int) (255 * g()) << 8) | ((int) (255 * r()));
     return NumberUtils.intToFloatColor(color);
+  }
+
+  public float a() {
+    return backingQuaterion.w;
+  }
+
+  public float b() {
+    return backingQuaterion.z;
+  }
+
+  public float g() {
+    return backingQuaterion.y;
+  }
+
+  public float r() {
+    return backingQuaterion.x;
+  }
+
+  /**
+   * Packs the color components into a 32-bit integer with the format ABGR.
+   *
+   * @return the packed color as a 32-bit int.
+   */
+  public int toIntBits() {
+    return ((int) (255 * a()) << 24) | ((int) (255 * b()) << 16) | ((int) (255 * g()) << 8) | ((int) (255 * r()));
   }
 
   @Override public String toString() {
@@ -441,21 +480,25 @@ public class PVec4 extends PVec<PVec4> {
   }
 
   public PVec4 w(float w) {
+    this.forWriting();
     this.backingQuaterion.w = w;
     return this;
   }
 
   public PVec4 x(float x) {
+    this.forWriting();
     this.backingQuaterion.x = x;
     return this;
   }
 
   public PVec4 y(float y) {
+    this.forWriting();
     this.backingQuaterion.y = y;
     return this;
   }
 
   public PVec4 z(float z) {
+    this.forWriting();
     this.backingQuaterion.z = z;
     return this;
   }

@@ -141,7 +141,7 @@ public class PEngine extends ApplicationAdapter {
     String fontFileName = "DosisSemibold-pxJd.ttf";
     DEBUG_fGen = new PFreetypeFontGenerator(fontName, Gdx.files.absolute("D:/Coding/pengine2/assets-raw/freetype/" + fontFileName), 750);
     DEBUG_sdfGen = new PSDFGenerator(1024);
-    DEBUG_fGen.gen('g', DEBUG_sdfGen,.1f, 3);
+    DEBUG_fGen.gen('g', DEBUG_sdfGen,.1f, 8);
     DEBUG_sdfGen.emitToFile(Gdx.files.local("engine/font/fontsdf.png"));
   }
 

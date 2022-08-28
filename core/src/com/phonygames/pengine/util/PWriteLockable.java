@@ -12,8 +12,9 @@ public interface PWriteLockable<T extends PWriteLockable> {
   }
   boolean isLockWriting();
   void setLockWriting(boolean lockWriting);
-  default void lockWriting() {
+  default T lockWriting() {
     setLockWriting(true);
+    return (T)this;
   }
   default void unlockWriting() {
     setLockWriting(false);

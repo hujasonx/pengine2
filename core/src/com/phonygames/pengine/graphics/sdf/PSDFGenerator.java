@@ -29,7 +29,7 @@ public class PSDFGenerator {
   // 5 floats per vertex: x, y, colPacked, u, v.
   private final float[] symbolVertices = new float[20];
   private boolean full = false;
-  private Channel lastDrawnChannel = Channel.R;
+  private Channel lastDrawnChannel = Channel.A; // Start with A, then go to R. This allows there to be opaque stuff.
   private PStringMap<SymbolProperties> symbolProperties = new PStringMap<>();
 
   public PSDFGenerator(final int sideLength) {
@@ -38,7 +38,7 @@ public class PSDFGenerator {
         new PRenderBuffer.Builder().setStaticSize(sideLength, sideLength).addFloatAttachment("sdf").build();
     this.shader = new PShader("", renderBuffer.fragmentLayout(), PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
                               Gdx.files.local("engine/shader/spritebatch/default.vert.glsl"),
-                              Gdx.files.local("engine/shader/sdfgen/sdfgen.frag.glsl"), new String[] {"sdf"});
+                              Gdx.files.local("engine/shader/sdfgen/sdfgen.frag.glsl"), new String[]{"sdf"});
   }
 
   /**
@@ -65,16 +65,16 @@ public class PSDFGenerator {
     if (symbolProperties.sheetTopY() >= sideLength) {
       // Move to the next channel.
       switch (outputChannel) {
-        case R:
-          outputChannel = Channel.G;
-          break;
-        case G:
+        case A:
           outputChannel = Channel.B;
           break;
         case B:
-          outputChannel = Channel.A;
+          outputChannel = Channel.G;
           break;
-        case A:
+        case G:
+          outputChannel = Channel.R;
+          break;
+        case R:
           // Filled!
           full = true;
           return null;
@@ -91,6 +91,11 @@ public class PSDFGenerator {
     curNextY[outputChannel.index()] =
         Math.max(curNextY[outputChannel.index()], symbolProperties.sheetY + symbolProperties.sheetHeight);
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      shader.set(UniformConstants.Vec4.u_inputUVOS, texture.uvOS());
+      shader.set(UniformConstants.Vec1.u_sheetPadding, sheetPadding);
+      shader.set(UniformConstants.Vec1.u_scale, scale);
+      shader.set(UniformConstants.Vec4.u_sheetPixelXYWH, symbolProperties.sheetX, symbolProperties.sheetY,
+                 symbolProperties.sheetWidth, symbolProperties.sheetHeight);
       renderBuffer.spriteBatch().enableBlending(true);
       renderBuffer.spriteBatch().draw(texture.getBackingTexture(), pool.vec4().set(0, 0, 1, 1), symbolProperties.sheetX,
                                       symbolProperties.sheetY, outputChannel.value(),
@@ -193,8 +198,14 @@ public class PSDFGenerator {
   }
 
   public static class UniformConstants {
+    public static class Vec1 {
+      public static String u_sheetPadding = "u_sheetPadding";
+      public static String u_scale = "u_scale";
+    }
+
     public static class Vec4 {
       public static String u_inputUVOS = "u_inputUVOS";
+      public static String u_sheetPixelXYWH = "u_sheetPixelXYWH";
     }
   }
 }

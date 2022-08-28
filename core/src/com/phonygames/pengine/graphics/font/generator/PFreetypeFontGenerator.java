@@ -76,19 +76,19 @@ public class PFreetypeFontGenerator {
     glyphData.c = c;
     // Render the glyph.
     renderBuffer.begin();
-    PGLUtils.clearScreen(0, 0, 0,1);
+    PGLUtils.clearScreen(0, 0, 0, 1);
     layout.setText(font, "" + c);
     font.getCache().clear();
     font.getCache().setColor(Color.WHITE);
     font.getCache().addText(layout, GLYPH_OFFSET_X, GLYPH_TEX_SIZE - GLYPH_OFFSET_Y);
     spriteBatch.begin();
     final int cap = GLYPH_TEX_SIZE - GLYPH_OFFSET_Y;
-    final int baseline = cap - (int)font.getCapHeight();
+    final int baseline = cap - (int) font.getCapHeight();
     final int glyphLeft = GLYPH_OFFSET_X;
     final int glyphRight = glyphLeft + glyph.width;
-    final int glyphBottom = cap + glyph.yoffset + (int)font.getAscent();
+    final int glyphBottom = cap + glyph.yoffset + (int) font.getAscent();
     final int glyphTop = glyphBottom + glyph.height;
-    final int descent = baseline + (int)font.getDescent();
+    final int descent = baseline + (int) font.getDescent();
     final int advancedX = glyphLeft + glyph.xadvance;
     // Cap Height.
     spriteBatch.setColor(Color.YELLOW);
@@ -118,7 +118,9 @@ public class PFreetypeFontGenerator {
     spriteBatch.end();
     renderBuffer.end();
     texture.set(renderBuffer.texture());
-    texture.uvOS().set(0, 0, 1, 1);
+    texture.uvOS().set(((float) glyphLeft) / GLYPH_TEX_SIZE, ((float) glyphBottom) / GLYPH_TEX_SIZE,
+                       ((float) glyphRight - glyphLeft) / GLYPH_TEX_SIZE,
+                       ((float) glyphTop - glyphBottom) / GLYPH_TEX_SIZE);
     sdfGenerator.begin();
     glyphData.symbolProperties =
         sdfGenerator.addSymbol(fontName + "_" + fontSize + "_" + (int) c + "_" + c, texture, scale, sheetPadding);

@@ -106,8 +106,6 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     return this;
   }
 
-  @Override public void lockWriting() {this.lockWriting = true;}
-
   public PMat4 mul(PMat4 mat4, float a) {
     mat4.mul(this, a);
     return mat4;
