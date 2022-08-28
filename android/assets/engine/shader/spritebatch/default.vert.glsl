@@ -1,10 +1,8 @@
-#include <engine/shader/header/shared>
+#include <engine/shader/header/spritebatch.vert>
 
-in vec2 a_pos;
-uniform mat4 u_viewProjTransform;
 
 void main() {
+    #include <engine/shader/start/spritebatch.vert>
 
-    gl_Position = u_viewProjTransform * vec4(a_pos, 0.0, 1.0);
-
+    #include <engine/shader/end/spritebatch.vert>
 }

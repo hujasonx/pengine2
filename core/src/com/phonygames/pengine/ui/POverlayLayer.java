@@ -17,9 +17,10 @@ public class POverlayLayer {
 
   public POverlayLayer() {
     renderBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("color").build();
-    spritebatchShader = new PShader("", renderBuffer.fragmentLayout(), PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
-                                    Gdx.files.local("engine/shader/spritebatch/default.vert.glsl"),
-                                    Gdx.files.local("engine/shader/spritebatch/default.frag.glsl"), null);
+    spritebatchShader =
+        new PShader("#define pos2dFlag\n", renderBuffer.fragmentLayout(), PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
+                    Gdx.files.local("engine/shader/spritebatch/default.vert.glsl"),
+                    Gdx.files.local("engine/shader/spritebatch/default.frag.glsl"), null);
   }
 
   public Texture getTexture() {
