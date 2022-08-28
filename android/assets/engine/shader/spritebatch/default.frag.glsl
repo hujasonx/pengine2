@@ -2,8 +2,6 @@
 
 #include <engine/shader/header/spritebatch.frag>
 
-#include <engine/shader/header/texture2D>[texture0]
-
 void main() {
     #include <engine/shader/start/spritebatch.frag>
 
