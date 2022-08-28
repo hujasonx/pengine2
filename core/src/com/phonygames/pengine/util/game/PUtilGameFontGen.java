@@ -1,18 +1,16 @@
 package com.phonygames.pengine.util.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PSpriteBatch;
-import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.font.PFont;
 import com.phonygames.pengine.graphics.font.PFreetypeFontGenerator;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.sdf.PSDFGenerator;
 import com.phonygames.pengine.graphics.sdf.PSDFSheet;
 import com.phonygames.pengine.graphics.shader.PShader;
-import com.phonygames.pengine.graphics.texture.PTexture;
+import com.phonygames.pengine.math.PVec4;
 
 public class PUtilGameFontGen {
   PFreetypeFontGenerator DEBUG_fGen;
@@ -51,12 +49,12 @@ public class PUtilGameFontGen {
     String fontName = "Dosis";
     PFont font = PFont.fromFileHandle(Gdx.files.local("engine/font/" + fontName + "." + PFont.FILE_EXTENSION));
     String sdfKey = font.glyphData('c').sdfKey();
-
-    sdfSB.draw(fontSDF.get(sdfKey), .5f, .1f, 0, 0, PColor.WHITE, PColor.RED, 100, 0, PColor.WHITE, PColor.RED, 100,
-               100, PColor.WHITE, PColor.RED, 0, 100, PColor.WHITE, PColor.RED);
+    PVec4 baseColor = PVec4.obtain().set(1, 1, 1, 1);
+    PVec4 borderColor = PVec4.obtain().set(.8f, .8f, .8f, 1);
+    sdfSB.draw(fontSDF.get(sdfKey), .5f, .3f, 0, 0, baseColor, borderColor, 100, 0, baseColor, borderColor, 100, 100,
+               baseColor, borderColor, 0, 100, baseColor, borderColor);
     sdfSB.end();
     renderTextShader.end();
-
     testFontRenderBuffer.end();
     testFontRenderBuffer.emitPNG(Gdx.files.absolute("D:/testfont.png"), 0);
     System.out.println(font);

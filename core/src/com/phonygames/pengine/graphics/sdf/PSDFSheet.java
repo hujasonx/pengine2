@@ -54,6 +54,7 @@ public class PSDFSheet {
           break;
         case IMAGE_SRC:
           Texture t = new Texture(fileHandle.parent().child(split[1]));
+          t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
           sheet.texture.set(t);
           break;
         case Symbol.SYMBOL:
