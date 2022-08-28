@@ -34,32 +34,32 @@ public class PUtilGameFontGen {
   }
 
   protected void testRenderFont() {
+    PSpriteBatch.PSDFSpriteBatch sdfSB = PSpriteBatch.PSDFSpriteBatch.staticBatch();
     PRenderBuffer testFontRenderBuffer =
         new PRenderBuffer.Builder().setStaticSize(512, 512).addFloatAttachment("color").build();
     testFontRenderBuffer.begin();
-    testFontRenderBuffer.prepSpriteBatchForRender(PSpriteBatch.PGdxSpriteBatch.staticBatch());
+    testFontRenderBuffer.prepSpriteBatchForRender(sdfSB);
     PShader renderTextShader = new PShader("#define pos2dFlag\n", testFontRenderBuffer.fragmentLayout(),
                                            PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
-                                           Gdx.files.local("engine/shader/spritebatch/default.vert.glsl"),
+                                           Gdx.files.local("engine/shader/sdf/sdf.vert.glsl"),
                                            Gdx.files.local("engine/shader/sdf/sdf.frag.glsl"), new String[]{"color"});
-    PSpriteBatch.PGdxSpriteBatch.staticBatch().setShader(renderTextShader);
-    PTexture texture = new PTexture();
-    Texture t = new Texture(Gdx.files.internal("engine/font/fontsdfPSDF.png"));
-    t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-    texture.set(t);
-    PSpriteBatch.PGdxSpriteBatch.staticBatch().begin();
-    renderTextShader.start(PSpriteBatch.PGdxSpriteBatch.staticBatch().renderContext());
-    float drawScale = 10;
-    PSpriteBatch.PGdxSpriteBatch.staticBatch()
-                        .draw(texture, 0, 512 * drawScale, PColor.WHITE, 512 * drawScale, 512 * drawScale, PColor.WHITE,
-                              512 * drawScale, 0, PColor.WHITE, 0, 0, PColor.WHITE);
-    PSpriteBatch.PGdxSpriteBatch.staticBatch().end();
-    renderTextShader.end();
-    testFontRenderBuffer.end();
-    testFontRenderBuffer.emitPNG(Gdx.files.absolute("D:/testfont.png"), 0);
+    sdfSB.begin();
+    sdfSB.enableBlending(false);
+    sdfSB.setShader(renderTextShader);
+    renderTextShader.start(sdfSB.renderContext());
     PSDFSheet fontSDF = PSDFSheet.fromFileHandle(Gdx.files.local("engine/font/fontsdf." + PSDFSheet.FILE_EXTENSION));
     String fontName = "Dosis";
     PFont font = PFont.fromFileHandle(Gdx.files.local("engine/font/" + fontName + "." + PFont.FILE_EXTENSION));
+    String sdfKey = font.glyphData('c').sdfKey();
+
+    sdfSB.draw(fontSDF.get(sdfKey), .5f, .1f, 0, 0, PColor.WHITE, PColor.RED, 100, 0, PColor.WHITE, PColor.RED, 100,
+               100, PColor.WHITE, PColor.RED, 0, 100, PColor.WHITE, PColor.RED);
+    sdfSB.end();
+    renderTextShader.end();
+
+    testFontRenderBuffer.end();
+    testFontRenderBuffer.emitPNG(Gdx.files.absolute("D:/testfont.png"), 0);
     System.out.println(font);
+    PApplicationWindow.drawTextureToScreen(testFontRenderBuffer.texture());
   }
 }

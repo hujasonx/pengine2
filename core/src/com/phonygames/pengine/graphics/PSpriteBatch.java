@@ -2,10 +2,12 @@ package com.phonygames.pengine.graphics;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.math.Matrix4;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.sdf.PSDFSheet;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.math.PMat4;
@@ -88,7 +90,6 @@ public abstract class PSpriteBatch {
     ((Buffer) mesh.getIndicesBuffer()).position(0);
     ((Buffer) mesh.getIndicesBuffer()).limit(numQueuedSprites * SHORTS_PER_SPRITE);
     if (shader != null) {
-      // Bind the textures, which should be blank right now.
       texture0.applyShaderWithUniform(UniformConstants.Sampler2D.u_texture0, shader);
       shader.set(UniformConstants.Mat4.u_viewProjTransform, projectionMatrix);
       mesh.glRenderInstanced(shader, 1);
@@ -205,6 +206,88 @@ public abstract class PSpriteBatch {
       vertices[vIndex++] = uvOS.x();
       vertices[vIndex++] = uvOS.y() + uvOS.w();
       vertices[vIndex++] = colPacked01.toFloatBits();
+      numQueuedSprites++;
+    }
+  }
+
+  /**
+   * a_pos (2d) a_uv0, a_channel (ColorPacked) a_threshold (float) : above this threshold will be rendered.
+   * a_borderThresholdInwardsOffset (float) : the border threshold inward offset. Will be subtracted. a_baseColor
+   * (ColorPacked) a_borderColor (ColorPacked)
+   */
+  public static class PSDFSpriteBatch extends PSpriteBatch {
+    @Getter(value = AccessLevel.PUBLIC, lazy = true)
+    @Accessors(fluent = true)
+    private static final PSDFSpriteBatch staticBatch = new PSDFSpriteBatch(1000);
+
+    public PSDFSpriteBatch(int capacity) {
+      super(capacity, new PVertexAttributes(
+          new VertexAttribute[]{PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos2d),
+                                PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.uv[0]),
+                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_channel"),
+                                PVertexAttributes.Attribute.genGenericAttribute("a_threshold", 1),
+                                PVertexAttributes.Attribute.genGenericAttribute("a_borderThresholdInwardsOffset", 1),
+                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_baseColor"),
+                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_borderColor"),}));
+    }
+
+    public void draw(PSDFSheet.Symbol symbol, float threshold, float borderThresholdInwardOffset, float x00, float y00,
+                     PVec4 baseColPacked00, PVec4 borderColPacked00, float x10, float y10, PVec4 baseColPacked10,
+                     PVec4 borderColPacked10, float x11, float y11, PVec4 baseColPacked11, PVec4 borderColPacked11,
+                     float x01, float y01, PVec4 baseColPacked01, PVec4 borderColPacked01) {
+      if (numQueuedSprites >= capacity - 1) {
+        flush();
+      }
+      if (this.texture0.getBackingTexture() != symbol.sheet().texture().getBackingTexture()) {
+        // Bind the new texture if needed.
+        flush();
+        // Don't copy over the uvOS, since that will be set via vertex attributes.
+        this.texture0.setBackingTexture(symbol.sheet().texture().getBackingTexture());
+      }
+      int vIndex = numQueuedSprites * floatsPerSprite;
+      float channelFloatBits = symbol.channel().value().toFloatBits();
+      PVec4 uvOS = PVec4.obtain();
+      uvOS.set(((float) symbol.sheetX()) / symbol.sheet().texture().width(),
+               1 - ((float) symbol.sheetY()) / symbol.sheet().texture().height(),
+               ((float) symbol.sheetWidth()) / symbol.sheet().texture().width(),
+               -((float) symbol.sheetHeight()) / symbol.sheet().texture().height());
+      vertices[vIndex++] = x00;
+      vertices[vIndex++] = y00;
+      vertices[vIndex++] = uvOS.x();
+      vertices[vIndex++] = uvOS.y();
+      vertices[vIndex++] = channelFloatBits;
+      vertices[vIndex++] = threshold;
+      vertices[vIndex++] = borderThresholdInwardOffset;
+      vertices[vIndex++] = baseColPacked00.toFloatBits();
+      vertices[vIndex++] = borderColPacked00.toFloatBits();
+      vertices[vIndex++] = x10;
+      vertices[vIndex++] = y10;
+      vertices[vIndex++] = uvOS.x() + uvOS.z();
+      vertices[vIndex++] = uvOS.y();
+      vertices[vIndex++] = channelFloatBits;
+      vertices[vIndex++] = threshold;
+      vertices[vIndex++] = borderThresholdInwardOffset;
+      vertices[vIndex++] = baseColPacked10.toFloatBits();
+      vertices[vIndex++] = borderColPacked10.toFloatBits();
+      vertices[vIndex++] = x11;
+      vertices[vIndex++] = y11;
+      vertices[vIndex++] = uvOS.x() + uvOS.z();
+      vertices[vIndex++] = uvOS.y() + uvOS.w();
+      vertices[vIndex++] = channelFloatBits;
+      vertices[vIndex++] = threshold;
+      vertices[vIndex++] = borderThresholdInwardOffset;
+      vertices[vIndex++] = baseColPacked11.toFloatBits();
+      vertices[vIndex++] = borderColPacked11.toFloatBits();
+      vertices[vIndex++] = x01;
+      vertices[vIndex++] = y01;
+      vertices[vIndex++] = uvOS.x();
+      vertices[vIndex++] = uvOS.y() + uvOS.w();
+      vertices[vIndex++] = channelFloatBits;
+      vertices[vIndex++] = threshold;
+      vertices[vIndex++] = borderThresholdInwardOffset;
+      vertices[vIndex++] = baseColPacked01.toFloatBits();
+      vertices[vIndex++] = borderColPacked01.toFloatBits();
+      uvOS.free();
       numQueuedSprites++;
     }
   }

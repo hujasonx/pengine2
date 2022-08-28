@@ -26,6 +26,10 @@ public class PFont {
   protected float spaceXAdvance, capHeight, ascent, descent, lineHeight, median;
   private GlyphData[] glyphData = new GlyphData[MAX_GLYPHS];
 
+  public GlyphData glyphData(int c) {
+    return glyphData[c];
+  }
+
   protected PFont() {
   }
 
@@ -137,7 +141,7 @@ public class PFont {
       builder.xAdvance(Integer.parseInt(split[5]));
       builder.xOffset(Integer.parseInt(split[6]));
       builder.yOffset(Integer.parseInt(split[7]));
-      return builder().build();
+      return builder.build();
     }
 
     public String toString() {

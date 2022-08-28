@@ -19,11 +19,11 @@ import lombok.val;
 
 public class PVertexAttributes {
   @Getter
-  /** Pos, nor, uv, col */ private static PVertexAttributes POS_NOR_UV0_COL0;
-  @Getter
   private static PVertexAttributes PHYSICS = new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position()});
   @Getter
   private static PVertexAttributes POS, POS_NOR_UV0_UV1, POS_UV0_COL0, POS_NOR_UV0, POS2D_UV0_COLPACKED0;
+  @Getter
+  /** Pos, nor, uv, col */ private static PVertexAttributes POS_NOR_UV0_COL0;
   @Getter
   private final VertexAttributes backingVertexAttributes;
   //  private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
@@ -111,6 +111,14 @@ public class PVertexAttributes {
   public static final class Attribute {
     private static final PStringMap<VertexAttribute> list = new PStringMap<>();
 
+    public static VertexAttribute genGenericAttribute(String alias, int numComponents) {
+      return new VertexAttribute(0 /* unused*/, numComponents, alias);
+    }
+
+    public static VertexAttribute genGenericColorPackedAttribute(String alias) {
+      return new VertexAttribute(VertexAttributes.Usage.ColorPacked /* unused*/, 4, alias);
+    }
+
     private static void init() {
       registerAttribute(Keys.pos, Keys.pos, 3, VertexAttributes.Usage.Position);
       registerAttribute(Keys.pos2d, Keys.pos, 2, VertexAttributes.Usage.Position);
@@ -147,10 +155,10 @@ public class PVertexAttributes {
                                 Attribute.get(Attribute.Keys.colPacked[0])});
     }
 
-    private static void registerAttribute(String id, String shaderId, int numComponents, int usage) {
+    private static void registerAttribute(String id, String alias, int numComponents, int usage) {
       list.put(id, new VertexAttribute(usage /* unused */, numComponents,
                                        usage == VertexAttributes.Usage.ColorPacked ? GL20.GL_UNSIGNED_BYTE :
-                                       GL20.GL_FLOAT, usage == VertexAttributes.Usage.ColorPacked, shaderId));
+                                       GL20.GL_FLOAT, usage == VertexAttributes.Usage.ColorPacked, alias));
     }
 
     public static VertexAttribute get(String key) {

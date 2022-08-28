@@ -14,7 +14,7 @@ void main() {
 
     vec2 sourceRegionPixelCorner = u_texture0TexSize.xy * u_inputUVOS.xy;
     vec2 sourceRegionPixelSize = u_texture0TexSize.xy * u_inputUVOS.zw;
-    vec2 sourceRegionPixelCorner2 = sourceRegionPixelCorner + sourceRegionPixelSize + 2 * u_sheetPadding;
+    vec2 sourceRegionPixelCorner2 = sourceRegionPixelCorner + sourceRegionPixelSize;
 
     // Includes padding.
     vec2 sheetPixelInSymbol = gl_FragCoord.xy - u_sheetPixelXYWH.xy;

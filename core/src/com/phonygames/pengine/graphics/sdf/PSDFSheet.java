@@ -21,9 +21,15 @@ public class PSDFSheet {
   public static final String SHEET_NAME = "sheetName";
   private String name;
   private final PStringMap<Symbol> symbols = new PStringMap<>();
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PTexture texture = new PTexture();
 
   private PSDFSheet() {
+  }
+
+  public Symbol get(String sdfKey) {
+    return symbols.get(sdfKey);
   }
 
   public static PSDFSheet blank(String name) {
@@ -61,6 +67,7 @@ public class PSDFSheet {
 
   public PSDFSheet registerSymbol(Symbol symbol) {
     symbols.put(symbol.id, symbol);
+    symbol.sheet = this;
     return this;
   }
 
@@ -154,6 +161,9 @@ public class PSDFSheet {
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     protected int sheetY;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private PSDFSheet sheet;
 
     public static Symbol fromString(String s) {
       String[] split = s.split("\\|");
