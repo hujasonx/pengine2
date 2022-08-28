@@ -28,6 +28,16 @@ public class PString extends PBasic<PString> {
     return this;
   }
 
+  public static PString obtain() {
+    return staticPool.obtain();
+  }
+
+  public PString appendBr() {
+    stringBuilder.append('\n');
+    valueDirty = true;
+    return this;
+  }
+
   public PString append(float value) {
     stringBuilder.append(value);
     valueDirty = true;

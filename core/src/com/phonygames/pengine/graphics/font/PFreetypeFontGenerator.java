@@ -1,5 +1,6 @@
-package com.phonygames.pengine.graphics.font.generator;
+package com.phonygames.pengine.graphics.font;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -11,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.PixmapPacker;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.phonygames.pengine.graphics.PRenderBuffer;
+import com.phonygames.pengine.graphics.font.PFont;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.sdf.PSDFGenerator;
 import com.phonygames.pengine.graphics.texture.PTexture;
@@ -21,6 +23,8 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 
 public class PFreetypeFontGenerator {
+  public static final String charsToGen =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?";
   private final static int GLYPH_OFFSET_X = 200;
   private final static int GLYPH_OFFSET_Y = 200;
   private final static int GLYPH_TEX_SIZE = 1024;
@@ -35,13 +39,13 @@ public class PFreetypeFontGenerator {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final int fontSize;
-  private final PStringMap<GlyphData> glyphDataMap = new PStringMap<>();
+  private final PStringMap<PFont.GlyphData> glyphDataMap = new PStringMap<>();
   private final OrthographicCamera orthographicCamera = new OrthographicCamera();
   private final SpriteBatch spriteBatch = new SpriteBatch();
   private PRenderBuffer renderBuffer;
   private float[] spritebatchLineFloats = new float[20];
   private PTexture texture = new PTexture();
-  public static final String charsToGen = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?";
+  private final PFont outputFont;
 
   public PFreetypeFontGenerator(String fontName, FileHandle fontFile, int fontSize) {
     this.fontName = fontName;
@@ -60,28 +64,40 @@ public class PFreetypeFontGenerator {
     orthographicCamera.setToOrtho(false, renderBuffer.width(), renderBuffer.height());
     orthographicCamera.update(true);
     spriteBatch.setProjectionMatrix(orthographicCamera.combined);
+    outputFont = new PFont();
+    outputFont.fontSize = fontSize;
+    outputFont.fontName = fontName;
+    outputFont.spaceXAdvance = font.getSpaceXadvance();
+    outputFont.capHeight = font.getCapHeight();
+    outputFont.ascent = font.getAscent();
+    outputFont.descent = font.getDescent();
+    outputFont.lineHeight = font.getLineHeight();
+    outputFont.median = font.getXHeight();
   }
 
   public void genAll(PSDFGenerator sdfGenerator, float scale, int sheetPadding) {
     for (int a = 0; a < charsToGen.length(); a++) {
       char c = charsToGen.charAt(a);
-      gen(c,sdfGenerator,scale,sheetPadding );
+      gen(c, sdfGenerator, scale, sheetPadding);
     }
   }
 
   /**
    * Renders the glyph to the sdf generator.
    */
-  public GlyphData gen(char c, PSDFGenerator sdfGenerator, float scale, int sheetPadding) {
+  public PFont.GlyphData gen(char c, PSDFGenerator sdfGenerator, float scale, int sheetPadding) {
     // Get the original glyph.
     BitmapFont.Glyph glyph = font.getData().getGlyph(c);
     if (glyph == null) {
       return null;
     }
-    GlyphData glyphData = new GlyphData();
-    glyphData.fontSize = this.fontSize();
-    glyphData.fontName = this.fontName;
-    glyphData.c = c;
+    String sdfKey = fontName + "_" + fontSize + "_" + (int) c;
+    PFont.GlyphData.GlyphDataBuilder builder = PFont.GlyphData.builder();
+    builder.sdfKey(sdfKey);
+    builder.fontSize(this.fontSize);
+    builder.fontName(this.fontName);
+    builder.c(c);
+    builder.xAdvance(glyph.xadvance);
     // Render the glyph.
     renderBuffer.begin();
     PGLUtils.clearScreen(0, 0, 0, 1);
@@ -130,14 +146,16 @@ public class PFreetypeFontGenerator {
                        ((float) glyphRight - glyphLeft) / GLYPH_TEX_SIZE,
                        ((float) glyphTop - glyphBottom) / GLYPH_TEX_SIZE);
     sdfGenerator.begin();
-    glyphData.symbolProperties =
-        sdfGenerator.addSymbol(fontName + "_" + fontSize + "_" + (int) c + "_" + c, texture, scale, sheetPadding);
+    sdfGenerator.addSymbol(sdfKey, texture, scale, sheetPadding);
     sdfGenerator.end();
-    if (glyphData.symbolProperties == null) {
-      return null;
-    }
+    PFont.GlyphData glyphData = builder.build();
+    outputFont.addGlyphData(glyphData);
     glyphDataMap.put((int) c + "", glyphData);
     return glyphData;
+  }
+
+  public void emitToFile() {
+    outputFont.writeFileHandle(Gdx.files.local("engine/font/"+fontName + "."+PFont.FILE_EXTENSION));
   }
 
   private void spritebatchLine(SpriteBatch spriteBatch, float x0, float y0, float x1, float y1, float lineWidth) {
@@ -175,20 +193,5 @@ public class PFreetypeFontGenerator {
 
   public Texture previewRenderBufferTexture() {
     return renderBuffer.texture();
-  }
-
-  public static class GlyphData {
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private int c;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private String fontName;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private int fontSize;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private PSDFGenerator.SymbolProperties symbolProperties;
   }
 }

@@ -3,10 +3,6 @@ package com.phonygames.pengine.util.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.phonygames.pengine.PGame;
-import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.PApplicationWindow;
-import com.phonygames.pengine.graphics.font.generator.PFreetypeFontGenerator;
-import com.phonygames.pengine.graphics.sdf.PSDFGenerator;
 
 /**
  * Helper util game.

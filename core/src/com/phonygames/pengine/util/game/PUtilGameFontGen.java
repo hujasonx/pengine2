@@ -5,9 +5,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.color.PColor;
-import com.phonygames.pengine.graphics.font.generator.PFreetypeFontGenerator;
+import com.phonygames.pengine.graphics.font.PFont;
+import com.phonygames.pengine.graphics.font.PFreetypeFontGenerator;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.sdf.PSDFGenerator;
+import com.phonygames.pengine.graphics.sdf.PSDFSheet;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PTexture;
 
@@ -20,13 +22,14 @@ public class PUtilGameFontGen {
     String fontFileName = "DosisSemibold-pxJd.ttf";
     DEBUG_fGen = new PFreetypeFontGenerator(fontName, Gdx.files.absolute(
         "D:/Coding/pengine2/assets-raw/freetype/" + fontFileName), 750);
-    DEBUG_sdfGen = new PSDFGenerator(1024);
+    DEBUG_sdfGen = new PSDFGenerator("font", 1024);
     //    DEBUG_fGen.gen('M',DEBUG_sdfGen,.1f, 8);
     DEBUG_fGen.genAll(DEBUG_sdfGen, .06f, 4);
-    DEBUG_sdfGen.emitToFile(Gdx.files.local("engine/font/fontsdf.png"));
+    DEBUG_sdfGen.emitToFile(Gdx.files.local("engine/font/fontsdf." + PSDFSheet.FILE_EXTENSION));
     if (DEBUG_fGen != null) {
       PApplicationWindow.drawTextureToScreen(DEBUG_fGen.previewRenderBufferTexture());
     }
+    DEBUG_fGen.emitToFile();
   }
 
   protected void testRenderFont() {
@@ -39,7 +42,7 @@ public class PUtilGameFontGen {
                                            Gdx.files.local("engine/shader/sdf/sdf.frag.glsl"), new String[]{"color"});
     testFontRenderBuffer.spriteBatch().setShader(renderTextShader);
     PTexture texture = new PTexture();
-    Texture t = new Texture(Gdx.files.internal("engine/font/fontsdf.png"));
+    Texture t = new Texture(Gdx.files.internal("engine/font/fontsdfPSDF.png"));
     t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
     texture.set(t);
     testFontRenderBuffer.spriteBatch().begin();
@@ -52,5 +55,9 @@ public class PUtilGameFontGen {
     renderTextShader.end();
     testFontRenderBuffer.end();
     testFontRenderBuffer.emitPNG(Gdx.files.absolute("D:/testfont.png"), 0);
+    PSDFSheet fontSDF = PSDFSheet.fromFileHandle(Gdx.files.local("engine/font/fontsdf." + PSDFSheet.FILE_EXTENSION));
+    String fontName = "Dosis";
+    PFont font = PFont.fromFileHandle(Gdx.files.local("engine/font/" + fontName + "." + PFont.FILE_EXTENSION));
+    System.out.println(font);
   }
 }

@@ -4,11 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderBuffer;
+import com.phonygames.pengine.graphics.font.PFont;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.sdf.PSDFSheet.Channel;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PPool;
+import com.phonygames.pengine.util.PString;
 import com.phonygames.pengine.util.collection.PStringMap;
 
 import lombok.AccessLevel;
@@ -30,15 +33,17 @@ public class PSDFGenerator {
   private final float[] symbolVertices = new float[20];
   private boolean full = false;
   private Channel lastDrawnChannel = Channel.A; // Start with A, then go to R. This allows there to be opaque stuff.
-  private PStringMap<SymbolProperties> symbolProperties = new PStringMap<>();
+  private final PSDFSheet outputSheet;
 
-  public PSDFGenerator(final int sideLength) {
+
+  public PSDFGenerator(String name, final int sideLength) {
     this.sideLength = sideLength;
     this.renderBuffer =
         new PRenderBuffer.Builder().setStaticSize(sideLength, sideLength).addFloatAttachment("sdf").build();
     this.shader = new PShader("", renderBuffer.fragmentLayout(), PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
                               Gdx.files.local("engine/shader/spritebatch/default.vert.glsl"),
                               Gdx.files.local("engine/shader/sdfgen/sdfgen.frag.glsl"), new String[]{"sdf"});
+    outputSheet = PSDFSheet.blank(name);
   }
 
   /**
@@ -49,20 +54,22 @@ public class PSDFGenerator {
    * @param scale
    * @return
    */
-  public SymbolProperties addSymbol(String id, PTexture texture, float scale, int sheetPadding) {
+  public PSDFSheet.Symbol addSymbol(String id, PTexture texture, float scale, int sheetPadding) {
     PAssert.isTrue(this.shader.isActive(), "Call begin() first");
-    SymbolProperties symbolProperties = new SymbolProperties();
-    symbolProperties.id = id;
+    PSDFSheet.Symbol.SymbolBuilder symbolBuilder = PSDFSheet.Symbol.builder();
+    symbolBuilder.id(id);
     Channel outputChannel = lastDrawnChannel;
-    symbolProperties.channel = outputChannel;
-    symbolProperties.scale = scale;
-    symbolProperties.sheetPadding = sheetPadding;
-    symbolProperties.sheetWidth = (int) (texture.width() * (texture.uvOS().z()) * scale) + 2 * sheetPadding;
-    symbolProperties.sheetHeight = (int) (texture.height() * (texture.uvOS().w()) * scale) + 2 * sheetPadding;
-    symbolProperties.sheetX = curX[outputChannel.index()];
-    symbolProperties.sheetY = curY[outputChannel.index()];
+    symbolBuilder.channel(outputChannel);
+    symbolBuilder.scale(scale);
+    symbolBuilder.sheetPadding(sheetPadding);
+    int sheetWidth = (int) (texture.width() * (texture.uvOS().z()) * scale) + 2 * sheetPadding;
+    symbolBuilder.sheetWidth(sheetWidth);
+    int sheetHeight = (int) (texture.height() * (texture.uvOS().w()) * scale) + 2 * sheetPadding;
+    symbolBuilder.sheetHeight(sheetHeight);
+    symbolBuilder.sheetX(curX[outputChannel.index()]);
+    symbolBuilder.sheetY(curY[outputChannel.index()]);
     boolean changedSheet = false;
-    if (symbolProperties.sheetTopY() >= sideLength) {
+    if (sheetHeight + curY[outputChannel.index()] >= sideLength) {
       // Move to the next channel.
       switch (outputChannel) {
         case A:
@@ -81,33 +88,34 @@ public class PSDFGenerator {
       }
       changedSheet = true;
     }
-    if (symbolProperties.sheetRightX() >= sideLength || changedSheet) {
+    if (sheetWidth + curX[outputChannel.index()] >= sideLength || changedSheet) {
       // Move to the next row.
-      symbolProperties.sheetX = 0;
-      symbolProperties.sheetY = curNextY[outputChannel.index()];
-      curY[outputChannel.index()] = symbolProperties.sheetY;
+      symbolBuilder.sheetX(0);
+      symbolBuilder.sheetY(curNextY[outputChannel.index()]);
     }
-    curX[outputChannel.index()] = symbolProperties.sheetX + symbolProperties.sheetWidth;
+    PSDFSheet.Symbol symbol = symbolBuilder.build();
+    curX[outputChannel.index()] = symbol.sheetX + symbol.sheetWidth;
+    curY[outputChannel.index()] = symbol.sheetY;
     curNextY[outputChannel.index()] =
-        Math.max(curNextY[outputChannel.index()], symbolProperties.sheetY + symbolProperties.sheetHeight);
+        Math.max(curNextY[outputChannel.index()], symbol.sheetY + symbol.sheetHeight);
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       shader.set(UniformConstants.Vec4.u_inputUVOS, texture.uvOS());
       shader.set(UniformConstants.Vec1.u_sheetPadding, sheetPadding);
       shader.set(UniformConstants.Vec1.u_scale, scale);
-      shader.set(UniformConstants.Vec4.u_sheetPixelXYWH, symbolProperties.sheetX, symbolProperties.sheetY,
-                 symbolProperties.sheetWidth, symbolProperties.sheetHeight);
+      shader.set(UniformConstants.Vec4.u_sheetPixelXYWH, symbol.sheetX, symbol.sheetY,
+                 symbol.sheetWidth, symbol.sheetHeight);
       renderBuffer.spriteBatch().enableBlending(true);
-      renderBuffer.spriteBatch().draw(texture.getBackingTexture(), pool.vec4().set(0, 0, 1, 1), symbolProperties.sheetX,
-                                      symbolProperties.sheetY, outputChannel.value(),
-                                      symbolProperties.sheetX + symbolProperties.sheetWidth, symbolProperties.sheetY,
-                                      outputChannel.value(), symbolProperties.sheetX + symbolProperties.sheetWidth,
-                                      symbolProperties.sheetY + symbolProperties.sheetHeight, outputChannel.value(),
-                                      symbolProperties.sheetX, symbolProperties.sheetY + symbolProperties.sheetHeight,
+      renderBuffer.spriteBatch().draw(texture.getBackingTexture(), pool.vec4().set(0, 0, 1, 1), symbol.sheetX,
+                                      symbol.sheetY, outputChannel.value(),
+                                      symbol.sheetX + symbol.sheetWidth, symbol.sheetY,
+                                      outputChannel.value(), symbol.sheetX + symbol.sheetWidth,
+                                      symbol.sheetY + symbol.sheetHeight, outputChannel.value(),
+                                      symbol.sheetX, symbol.sheetY + symbol.sheetHeight,
                                       outputChannel.value());
     }
     lastDrawnChannel = outputChannel;
-    this.symbolProperties.put(id, symbolProperties);
-    return symbolProperties;
+    outputSheet.registerSymbol(symbol);
+    return symbol;
   }
 
   public void begin() {
@@ -117,8 +125,17 @@ public class PSDFGenerator {
     this.renderBuffer.spriteBatch().setShader(this.shader);
   }
 
+  /**
+   *
+   * @param out the .psdf file.
+   * @return
+   */
   public boolean emitToFile(FileHandle out) {
-    if (!renderBuffer.emitPNG(out, 0)) {
+    PAssert.isTrue(out.extension().equals(PSDFSheet.FILE_EXTENSION));
+    String baseName = out.nameWithoutExtension();
+    String imageSource = baseName+"PSDF.png";
+    outputSheet.writePSDFFileHandle(out, imageSource);
+    if (!renderBuffer.emitPNG(out.parent().child(imageSource), 0)) {
       return false;
     }
     return true;
@@ -128,73 +145,6 @@ public class PSDFGenerator {
     this.renderBuffer.spriteBatch().end();
     this.shader.end();
     this.renderBuffer.end();
-  }
-
-  enum Channel {
-    R, G, B, A;
-
-    int index() {
-      switch (this) {
-        case A:
-          return 3;
-        case B:
-          return 2;
-        case G:
-          return 1;
-        case R:
-        default:
-          return 0;
-      }
-    }
-
-    PVec4 value() {
-      switch (this) {
-        case A:
-          return PVec4.W;
-        case B:
-          return PVec4.Z;
-        case G:
-          return PVec4.Y;
-        case R:
-        default:
-          return PVec4.X;
-      }
-    }
-  }
-
-  public static class SymbolProperties {
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private Channel channel;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private String id;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private float scale;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    /** Inlcudes padding on both sides. */ private int sheetHeight;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private int sheetPadding = 2;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    /** Inlcudes padding on both sides. */ private int sheetWidth;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private int sheetX;
-    @Getter(value = AccessLevel.PUBLIC)
-    @Accessors(fluent = true)
-    private int sheetY;
-
-    public int sheetRightX() {
-      return sheetWidth + sheetX;
-    }
-
-    public int sheetTopY() {
-      return sheetHeight + sheetY;
-    }
   }
 
   public static class UniformConstants {
