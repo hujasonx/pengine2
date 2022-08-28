@@ -125,24 +125,6 @@ public class PEngine extends ApplicationAdapter {
     if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.INSERT)) {
       System.gc();
     }
-    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.F)) {
-      debugFontGen();
-    }
-
-    if (DEBUG_fGen != null) {
-      PApplicationWindow.drawTextureToScreen(DEBUG_fGen.previewRenderBufferTexture());
-    }
-  }
-
-  PSDFGenerator DEBUG_sdfGen;
-  PFreetypeFontGenerator DEBUG_fGen;
-  private void debugFontGen() {
-    String fontName = "Dosis";
-    String fontFileName = "DosisSemibold-pxJd.ttf";
-    DEBUG_fGen = new PFreetypeFontGenerator(fontName, Gdx.files.absolute("D:/Coding/pengine2/assets-raw/freetype/" + fontFileName), 750);
-    DEBUG_sdfGen = new PSDFGenerator(1024);
-    DEBUG_fGen.gen('g', DEBUG_sdfGen,.1f, 8);
-    DEBUG_sdfGen.emitToFile(Gdx.files.local("engine/font/fontsdf.png"));
   }
 
   private void processLogicUpdateForFrame() {

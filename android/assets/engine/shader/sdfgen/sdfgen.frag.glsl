@@ -1,8 +1,6 @@
 #params [OUTPUT0]
 
 #include <engine/shader/header/spritebatch.frag>
-
-#include <engine/shader/header/texture2D>[texture0]
 uniform float u_sheetPadding;
 uniform vec4 u_inputUVOS;
 uniform vec4 u_sheetPixelXYWH;
@@ -16,7 +14,7 @@ void main() {
 
     vec2 sourceRegionPixelCorner = u_texture0TexSize.xy * u_inputUVOS.xy;
     vec2 sourceRegionPixelSize = u_texture0TexSize.xy * u_inputUVOS.zw;
-    vec2 sourceRegionPixelCorner2 = sourceRegionPixelCorner + sourceRegionPixelSize;
+    vec2 sourceRegionPixelCorner2 = sourceRegionPixelCorner + sourceRegionPixelSize + 2 * u_sheetPadding;
 
     // Includes padding.
     vec2 sheetPixelInSymbol = gl_FragCoord.xy - u_sheetPixelXYWH.xy;
@@ -62,6 +60,7 @@ void main() {
     //    OUTPUT0.rg = vec2(litStatus);
     //    OUTPUT0.a = 1.0;
     //    OUTPUT0.xy = pixelForSymbol / u_sheetPixelXYWH.zw;
+
 
 
     #include <engine/shader/end/spritebatch.frag>

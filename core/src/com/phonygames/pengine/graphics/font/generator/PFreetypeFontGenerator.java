@@ -41,6 +41,7 @@ public class PFreetypeFontGenerator {
   private PRenderBuffer renderBuffer;
   private float[] spritebatchLineFloats = new float[20];
   private PTexture texture = new PTexture();
+  public static final String charsToGen = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?";
 
   public PFreetypeFontGenerator(String fontName, FileHandle fontFile, int fontSize) {
     this.fontName = fontName;
@@ -59,6 +60,13 @@ public class PFreetypeFontGenerator {
     orthographicCamera.setToOrtho(false, renderBuffer.width(), renderBuffer.height());
     orthographicCamera.update(true);
     spriteBatch.setProjectionMatrix(orthographicCamera.combined);
+  }
+
+  public void genAll(PSDFGenerator sdfGenerator, float scale, int sheetPadding) {
+    for (int a = 0; a < charsToGen.length(); a++) {
+      char c = charsToGen.charAt(a);
+      gen(c,sdfGenerator,scale,sheetPadding );
+    }
   }
 
   /**

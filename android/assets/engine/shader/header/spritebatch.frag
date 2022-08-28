@@ -1,5 +1,7 @@
 #include <engine/shader/header/shared>
 
+#include <engine/shader/header/texture2D>[texture0]
+
 in vec4 v_pos;
 in vec4 v_col0;
 in vec4 v_col1;
