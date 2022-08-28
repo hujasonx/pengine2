@@ -157,6 +157,19 @@ public abstract class PSpriteBatch {
     return this;
   }
 
+  /**
+   * The spritebatch is not responsible for starting and ending the shader.
+   *
+   * @param shader
+   * @return
+   */
+  public PSpriteBatch setAndStartShader(PShader shader) {
+    flush();
+    this.shader = shader;
+    shader.start(this.renderContext);
+    return this;
+  }
+
   /** POS2D_UV0_COLPACKED0 */
   public static class PGdxSpriteBatch extends PSpriteBatch {
     @Getter(value = AccessLevel.PUBLIC, lazy = true)

@@ -123,8 +123,7 @@ public class PSDFGenerator {
     this.renderBuffer.begin(false);
     this.renderBuffer.prepSpriteBatchForRender(PSpriteBatch.PGdxSpriteBatch.staticBatch());
     PSpriteBatch.PGdxSpriteBatch.staticBatch().begin();
-    this.shader.start(PSpriteBatch.PGdxSpriteBatch.staticBatch().renderContext());
-    PSpriteBatch.PGdxSpriteBatch.staticBatch().setShader(this.shader);
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().setAndStartShader(this.shader);
   }
 
   /**
