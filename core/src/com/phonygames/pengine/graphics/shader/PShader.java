@@ -93,14 +93,14 @@ public class PShader implements Disposable, Comparable<PShader> {
     StringBuilder fragmentStringBuilder =
         new StringBuilder("#version " + GL_VERSION + "\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
     if (rawVSCode != null) {
-      vertexStringBuilder.append(PFileHandleUtils.loadRecursive(rawVSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR));
+      vertexStringBuilder.append(PFileHandleUtils.loadRecursive(rawVSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR, inputs));
     } else {
-      vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR));
+      vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR, inputs));
     }
     if (rawFSCode != null) {
-      fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(rawFSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR));
+      fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(rawFSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR, inputs));
     } else {
-      fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR));
+      fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR, inputs));
     }
     int oldCombinedSourceHash = (vertexShaderSource == null ? 0 : vertexShaderSource.hashCode()) +
                                 (fragmentShaderSource == null ? 0 : fragmentShaderSource.hashCode());
@@ -238,8 +238,10 @@ public class PShader implements Disposable, Comparable<PShader> {
   public static void reloadAllFromSources() {
     try (val it = staticShaders.obtainIterator()) {
       while (it.hasNext()) {
-        val shader = it.next();
-        shader.reloadFromSources(true);
+        PShader shader = it.next();
+        if (shader != null) {
+          shader.reloadFromSources(true);
+        }
       }
     }
   }

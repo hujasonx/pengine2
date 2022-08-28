@@ -20,7 +20,7 @@ public class POverlayLayer {
     spritebatchShader =
         new PShader("#define pos2dFlag\n", renderBuffer.fragmentLayout(), PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
                     Gdx.files.local("engine/shader/spritebatch/default.vert.glsl"),
-                    Gdx.files.local("engine/shader/spritebatch/default.frag.glsl"), null);
+                    Gdx.files.local("engine/shader/spritebatch/default.frag.glsl"), new String[]{"color"});
   }
 
   public Texture getTexture() {
@@ -29,19 +29,14 @@ public class POverlayLayer {
 
   public void update() {
     renderBuffer.begin(true);
-    PGLUtils.clearScreen(0, .3f, 0, 1);
+    PGLUtils.clearScreen(0, 0, 0, 0);
     renderBuffer.spriteBatch().begin();
     renderBuffer.spriteBatch().setShader(spritebatchShader);
     texture.set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Glow", true));
-    renderBuffer.spriteBatch().disableBlending();
+    renderBuffer.spriteBatch().enableBlending(false);
     renderBuffer.spriteBatch()
-                .draw(texture, 0, 0, PColor.BLACK, 100, 0, PColor.RED, 1, 100, PColor.YELLOW, 0, 1, PColor.GREEN);
-    //        for (int a = 0; a < 10; a++) {
-    //          renderBuffer.spriteBatch().draw(texture, MathUtils.random(), MathUtils.random(), PColor.BLACK, MathUtils
-    //          .random(),
-    //                                          MathUtils.random(), PColor.RED, MathUtils.random(), MathUtils.random(),
-    //                                          PColor.YELLOW, MathUtils.random(), MathUtils.random(), PColor.GREEN);
-    //        }
+                .draw(texture, 0, 0, PColor.WHITE, 100, 0, PColor.WHITE, 100, 100, PColor.WHITE, 0, 100, PColor.WHITE);
+
     renderBuffer.spriteBatch().end();
     renderBuffer.end();
   }

@@ -193,7 +193,7 @@ public class PSpriteBatch {
 
   public static class UniformConstants {
     public static class Sampler2D {
-      public static final String u_texture0 = "u_texture0";
+      public static final String u_texture0 = "u_texture0Tex";
     }
 
     public static class Mat4 {

@@ -516,7 +516,7 @@ public class PRenderContext {
       public final static String u_viewProjTransformInvTra = "u_viewProjTransformInvTra";
     }
 
-    public static class Sampler2d {}
+    public static class Sampler2D {}
 
     public static class Vec2 {}
 
