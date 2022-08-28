@@ -22,7 +22,7 @@ public class PUtilGameFontGen {
         "D:/Coding/pengine2/assets-raw/freetype/" + fontFileName), 750);
     DEBUG_sdfGen = new PSDFGenerator(1024);
     //    DEBUG_fGen.gen('M',DEBUG_sdfGen,.1f, 8);
-    DEBUG_fGen.genAll(DEBUG_sdfGen, .1f, 8);
+    DEBUG_fGen.genAll(DEBUG_sdfGen, .06f, 4);
     DEBUG_sdfGen.emitToFile(Gdx.files.local("engine/font/fontsdf.png"));
     if (DEBUG_fGen != null) {
       PApplicationWindow.drawTextureToScreen(DEBUG_fGen.previewRenderBufferTexture());
@@ -39,12 +39,15 @@ public class PUtilGameFontGen {
                                            Gdx.files.local("engine/shader/sdf/sdf.frag.glsl"), new String[]{"color"});
     testFontRenderBuffer.spriteBatch().setShader(renderTextShader);
     PTexture texture = new PTexture();
-    texture.set(new Texture(Gdx.files.internal("engine/font/fontsdf.png")));
+    Texture t = new Texture(Gdx.files.internal("engine/font/fontsdf.png"));
+    t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+    texture.set(t);
     testFontRenderBuffer.spriteBatch().begin();
     renderTextShader.start(testFontRenderBuffer.spriteBatch().renderContext());
+    float drawScale = 10;
     testFontRenderBuffer.spriteBatch()
-                        .draw(texture, 0, 512, PColor.WHITE, 512, 512, PColor.WHITE, 512, 0, PColor.WHITE, 0, 0,
-                              PColor.WHITE);
+                        .draw(texture, 0, 512 * drawScale, PColor.WHITE, 512 * drawScale, 512 * drawScale, PColor.WHITE,
+                              512 * drawScale, 0, PColor.WHITE, 0, 0, PColor.WHITE);
     testFontRenderBuffer.spriteBatch().end();
     renderTextShader.end();
     testFontRenderBuffer.end();
