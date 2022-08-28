@@ -1,8 +1,5 @@
 #include <engine/shader/header/shared>
 
-uniform vec4 u_tdtuituidt;
-uniform vec4 u_renderBufferSize;
-
 in vec3 a_pos;
 out vec3 v_aPos;
 out vec3 v_skinnedPos;

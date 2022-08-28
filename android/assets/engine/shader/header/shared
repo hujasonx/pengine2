@@ -4,3 +4,7 @@ vec3 normalizeSafe(vec3 vec, float minLength) {
 }
 
 vec3 normalizeSafe(vec3 vec) { return normalizeSafe(vec, .01); }
+
+uniform vec4 u_tdtuituidt;
+uniform vec4 u_renderBufferSize;
+

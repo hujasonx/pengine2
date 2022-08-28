@@ -12,6 +12,7 @@ import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PPbrPipeline;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.PSpriteBatch;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -26,6 +27,7 @@ import com.phonygames.pengine.lighting.PPointLight;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.kinematics.PPlanarIKLimb;
+import com.phonygames.pengine.ui.POverlayLayer;
 import com.phonygames.pengine.util.PCharacterCameraController;
 import com.phonygames.pengine.util.PFlyingCameraController;
 import com.phonygames.pengine.util.collection.PList;
@@ -47,6 +49,8 @@ public class CybertagGame implements PGame {
   private PVec3 testIKFrontGoal = PVec3.obtain();
   private PModelInstance testikModelInstance;
   private World world;
+  private POverlayLayer overlayLayer;
+
   @Override public void frameUpdate() {
     PPool.PoolBuffer pool = PPool.getBuffer();
     if (PKeyboard.isFrameJustDown(Input.Keys.ESCAPE)) {
@@ -201,6 +205,11 @@ public class CybertagGame implements PGame {
     }
   }
 
+  public void testSpriteBatch() {
+    overlayLayer.update();
+    PApplicationWindow.drawTextureToScreen(overlayLayer.getTexture());
+  }
+
   @Override public void init() {
     catModel = PAssetManager.model("engine/model/Persian.glb", true);
     for (int a = 0; a < 10; a++) {
@@ -236,6 +245,7 @@ public class CybertagGame implements PGame {
       vColIndexBuffer.addData(0, 0, 0, 0); // Skin color emissiveI.
     });
     testikModelInstance.worldTransform().setToRotation(0, 1, 0, 2).translate(0, 0, .2f);
+    overlayLayer = new POverlayLayer();
   }
 
   @Override public void logicUpdate() {
@@ -261,6 +271,8 @@ public class CybertagGame implements PGame {
     }
     PDebugRenderer.render(renderContext);
     PDebugRenderer.clear();
+
+    testSpriteBatch();
   }
 
   @Override public void postLogicUpdate() {

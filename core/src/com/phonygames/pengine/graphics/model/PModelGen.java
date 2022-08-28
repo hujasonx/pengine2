@@ -40,7 +40,7 @@ public class PModelGen implements PPostableTask {
   private boolean finished = false;
 
   public Part addPbrPart(String name) {
-    return addPart(name, PVertexAttributes.getGLTF_UNSKINNED());
+    return addPart(name, PVertexAttributes.getPOS_NOR_UV0_COL0());
   }
 
   public Part addPart(String name, PVertexAttributes vertexAttributes) {

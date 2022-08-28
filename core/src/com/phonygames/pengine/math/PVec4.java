@@ -45,6 +45,12 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
+  /** Packs the color components into a 32-bit integer with the format ABGR.
+   * @return the packed color as a 32-bit int. */
+  public int toIntBits () {
+    return ((int)(255 * a()) << 24) | ((int)(255 * b()) << 16) | ((int)(255 * g()) << 8) | ((int)(255 * r()));
+  }
+
   public float[] emit(float[] out) {
     PAssert.isTrue(out.length == 4);
     out[0] = backingQuaterion.x;
@@ -417,8 +423,12 @@ public class PVec4 extends PVec<PVec4> {
     return this;
   }
 
-  public float toFloatBits() {
-    int color = ((int) (255 * w()) << 24) | ((int) (255 * z()) << 16) | ((int) (255 * y()) << 8) | ((int) (255 * x()));
+  /** Packs the color components into a 32-bit integer with the format ABGR and then converts it to a float. Alpha is compressed
+   * from 0-255 to use only even numbers between 0-254 to avoid using float bits in the NaN range (see
+   * {@link NumberUtils#intToFloatColor(int)}). Converting a color to a float and back can be lossy for alpha.
+   * @return the packed color as a 32-bit float */
+  public float toFloatBits () {
+    int color = ((int)(255 * a()) << 24) | ((int)(255 * b()) << 16) | ((int)(255 * g()) << 8) | ((int)(255 * r()));
     return NumberUtils.intToFloatColor(color);
   }
 

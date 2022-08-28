@@ -184,7 +184,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
     if (modelInstance != null) {
       return;
     }
-    mesh = new PMesh(false, maxCapacity * 4, maxCapacity * 6, PVertexAttributes.getBILLBOARD_PARTICLE());
+    mesh = new PMesh(false, maxCapacity * FLOATS_PER_PARTICLE, maxCapacity * 6, PVertexAttributes.getPOS_UV0_COL0());
     int len = maxCapacity * 6;
     short[] indices = new short[len];
     short j = 0;

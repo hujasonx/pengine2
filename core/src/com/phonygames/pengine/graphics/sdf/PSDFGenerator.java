@@ -1,12 +1,10 @@
 package com.phonygames.pengine.graphics.sdf;
 
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.Gdx;
 import com.phonygames.pengine.graphics.PRenderBuffer;
-import com.phonygames.pengine.graphics.color.PColor;
-import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.math.PVec4;
 
 import lombok.AccessLevel;
@@ -17,19 +15,52 @@ import lombok.experimental.Accessors;
  * Helper class for generating SDFs.
  */
 public class PSDFGenerator {
-  private final int sideLength;
-  private final PRenderBuffer renderBuffer;
+  private final int curNextY[] = new int[]{0, 0, 0, 0};
   // R, G, B, and A have their own positions.
-  private final int curX[] = new int[] {0, 0, 0, 0};
-  private final int curY[] = new int[] {0, 0, 0, 0};
-  private final int curNextY[] = new int[] {0, 0, 0, 0};
-  private Channel lastDrawnChannel = Channel.R;
+  private final int curX[] = new int[]{0, 0, 0, 0};
+  private final int curY[] = new int[]{0, 0, 0, 0};
+  private final PRenderBuffer renderBuffer;
+  private final PShader shader;
+  private final int sideLength;
   // 5 floats per vertex: x, y, colPacked, u, v.
   private final float[] symbolVertices = new float[20];
-  private final ShaderProgram shaderProgram;
+  private Channel lastDrawnChannel = Channel.R;
+
+  public PSDFGenerator(final int sideLength) {
+    this.sideLength = sideLength;
+    this.renderBuffer =
+        new PRenderBuffer.Builder().setStaticSize(sideLength, sideLength).addFloatAttachment("sdf").build();
+    this.shader = new PShader("", renderBuffer.fragmentLayout(), PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
+                              Gdx.files.local("engine/shader/spritebatch/gdxspritebatch.vert.glsl"),
+                              Gdx.files.local("engine/shader/spritebatch/gdxspritebatch.frag.glsl"), null);
+  }
+
+  public SymbolProperties addSymbol(String id, PTexture texture, Channel outputChannel) {
+    SymbolProperties symbolProperties = new SymbolProperties();
+//    this.renderBuffer.spriteBatch()
+//                     .setColor(outputChannel.value().r(), outputChannel.value().g(), outputChannel.value().b(),
+//                               outputChannel.value().a());
+    //    this.renderBuffer.spriteBatch().draw(texture, symbolVertices,0,symbolVertices.length);
+    return symbolProperties;
+  }
+
+  public void begin() {
+    this.renderBuffer.begin(false);
+    this.renderBuffer.spriteBatch().begin();
+  }
+
+  public boolean channelFull(Channel channel) {
+    return curNextY[channel.index()] == -1;
+  }
+
+  public void end() {
+    this.renderBuffer.spriteBatch().end();
+    this.renderBuffer.end();
+  }
 
   enum Channel {
     R, G, B, A;
+
     int index() {
       switch (this) {
         case A:
@@ -59,38 +90,9 @@ public class PSDFGenerator {
     }
   }
 
-  public PSDFGenerator(final int sideLength) {
-    this.sideLength = sideLength;
-    this.renderBuffer =
-        new PRenderBuffer.Builder().setStaticSize(sideLength, sideLength).addFloatAttachment("sdf").build();
-    this.shaderProgram = null;//new ShaderProgram()
-  }
-
-  public void begin() {
-    this.renderBuffer.begin(false);
-    this.renderBuffer.spriteBatch().begin();
-  }
-
-  public SymbolProperties addSymbol(String id, Texture texture, Channel outputChannel) {
-    SymbolProperties symbolProperties = new SymbolProperties();
-    this.renderBuffer.spriteBatch().setColor(outputChannel.value().r(), outputChannel.value().g(), outputChannel.value().b(), outputChannel.value().a());
-    this.renderBuffer.spriteBatch().draw(texture, symbolVertices,0,symbolVertices.length);
-    return symbolProperties;
-  }
-
   public static class SymbolProperties {
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private String id;
-
-  }
-
-  public void end() {
-    this.renderBuffer.spriteBatch().end();
-    this.renderBuffer.end();
-  }
-
-  public boolean channelFull(Channel channel) {
-    return curNextY[channel.index()] == -1;
   }
 }

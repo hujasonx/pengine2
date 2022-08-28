@@ -19,11 +19,11 @@ import lombok.val;
 
 public class PVertexAttributes {
   @Getter
-  /** Pos, nor, uv, col */ private static PVertexAttributes GLTF_UNSKINNED;
+  /** Pos, nor, uv, col */ private static PVertexAttributes POS_NOR_UV0_COL0;
   @Getter
   private static PVertexAttributes PHYSICS = new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position()});
   @Getter
-  private static PVertexAttributes POSITION, DEFAULT, BILLBOARD_PARTICLE, GLTF_UNSKINNED_NOCOLOR;
+  private static PVertexAttributes POS, POS_NOR_UV0_UV1, POS_UV0_COL0, POS_NOR_UV0, POS2D_UV0_COLPACKED0;
   @Getter
   private final VertexAttributes backingVertexAttributes;
   //  private final Map<String, Integer> vertexAttributeFloatIndexInVertex = new HashMap<>();
@@ -112,44 +112,45 @@ public class PVertexAttributes {
     private static final PStringMap<VertexAttribute> list = new PStringMap<>();
 
     private static void init() {
-      registerAttribute(Keys.pos, 3, VertexAttributes.Usage.Position);
-      registerAttribute(Keys.nor, 3, VertexAttributes.Usage.Normal);
+      registerAttribute(Keys.pos, Keys.pos, 3, VertexAttributes.Usage.Position);
+      registerAttribute(Keys.pos2d, Keys.pos, 2, VertexAttributes.Usage.Position);
+      registerAttribute(Keys.nor, Keys.nor, 3, VertexAttributes.Usage.Normal);
       for (int a = 0; a < Keys.uv.length; a++) {
         Keys.uv[a] = "a_uv" + a;
-        registerAttribute(Keys.uv[a], 2);
+        registerAttribute(Keys.uv[a], Keys.uv[a], 2, VertexAttributes.Usage.TextureCoordinates);
       }
       for (int a = 0; a < Keys.col.length; a++) {
         Keys.col[a] = "a_col" + a;
-        registerAttribute(Keys.col[a], 4);
+        Keys.colPacked[a] = "a_colPacked" + a;
+        registerAttribute(Keys.col[a], Keys.col[a], 4, VertexAttributes.Usage.ColorUnpacked);
+        registerAttribute(Keys.colPacked[a], Keys.col[a], 4, VertexAttributes.Usage.ColorPacked);
       }
       for (int a = 0; a < Keys.bon.length; a++) {
         Keys.bon[a] = "a_bon" + a;
-        registerAttribute(Keys.bon[a], 2);
+        registerAttribute(Keys.bon[a], Keys.bon[a], 2, VertexAttributes.Usage.BoneWeight);
       }
-      DEFAULT = new PVertexAttributes(
+      POS_NOR_UV0_UV1 = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
                                 Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Attribute.Keys.uv[1])});
-      POSITION = new PVertexAttributes(new VertexAttribute[]{Attribute.get(Attribute.Keys.pos)});
-      BILLBOARD_PARTICLE = new PVertexAttributes(
+      POS = new PVertexAttributes(new VertexAttribute[]{Attribute.get(Attribute.Keys.pos)});
+      POS_UV0_COL0 = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Keys.uv[0]),
                                 Attribute.get(Attribute.Keys.col[0])});
-      GLTF_UNSKINNED = new PVertexAttributes(
+      POS_NOR_UV0_COL0 = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
                                 Attribute.get(Attribute.Keys.uv[0]), Attribute.get(Keys.col[0])});
-      GLTF_UNSKINNED_NOCOLOR = new PVertexAttributes(
+      POS_NOR_UV0 = new PVertexAttributes(
           new VertexAttribute[]{Attribute.get(Attribute.Keys.pos), Attribute.get(Attribute.Keys.nor),
                                 Attribute.get(Attribute.Keys.uv[0])});
+      POS2D_UV0_COLPACKED0 = new PVertexAttributes(
+          new VertexAttribute[]{Attribute.get(Attribute.Keys.pos2d), Attribute.get(Attribute.Keys.uv[0]),
+                                Attribute.get(Attribute.Keys.colPacked[0])});
     }
 
-    private static void registerAttribute(String id, int numComponents, int usage) {
-      boolean normalized = usage == VertexAttributes.Usage.Normal;
+    private static void registerAttribute(String id, String shaderId, int numComponents, int usage) {
       list.put(id, new VertexAttribute(usage /* unused */, numComponents,
                                        usage == VertexAttributes.Usage.ColorPacked ? GL20.GL_UNSIGNED_BYTE :
-                                       GL20.GL_FLOAT, normalized, id));
-    }
-
-    private static void registerAttribute(String id, int numComponents) {
-      list.put(id, new VertexAttribute(0 /* unused */, numComponents, id));
+                                       GL20.GL_FLOAT, usage == VertexAttributes.Usage.ColorPacked, shaderId));
     }
 
     public static VertexAttribute get(String key) {
@@ -161,8 +162,10 @@ public class PVertexAttributes {
     public static final class Keys {
       public static final String bon[] = new String[8];
       public static final String col[] = new String[8];
+      public static final String colPacked[] = new String[8];
       public static final String nor = "a_nor";
       public static final String pos = "a_pos";
+      public static final String pos2d = "a_pos2d";
       public static final String uv[] = new String[8];
     }
   }

@@ -352,6 +352,10 @@ public class PRenderContext {
     return this;
   }
 
+  public PRenderContext disableBlending() {
+    return setBlending(false, -1, -1, -1, -1);
+  }
+
   public PRenderContext setCullFaceBack() {
     setCullFace(GL20.GL_BACK);
     return this;

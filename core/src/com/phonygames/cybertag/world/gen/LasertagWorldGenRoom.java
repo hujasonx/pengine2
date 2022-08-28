@@ -57,7 +57,7 @@ public class LasertagWorldGenRoom {
     //
     // Init parts and templates.
     final String partNamePrefix = partNamePrefix();
-    PModelGen.Part basePart = modelGen.addPart(partNamePrefix + "Part", PVertexAttributes.getGLTF_UNSKINNED());
+    PModelGen.Part basePart = modelGen.addPart(partNamePrefix + "Part", PVertexAttributes.getPOS_NOR_UV0_COL0());
     PModelGen.StaticPhysicsPart basePhysicsPart = modelGen.addStaticPhysicsPart(partNamePrefix + "StaticPhysicsPart");
     LasertagWorldGenOld.RoomPartData roomPartData = context.addRoomPartData(building.index, index);
     roomPartData.modelgenParts.add(new LasertagWorldGenOld.RoomPartData.Part(

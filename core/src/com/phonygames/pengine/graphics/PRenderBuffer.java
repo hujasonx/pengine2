@@ -49,11 +49,11 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   private float windowScale = 1;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final SpriteBatch spriteBatch;
+  private final PSpriteBatch spriteBatch;
   private final OrthographicCamera orthoCamera;
 
   private PRenderBuffer() {
-    this.spriteBatch = new SpriteBatch();
+    this.spriteBatch = new PSpriteBatch(1000);
     this.orthoCamera = new OrthographicCamera();
   }
 
@@ -73,7 +73,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   }
 
   public PShader getQuadShader(FileHandle frag) {
-    return new PShader("", fragmentLayout(), PVertexAttributes.getPOSITION(),
+    return new PShader("", fragmentLayout(), PVertexAttributes.getPOS(),
                        Gdx.files.local("engine/shader/quad.vert.glsl"), frag, null);
   }
 

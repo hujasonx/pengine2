@@ -104,7 +104,6 @@ public class PPipeParticleSource implements PPool.Poolable {
       }
       currentBufferVerticesIndex += p.verticesFloatCount();
       currentBufferIndicesIndex += p.indicesShortCount();
-      System.out.println(a + ", " + p.pos());
     }
     if (currentBufferVerticesIndex == 0 || currentBufferIndicesIndex == 0) {
       return;
@@ -122,7 +121,7 @@ public class PPipeParticleSource implements PPool.Poolable {
 
   /** Should be called by render() */
   private boolean setVerticesForParticle(PPipeParticle particle) {
-    int floatsPerV = PVertexAttributes.getGLTF_UNSKINNED().getNumFloatsPerVertex();
+    int floatsPerV = PVertexAttributes.getPOS_NOR_UV0_COL0().getNumFloatsPerVertex();
     return particle.outputVertexAndIndexData(vertices, currentBufferVerticesIndex, currentBufferVerticesIndex / floatsPerV, indices, currentBufferIndicesIndex);
   }
 
@@ -130,7 +129,7 @@ public class PPipeParticleSource implements PPool.Poolable {
     if (modelInstance != null) {
       return;
     }
-    mesh = new PMesh(false, MAX_FLOATS, MAX_SHORTS, PVertexAttributes.getGLTF_UNSKINNED());
+    mesh = new PMesh(false, MAX_FLOATS, MAX_SHORTS, PVertexAttributes.getPOS_NOR_UV0_COL0());
     //    mesh.setIndices(indices);
     ModelBuilder modelBuilder = new ModelBuilder();
     modelBuilder.begin();

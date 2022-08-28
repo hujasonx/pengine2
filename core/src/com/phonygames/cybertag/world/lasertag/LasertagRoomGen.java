@@ -103,7 +103,7 @@ public class LasertagRoomGen extends PBuilder {
       int tileVColIndex = lasertagRoom.numBaseVCols;
 
       @Override protected void modelIntro() {
-        basePart = addPart("base", PVertexAttributes.getGLTF_UNSKINNED());
+        basePart = addPart("base", PVertexAttributes.getPOS_NOR_UV0_COL0());
         staticPhysicsPart = addStaticPhysicsPart("staticPhysics");
       }
 

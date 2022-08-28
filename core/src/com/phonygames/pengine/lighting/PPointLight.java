@@ -43,7 +43,7 @@ public class PPointLight extends PLight implements Pool.Poolable {
       PModelGen.Part basePart;
 
       @Override protected void modelIntro() {
-        basePart = addPart("base", PVertexAttributes.getPOSITION());
+        basePart = addPart("base", PVertexAttributes.getPOS());
       }
 
       @Override protected void modelMiddle() {

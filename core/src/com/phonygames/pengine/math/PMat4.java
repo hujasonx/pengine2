@@ -6,9 +6,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PBasic;
 import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.collection.PStringMap;
 import com.phonygames.pengine.util.PStringUtils;
 import com.phonygames.pengine.util.PWriteLockable;
+import com.phonygames.pengine.util.collection.PStringMap;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -164,6 +164,11 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
 
   public PMat4 scl(float x, float y, float z) {
     backingMatrix4.scale(x, y, z);
+    return this;
+  }
+
+  public PMat4 set(Matrix4 value) {
+    this.forWriting().backingMatrix4.set(value);
     return this;
   }
 

@@ -102,7 +102,7 @@ public class PPipeParticle extends PParticle {
   private PPipeParticle() {
     reset();
     previousPositionTracker.trackedVec(pos);
-    vertexAttributes = PVertexAttributes.getGLTF_UNSKINNED();
+    vertexAttributes = PVertexAttributes.getPOS_NOR_UV0_COL0();
   }
 
   @Override public void reset() {

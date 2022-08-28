@@ -1,8 +1,5 @@
 #include <engine/shader/header/shared>
 
-uniform vec4 u_tdtuituidt;
-uniform vec4 u_renderBufferSize;
-
 in vec3 v_aPos;
 in vec3 v_skinnedPos;
 #ifdef a_norFlag

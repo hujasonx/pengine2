@@ -91,7 +91,7 @@ public class MeshTemplate {
         }
         part.set(PVertexAttributes.Attribute.Keys.col[0], PMesh.vColForIndex(temp, vColIndex));
         part.emit(mesh, emitPhysics ? staticPhysicsPart : null, vertexProcessor,
-                  PVertexAttributes.getGLTF_UNSKINNED_NOCOLOR());
+                  PVertexAttributes.getPOS_NOR_UV0());
       } else if (emitPhysics && staticPhysicsPart != null) {
         staticPhysicsPart.emit(mesh, vertexProcessor);
       }
