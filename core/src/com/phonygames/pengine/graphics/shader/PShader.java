@@ -17,8 +17,8 @@ import com.phonygames.pengine.math.PVec1;
 import com.phonygames.pengine.math.PVec2;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.collection.PSet;
 import com.phonygames.pengine.util.PStringUtils;
+import com.phonygames.pengine.util.collection.PSet;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -43,9 +43,9 @@ public class PShader implements Disposable, Comparable<PShader> {
   /** The inputs passed to the shader filehandler loader system */
   private final String[] inputs;
   private final String prefix;
-  private final FileHandle vsSourceFH, fsSourceFH;
   /** Takes precedences over the filehandles. */
   private final String rawVSCode, rawFSCode;
+  private final FileHandle vsSourceFH, fsSourceFH;
   private float checkValidLoggingThrottleNextCheckTime = 0;
   private String combinedStaticStringResult;
   @Getter
@@ -56,26 +56,11 @@ public class PShader implements Disposable, Comparable<PShader> {
 
   public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
                  FileHandle vert, FileHandle frag, String[] inputs) {
-    this(prefix, fragmentLayout,vertexAttributes,vert,frag,null, null, inputs);
-  }
-
-  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
-                 String vert, FileHandle frag, String[] inputs) {
-    this(prefix, fragmentLayout,vertexAttributes,null,frag,vert, null, inputs);
-  }
-
-  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
-                 String vert, String frag, String[] inputs) {
-    this(prefix, fragmentLayout,vertexAttributes,null,null,vert, frag, inputs);
-  }
-
-  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
-                 FileHandle vert, String frag, String[] inputs) {
-    this(prefix, fragmentLayout,vertexAttributes,vert,null,null, frag, inputs);
+    this(prefix, fragmentLayout, vertexAttributes, vert, frag, null, null, inputs);
   }
 
   private PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
-                 FileHandle vertFH, FileHandle fragFH, String vert, String frag, String[] inputs) {
+                  FileHandle vertFH, FileHandle fragFH, String vert, String frag, String[] inputs) {
     this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
     this.fragmentLayout = fragmentLayout;
     vsSourceFH = vertFH;
@@ -89,16 +74,20 @@ public class PShader implements Disposable, Comparable<PShader> {
 
   public void reloadFromSources(boolean logAlwaysIfSourcesChanged) {
     combinedStaticStringResult = null;
-    StringBuilder vertexStringBuilder = new StringBuilder("#version " + GL_VERSION + "\n// VERTEX SHADER\n").append(this.prefix);
+    StringBuilder vertexStringBuilder =
+        new StringBuilder("#version " + GL_VERSION + "\n// VERTEX SHADER\n").append(this.prefix);
     StringBuilder fragmentStringBuilder =
-        new StringBuilder("#version " + GL_VERSION + "\n// FRAGMENT SHADER\n").append(this.prefix).append(fragmentLayout).append("\n");
+        new StringBuilder("#version " + GL_VERSION + "\n// FRAGMENT SHADER\n").append(this.prefix)
+                                                                              .append(fragmentLayout).append("\n");
     if (rawVSCode != null) {
-      vertexStringBuilder.append(PFileHandleUtils.loadRecursive(rawVSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR, inputs));
+      vertexStringBuilder.append(
+          PFileHandleUtils.loadRecursive(rawVSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR, inputs));
     } else {
       vertexStringBuilder.append(PFileHandleUtils.loadRecursive(vsSourceFH, RECURSIVE_LOAD_PROCESSOR, inputs));
     }
     if (rawFSCode != null) {
-      fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(rawFSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR, inputs));
+      fragmentStringBuilder.append(
+          PFileHandleUtils.loadRecursive(rawFSCode, Gdx.files.local(""), RECURSIVE_LOAD_PROCESSOR, inputs));
     } else {
       fragmentStringBuilder.append(PFileHandleUtils.loadRecursive(fsSourceFH, RECURSIVE_LOAD_PROCESSOR, inputs));
     }
@@ -132,7 +121,6 @@ public class PShader implements Disposable, Comparable<PShader> {
         stringBuilder.append(vsSourceFH.path()).append("\n");
       }
       printSource(stringBuilder, "V: ", PStringUtils.splitByLine(vertexShaderSource));
-
       if (fsSourceFH != null) {
         stringBuilder.append("F: ");
         stringBuilder.append(fsSourceFH.path()).append("\n");
@@ -233,6 +221,21 @@ public class PShader implements Disposable, Comparable<PShader> {
       }
       stringBuilder.append("\n");
     }
+  }
+
+  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
+                 String vert, FileHandle frag, String[] inputs) {
+    this(prefix, fragmentLayout, vertexAttributes, null, frag, vert, null, inputs);
+  }
+
+  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
+                 String vert, String frag, String[] inputs) {
+    this(prefix, fragmentLayout, vertexAttributes, null, null, vert, frag, inputs);
+  }
+
+  public PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
+                 FileHandle vert, String frag, String[] inputs) {
+    this(prefix, fragmentLayout, vertexAttributes, vert, null, null, frag, inputs);
   }
 
   public static void reloadAllFromSources() {
@@ -434,7 +437,7 @@ public class PShader implements Disposable, Comparable<PShader> {
     if (!checkValid()) {
       return this;
     }
-    PAssert.isTrue(isActive());
+    PAssert.isTrue(isActive(), "Shader must be active");
     if (texture != null && shaderProgram.hasUniform(uniform)) {
       int bindTarget = PRenderContext.activeContext().getTextureBinder().bind(texture);
       shaderProgram.setUniformi(uniform, bindTarget);

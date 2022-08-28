@@ -31,6 +31,7 @@ public class POverlayLayer {
     renderBuffer.begin(true);
     PGLUtils.clearScreen(0, 0, 0, 0);
     renderBuffer.spriteBatch().begin();
+    spritebatchShader.start(renderBuffer.spriteBatch().renderContext());
     renderBuffer.spriteBatch().setShader(spritebatchShader);
     texture.set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Glow", true));
     renderBuffer.spriteBatch().enableBlending(false);
@@ -38,6 +39,7 @@ public class POverlayLayer {
                 .draw(texture, 0, 0, PColor.WHITE, 100, 0, PColor.WHITE, 100, 100, PColor.WHITE, 0, 100, PColor.WHITE);
 
     renderBuffer.spriteBatch().end();
+    spritebatchShader.end();
     renderBuffer.end();
   }
 }

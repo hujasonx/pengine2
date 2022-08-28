@@ -5,8 +5,11 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.utils.Disposable;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.framebuffer.PFrameBuffer;
@@ -31,6 +34,10 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   private static PRenderBuffer activeBuffer = null;
   private static Texture testTexture = null;
   private final List<AttachmentSpec> attachmentSpecs = new ArrayList<>();
+  private final OrthographicCamera orthoCamera;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PSpriteBatch spriteBatch;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private boolean active;
@@ -47,14 +54,16 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private float windowScale = 1;
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  private final PSpriteBatch spriteBatch;
-  private final OrthographicCamera orthoCamera;
 
   private PRenderBuffer() {
     this.spriteBatch = new PSpriteBatch(1000);
     this.orthoCamera = new OrthographicCamera();
+  }
+
+  public void blurSelf(float spreadH, float spreadV) {
+    PAssert.isFalse(active);
+    PBlurShader blurShader = PBlurShader.gen(this);
+    blurShader.apply(this, spreadH, spreadV);
   }
 
   @Override public void dispose() {
@@ -72,14 +81,19 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     }
   }
 
-  public PShader getQuadShader(FileHandle frag) {
-    return new PShader("", fragmentLayout(), PVertexAttributes.getPOS(),
-                       Gdx.files.local("engine/shader/quad.vert.glsl"), frag, null);
-  }
-
-  public Texture texture() {
+  public boolean emitPNG(FileHandle out, int textureIndex) {
     createFrameBuffersIfNeeded();
-    return frameBuffer.getTextureAttachments().first();
+    Texture texture = texture(textureIndex);
+    FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, width(), height(), false);
+    frameBuffer.begin();
+    SpriteBatch spriteBatch = new SpriteBatch();
+    spriteBatch.setProjectionMatrix(orthoCamera.combined);
+    spriteBatch.begin();
+    spriteBatch.draw(texture, 0, 0);
+    spriteBatch.end();
+    PixmapIO.writePNG(out, Pixmap.createFromFrameBuffer(0, 0, width(), height()));
+    frameBuffer.end();
+    return true;
   }
 
   private void createFrameBuffersIfNeeded() {
@@ -108,15 +122,23 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     return frameBuffer.getTextureAttachments().get(index);
   }
 
-  public Texture texture(String id) {
+  public int width() {
     createFrameBuffersIfNeeded();
-    for (int a = 0; a < attachmentSpecs.size(); a++) {
-      val spec = attachmentSpecs.get(a);
-      if (id.equals(spec.name)) {
-        return frameBuffer.getTextureAttachments().get(a);
-      }
-    }
-    return null;
+    return frameBuffer.getWidth();
+  }
+
+  public int height() {
+    createFrameBuffersIfNeeded();
+    return frameBuffer.getHeight();
+  }
+
+  public PShader getQuadShader(FileHandle frag) {
+    return new PShader("", fragmentLayout(), PVertexAttributes.getPOS(),
+                       Gdx.files.local("engine/shader/quad.vert.glsl"), frag, null);
+  }
+
+  public String getTextureName(int index) {
+    return attachmentSpecs.get(index).name;
   }
 
   public Texture getTexturePrev(String id) {
@@ -135,10 +157,6 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     return frameBufferPrev.getTextureAttachments().get(index);
   }
 
-  public int height() {
-    return frameBuffer.getHeight();
-  }
-
   public int numTextures() {
     createFrameBuffersIfNeeded();
     return frameBuffer.getTextureAttachments().size;
@@ -150,9 +168,6 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     }
   }
 
-  public String getTextureName(int index) {
-    return attachmentSpecs.get(index).name;
-  }
   public PRenderBuffer renderQuad(PShader shader) {
     boolean wasActive = activeBuffer == this;
     if (!wasActive) {
@@ -175,12 +190,6 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     activeBuffer = null;
   }
 
-  public void blurSelf(float spreadH, float spreadV) {
-    PAssert.isFalse(active);
-    PBlurShader blurShader = PBlurShader.gen(this);
-    blurShader.apply(this, spreadH, spreadV);
-  }
-
   public void begin(boolean swapBuffers) {
     PAssert.isTrue(activeBuffer == null, "Another renderBuffer was already active!");
     createFrameBuffersIfNeeded();
@@ -201,8 +210,20 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     frameBufferPrev = temp;
   }
 
-  public int width() {
-    return frameBuffer.getWidth();
+  public Texture texture() {
+    createFrameBuffersIfNeeded();
+    return frameBuffer.getTextureAttachments().first();
+  }
+
+  public Texture texture(String id) {
+    createFrameBuffersIfNeeded();
+    for (int a = 0; a < attachmentSpecs.size(); a++) {
+      val spec = attachmentSpecs.get(a);
+      if (id.equals(spec.name)) {
+        return frameBuffer.getTextureAttachments().get(a);
+      }
+    }
+    return null;
   }
 
   public enum SizeMode {
@@ -269,10 +290,6 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
       return addFloatAttachment(name, GL30.GL_RGBA16F, GL30.GL_RGBA);
     }
 
-    public Builder addFloatAttachment(String name, int internalFormat) {
-      return addFloatAttachment(name, internalFormat, GL30.GL_RGBA);
-    }
-
     public Builder addFloatAttachment(String name, int internalFormat, int format) {
       checkLock();
       renderBuffer.fragmentLayout +=
@@ -280,6 +297,10 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
       renderBuffer.attachmentSpecs.add(
           new AttachmentSpec(name, internalFormat, format, GL30.GL_FLOAT, AttachmentSpec.AttachmentType.Float));
       return this;
+    }
+
+    public Builder addFloatAttachment(String name, int internalFormat) {
+      return addFloatAttachment(name, internalFormat, GL30.GL_RGBA);
     }
 
     public PRenderBuffer build() {

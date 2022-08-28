@@ -39,6 +39,7 @@ public class PTexture implements PPool.Poolable, PDeepCopyable<PTexture> {
 
   public PTexture set(Texture texture) {
     this.backingTexture = texture;
+    this.uvOS.set(0, 0, 1, 1);
     return this;
   }
 

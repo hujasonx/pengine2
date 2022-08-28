@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics;
 
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Matrix4;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
@@ -13,11 +14,21 @@ import com.phonygames.pengine.math.PVec4;
 
 import java.nio.Buffer;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
+/**
+ * Caller is responsible for starting and ending shaders around flush() or end() calls.
+ */
 public class PSpriteBatch {
   public static final int SHORTS_PER_SPRITE = 6;
   private static final String SPRITEBATCH = "spritebatch";
   public final int FLOATS_PER_SPRITE;
-  private final PTexture texture = new PTexture();
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PRenderContext renderContext = new PRenderContext();
+  private final PTexture texture0 = new PTexture();
   private final PVertexAttributes vertexAttributes;
   private final float[] vertices;
   private int capacity;
@@ -27,7 +38,7 @@ public class PSpriteBatch {
   private PMat4 projectionMatrix = PMat4.obtain();
   private PShader shader;
   private boolean started = false;
-  private final PRenderContext renderContext = new PRenderContext();
+
   public PSpriteBatch(int capacity) {
     this.capacity = capacity;
     vertexAttributes = PVertexAttributes.getPOS2D_UV0_COLPACKED0();
@@ -41,65 +52,58 @@ public class PSpriteBatch {
     renderContext.resetDefaults();
     renderContext.setCullFaceDisabled();
     started = true;
-    // Bind the textures, which should be blank right now.
-    if (shader != null) {
-      shader.start(renderContext);
-      texture.applyShaderWithUniform(UniformConstants.Sampler2D.u_texture0, shader);
-    }
-  }
-
-  public PSpriteBatch setShader(PShader shader) {
-    if (this.shader != null) {
-      if (this.shader.isActive() && started) {
-        flush();
-        this.shader.end();
-      }
-    }
-    this.shader = shader;
-    if (started) {
-      shader.start(renderContext);
-      texture.applyShaderWithUniform(UniformConstants.Sampler2D.u_texture0, shader);
-    }
-    return this;
   }
 
   public void disableBlending() {
     PRenderContext.activeContext().disableBlending();
   }
+  // TODO: support more flexible vertex attributes.
 
-  public void draw(PTexture texture, float x00, float y00, PVec4 colPacked00, float x10,
-                   float y10, PVec4 colPacked10, float x11, float y11, PVec4 colPacked11,
-                   float x01, float y01, PVec4 colPacked01) {
+  /**
+   * May call flush().
+   */
+  public void draw(PTexture texture, float x00, float y00, PVec4 colPacked00, float x10, float y10, PVec4 colPacked10,
+                   float x11, float y11, PVec4 colPacked11, float x01, float y01, PVec4 colPacked01) {
+    draw(texture.getBackingTexture(), texture.uvOS(), x00, y00, colPacked00, x10, y10, colPacked10, x11, y11,
+         colPacked11, x01, y01, colPacked01);
+  }
+  // TODO: support more flexible vertex attributes.
+
+  /**
+   * May call flush().
+   */
+  public void draw(Texture texture, PVec4 uvOS, float x00, float y00, PVec4 colPacked00, float x10, float y10,
+                   PVec4 colPacked10, float x11, float y11, PVec4 colPacked11, float x01, float y01,
+                   PVec4 colPacked01) {
     if (numQueuedSprites >= capacity - 1) {
       flush();
     }
-    if (this.texture.getBackingTexture() != texture.getBackingTexture()) {
+    if (this.texture0.getBackingTexture() != texture) {
       // Bind the new texture if needed.
       flush();
       // Don't copy over the uvOS, since that will be set via vertex attributes.
-      this.texture.setBackingTexture(texture.getBackingTexture());
-      this.texture.applyShaderWithUniform(UniformConstants.Sampler2D.u_texture0, shader);
+      this.texture0.setBackingTexture(texture);
     }
     int vIndex = numQueuedSprites * FLOATS_PER_SPRITE;
     vertices[vIndex++] = x00;
     vertices[vIndex++] = y00;
-    vertices[vIndex++] = texture.uvOS().x();
-    vertices[vIndex++] = texture.uvOS().y();
+    vertices[vIndex++] = uvOS.x();
+    vertices[vIndex++] = uvOS.y();
     vertices[vIndex++] = colPacked00.toFloatBits();
     vertices[vIndex++] = x10;
     vertices[vIndex++] = y10;
-    vertices[vIndex++] = texture.uvOS().x() + texture.uvOS().z();
-    vertices[vIndex++] = texture.uvOS().y();
+    vertices[vIndex++] = uvOS.x() + uvOS.z();
+    vertices[vIndex++] = uvOS.y();
     vertices[vIndex++] = colPacked10.toFloatBits();
     vertices[vIndex++] = x11;
     vertices[vIndex++] = y11;
-    vertices[vIndex++] = texture.uvOS().x() + texture.uvOS().z();
-    vertices[vIndex++] = texture.uvOS().y() + texture.uvOS().w();
+    vertices[vIndex++] = uvOS.x() + uvOS.z();
+    vertices[vIndex++] = uvOS.y() + uvOS.w();
     vertices[vIndex++] = colPacked11.toFloatBits();
     vertices[vIndex++] = x01;
     vertices[vIndex++] = y01;
-    vertices[vIndex++] = texture.uvOS().x();
-    vertices[vIndex++] = texture.uvOS().y() + texture.uvOS().w();
+    vertices[vIndex++] = uvOS.x();
+    vertices[vIndex++] = uvOS.y() + uvOS.w();
     vertices[vIndex++] = colPacked01.toFloatBits();
     numQueuedSprites++;
   }
@@ -114,10 +118,12 @@ public class PSpriteBatch {
     ((Buffer) mesh.getIndicesBuffer()).position(0);
     ((Buffer) mesh.getIndicesBuffer()).limit(numQueuedSprites * SHORTS_PER_SPRITE);
     if (shader != null) {
+      // Bind the textures, which should be blank right now.
+      texture0.applyShaderWithUniform(UniformConstants.Sampler2D.u_texture0, shader);
       shader.set(UniformConstants.Mat4.u_viewProjTransform, projectionMatrix);
       mesh.glRenderInstanced(shader, 1);
     } else {
-      PAssert.warn("PSpriteBatch::flush called with null shader.");
+      throw new RuntimeException("PSpriteBatch::flush called with null shader.");
     }
     clear();
   }
@@ -161,13 +167,10 @@ public class PSpriteBatch {
   }
 
   public void end() {
-    flush();
-    if (shader != null && shader.isActive()) {
-      shader.end();
-    }
-    renderContext.end();
-    texture.reset();
     PAssert.isTrue(started);
+    flush();
+    renderContext.end();
+    texture0.reset();
     started = false;
   }
 
@@ -191,13 +194,25 @@ public class PSpriteBatch {
     return this;
   }
 
+  /**
+   * The spritebatch is not responsible for starting and ending the shader.
+   *
+   * @param shader
+   * @return
+   */
+  public PSpriteBatch setShader(PShader shader) {
+    flush();
+    this.shader = shader;
+    return this;
+  }
+
   public static class UniformConstants {
-    public static class Sampler2D {
-      public static final String u_texture0 = "u_texture0Tex";
+    public static class Mat4 {
+      public static final String u_viewProjTransform = "u_viewProjTransform";
     }
 
-    public static class Mat4 {
-      public static final String  u_viewProjTransform = "u_viewProjTransform";
+    public static class Sampler2D {
+      public static final String u_texture0 = "u_texture0Tex";
     }
   }
 }

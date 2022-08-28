@@ -9,8 +9,10 @@ import com.badlogic.gdx.math.WindowedMean;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PApplicationWindow;
+import com.phonygames.pengine.graphics.font.generator.PFreetypeFontGenerator;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
+import com.phonygames.pengine.graphics.sdf.PSDFGenerator;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.graphics.shader.PShaderProvider;
 import com.phonygames.pengine.input.PInput;
@@ -123,6 +125,24 @@ public class PEngine extends ApplicationAdapter {
     if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.INSERT)) {
       System.gc();
     }
+    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.F)) {
+      debugFontGen();
+    }
+
+    if (DEBUG_fGen != null) {
+      PApplicationWindow.drawTextureToScreen(DEBUG_fGen.previewRenderBufferTexture());
+    }
+  }
+
+  PSDFGenerator DEBUG_sdfGen;
+  PFreetypeFontGenerator DEBUG_fGen;
+  private void debugFontGen() {
+    String fontName = "Dosis";
+    String fontFileName = "DosisSemibold-pxJd.ttf";
+    DEBUG_fGen = new PFreetypeFontGenerator(fontName, Gdx.files.absolute("D:/Coding/pengine2/assets-raw/freetype/" + fontFileName), 750);
+    DEBUG_sdfGen = new PSDFGenerator(1024);
+    DEBUG_fGen.gen('a', DEBUG_sdfGen,.1f, 3);
+    DEBUG_sdfGen.emitToFile(Gdx.files.local("engine/font/fontsdf.png"));
   }
 
   private void processLogicUpdateForFrame() {
