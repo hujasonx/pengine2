@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.PRenderBuffer;
+import com.phonygames.pengine.graphics.PSpriteBatch;
 import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.font.PFont;
 import com.phonygames.pengine.graphics.font.PFreetypeFontGenerator;
@@ -36,22 +37,23 @@ public class PUtilGameFontGen {
     PRenderBuffer testFontRenderBuffer =
         new PRenderBuffer.Builder().setStaticSize(512, 512).addFloatAttachment("color").build();
     testFontRenderBuffer.begin();
+    testFontRenderBuffer.prepSpriteBatchForRender(PSpriteBatch.PGdxSpriteBatch.staticBatch());
     PShader renderTextShader = new PShader("#define pos2dFlag\n", testFontRenderBuffer.fragmentLayout(),
                                            PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
                                            Gdx.files.local("engine/shader/spritebatch/default.vert.glsl"),
                                            Gdx.files.local("engine/shader/sdf/sdf.frag.glsl"), new String[]{"color"});
-    testFontRenderBuffer.spriteBatch().setShader(renderTextShader);
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().setShader(renderTextShader);
     PTexture texture = new PTexture();
     Texture t = new Texture(Gdx.files.internal("engine/font/fontsdfPSDF.png"));
     t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
     texture.set(t);
-    testFontRenderBuffer.spriteBatch().begin();
-    renderTextShader.start(testFontRenderBuffer.spriteBatch().renderContext());
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().begin();
+    renderTextShader.start(PSpriteBatch.PGdxSpriteBatch.staticBatch().renderContext());
     float drawScale = 10;
-    testFontRenderBuffer.spriteBatch()
+    PSpriteBatch.PGdxSpriteBatch.staticBatch()
                         .draw(texture, 0, 512 * drawScale, PColor.WHITE, 512 * drawScale, 512 * drawScale, PColor.WHITE,
                               512 * drawScale, 0, PColor.WHITE, 0, 0, PColor.WHITE);
-    testFontRenderBuffer.spriteBatch().end();
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().end();
     renderTextShader.end();
     testFontRenderBuffer.end();
     testFontRenderBuffer.emitPNG(Gdx.files.absolute("D:/testfont.png"), 0);

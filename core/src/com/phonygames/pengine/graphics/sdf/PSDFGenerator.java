@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderBuffer;
+import com.phonygames.pengine.graphics.PSpriteBatch;
 import com.phonygames.pengine.graphics.font.PFont;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.sdf.PSDFSheet.Channel;
@@ -104,8 +105,8 @@ public class PSDFGenerator {
       shader.set(UniformConstants.Vec1.u_scale, scale);
       shader.set(UniformConstants.Vec4.u_sheetPixelXYWH, symbol.sheetX, symbol.sheetY,
                  symbol.sheetWidth, symbol.sheetHeight);
-      renderBuffer.spriteBatch().enableBlending(true);
-      renderBuffer.spriteBatch().draw(texture.getBackingTexture(), pool.vec4().set(0, 0, 1, 1), symbol.sheetX,
+      PSpriteBatch.PGdxSpriteBatch.staticBatch().enableBlending(true);
+      PSpriteBatch.PGdxSpriteBatch.staticBatch().draw(texture.getBackingTexture(), pool.vec4().set(0, 0, 1, 1), symbol.sheetX,
                                       symbol.sheetY, outputChannel.value(),
                                       symbol.sheetX + symbol.sheetWidth, symbol.sheetY,
                                       outputChannel.value(), symbol.sheetX + symbol.sheetWidth,
@@ -120,9 +121,10 @@ public class PSDFGenerator {
 
   public void begin() {
     this.renderBuffer.begin(false);
-    this.renderBuffer.spriteBatch().begin();
-    this.shader.start(this.renderBuffer.spriteBatch().renderContext());
-    this.renderBuffer.spriteBatch().setShader(this.shader);
+    this.renderBuffer.prepSpriteBatchForRender(PSpriteBatch.PGdxSpriteBatch.staticBatch());
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().begin();
+    this.shader.start(PSpriteBatch.PGdxSpriteBatch.staticBatch().renderContext());
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().setShader(this.shader);
   }
 
   /**
@@ -142,7 +144,7 @@ public class PSDFGenerator {
   }
 
   public void end() {
-    this.renderBuffer.spriteBatch().end();
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().end();
     this.shader.end();
     this.renderBuffer.end();
   }

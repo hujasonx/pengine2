@@ -37,9 +37,6 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   private final OrthographicCamera orthoCamera;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private final PSpriteBatch spriteBatch;
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
   private boolean active;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -55,8 +52,12 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   @Accessors(fluent = true)
   private float windowScale = 1;
 
+  public PSpriteBatch prepSpriteBatchForRender(PSpriteBatch spriteBatch) {
+    spriteBatch.projectionMatrix.set(orthoCamera.combined);
+    return spriteBatch;
+  }
+
   private PRenderBuffer() {
-    this.spriteBatch = new PSpriteBatch(1000);
     this.orthoCamera = new OrthographicCamera();
   }
 
@@ -114,7 +115,6 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
     // Set the spritebatch.
     this.orthoCamera.setToOrtho(false, desiredW, desiredH);
     this.orthoCamera.update(true);
-    this.spriteBatch.setProjectionMatrix(this.orthoCamera.combined);
   }
 
   public Texture texture(int index) {

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.PRenderBuffer;
+import com.phonygames.pengine.graphics.PSpriteBatch;
 import com.phonygames.pengine.graphics.color.PColor;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
@@ -14,6 +15,7 @@ public class POverlayLayer {
   private PRenderBuffer renderBuffer;
   private PShader spritebatchShader;
   private PTexture texture = new PTexture();
+
 
   public POverlayLayer() {
     renderBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("color").build();
@@ -30,15 +32,16 @@ public class POverlayLayer {
   public void update() {
     renderBuffer.begin(true);
     PGLUtils.clearScreen(0, 0, 0, 0);
-    renderBuffer.spriteBatch().begin();
-    spritebatchShader.start(renderBuffer.spriteBatch().renderContext());
-    renderBuffer.spriteBatch().setShader(spritebatchShader);
+    renderBuffer.prepSpriteBatchForRender(PSpriteBatch.PGdxSpriteBatch.staticBatch());
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().begin();
+    spritebatchShader.start(PSpriteBatch.PGdxSpriteBatch.staticBatch().renderContext());
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().setShader(spritebatchShader);
     texture.set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Glow", true));
-    renderBuffer.spriteBatch().enableBlending(false);
-    renderBuffer.spriteBatch()
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().enableBlending(false);
+    PSpriteBatch.PGdxSpriteBatch.staticBatch()
                 .draw(texture, 0, 0, PColor.WHITE, 100, 0, PColor.WHITE, 100, 100, PColor.WHITE, 0, 100, PColor.WHITE);
 
-    renderBuffer.spriteBatch().end();
+    PSpriteBatch.PGdxSpriteBatch.staticBatch().end();
     spritebatchShader.end();
     renderBuffer.end();
   }
