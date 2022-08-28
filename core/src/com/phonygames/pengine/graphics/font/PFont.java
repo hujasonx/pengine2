@@ -120,6 +120,12 @@ public class PFont {
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     /** The x advance amount for the original scale (fontsize). */ private int xAdvance;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    /** The x offset amount for the original scale (fontsize). */ private int xOffset;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    /** The y offset amount for the original scale (fontsize). */ private int yOffset;
 
     public static GlyphData fromString(String s) {
       String[] split = s.split("\\|");
@@ -129,6 +135,8 @@ public class PFont {
       builder.fontSize(Integer.parseInt(split[3]));
       builder.sdfKey(split[4]);
       builder.xAdvance(Integer.parseInt(split[5]));
+      builder.xOffset(Integer.parseInt(split[6]));
+      builder.yOffset(Integer.parseInt(split[7]));
       return builder().build();
     }
 
@@ -140,6 +148,8 @@ public class PFont {
       s.append(fontSize).append("|");
       s.append(sdfKey).append("|");
       s.append(xAdvance).append("|");
+      s.append(xOffset).append("|");
+      s.append(yOffset).append("|");
       return s.toString();
     }
   }

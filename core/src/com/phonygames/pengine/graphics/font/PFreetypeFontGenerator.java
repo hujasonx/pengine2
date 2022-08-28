@@ -98,17 +98,21 @@ public class PFreetypeFontGenerator {
     builder.fontName(this.fontName);
     builder.c(c);
     builder.xAdvance(glyph.xadvance);
+    builder.xOffset(glyph.xoffset);
+    builder.yOffset(glyph.yoffset);
     // Render the glyph.
     renderBuffer.begin();
     PGLUtils.clearScreen(0, 0, 0, 1);
     layout.setText(font, "" + c);
     font.getCache().clear();
     font.getCache().setColor(Color.WHITE);
-    font.getCache().addText(layout, GLYPH_OFFSET_X, GLYPH_TEX_SIZE - GLYPH_OFFSET_Y);
+    int drawX = GLYPH_OFFSET_X;
+    int drawY = GLYPH_TEX_SIZE - GLYPH_OFFSET_Y;
+    font.getCache().addText(layout, drawX, drawY);
     spriteBatch.begin();
-    final int cap = GLYPH_TEX_SIZE - GLYPH_OFFSET_Y;
+    final int cap = drawY;
     final int baseline = cap - (int) font.getCapHeight();
-    final int glyphLeft = GLYPH_OFFSET_X;
+    final int glyphLeft = drawX;
     final int glyphRight = glyphLeft + glyph.width;
     final int glyphBottom = cap + glyph.yoffset + (int) font.getAscent();
     final int glyphTop = glyphBottom + glyph.height;
