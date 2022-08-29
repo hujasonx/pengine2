@@ -233,15 +233,19 @@ public abstract class PSpriteBatch {
     @Accessors(fluent = true)
     private static final PSDFSpriteBatch staticBatch = new PSDFSpriteBatch(1000);
 
-    public PSDFSpriteBatch(int capacity) {
-      super(capacity, new PVertexAttributes(
+    public static PVertexAttributes genVertexAttributes() {
+      return new PVertexAttributes(
           new VertexAttribute[]{PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos2d),
                                 PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.uv[0]),
                                 PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_channel"),
                                 PVertexAttributes.Attribute.genGenericAttribute("a_threshold", 1),
                                 PVertexAttributes.Attribute.genGenericAttribute("a_borderThresholdInwardsOffset", 1),
                                 PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_baseColor"),
-                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_borderColor"),}));
+                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_borderColor"),});
+    }
+
+    public PSDFSpriteBatch(int capacity) {
+      super(capacity, genVertexAttributes());
     }
 
     public void draw(PSDFSheet.Symbol symbol, float threshold, float borderThresholdInwardOffset, float x00, float y00,

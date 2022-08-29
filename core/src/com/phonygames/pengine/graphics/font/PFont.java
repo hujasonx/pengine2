@@ -2,12 +2,14 @@ package com.phonygames.pengine.graphics.font;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.graphics.sdf.PSDFSheet;
 import com.phonygames.pengine.util.PString;
 import com.phonygames.pengine.util.PStringUtils;
 
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 public class PFont {
@@ -29,6 +31,10 @@ public class PFont {
   public GlyphData glyphData(int c) {
     return glyphData[c];
   }
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  protected PSDFSheet sdfSheet;
 
   protected PFont() {
   }

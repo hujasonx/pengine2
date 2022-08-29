@@ -7,7 +7,7 @@ in float v_borderThresholdInwardsOffset;
 in vec4 v_baseColor;
 in vec4 v_borderColor;
 
-const float smoothing = .1;
+const float smoothing = .3;
 
 void main() {
     #include <engine/shader/start/spritebatch.frag>
@@ -17,7 +17,7 @@ void main() {
     float outputAlpha = smoothstep(v_threshold - smoothing * .5, v_threshold + smoothing * .5, sdfValue);
 
     float borderColorMix =
-    1 - smoothstep(v_threshold + v_borderThresholdInwardsOffset - smoothing * .5,
+    1.0 - smoothstep(v_threshold + v_borderThresholdInwardsOffset - smoothing * .5,
     v_threshold + v_borderThresholdInwardsOffset + smoothing * .5, sdfValue);
 
     OUTPUT0 = mix(v_baseColor, v_borderColor, borderColorMix);

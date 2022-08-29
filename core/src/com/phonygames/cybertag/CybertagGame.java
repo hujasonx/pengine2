@@ -3,6 +3,7 @@ package com.phonygames.cybertag;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.MathUtils;
+import com.phonygames.cybertag.ui.CybertagUIController;
 import com.phonygames.cybertag.world.World;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.PEngine;
@@ -12,7 +13,6 @@ import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PPbrPipeline;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PRenderContext;
-import com.phonygames.pengine.graphics.PSpriteBatch;
 import com.phonygames.pengine.graphics.animation.PAnimation;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -49,7 +49,7 @@ public class CybertagGame implements PGame {
   private PVec3 testIKFrontGoal = PVec3.obtain();
   private PModelInstance testikModelInstance;
   private World world;
-  private POverlayLayer overlayLayer;
+  private CybertagUIController cybertagUIController;
 
   @Override public void frameUpdate() {
     PPool.PoolBuffer pool = PPool.getBuffer();
@@ -205,9 +205,9 @@ public class CybertagGame implements PGame {
     }
   }
 
-  public void testSpriteBatch() {
-    overlayLayer.update();
-    PApplicationWindow.drawTextureToScreen(overlayLayer.getTexture());
+  public void renderUI() {
+    cybertagUIController.internalRender();
+    PApplicationWindow.drawTextureToScreen(cybertagUIController.getUITexture());
   }
 
   @Override public void init() {
@@ -245,7 +245,7 @@ public class CybertagGame implements PGame {
       vColIndexBuffer.addData(0, 0, 0, 0); // Skin color emissiveI.
     });
     testikModelInstance.worldTransform().setToRotation(0, 1, 0, 2).translate(0, 0, .2f);
-    overlayLayer = new POverlayLayer();
+    cybertagUIController = new CybertagUIController();
   }
 
   @Override public void logicUpdate() {
@@ -272,7 +272,7 @@ public class CybertagGame implements PGame {
     PDebugRenderer.render(renderContext);
     PDebugRenderer.clear();
 
-    testSpriteBatch();
+    renderUI();
   }
 
   @Override public void postLogicUpdate() {
