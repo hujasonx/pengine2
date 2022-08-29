@@ -29,7 +29,17 @@ float outputLevelForSourceUV(vec2 sourceUV) {
 
     // The source texture must be all white to be considerered lit.
     float litStatus = litStatusOfSourceUV(sourceUV);// step(2.9, dot(vec3(1.0), texture0Tex(sheetPixelSourceUV).rgb));
+
     float minPixelDistanceToNearestOppositeLitStatus = 100000;
+    // For lit pixels, start the min pixel distance as the minimum edge distance to a padding area.
+    if (litStatus > 0.5) {
+        minPixelDistanceToNearestOppositeLitStatus = min(minPixelDistanceToNearestOppositeLitStatus, sourcePixel.x - sourceRegionPixelCorner.x);
+        minPixelDistanceToNearestOppositeLitStatus = min(minPixelDistanceToNearestOppositeLitStatus, sourcePixel.y - sourceRegionPixelCorner.y);
+        minPixelDistanceToNearestOppositeLitStatus = min(minPixelDistanceToNearestOppositeLitStatus, sourceRegionPixelCorner2.x - sourcePixel.x);
+        minPixelDistanceToNearestOppositeLitStatus = min(minPixelDistanceToNearestOppositeLitStatus, sourceRegionPixelCorner2.y - sourcePixel.y);
+    }
+
+
     // The number of pixels distant in the source texture to go from 0 to 0.5.
     // The padding has an extra pixel that shouldn't be used.
     float sourcePixelHalfDistance = (u_sheetPadding - 1.0) / u_scale;
@@ -40,7 +50,7 @@ float outputLevelForSourceUV(vec2 sourceUV) {
             vec2 checkSourcePixel = vec2(sourcePixelX, sourcePixelY);
             vec2 checkSourceUV = checkSourcePixel * u_texture0TexSize.zw;
 
-            float checkLitStatus = step(2.9, dot(vec3(1.0), texture0Tex(checkSourceUV).rgb));
+            float checkLitStatus = litStatusOfSourceUV(checkSourceUV);
             if (abs(checkLitStatus - litStatus) > .5) {
                 // The lit status is different.
                 float distanceToSheetPixelSourcePixel = length(sourcePixel - checkSourcePixel);
@@ -68,12 +78,9 @@ void main() {
     vec2 sheetPixelInSymbolPadded = gl_FragCoord.xy - u_sheetPixelXYWH.xy - vec2(u_sheetPadding, u_sheetPadding);
     // The pixel offset in the source texture from the symbol corner.
     vec2 sourcePixelInSymbolPadded = sheetPixelInSymbolPadded / u_scale;
-    // The number of pixels distant in the source texture to go from 0 to 0.5.
-    // The padding has an extra pixel that shouldn't be used.
-    float sourcePixelHalfDistance = (u_sheetPadding - 1.0) / u_scale;
     // The pixel in the source texture.
     vec2 sheetPixelSourcePixel = sourceRegionPixelCorner + sourcePixelInSymbolPadded;
-
+    // The uv in the source texture.
     vec2 sheetPixelSourceUV = sheetPixelSourcePixel * u_texture0TexSize.zw;
 
     float sheetPixelIsPartOfPadding = 0.0;
@@ -84,60 +91,38 @@ void main() {
         sheetPixelIsPartOfPadding = 1.0;
     }
 
-    //    // The source texture must be all white to be considerered lit.
-    //    float litStatus = litStatusOfSourceUV(sheetPixelSourceUV);// step(2.9, dot(vec3(1.0), texture0Tex(sheetPixelSourceUV).rgb));
-    //    float minPixelDistanceToNearestOppositeLitStatus = 100000;
-    //
-    //    // Find the nearest pixel of the opposite color.
-    //    for (float sourcePixelX = sourceRegionPixelCorner.x; sourcePixelX < sourceRegionPixelCorner2.x; sourcePixelX += 1.0) {
-    //        for (float sourcePixelY = sourceRegionPixelCorner.y; sourcePixelY < sourceRegionPixelCorner2.y; sourcePixelY += 1.0) {
-    //            vec2 checkSourcePixel = vec2(sourcePixelX, sourcePixelY);
-    //            vec2 checkSourceUV = checkSourcePixel * u_texture0TexSize.zw;
-    //
-    //            float checkLitStatus = step(2.9, dot(vec3(1.0), texture0Tex(checkSourceUV).rgb));
-    //            if (abs(checkLitStatus - litStatus) > .5) {
-    //                // The lit status is different.
-    //                float distanceToSheetPixelSourcePixel = length(sheetPixelSourcePixel - checkSourcePixel);
-    //                minPixelDistanceToNearestOppositeLitStatus = min(minPixelDistanceToNearestOppositeLitStatus, distanceToSheetPixelSourcePixel);
-    //            }
-    //        }
-    //    }
-    //    float scaledPixelDistance = minPixelDistanceToNearestOppositeLitStatus / sourcePixelHalfDistance;
-
-
-    // Fill the output based on the minimum distance found.
-    // Either -1 or 1, depending on the lit status (0 or 1).
-//    float litSign = 2.0 * (litStatus - 0.5);
-    //    float outputLevel = 0.5 + litSign * scaledPixelDistance;
-    float outputLevel = outputLevelForSourceUV(sheetPixelSourceUV);
+    vec2 sourceUVOffsetForHalfSheetPixel = vec2(0.5 / u_scale) * u_texture0TexSize.zw;
+    float outputLevel = outputLevelForSourceUV(sheetPixelSourceUV + sourceUVOffsetForHalfSheetPixel);
     OUTPUT0 = v_col0 * vec4(outputLevel);
 
 
-    //    OUTPUT0 = vec4(v_col0) * texture0Tex(vec2(v_uv0.x, v_uv0.y));
-    //    OUTPUT0.rg = vec2(litStatus);
-    //    OUTPUT0.a = 1.0;
-    //    OUTPUT0.xy = pixelForSymbol / u_sheetPixelXYWH.zw;
+//    //    OUTPUT0 = vec4(v_col0) * texture0Tex(vec2(v_uv0.x, v_uv0.y));
+//    //    OUTPUT0.rg = vec2(litStatus);
+//    //    OUTPUT0.a = 1.0;
+//    //    OUTPUT0.xy = pixelForSymbol / u_sheetPixelXYWH.zw;
+//
+//
+//    //    OUTPUT0.g = litStatus;
+//    //    OUTPUT0.b = 0.5 + litSign * scaledPixelDistance;
+//    //    OUTPUT0.a = 1.0;
+//    //    OUTPUT0.g = texture0Tex(sheetPixelSourceUV).g;
+//    //    OUTPUT0.r = litStatus;
+//    OUTPUT0 =  vec4(0.0, 0.0, 0.0, 1.0);
+//    //    OUTPUT0.r = texture0Tex(sheetPixelSourceUV).r;
+//    //    OUTPUT0.gb = sheetPixelInSymbolPadded / (u_sheetPixelXYWH.zw - 2.8 * vec2(u_sheetPadding));
+//    //    if (OUTPUT0.g < 0.0 || OUTPUT0.g > 1.0) {
+//    //        OUTPUT0.r += 0.3;
+//    //    }
+//    //    if (OUTPUT0.b < 0.0 || OUTPUT0.b > 1.0) {
+//    //        OUTPUT0.r += 0.3;
+//    //    }
+//
+//    if (sheetPixelIsPartOfPadding > 0.5) {
+//        OUTPUT0.a = 1.0;
+//        OUTPUT0.r = 1.0;
+//    }
+//    OUTPUT0.g = texture0Tex(sheetPixelSourceUV).r;
+//    OUTPUT0.b = outputLevel;
 
-
-    //    OUTPUT0.g = litStatus;
-    //    OUTPUT0.b = 0.5 + litSign * scaledPixelDistance;
-    //    OUTPUT0.a = 1.0;
-    //    OUTPUT0.g = texture0Tex(sheetPixelSourceUV).g;
-    //    OUTPUT0.r = litStatus;
-    //    OUTPUT0 =  vec4(0.0, 0.0, 0.0, 1.0);
-    //    OUTPUT0.r = texture0Tex(sheetPixelSourceUV).r;
-    //    OUTPUT0.gb = sheetPixelInSymbolPadded / (u_sheetPixelXYWH.zw - 2.8 * vec2(u_sheetPadding));
-    //    if (OUTPUT0.g < 0.0 || OUTPUT0.g > 1.0) {
-    //        OUTPUT0.r += 0.3;
-    //    }
-    //    if (OUTPUT0.b < 0.0 || OUTPUT0.b > 1.0) {
-    //        OUTPUT0.r += 0.3;
-    //    }
-
-    if (sheetPixelIsPartOfPadding > 0.5) {
-        OUTPUT0.a = 1.0;
-        OUTPUT0.r = 1.0;
-    }
-
-        #include <engine/shader/end/spritebatch.frag>
+    #include <engine/shader/end/spritebatch.frag>
 }
