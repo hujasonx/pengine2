@@ -29,6 +29,7 @@ public class CybertagUIController {
     textRenderer.begin();
     textRenderer.font(font);
     textRenderer.fontSize(120);
+    textRenderer.italicsAmount(.4f);
     textRenderer.topCorner().set(300, 300);
     textRenderer.addText("Hello World!");
 

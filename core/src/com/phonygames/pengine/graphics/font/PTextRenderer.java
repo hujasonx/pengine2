@@ -129,9 +129,6 @@ public class PTextRenderer {
         default:
           PFont.GlyphData glyphData = font.glyphData(c);
           Glyph glyph = genAndAddGlyph(glyphData, font.sdfSheet());
-          if (glyphData != null) {
-            nextCharOffset.x(nextCharOffset.x() + glyphData.xAdvance() * fromFontScale);
-          }
           glyph.charIndex = charIndex;
           glyph.capCorner.set(topCorner).add(xAxis, nextCharOffset.x()).add(yAxis, nextCharOffset.y());
           glyph.fontSize = fontSize;
@@ -140,6 +137,9 @@ public class PTextRenderer {
           glyph.yAxis.set(yAxis);
           glyph.italicsAmount = italicsAmount;
           glyph.setMeshCornersFromSettings();
+          if (glyphData != null) {
+            nextCharOffset.x(nextCharOffset.x() + glyphData.xAdvance() * fromFontScale);
+          }
           break;
       }
       if (isAtEndOfWord) {
@@ -201,6 +201,7 @@ public class PTextRenderer {
                  glyph.meshCorner11.x(), glyph.meshCorner11.y(), baseColor, borderColor, glyph.meshCorner01.x(),
                  glyph.meshCorner01.y(), baseColor, borderColor);
     }
+    sdfSB.enableBlending(false);
     sdfSB.flush();
     glyphs.clearAndFreePooled();
     baseColor.free();
@@ -316,10 +317,10 @@ public class PTextRenderer {
       final float fromFontScale = fromFontScale();
       final float paddingOriginalScale = sdfSymbol.paddingOriginalScale();
       try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-        // Get the baseline corners, as they are unchanged regardless of slant.
-        PVec2 unSlantedBaselineCorner = pool.vec2(capCorner).add(yAxis, -glyphData.font().capHeight() * fromFontScale);
+        // Get the baseline corners, as they are unchanged regardless of slant. Includes horizontal padding.
+        PVec2 unSlantedBaselineCorner = pool.vec2(capCorner).add(xAxis, -fromFontScale * paddingOriginalScale).add(yAxis, -glyphData.font().capHeight() * fromFontScale);
         PVec2 unSlantedBaselineEndCorner =
-            pool.vec2(unSlantedBaselineCorner).add(xAxis, sdfSymbol.sheetWidthWithoutPadding() / sdfSymbol.scale() * fromFontScale);
+            pool.vec2(unSlantedBaselineCorner).add(xAxis, (glyphData.width() + 2* paddingOriginalScale) * fromFontScale);
         // Set the mesh corners for a vertically-sloped glyph.
         float baselineToPaddedGlyphTop = fromFontScale * (glyphData.baselineToTop() + paddingOriginalScale);
         float baselineToPaddedGlyphBottom = fromFontScale * (glyphData.baselineToBottom() - paddingOriginalScale);
@@ -327,8 +328,8 @@ public class PTextRenderer {
         meshCorner10.set(unSlantedBaselineEndCorner).add(yAxis, baselineToPaddedGlyphBottom);
         meshCorner01.set(unSlantedBaselineCorner).add(yAxis, baselineToPaddedGlyphTop);
         meshCorner11.set(unSlantedBaselineEndCorner).add(yAxis, baselineToPaddedGlyphTop);
-        // Apply italics by shifting the corners horizontally..
-        meshCorner00.add(xAxis, baselineToPaddedGlyphBottom * italicsAmount);
+        // Apply italics by shifting the corners horizontally.
+        meshCorner00.add(xAxis, baselineToPaddedGlyphBottom * italicsAmount );
         meshCorner10.add(xAxis, baselineToPaddedGlyphBottom * italicsAmount);
         meshCorner01.add(xAxis, baselineToPaddedGlyphTop * italicsAmount);
         meshCorner11.add(xAxis, baselineToPaddedGlyphTop * italicsAmount);
