@@ -23,7 +23,7 @@ public class PUtilGameFontGen {
         "D:/Coding/pengine2/assets-raw/freetype/" + fontFileName), 750);
     DEBUG_sdfGen = new PSDFGenerator("font", 1024);
     //    DEBUG_fGen.gen('M',DEBUG_sdfGen,.1f, 8);
-    DEBUG_fGen.genAll(DEBUG_sdfGen, .06f, 4);
+    DEBUG_fGen.genAll(DEBUG_sdfGen, .08f, 8);
     DEBUG_sdfGen.emitToFile(Gdx.files.local("engine/font/fontsdf." + PSDFSheet.FILE_EXTENSION));
     if (DEBUG_fGen != null) {
       PApplicationWindow.drawTextureToScreen(DEBUG_fGen.previewRenderBufferTexture());

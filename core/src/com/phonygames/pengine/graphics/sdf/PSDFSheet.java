@@ -12,6 +12,7 @@ import com.phonygames.pengine.util.collection.PStringMap;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
 
@@ -137,6 +138,11 @@ public class PSDFSheet {
   }
 
   @Builder public static class Symbol {
+
+    /** What the padding is in the symbol, in the scale of the original image. */
+    public float paddingOriginalScale() {
+      return sheetPadding / scale;
+    }
     public static final String SYMBOL = "Symbol";
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
@@ -165,6 +171,14 @@ public class PSDFSheet {
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private PSDFSheet sheet;
+
+    public int sheetWidthWithoutPadding() {
+      return sheetWidth - 2 * sheetPadding;
+    }
+
+    public int sheetHeightWithoutPadding() {
+      return sheetHeight - 2 * sheetPadding;
+    }
 
     public static Symbol fromString(String s) {
       String[] split = s.split("\\|");

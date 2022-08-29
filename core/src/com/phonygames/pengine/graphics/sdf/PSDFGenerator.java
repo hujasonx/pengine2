@@ -35,7 +35,7 @@ public class PSDFGenerator {
   private boolean full = false;
   private Channel lastDrawnChannel = Channel.A; // Start with A, then go to R. This allows there to be opaque stuff.
   private final PSDFSheet outputSheet;
-
+  private int additionalPadding = 1;
 
   public PSDFGenerator(String name, final int sideLength) {
     this.sideLength = sideLength;
@@ -95,10 +95,10 @@ public class PSDFGenerator {
       symbolBuilder.sheetY(curNextY[outputChannel.index()]);
     }
     PSDFSheet.Symbol symbol = symbolBuilder.build();
-    curX[outputChannel.index()] = symbol.sheetX + symbol.sheetWidth;
+    curX[outputChannel.index()] = symbol.sheetX + symbol.sheetWidth + additionalPadding;
     curY[outputChannel.index()] = symbol.sheetY;
     curNextY[outputChannel.index()] =
-        Math.max(curNextY[outputChannel.index()], symbol.sheetY + symbol.sheetHeight);
+        Math.max(curNextY[outputChannel.index()], symbol.sheetY + symbol.sheetHeight + additionalPadding);
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       shader.set(UniformConstants.Vec4.u_inputUVOS, texture.uvOS());
       shader.set(UniformConstants.Vec1.u_sheetPadding, sheetPadding);

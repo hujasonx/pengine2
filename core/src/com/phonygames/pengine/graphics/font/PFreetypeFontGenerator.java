@@ -100,6 +100,8 @@ public class PFreetypeFontGenerator {
     builder.xAdvance(glyph.xadvance);
     builder.xOffset(glyph.xoffset);
     builder.yOffset(glyph.yoffset);
+    builder.width(glyph.width);
+    builder.height(glyph.height);
     // Render the glyph.
     renderBuffer.begin();
     PGLUtils.clearScreen(0, 0, 0, 1);

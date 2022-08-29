@@ -24,6 +24,7 @@ void main() {
     OUTPUT0.a *= outputAlpha;
 
     //    OUTPUT0.rg = bufferUV * 10.0;
+    OUTPUT0.a = 1.0;
 
     #include <engine/shader/end/spritebatch.frag>
 }

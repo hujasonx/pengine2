@@ -23,8 +23,14 @@ public class PFont {
   private static final String LINE_HEIGHT = "lineHeight";
   private static final String MEDIAN = "median";
   private static final String SPACE_XADVANCE = "spaceWidth";
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   protected String fontName;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   protected int fontSize;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   protected float spaceXAdvance, capHeight, ascent, descent, lineHeight, median;
   private GlyphData[] glyphData = new GlyphData[MAX_GLYPHS];
 
@@ -80,6 +86,7 @@ public class PFont {
         case GlyphData.GLYPH_DATA:
           PAssert.isNotNull(font, "Font was not created yet!");
           GlyphData glyphData = GlyphData.fromString(line);
+          glyphData.font = font;
           font.glyphData[glyphData.c] = glyphData;
           break;
       }
@@ -89,6 +96,7 @@ public class PFont {
 
   public PFont addGlyphData(GlyphData glyphData) {
     this.glyphData[glyphData.c] = glyphData;
+    glyphData.font = this;
     return this;
   }
 
@@ -132,10 +140,40 @@ public class PFont {
     /** The x advance amount for the original scale (fontsize). */ private int xAdvance;
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
+    /** The width for the original scale (fontsize). */ private int width;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    /** The height for the original scale (fontsize). */ private int height;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
     /** The x offset amount for the original scale (fontsize). */ private int xOffset;
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     /** The y offset amount for the original scale (fontsize). */ private int yOffset;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private PFont font;
+    //      final int cap = drawY;
+    //      final int baseline = cap - (int) font.getCapHeight();
+    //      Derived -> final int drawY = baseline + (int) font.getCapHeight();
+    //      final int glyphLeft = drawX;
+    //      final int glyphRight = glyphLeft + glyph.width;
+    //      final int glyphBottom = cap + glyph.yoffset + (int) font.getAscent();
+    //      Derived -> final int glyphBottom = baseline + (int) font.getCapHeight() + glyph.yoffset + (int) font.getAscent();
+    //      final int glyphTop = glyphBottom + glyph.height;
+    //      Derived -> final int glyphTop = baseline + (int) font.getCapHeight() + glyph.yoffset + (int) font.getAscent() + glyph.height;
+    //      final int glyphTop = glyphBottom + glyph.height;
+    //      final int descent = baseline + (int) font.getDescent();
+    //      final int advancedX = glyphLeft + glyph.xadvance;
+    /** The distance from the top of the glyph to the baseline in the original scale (fontsize). Positive means the top extends up from the baseline.*/
+    public int baselineToTop() {
+      return (int)font.capHeight + yOffset + (int)font.ascent + height;
+    }
+
+    /** The distance from the baseline to the bottom in the original scale (fontsize). Negative means the bottom extends below the baseline. */
+    public int baselineToBottom() {
+      return (int)font.capHeight + yOffset + (int)font.ascent;
+    }
 
     public static GlyphData fromString(String s) {
       String[] split = s.split("\\|");
@@ -147,6 +185,8 @@ public class PFont {
       builder.xAdvance(Integer.parseInt(split[5]));
       builder.xOffset(Integer.parseInt(split[6]));
       builder.yOffset(Integer.parseInt(split[7]));
+      builder.width(Integer.parseInt(split[8]));
+      builder.height(Integer.parseInt(split[9]));
       return builder.build();
     }
 
@@ -160,6 +200,8 @@ public class PFont {
       s.append(xAdvance).append("|");
       s.append(xOffset).append("|");
       s.append(yOffset).append("|");
+      s.append(width).append("|");
+      s.append(height).append("|");
       return s.toString();
     }
   }
