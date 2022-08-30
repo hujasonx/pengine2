@@ -1,6 +1,7 @@
 package com.phonygames.pengine.graphics.font;
 
 import com.badlogic.gdx.Gdx;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PSpriteBatch;
@@ -72,6 +73,10 @@ public class PTextRenderer {
   /** The top corner from which offsets are calculated. Can be on the left or right depending on rtl. */ private PVec2
       topCorner = PVec2.obtain();
 
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private int charIndexInVisualLine;
+
   public PTextRenderer(PRenderBuffer renderBuffer) {
     this.renderBuffer = renderBuffer;
     textShader = new PShader("#define pos2dFlag\n", renderBuffer.fragmentLayout(),
@@ -101,6 +106,7 @@ public class PTextRenderer {
   public void clear() {
     nextCharOffset.setZero();
     fullText.clear();
+    charIndexInVisualLine = 0;
     glyphs.clearAndFreePooled();
   }
 
@@ -115,6 +121,7 @@ public class PTextRenderer {
     /** Scale values from font size to the desired output size */
     float fromFontScale = fontSize / font.fontSize;
     int lastSpaceIndex = -1;
+    int prevChar = fullText.length() == 0 ? 0 : fullText.charAt(fullText.length() - 1);
     for (int a = 0; a < text.length(); a++) {
       char c = text.charAt(a);
       boolean isAtEndOfWord = c == ' ' || a == text.length() - 1;
@@ -130,16 +137,24 @@ public class PTextRenderer {
           PFont.GlyphData glyphData = font.glyphData(c);
           Glyph glyph = genAndAddGlyph(glyphData, font.sdfSheet());
           glyph.charIndex = charIndex;
-          glyph.capCorner.set(topCorner).add(xAxis, nextCharOffset.x()).add(yAxis, nextCharOffset.y());
           glyph.fontSize = fontSize;
           glyph.textRenderer = this;
           glyph.xAxis.set(xAxis);
           glyph.yAxis.set(yAxis);
           glyph.italicsAmount = italicsAmount;
-          glyph.setMeshCornersFromSettings();
+          glyph.charIndexInVisualLine = charIndexInVisualLine;
+          int fontScaleKerning = 0;
+          // Apply kernings.
           if (glyphData != null) {
-            nextCharOffset.x(nextCharOffset.x() + glyphData.xAdvance() * fromFontScale);
+            if (charIndexInVisualLine > 0) {
+              fontScaleKerning = font.getKerning(prevChar,c);
+              if (fontScaleKerning != 0)
+              nextCharOffset.add(fromFontScale * fontScaleKerning, 0);
+            }
           }
+          glyph.capCorner.set(topCorner).add(xAxis, nextCharOffset.x()).add(yAxis, nextCharOffset.y());
+          nextCharOffset.add(fromFontScale * glyphData.xAdvance(), 0);
+          glyph.setMeshCornersFromSettings();
           break;
       }
       if (isAtEndOfWord) {
@@ -155,6 +170,8 @@ public class PTextRenderer {
             break;
         }
       }
+      charIndexInVisualLine++;
+      prevChar = c;
       charIndex++;
     }
     return this;
@@ -264,6 +281,9 @@ public class PTextRenderer {
     @Accessors(fluent = true)
     /** The index in the textRenderer string this glyph corresponds to. */ private int charIndex;
     @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    /** The index in the textRenderer line this glyph corresponds to. */ private int charIndexInVisualLine;
+    @Getter(value = AccessLevel.PUBLIC)
     @Setter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private float fontSize;
@@ -285,6 +305,7 @@ public class PTextRenderer {
 
     @Override public void reset() {
       charIndex = 0;
+      charIndexInVisualLine = 0;
       glyphData = null;
       sdfSheet = null;
       capCorner.setZero();

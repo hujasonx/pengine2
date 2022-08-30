@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 
 public class PFont {
   public static final String FILE_EXTENSION = "pfont";
-  public static final int MAX_GLYPHS = 1024;
+  public static final int MAX_GLYPHS = 512;
   private static final String ASCENT = "ascent";
   private static final String CAP_HEIGHT = "capHeight";
   private static final String DESCENT = "descent";
@@ -23,6 +23,7 @@ public class PFont {
   private static final String LINE_HEIGHT = "lineHeight";
   private static final String MEDIAN = "median";
   private static final String SPACE_XADVANCE = "spaceWidth";
+  private static final String KERNING = "kerning";
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected String fontName;
@@ -33,6 +34,7 @@ public class PFont {
   @Accessors(fluent = true)
   protected float spaceXAdvance, capHeight, ascent, descent, lineHeight, median;
   private GlyphData[] glyphData = new GlyphData[MAX_GLYPHS];
+  private int[][] kernings = new int[MAX_GLYPHS][];
 
   public GlyphData glyphData(int c) {
     return glyphData[c];
@@ -83,6 +85,12 @@ public class PFont {
         case SPACE_XADVANCE:
           font.spaceXAdvance = Float.parseFloat(split[1]);
           break;
+        case KERNING:
+          int startCharForKerning = Integer.parseInt(split[1]);
+          int endCharForKerning = Integer.parseInt(split[2]);
+          int kerningAmount = Integer.parseInt(split[3]);
+          font.addKerning(startCharForKerning,endCharForKerning,kerningAmount);
+          break;
         case GlyphData.GLYPH_DATA:
           PAssert.isNotNull(font, "Font was not created yet!");
           GlyphData glyphData = GlyphData.fromString(line);
@@ -92,6 +100,21 @@ public class PFont {
       }
     }
     return font;
+  }
+
+  public int getKerning(int startChar, int endChar) {
+    if (kernings[startChar] == null) {
+      return 0;
+    }
+    return kernings[startChar][endChar];
+  }
+
+  public PFont addKerning(int startChar, int endChar, int kerningAmount) {
+    if (kernings[startChar] == null) {
+      kernings[startChar] = new int[MAX_GLYPHS];
+    }
+    kernings[startChar][endChar] = kerningAmount;
+    return this;
   }
 
   public PFont addGlyphData(GlyphData glyphData) {
@@ -115,6 +138,14 @@ public class PFont {
       GlyphData glyphData = this.glyphData[a];
       if (glyphData == null) {continue;}
       outData.append(glyphData.toString()).appendBr();
+      if (kernings[a] != null) {
+        for (int b = 0; b < MAX_GLYPHS; b++) {
+          if (kernings[a][b] != 0) {
+            outData.append(KERNING).append("|").append(a).append("|").append(b).append("|").append(kernings[a][b]).appendBr();
+          }
+
+        }
+      }
     }
     fileHandle.writeString(outData.toString(), false);
     outData.free();

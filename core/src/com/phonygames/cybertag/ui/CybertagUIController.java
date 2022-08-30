@@ -6,6 +6,7 @@ import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PSpriteBatch;
 import com.phonygames.pengine.graphics.font.PFont;
 import com.phonygames.pengine.graphics.font.PTextRenderer;
+import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.sdf.PSDFSheet;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec4;
@@ -26,12 +27,12 @@ public class CybertagUIController {
 
   public void internalRender() {
     uiRenderBuffer.begin();
+    PGLUtils.clearScreen(0,0,0,0);
     textRenderer.begin();
     textRenderer.font(font);
     textRenderer.fontSize(120);
-    textRenderer.italicsAmount(.4f);
     textRenderer.topCorner().set(300, 300);
-    textRenderer.addText("Hello World!");
+    textRenderer.addText("Hello World! WMWA");
 
     textRenderer.end();
     uiRenderBuffer.end();

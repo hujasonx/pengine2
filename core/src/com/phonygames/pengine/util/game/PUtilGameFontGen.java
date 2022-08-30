@@ -16,11 +16,14 @@ public class PUtilGameFontGen {
   PFreetypeFontGenerator DEBUG_fGen;
   PSDFGenerator DEBUG_sdfGen;
 
+  private static final String BASE_PATH = "D:/Coding/pengine2/";
+  private static final String FREETYPE_ASSETS_PATH = BASE_PATH + "assets-raw/freetype/";
+
   protected void debugFontGen() {
     String fontName = "Dosis";
     String fontFileName = "DosisSemibold-pxJd.ttf";
     DEBUG_fGen = new PFreetypeFontGenerator(fontName, Gdx.files.absolute(
-        "D:/Coding/pengine2/assets-raw/freetype/" + fontFileName), 750);
+        FREETYPE_ASSETS_PATH + fontFileName), 750);
     DEBUG_sdfGen = new PSDFGenerator("font", 1024);
     //    DEBUG_fGen.gen('M',DEBUG_sdfGen,.1f, 8);
     DEBUG_fGen.genAll(DEBUG_sdfGen, .08f, 8);

@@ -156,6 +156,12 @@ public class PFreetypeFontGenerator {
     sdfGenerator.end();
     PFont.GlyphData glyphData = builder.build();
     outputFont.addGlyphData(glyphData);
+    for (int a = 0; a < 256; a++) {
+      int kern = glyph.getKerning((char)a);
+      if (kern != 0) {
+        outputFont.addKerning(c, (char)a,kern);
+      }
+    }
     glyphDataMap.put((int) c + "", glyphData);
     return glyphData;
   }
