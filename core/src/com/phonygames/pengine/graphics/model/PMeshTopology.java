@@ -47,7 +47,7 @@ public class PMeshTopology {
     }
     // Recalculate the normals based on the new shape.
     recalcSmoothNormals(verticesToModify, triangleIndicesCanonical, 0, -1, vertexAttributes);
-    // Copy the position and normal data from canonical vertices to the shared vertices.
+    // Copy the normal data from canonical vertices to the shared vertices.
     for (int indexInCanonicalIndicesArray = 0, canonicalIndexIndex = 0;
          indexInCanonicalIndicesArray < canonicalIndices.length; ) {
       short canonicalIndex = canonicalIndices[indexInCanonicalIndicesArray + 0];
