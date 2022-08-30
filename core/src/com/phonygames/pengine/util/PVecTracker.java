@@ -89,7 +89,7 @@ public class PVecTracker<T extends PVec<T>> {
       T newValue = pool.obtain().set(getSamplePointFromLast(0));
       float timeElapsedSinceLastSample = PEngine.t - lastSampleT;
       newValue.lerp(trackedVec, timeBetweenSamples / timeElapsedSinceLastSample);
-      addSampleVec(trackedVec);
+      addSampleVec(newValue);
       lastSampleT += timeBetweenSamples;
       newValue.free();
     }
