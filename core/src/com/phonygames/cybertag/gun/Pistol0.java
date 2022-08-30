@@ -3,6 +3,7 @@ package com.phonygames.cybertag.gun;
 import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.character.PlayerCharacterEntity;
 import com.phonygames.pengine.PAssetManager;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.particles.PBillboardParticle;
 import com.phonygames.pengine.graphics.particles.PPipeParticle;
@@ -56,7 +57,7 @@ public class Pistol0 extends Gun {
     pipeParticleSource.delegate(particle -> {
       float a = .6f - PNumberUtils.pow(particle.lifeT(), 3) * .03f;
       // Apply gravity.
-      //      particle.vel().y(particle.vel().y() - PEngine.dt * 9.81f);
+//            particle.vel().y(particle.vel().y() - PEngine.dt * 9.81f);
       if (a < 0) {
         particle.kill();
         return;
@@ -102,7 +103,7 @@ public class Pistol0 extends Gun {
         //        particle.tailCol().setHSVA(MathUtils.random(), 1, 10, 1);
         particle.tailCol().set(particle.headCol());
         particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)).nor()
-                .scl(MathUtils.random(.5f));
+                .scl(MathUtils.random(.15f));
         particle.vel().add(fireDir, 250);
         particle.pos().set(firePointPos);
         particle.intermediatePointNormalizedTimes().add(.05f).add(.22f).add(.5f).add(.7f);
