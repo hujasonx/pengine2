@@ -32,6 +32,7 @@ allprojects {
         gdxControllersVersion = '2.1.0'
         recastVersion = '1.5.3'
         gltfVersion = '2.0.0-rc.1'
+        javaparserVersion = '3.24.4'
     }
 
     repositories {
@@ -135,6 +136,7 @@ project(":core") {
         api group: 'org.recast4j', name: 'detour-crowd', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour-extras', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour-dynamic', version: "$recastVersion"
+        api group: 'com.github.javaparser', name: 'javaparser-core', version: "$javaparserVersion"
         implementation fileTree(dir: "../libs", include: "*.jar")
         api "com.github.mgsx-dev.gdx-gltf:gltf:$gltfVersion"
         implementation 'com.android.support:support-annotations:27.1.0'

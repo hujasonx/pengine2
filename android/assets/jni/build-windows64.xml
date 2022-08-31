@@ -1,21 +1,27 @@
-<project name="penginelib-Windows-64" basedir="." default="postcompile">
+<project name="pengine_FMOD-Windows-64" basedir="." default="postcompile">
 	<!-- include the environment -->
 	<property environment="env"/>	
 	<!-- output directory for temporary object files -->
-	<property name="buildDir" value="temp/target/windows64" />
+	<property name="buildDir" value="target/windows64" />
 	<!-- output directory for the shared library -->
-	<property name="outputDir" value="../output/windows64" />
+	<property name="libsDir" value="../libs/windows64" />
 	<!-- the name of the shared library -->
-	<property name="libName" value="penginelib64.dll"/>
+	<property name="libName" value="pengine_FMOD64.dll"/>
 	<!-- the jni header jniPlatform to use -->
 	<property name="jniPlatform" value="win32"/>
+	<!-- the compiler to use when compiling c files -->
+	<property name="cCompiler" value="gcc"/>
+	<!-- the compiler to use when compiling c++ files -->
+	<property name="cppCompiler" value="g++"/>
+	<!-- the command to use when archiving files -->
+	<property name="archiver" value="ar"/>
 	<!-- the compilerPrefix for the C & C++ compilers -->
 	<property name="compilerPrefix" value="x86_64-w64-mingw32-"/>
-	<!--  the compilerSuffix for the C & C++ compilers -->	
-	<property name="compilerSuffix" value="" />	
+	<!-- the compilerSuffix for the C & C++ compilers -->
+	<property name="compilerSuffix" value="" />
 	
 	<!-- define gcc compiler, options and files to compile -->
-	<property name="gcc" value="${compilerPrefix}gcc${compilerSuffix}"/>	
+	<property name="gcc" value="${compilerPrefix}${cCompiler}${compilerSuffix}"/>	
 	<property name="gcc-opts" value="-c -Wall -O2 -mfpmath=sse -msse2 -fmessage-length=0 -m64"/>
 	<fileset id="gcc-files" dir="./">
 		<exclude name="target/"/>		
@@ -26,7 +32,7 @@
 	</fileset>
 	
 	<!-- define g++ compiler, options and files to compile -->
-	<property name="g++" value="${compilerPrefix}g++${compilerSuffix}"/>
+	<property name="g++" value="${compilerPrefix}${cppCompiler}${compilerSuffix}"/>
 	<property name="g++-opts" value="-c -Wall -O2 -mfpmath=sse -msse2 -fmessage-length=0 -m64 -std=c++11 "/>
 	<fileset id="g++-files" dir="./">
 		<exclude name="target/"/>
@@ -36,15 +42,18 @@
 	</fileset>
 
 	<!-- define linker and options -->
-	<property name="linker" value="${compilerPrefix}g++${compilerSuffix}"/>
+	<property name="linker" value="${compilerPrefix}${cppCompiler}${compilerSuffix}"/>
 	<property name="linker-opts" value="-Wl,--kill-at -shared -static -static-libgcc -static-libstdc++ -m64"/>
 	<property name="libraries" value=""/>
+
+	<!-- define stripper -->
+	<property name="stripper" value="${compilerPrefix}strip${compilerSuffix}"/>
 	
 	<!-- cleans the build directory, removes all object files and shared libs -->
 	<target name="clean">
 		<delete includeemptydirs="true" quiet="true">
 			<fileset dir="${buildDir}"/>
-			<fileset dir="${outputDir}" includes="**/*" excludes="**/.svn"/>
+			<fileset dir="${libsDir}" includes="**/*" excludes="**/.svn"/>
 		</delete>
 	</target>
 	
@@ -65,6 +74,23 @@
 		</condition>
 		<condition property="has-compiler">
 			<equals arg1="${compiler-found}" arg2="true"/>
+		</condition>
+		<condition property="stripper-found">
+			<or>
+				<!-- Include both b/c Windows might be either -->
+				<available file="${stripper}" filepath="${env.PATH}"/>
+				<available file="${stripper}" filepath="${env.Path}"/>
+			</or>
+		</condition>
+		<condition property="should-strip">
+			<and>
+				<equals arg1="${stripper-found}" arg2="true"/>
+				<equals arg1="${release}" arg2="true"/>
+				<!-- Don't strip mac osx libs -->
+				<not>
+					<contains string="${libName}" substring="dylib"/>
+				</not>
+			</and>
 		</condition>
 		
 	</target>
@@ -126,17 +152,25 @@
 			</patternset>
 		</fileset>
 		<pathconvert pathsep=" " property="objFiles" refid="objFileSet" />
-		<mkdir dir="${outputDir}" />
+		<mkdir dir="${libsDir}" />
 		<exec executable="${linker}" failonerror="true" dir="${buildDir}">
 			<arg line="${linker-opts}" />
 			<arg value="-o" />
-			<arg path="${outputDir}/${libName}" />
+			<arg path="${libsDir}/${libName}" />
 			<arg line="${objFiles}"/>
 			<arg line="${libraries}" />
 		</exec>
 	</target>	
+
+	<!-- strips the shared library of debug symbols -->
+	<target name="strip" depends="link" if="should-strip">
+		<exec executable="${stripper}" failonerror="true" dir="${buildDir}">
+			<arg value="--strip-unneeded"/>
+			<arg path="${libsDir}/${libName}" />
+		</exec>
+	</target>
 	
-	<target name="postcompile" depends="link">
+	<target name="postcompile" depends="strip">
 		
 	</target>
 </project>
