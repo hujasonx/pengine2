@@ -99,7 +99,7 @@ public class Pistol0 extends Gun {
       for (int a = 0; a < 1; a++) {
         PPipeParticle particle = pipeParticleSource.spawnParticle();
         particle.updateTopology(4, 4);
-        particle.headCol().setHSVA(.15f, 1, 3, 1);
+        particle.headCol().setHSVA(.15f, .4f, 3, 1);
         //        particle.tailCol().setHSVA(MathUtils.random(), 1, 10, 1);
         particle.tailCol().set(particle.headCol());
         particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)).nor()

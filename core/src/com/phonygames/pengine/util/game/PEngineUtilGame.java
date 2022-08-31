@@ -16,6 +16,9 @@ public class PEngineUtilGame implements PGame {
     if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.R)) {
       fontGen.testRenderFont();
     }
+    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.S)) {
+      PUtilGameFMODGen.generate();
+    }
   }
 
   @Override public void init() {

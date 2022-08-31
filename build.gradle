@@ -133,7 +133,6 @@ project(":core") {
         api group: 'org.recast4j', name: 'recast', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour-crowd', version: "$recastVersion"
-//        api group: 'org.recast4j', name: 'detour-tile-cache', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour-extras', version: "$recastVersion"
         api group: 'org.recast4j', name: 'detour-dynamic', version: "$recastVersion"
         implementation fileTree(dir: "../libs", include: "*.jar")
