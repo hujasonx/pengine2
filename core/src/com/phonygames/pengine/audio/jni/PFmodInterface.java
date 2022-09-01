@@ -180,7 +180,7 @@ public class PFmodInterface {
     ERRCHECK(FMOD_Studio_EventInstance_Start(eventInstances[instanceId]));
   */
 
-  public static enum FMOD_STUDIO_STOP_MODE {
+  public enum FMOD_STUDIO_STOP_MODE {
     FMOD_STUDIO_STOP_ALLOWFADEOUT, FMOD_STUDIO_STOP_IMMEDIATE, FMOD_STUDIO_STOP_FORCEINT
   }
 

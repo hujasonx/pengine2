@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.profiling.GLErrorListener;
 import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.math.WindowedMean;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.phonygames.pengine.audio.PAudio;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PApplicationWindow;
 import com.phonygames.pengine.graphics.model.PMesh;
@@ -51,13 +52,16 @@ public class PEngine extends ApplicationAdapter {
   @Override public void create() {
     try {
       new SharedLibraryLoader().load(LIBRARY_NAME);
+      PAudio.isSupported = true;
     } catch (Exception e) {
+      e.printStackTrace();
     }
     initStatic();
     game.init();
   }
 
   private static void initStatic() {
+    PAudio.init();
     PInput.init();
     PVertexAttributes.init();
     PLight.initMeshes();
@@ -149,12 +153,17 @@ public class PEngine extends ApplicationAdapter {
           PStringUtils.prependSpacesToLength(
               PStringUtils.roundNearestHundredth(PApplicationUtils.runtimeUsedMemoryMb() / 1024), 5) + "GB");
     }
-    PApplicationWindow.preFrameUpdate();
-    PAssetManager.preFrameUpdate();
+    preFrameUpdateStatic();
     game.preFrameUpdate();
     game.frameUpdate();
     game.postFrameUpdate();
     postFrameUpdateStatic();
+  }
+
+  private static void preFrameUpdateStatic() {
+    PApplicationWindow.preFrameUpdate();
+    PAssetManager.preFrameUpdate();
+    PAudio.preFrameUpdate();
   }
 
   private static void postLogicUpdateStatic() {
@@ -171,6 +180,7 @@ public class PEngine extends ApplicationAdapter {
         Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
       }
     }
+    PAudio.postFrameUpdate();
   }
 
   @Override public void dispose() {

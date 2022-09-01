@@ -4,10 +4,10 @@ import com.badlogic.gdx.jnigen.AntScriptGenerator;
 import com.badlogic.gdx.jnigen.BuildConfig;
 import com.badlogic.gdx.jnigen.BuildTarget;
 import com.badlogic.gdx.jnigen.NativeCodeGenerator;
+import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.util.jni.PJniAntBuilder;
 
 public class PUtilGameFMODGen {
-  public static final String LIBRARY_NAME = "pengine_FMOD";
 
   public static boolean generate() {
     try {
@@ -21,7 +21,7 @@ public class PUtilGameFMODGen {
       BuildTarget linux64 = BuildTarget.newDefaultTarget(BuildTarget.TargetOs.Linux, true);
       BuildTarget mac = BuildTarget.newDefaultTarget(BuildTarget.TargetOs.MacOsX, true);
       AntScriptGenerator antScriptGenerator = new AntScriptGenerator();
-      BuildConfig config = new BuildConfig(LIBRARY_NAME);
+      BuildConfig config = new BuildConfig(PEngine.LIBRARY_NAME);
       antScriptGenerator.generate(config, win64);
       PJniAntBuilder.executeAnt(jniDir + "build.xml", "-v", "-DcompilerSuffix=.exe", "-Dlibraries=\""+ jniDir +"deps/*\"");
 //      PJniAntBuilder.executeAnt(jniDir + "build.xml", "-v", "-DcompilerSuffix=.exe",
