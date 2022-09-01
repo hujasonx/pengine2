@@ -200,6 +200,10 @@ public class PMat4 extends PBasic<PMat4> implements PPool.Poolable, PLerpable<PM
     return this;
   }
 
+  public PMat4 setToRotation(PVec4 rotation) {
+    return setToRotation(rotation.x(),rotation.y(),rotation.z(),rotation.w());
+  }
+
   public PMat4 setToRotation(float axisX, float axisY, float axisZ, float angleRad) {
     this.forWriting().backingMatrix4.setToRotationRad(axisX, axisY, axisZ, angleRad);
     return this;

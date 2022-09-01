@@ -64,6 +64,10 @@ public abstract class Gun implements PRenderable {
   protected float walkCycleYOffsetPower = 1;
   /** How much to scale the y offset from walking; will be multiplied with [0, 1] */
   protected float walkCycleYOffsetScale = 1;
+  /** How much to pitch the gun from walking; will be multiplied with [0, 1] */
+  protected float walkCycleAnglePitchScale = 1;
+  /** The power to raise the walk cycle pitch to. */
+  protected float walkCycleAnglePitchScalePower = 1;
   private float lifeT = 0;
   private transient float reloadAnimationT = -1, shootAnimationT = -1, defaultAnimationT = 0;
 
@@ -214,6 +218,7 @@ public abstract class Gun implements PRenderable {
 
   public void setGoalsForOffsetSprings(float walkCycleT, PSODynamics.PSODynamics3 weaponPosOffsetSpring,
                                        PSODynamics.PSODynamics3 weaponPosEulRotSpring) {
+    /** CycleT, but scaled to be within the edge insets. */
     float cycleTScaled = (PNumberUtils.clamp(walkCycleT, walkCycleShakeTEdgeInset, 1 - walkCycleShakeTEdgeInset) -
                           walkCycleShakeTEdgeInset) / (1 - 2 * walkCycleShakeTEdgeInset);
     float xFactor = ((cycleTScaled - .5f) * 2);
@@ -233,5 +238,7 @@ public abstract class Gun implements PRenderable {
                                                                               MathUtils.sin(MathUtils.PI2 /
                                                                                             weaponIdleSwayDirSettings.y() *
                                                                                             PEngine.t));
+//    float anglePitchFactor = PNumberUtils.pow(Math.abs(cycleTScaled - .5f) * 2, walkCycleAnglePitchScalePower);
+//    weaponPosEulRotSpring.goal().y(anglePitchFactor * walkCycleAnglePitchScale);
   }
 }

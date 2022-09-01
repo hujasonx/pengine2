@@ -30,6 +30,7 @@ public class PVec4 extends PVec<PVec4> implements PWriteLockable<PVec4> {
   public static final PVec4 Y = new PVec4().set(0, 1, 0, 0);
   public static final PVec4 Z = new PVec4().set(0, 0, 1, 0);
   public static final PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
+  public static final PVec4 IDT_QUATERNION = new PVec4().setIdentityQuaternion();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PVec4> staticPool = new PPool<PVec4>() {
     @Override protected PVec4 newObject() {

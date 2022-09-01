@@ -20,6 +20,8 @@ public class Pistol0 extends Gun {
     walkCycleXOffsetScale = .01f;
     walkCycleYOffsetScale = .014f;
     walkCycleYOffsetPower = .75f;
+     walkCycleAnglePitchScale = -.15f;
+    walkCycleAnglePitchScalePower = .85f;
     reloadAnimation = "Reload";
     triggerAnimation = "PullTrigger";
     defaultAnimation = "Default";

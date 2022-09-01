@@ -263,6 +263,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
   private PMat4 frameUpdateWeaponOffsetSprings(PPool.PoolBuffer pool) {
     gun.setGoalsForOffsetSprings(walkCycleTSpring.pos().x(), weaponPosOffsetSpring, weaponPosEulRotSpring);
     PMat4 out = pool.mat4();
+    // Nudge the weapon in the direction of camera movement.
     float camRotNudgeFactorPos = .012f;
     float camRotNudgeFactorPosPow = .5f;
     weaponPosOffsetSpring.vel().add(
