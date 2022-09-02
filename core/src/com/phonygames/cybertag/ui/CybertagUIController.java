@@ -30,9 +30,15 @@ public class CybertagUIController {
     PGLUtils.clearScreen(0,0,0,0);
     textRenderer.begin();
     textRenderer.font(font);
-    textRenderer.fontSize(120);
+    textRenderer.fontSize(50);
     textRenderer.topCorner().set(300, 300);
+    textRenderer.centerTextHorizontalBeforeFlushing(true);
     textRenderer.addText("Hello World! WMWA");
+    textRenderer.addText("Hello World!");
+    textRenderer.addText("Hello World!");
+    textRenderer.addText("Hello World!");
+    textRenderer.addText("Hello World!");
+    textRenderer.addText("Hello World!");
 
     textRenderer.end();
     uiRenderBuffer.end();

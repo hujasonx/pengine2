@@ -1,7 +1,6 @@
 package com.phonygames.pengine.graphics.font;
 
 import com.badlogic.gdx.Gdx;
-import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderBuffer;
 import com.phonygames.pengine.graphics.PSpriteBatch;
@@ -37,6 +36,17 @@ public class PTextRenderer {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PVec2 yAxis = PVec2.obtain();
+  /**
+   * Whether or not to horizontally center text before flushing. Text will be centered within the text region width, or
+   * the top corner (if the region width is set to -1)
+   */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private boolean centerTextHorizontalBeforeFlushing = false;
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private int charIndexInVisualLine;
   /** The size, which can be modified by the input text. */
   private float curFontSize;
   @Getter(value = AccessLevel.PUBLIC)
@@ -54,13 +64,7 @@ public class PTextRenderer {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  /** The width of the region this text renderer is allowed to render in. Set to -1 for unlimited. */
-  private float textRegionWidth;
-  @Getter(value = AccessLevel.PUBLIC)
-  @Setter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  /** 0 for vertical, 1 for 45 degrees. */
-  private float italicsAmount;
+  /** 0 for vertical, 1 for 45 degrees. */ private float italicsAmount;
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -69,13 +73,19 @@ public class PTextRenderer {
   private boolean rtl = false;
   private boolean started = false;
   @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  /** The width of the region this text renderer is allowed to render in. Set to -1 for unlimited. */ private float
+      textRegionWidth;
+  @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   /** The top corner from which offsets are calculated. Can be on the left or right depending on rtl. */ private PVec2
       topCorner = PVec2.obtain();
-
+  /** The index of the last laid out glyph that is in the glyph list (not yet flushed). */
+  private int lastLaidOutGlyphIndex = -1;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private int charIndexInVisualLine;
+  private int nextVisualLineNo = 0;
 
   public PTextRenderer(PRenderBuffer renderBuffer) {
     this.renderBuffer = renderBuffer;
@@ -94,11 +104,13 @@ public class PTextRenderer {
     curFontSize = fontSize;
     delegate = null;
     font = null;
+    centerTextHorizontalBeforeFlushing =false;
     xAxis.set(1, 0);
     yAxis.set(0, 1);
     italicsAmount = 0;
     topCorner.setZero();
     overflowBehaviour = OverflowBehaviour.None;
+    lastLaidOutGlyphIndex = -1;
     clear();
   }
 
@@ -108,8 +120,10 @@ public class PTextRenderer {
     fullText.clear();
     charIndexInVisualLine = 0;
     glyphs.clearAndFreePooled();
+    nextVisualLineNo = 0;
   }
 
+  /** Adds the glyphs from the text to the queue in a new line. */
   public PTextRenderer addText(String text) {
     if (text == null || text.length() == 0) {
       return this;
@@ -125,6 +139,7 @@ public class PTextRenderer {
     for (int a = 0; a < text.length(); a++) {
       char c = text.charAt(a);
       boolean isAtEndOfWord = c == ' ' || a == text.length() - 1;
+      boolean isAtEndOfLine = c == '\n' || a == text.length() - 1;
       /** Horizontal offset before this char was added. */
       float originalHorizontalOffset = nextCharOffset.x();
       // Special cases.
@@ -133,7 +148,12 @@ public class PTextRenderer {
           lastSpaceIndex = a;
           nextCharOffset.x(nextCharOffset.x() + font.spaceXAdvance * fromFontScale);
           break;
+        case '\n':
+          nextCharOffset.x(0);
+          nextCharOffset.add(0, font.lineHeight() * fromFontScale);
+          break;
         default:
+          // Regular character; track the corresponding glyph and set its parameters.
           PFont.GlyphData glyphData = font.glyphData(c);
           Glyph glyph = genAndAddGlyph(glyphData, font.sdfSheet());
           glyph.charIndex = charIndex;
@@ -143,18 +163,17 @@ public class PTextRenderer {
           glyph.yAxis.set(yAxis);
           glyph.italicsAmount = italicsAmount;
           glyph.charIndexInVisualLine = charIndexInVisualLine;
+          glyph.visualLineNo = nextVisualLineNo;
           int fontScaleKerning = 0;
           // Apply kernings.
           if (glyphData != null) {
             if (charIndexInVisualLine > 0) {
-              fontScaleKerning = font.getKerning(prevChar,c);
-              if (fontScaleKerning != 0)
-              nextCharOffset.add(fromFontScale * fontScaleKerning, 0);
+              fontScaleKerning = font.getKerning(prevChar, c);
+              if (fontScaleKerning != 0) {nextCharOffset.add(fromFontScale * fontScaleKerning, 0);}
             }
           }
-          glyph.capCorner.set(topCorner).add(xAxis, nextCharOffset.x()).add(yAxis, nextCharOffset.y());
+          glyph.layoutOffset.set(nextCharOffset);
           nextCharOffset.add(fromFontScale * glyphData.xAdvance(), 0);
-          glyph.setMeshCornersFromSettings();
           break;
       }
       if (isAtEndOfWord) {
@@ -170,13 +189,53 @@ public class PTextRenderer {
             break;
         }
       }
-      charIndexInVisualLine++;
+      if (isAtEndOfLine) {
+        layoutLineAndMoveToNext(fromFontScale);
+      } else {
+        charIndexInVisualLine++;
+      }
       prevChar = c;
       charIndex++;
     }
     return this;
   }
 
+  /** Lays out the last queued glyphs, calls the delegate functions on any newly laid out glyphs. */
+  private void layoutLineAndMoveToNext(float fromFontScale) {
+    // Layout the glyphs up to this point. They should all be on the same line.
+    int startGlyphIndex = lastLaidOutGlyphIndex + 1;
+    float lineStartLayoutX = glyphs.get(startGlyphIndex).layoutOffset.x();
+    float lineEndLayoutX = nextCharOffset.x();
+    float lineLayoutWidth = lineEndLayoutX - lineStartLayoutX;
+    PAssert.isTrue(lineLayoutWidth >= 0);
+    if (centerTextHorizontalBeforeFlushing) {
+      // Center the text.
+      float lineLayoutCenter = (lineStartLayoutX + lineEndLayoutX) * .5f;
+      float desiredLayoutCenter = textRegionWidth == -1 ? 0 : textRegionWidth * .5f;
+      float layoutXDelta = desiredLayoutCenter - lineLayoutCenter;
+      for (int a = startGlyphIndex; a < glyphs.size(); a++) {
+        glyphs.get(a).layoutOffset.add(layoutXDelta, 0);
+      }
+    }
+    // Call the delegate functions and lay out the glyphs.
+    for (int a = startGlyphIndex; a < glyphs.size(); a++) {
+      Glyph glyph = glyphs.get(a);
+      glyph.setCapCornerFromLayout(topCorner);
+      if (delegate != null) {
+        delegate.processGlyphBeforeTextRendererFlush(glyph);
+      }
+      glyph.setMeshCornersFromSettings();
+    }
+    lastLaidOutGlyphIndex = glyphs.size() - 1;
+    // Move to the next line.
+    nextCharOffset.x(0);
+    nextCharOffset.add(0, -font.lineHeight() * fromFontScale);
+    // Prepare the char index and visual line for the next character.
+    charIndexInVisualLine = 0;
+    nextVisualLineNo ++;
+  }
+
+  /** Tracks another glyph. */
   private Glyph genAndAddGlyph(PFont.GlyphData glyphData, PSDFSheet sheet) {
     Glyph glyph = glyphs.genPooledAndAdd();
     glyph.glyphData = glyphData;
@@ -221,6 +280,7 @@ public class PTextRenderer {
     sdfSB.enableBlending(false);
     sdfSB.flush();
     glyphs.clearAndFreePooled();
+    lastLaidOutGlyphIndex = -1;
     baseColor.free();
     borderColor.free();
     return this;
@@ -230,7 +290,9 @@ public class PTextRenderer {
     Ellipsis, Wrap, None
   }
 
-  public interface PTextRendererDelegate {}
+  public interface PTextRendererDelegate {
+    public void processGlyphBeforeTextRendererFlush(Glyph glyph);
+  }
 
   public static class Glyph implements PPool.Poolable {
     // #pragma mark - PPool.Poolable
@@ -302,12 +364,29 @@ public class PTextRenderer {
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)
     private boolean valid;
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    /** The charOffset that this glyph was laid out with. */
+    private final PVec2 layoutOffset = PVec2.obtain();
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    /** The line that this glyph appears to be in. */
+    private int visualLineNo;
+
+    /** Recalculates the cap corner using the provided xaxis, yaxis, layoutoffset, and top corner. */
+    private void setCapCornerFromLayout(PVec2 topCorner) {
+
+      capCorner.set(topCorner).add(xAxis, layoutOffset.x()).add(yAxis, layoutOffset.y());
+
+    }
 
     @Override public void reset() {
       charIndex = 0;
+      visualLineNo = 0;
       charIndexInVisualLine = 0;
       glyphData = null;
       sdfSheet = null;
+      layoutOffset.setZero();
       capCorner.setZero();
       meshCorner00.setZero();
       meshCorner01.setZero();
@@ -339,9 +418,11 @@ public class PTextRenderer {
       final float paddingOriginalScale = sdfSymbol.paddingOriginalScale();
       try (PPool.PoolBuffer pool = PPool.getBuffer()) {
         // Get the baseline corners, as they are unchanged regardless of slant. Includes horizontal padding.
-        PVec2 unSlantedBaselineCorner = pool.vec2(capCorner).add(xAxis, -fromFontScale * paddingOriginalScale).add(yAxis, -glyphData.font().capHeight() * fromFontScale);
-        PVec2 unSlantedBaselineEndCorner =
-            pool.vec2(unSlantedBaselineCorner).add(xAxis, (glyphData.width() + 2* paddingOriginalScale) * fromFontScale);
+        PVec2 unSlantedBaselineCorner = pool.vec2(capCorner).add(xAxis, -fromFontScale * paddingOriginalScale)
+                                            .add(yAxis, -glyphData.font().capHeight() * fromFontScale);
+        PVec2 unSlantedBaselineEndCorner = pool.vec2(unSlantedBaselineCorner).add(xAxis, (glyphData.width() +
+                                                                                          2 * paddingOriginalScale) *
+                                                                                         fromFontScale);
         // Set the mesh corners for a vertically-sloped glyph.
         float baselineToPaddedGlyphTop = fromFontScale * (glyphData.baselineToTop() + paddingOriginalScale);
         float baselineToPaddedGlyphBottom = fromFontScale * (glyphData.baselineToBottom() - paddingOriginalScale);
@@ -350,7 +431,7 @@ public class PTextRenderer {
         meshCorner01.set(unSlantedBaselineCorner).add(yAxis, baselineToPaddedGlyphTop);
         meshCorner11.set(unSlantedBaselineEndCorner).add(yAxis, baselineToPaddedGlyphTop);
         // Apply italics by shifting the corners horizontally.
-        meshCorner00.add(xAxis, baselineToPaddedGlyphBottom * italicsAmount );
+        meshCorner00.add(xAxis, baselineToPaddedGlyphBottom * italicsAmount);
         meshCorner10.add(xAxis, baselineToPaddedGlyphBottom * italicsAmount);
         meshCorner01.add(xAxis, baselineToPaddedGlyphTop * italicsAmount);
         meshCorner11.add(xAxis, baselineToPaddedGlyphTop * italicsAmount);
