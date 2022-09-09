@@ -116,8 +116,8 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       legPlacer.cycleTimeCurve().addKeyFrame(0, 1);
       legPlacer.cycleTimeCurve().addKeyFrame(4, .6f);
       legPlacer.cycleTimeCurve().addKeyFrame(5, .6f);
-      leftLegPlacerLeg = legPlacer.addLeg(leftLegLimb, "Foot.L").preventEEAboveBase(true).maximumStrengthDis(1);
-      rightLegPlacerLeg = legPlacer.addLeg(rightLegLimb, "Foot.R").preventEEAboveBase(true).maximumStrengthDis(1);
+      leftLegPlacerLeg = legPlacer.addLeg(leftLegLimb, "Foot.L").preventEEAboveBase(true).maximumStrengthDis(1).setEEGoalOffset(0, 0, .15f);
+      rightLegPlacerLeg = legPlacer.addLeg(rightLegLimb, "Foot.R").preventEEAboveBase(true).maximumStrengthDis(1).setEEGoalOffset(0, 0, -.15f);
       modelInstance.addBoneRigidBodiesToSimulation();
     }
   }
@@ -225,7 +225,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
         hipNode.worldTransform().getRotation(pool.vec4()).invQuat().applyAsQuat(pool.vec3().set(PVec3.Y));
     PVec3 axisYLocalTorso =
         hipNode.worldTransform().getRotation(pool.vec4()).invQuat().applyAsQuat(pool.vec3().set(PVec3.Y));
-    // Calculate the desired angle offset of the hip.
+    // Calculate the desired yaw angle offset of the hip.
     PVec3 velocity = characterController.getVel(pool.vec3());
     float angle;
     if (!velocity.isZero()) {
@@ -245,6 +245,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     }
     hipYawSpring.frameUpdate();
     angle = hipYawSpring.pos().x();
+    // This angle offset affects the yaw of the character's body.
     float angleOffset = -MathUtils.PI * .05f;
     // Apply a rotation to the hip and a reverse rotation to the torso. The angle offset should affect both.
     PVec4 hipLocalRot = pool.vec4().setToRotation(axisYLocalHip, angleOffset + angle);
@@ -253,7 +254,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     torsoNode.transform().rotate(torsoLocalRot);
     torsoNode.stopWorldTransformRecursionAt(false);
     modelInstance.recalcTransforms();
-    // Apply the rotation to the leg bind poles.
+    // Apply the rotation to the leg bind poles, but don't include the angleOffset.
     PVec3 legBindPole = pool.vec3(MathUtils.sin(angle), 0, MathUtils.cos(angle));
     leftLegLimb.setBindPole(legBindPole);
     rightLegLimb.setBindPole(legBindPole);

@@ -102,7 +102,7 @@ public class PLegPlacer implements PPool.Poolable {
           if (!leg.inCycle && (leg == queuedMoveLeg && lastMovedLeg != null && lastMovedLeg.inCycle &&
                                lastMovedLeg.cycleT >= timeBetweenConsecutiveLegMoves)) {
             // If there are no moving legs or the cycle just finished, we can trigger the next leg cycle if needed.
-            float deviation = leg.calcDeviationFromNatural();
+            float deviation = leg.calcDeviationFromGoal();
             if (deviation > minimumDeviationForKickOff) {
               kickOffMove(leg, a);
             }
@@ -117,7 +117,7 @@ public class PLegPlacer implements PPool.Poolable {
         PVec3 modelSpaceVelocity = pool.vec3(left.dot(velocity), up.dot(velocity), forward.dot(velocity));
         for (int a = 0; a < legs.size(); a++) {
           Leg leg = legs.get(a);
-          float deviation = leg.calcDeviationFromNatural();
+          float deviation = leg.calcDeviationFromGoal();
           if (deviation > minimumDeviationForKickOff && (bestLeg == null || deviation > bestDeviation - .001f)) {
             if (bestLegIndex != -1 && Math.abs(deviation - bestDeviation) < .01f) {
               // If the deviations are pretty similar, compare velocity scores instead. This should help select
@@ -178,6 +178,10 @@ public class PLegPlacer implements PPool.Poolable {
     private final PVec4 naturalEERotLocal = PVec4.obtain();
     private final PVec3 prevEEPosGoal = PVec3.obtain();
     private final PVec4 prevEERotGoal = PVec4.obtain();
+    /** The goal offset in model space; normally should be zero. */
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private final PVec3 goalOffsetMS = PVec3.obtain();
     private final PPhysicsRayCast rayCast = PPhysicsRayCast.obtain();
     @Getter(value = AccessLevel.PUBLIC)
     @Setter(value = AccessLevel.PUBLIC)
@@ -211,6 +215,12 @@ public class PLegPlacer implements PPool.Poolable {
       reset();
     }
 
+    /** Sets the end effector goal offset (model space). */
+    public Leg setEEGoalOffset(float x, float y, float z) {
+      goalOffsetMS.set(x, y, z);
+      return this;
+    }
+
     @Override public void reset() {
       legPlacer = null;
       curEEPos.setZero();
@@ -235,6 +245,7 @@ public class PLegPlacer implements PPool.Poolable {
       cycleT = 0;
       cycleStrength = 0;
       inCycle = false;
+      goalOffsetMS.setZero();
     }
 
     /**
@@ -250,8 +261,25 @@ public class PLegPlacer implements PPool.Poolable {
       }
     }
 
+    /**
+     * Calculates the deviation from the goal position and orientation of the end effector.
+     *
+     * @return
+     */
+    private float calcDeviationFromGoal() {
+      try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+        PVec3 goalPos = calcGoalEEPos(pool.vec3());
+        float posDist = goalPos.dst(curEEPos);
+        return posDist;
+      }
+    }
+
     private PVec3 calcNaturalEEPos(PVec3 out) {
       return out.set(naturalEEPosLocal).mul(legPlacer.modelInstance.worldTransform(), 1f);
+    }
+
+    private PVec3 calcGoalEEPos(PVec3 out) {
+      return out.set(naturalEEPosLocal).add(goalOffsetMS).mul(legPlacer.modelInstance.worldTransform(), 1f);
     }
 
     /** Returns true if the cycle was finished on this timestep. */
@@ -305,7 +333,7 @@ public class PLegPlacer implements PPool.Poolable {
             float timeLeftBeforeEnd = (1 - cycleT) * legPlacer.cycleTime(speed);
             float timeLeftBeforeFootDown = (stepTimeOffsets.y() - cycleT) * legPlacer.cycleTime(speed);
             PVec3 expectedModelTranslationDeltaAtEnd = pool.vec3(velocity).scl(timeLeftBeforeEnd);
-            PVec3 expectedFootPositionAtEnd = calcNaturalEEPos(pool.vec3()).add(expectedModelTranslationDeltaAtEnd);
+            PVec3 expectedFootPositionAtEnd = calcGoalEEPos(pool.vec3()).add(expectedModelTranslationDeltaAtEnd);
             PVec3 expectedBasePositionAtEnd = pool.vec3(basePosWS).add(expectedModelTranslationDeltaAtEnd);
             // Do a raycast at the expected end position.
             PVec3 rayCastHitPos = pool.vec3(), rayCastHitNor = pool.vec3();
@@ -413,6 +441,7 @@ public class PLegPlacer implements PPool.Poolable {
       return out.set(basePos).add(delta, Math.min(1, limb.maximumExtendedLength() / deltaLen));
     }
 
+    /** Recalculates helper variables. */
     private void recalc() {
       endEffector.templateNode().modelSpaceTransform().getTranslation(naturalEEPosLocal);
       endEffector.templateNode().modelSpaceTransform().getRotation(naturalEERotLocal);
