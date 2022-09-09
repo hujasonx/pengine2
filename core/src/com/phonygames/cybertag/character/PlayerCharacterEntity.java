@@ -245,8 +245,9 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     }
     hipYawSpring.frameUpdate();
     angle = hipYawSpring.pos().x();
-    // Apply a rotation to the hip and a reverse rotation to the torso.
-    PVec4 hipLocalRot = pool.vec4().setToRotation(axisYLocalHip, angle);
+    float angleOffset = -MathUtils.PI * .05f;
+    // Apply a rotation to the hip and a reverse rotation to the torso. The angle offset should affect both.
+    PVec4 hipLocalRot = pool.vec4().setToRotation(axisYLocalHip, angleOffset + angle);
     PVec4 torsoLocalRot = pool.vec4().setToRotation(axisYLocalTorso, -angle);
     hipNode.transform().rotate(hipLocalRot);
     torsoNode.transform().rotate(torsoLocalRot);

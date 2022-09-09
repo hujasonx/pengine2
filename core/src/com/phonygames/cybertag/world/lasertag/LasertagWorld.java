@@ -1,9 +1,11 @@
 package com.phonygames.cybertag.world.lasertag;
 
 import com.phonygames.cybertag.world.World;
+import com.phonygames.cybertag.world.grid.TileBuilding;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.util.collection.PList;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,7 +16,7 @@ public class LasertagWorld {
   public final World world;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  protected LasertagBuilding[] buildings;
+  protected final PList<TileBuilding> buildings = new PList<>();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
@@ -24,19 +26,22 @@ public class LasertagWorld {
   }
 
   public void frameUpdate() {
-    for (val building : buildings) {
+    for (int a = 0; a < buildings.size(); a++) {
+      TileBuilding building = buildings.get(a);
       building.frameUpdate();
     }
   }
 
   public void logicUpdate() {
-    for (val building : buildings) {
+    for (int a = 0; a < buildings.size(); a++) {
+      TileBuilding building = buildings.get(a);
       building.logicUpdate();
     }
   }
 
   public void render(PRenderContext renderContext) {
-    for (val building : buildings) {
+    for (int a = 0; a < buildings.size(); a++) {
+      TileBuilding building = buildings.get(a);
       building.render(renderContext);
     }
     if (modelInstance != null) {

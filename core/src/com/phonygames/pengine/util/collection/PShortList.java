@@ -33,6 +33,14 @@ public class PShortList implements PPool.Poolable {
   private PShortList() {
   }
 
+  public short sum() {
+    short sum = 0;
+    for (int a = 0; a < size; a++) {
+      sum += values[a];
+    }
+    return sum;
+  }
+
   public PShortList add(short f) {
     ensureCapacity(size + 1);
     values[size] = f;

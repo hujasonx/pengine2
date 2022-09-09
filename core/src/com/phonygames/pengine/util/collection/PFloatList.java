@@ -40,6 +40,14 @@ public class PFloatList implements PPool.Poolable {
     return this;
   }
 
+  public float sum() {
+    float sum = 0;
+    for (int a = 0; a < size; a++) {
+      sum += values[a];
+    }
+    return sum;
+  }
+
   public float get(int index) {
     if (index >= size) {
       throw new ArrayIndexOutOfBoundsException();

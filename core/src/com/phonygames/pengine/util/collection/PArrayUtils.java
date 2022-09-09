@@ -46,4 +46,16 @@ public class PArrayUtils {
     }
     return weights.length - 1;
   }
+
+  public static int randomIndexWithWeights(PFloatList weights) {
+    float r = MathUtils.random(weights.sum());
+    float s = 0;
+    for (int a = 0; a < weights.size(); a++) {
+      s += weights.get(a);
+      if (s >= r) {
+        return a;
+      }
+    }
+    return weights.size() - 1;
+  }
 }

@@ -91,7 +91,7 @@ public class PEngine extends ApplicationAdapter {
   @Override public void render() {
     PInput.preFrameUpdate();
     float gdxdt = Gdx.graphics.getDeltaTime();
-    gdxdt = Math.max(gdxdt, 1f / 300f);
+    gdxdt = Math.max(gdxdt, 1f / 1000f);
     uidtWindowedMean.addValue(gdxdt);
     uidt = uidtWindowedMean.hasEnoughData() ? uidtWindowedMean.getMean() : gdxdt;
     dt = uidt * timeScale;

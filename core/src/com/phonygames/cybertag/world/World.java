@@ -21,7 +21,6 @@ import com.phonygames.pengine.util.PPool;
 
 public class World {
   public final LasertagWorld lasertagWorld;
-  private PBillboardParticleSource billboardParticleSource;
   private NpcHumanoidEntity npcHumanoidEntity;
   public PlayerCharacterEntity playerCharacter;
   public HeadGunnerEntity headGunnerEntity;
@@ -34,7 +33,6 @@ public class World {
     playerCharacter = new PlayerCharacterEntity();
     npcHumanoidEntity = new NpcHumanoidEntity(this);
     headGunnerEntity = new HeadGunnerEntity(this);
-    billboardParticleSource = new PBillboardParticleSource();
   }
 
   public void previewNavMeshData() {
@@ -60,24 +58,7 @@ public class World {
     lasertagWorld.frameUpdate();
     playerCharacter.frameUpdate();
     npcHumanoidEntity.frameUpdate();
-    billboardParticleSource.frameUpdate();
     headGunnerEntity.frameUpdate();
-    if (PKeyboard.isFrameJustDown(Input.Keys.ALT_RIGHT)) {
-      PBillboardParticle particle = billboardParticleSource.spawnParticle();
-      particle.texture().set(PAssetManager.textureRegion("textureAtlas/particles.atlas", "Glow", true));
-      particle.faceCamera(true);
-      particle.faceCameraXScale(4);
-      particle.faceCameraYScale(4);
-      particle.angVel(MathUtils.random(-1f, 1f));
-      particle.angVelDecel(.1f);
-      particle.vel().set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f));
-      particle.accelVelocityDir(-.1f);
-      particle.pos().set(MathUtils.random(10f), MathUtils.random(10f), MathUtils.random(10f));
-    }
-    //    if (tileCache != null) {
-    //      tileCache.previewNavmesh();
-    //      //      previewNavMeshData();
-    //    }
   }
 
   public void logicUpdate() {
@@ -97,8 +78,6 @@ public class World {
     lasertagWorld.render(renderContext);
     playerCharacter.render(renderContext);
     npcHumanoidEntity.render(renderContext);
-    billboardParticleSource.setOrigin(renderContext.cameraPos());
-    billboardParticleSource.render(renderContext);
     headGunnerEntity.render(renderContext);
   }
 }

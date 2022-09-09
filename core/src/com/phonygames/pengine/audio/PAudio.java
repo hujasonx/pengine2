@@ -42,7 +42,7 @@ public class PAudio {
     PFmodInterface.loadBank(mediaFolder + "Master Bank.strings.bank");
     PFmodInterface.loadBank(mediaFolder + "All.bank");
     musicEventInstances[0] = PFmodInterface.getEventInstance("event:/TestMusic");
-    PFmodInterface.setEventInstanceVolume(musicEventInstances[0], .1f);
+    PFmodInterface.setEventInstanceVolume(musicEventInstances[0], .01f);
     PFmodInterface.startPlaybackForEventInstance(musicEventInstances[0]);
   }
 
