@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.character.HeadGunnerEntity;
 import com.phonygames.cybertag.character.NpcHumanoidEntity;
 import com.phonygames.cybertag.character.PlayerCharacterEntity;
+import com.phonygames.cybertag.world.grid.LasertagGridWorldGen;
 import com.phonygames.cybertag.world.lasertag.LasertagWorld;
 import com.phonygames.cybertag.world.lasertag.WorldGen;
 import com.phonygames.pengine.PAssetManager;
@@ -29,7 +30,7 @@ public class World {
   public final PList<Float> physicsVertexPositions = new PList<>();
 
   public World() {
-    lasertagWorld = WorldGen.gen(this);
+    lasertagWorld = LasertagGridWorldGen.gen(this);
     playerCharacter = new PlayerCharacterEntity();
     npcHumanoidEntity = new NpcHumanoidEntity(this);
     headGunnerEntity = new HeadGunnerEntity(this);

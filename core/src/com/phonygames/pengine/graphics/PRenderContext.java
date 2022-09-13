@@ -318,7 +318,7 @@ public class PRenderContext {
     }
   }
 
-  // Returns whether or not the projection was successful.
+  /** Project from 3d to 2d space; returns true if the conversion was on-screen. */
   public boolean projectIf(PVec3 in) {
     if (cameraDir().dot(in.x() - cameraPos().x(), in.y() - cameraPos().y(), in.z() - cameraPos().z()) < 0) {
       return false;

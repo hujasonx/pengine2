@@ -16,10 +16,10 @@ import lombok.experimental.Accessors;
 public class TileRoom  implements PRenderContext.DataBufferEmitter{
   /** The room's type. */
   private final String type;
+  /** The tiles in this room. */
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  /** The tiles in this room. */
-  private static final TileGrid tileGrid = new TileGrid();
+  private final TileGrid tileGrid = new TileGrid();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   /** Whether or not the room should have an open ceiling. */

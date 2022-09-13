@@ -21,7 +21,7 @@ public class LasertagWorld {
   @Accessors(fluent = true)
   protected PModelInstance modelInstance;
 
-  protected LasertagWorld(World world) {
+  public LasertagWorld(World world) {
     this.world =world;
   }
 

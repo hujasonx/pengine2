@@ -14,9 +14,12 @@ public abstract class TileRoomParameters {
   public float minimumFullHeightTilesRatio = .25f;
   /** The ratio of tiles that must be in the room compared to the constructed bounds. */
   public float minimumTilesRatio = .5f;
-
+  /** Whether or not the room should have an open ceiling. */
+  public boolean openCeiling = false;
 
   public static class Standard extends TileRoomParameters {
 
   }
+
+//  public void
 }

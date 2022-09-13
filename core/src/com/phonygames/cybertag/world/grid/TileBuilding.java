@@ -21,6 +21,10 @@ public class TileBuilding implements PRenderContext.DataBufferEmitter {
   @Accessors(fluent = true)
   /** The tile bounds of the building. */
   private final PIntAABB tileBounds = new PIntAABB();
+  /** The tiles in this building. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private static final TileGrid tileGrid = new TileGrid();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PList<PIntAABB> excludedTileBounds = new PList<>();
@@ -46,6 +50,22 @@ public class TileBuilding implements PRenderContext.DataBufferEmitter {
       }
     }
     return true;
+  }
+
+  /** Returns the tile room in this building at the given tile position. */
+  public TileRoom roomAtTilePosition(int x, int y, int z) {
+    for (int a = 0; a < rooms.size(); a++) {
+      TileRoom room = rooms.get(a);
+      if (room.tileGrid().hasTileAt(x, y, z)) {
+        return room;
+      }
+    }
+    return null;
+  }
+
+  /** Returns the tile in this building at the given tile position. */
+  public GridTile tileAtTilePosition(int x, int y, int z) {
+    return tileGrid.getTileAt(x, y, z);
   }
 
   public void render(PRenderContext renderContext) {
