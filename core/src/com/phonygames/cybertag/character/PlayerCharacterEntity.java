@@ -8,6 +8,7 @@ import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.character.PLegPlacer;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.animation.PAnimation;
+import com.phonygames.pengine.graphics.color.PVColIndexBuffer;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
@@ -32,19 +33,21 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
       PVec3.obtain().set(0, 1.6f, .15f);
   private final PVec2 facingDirFlat = PVec2.obtain().set(1, 0), facingLeftFlat = PVec2.obtain().set(0, -1f);
   private final PVec3 pos = PVec3.obtain();
-  private PCharacterCameraController cameraController;
+  private final PCharacterCameraController cameraController;
   private Gun gun;
-  private PSODynamics.PSODynamics1 hipYawSpring = PSODynamics.obtain1();
+  private final PSODynamics.PSODynamics1 hipYawSpring = PSODynamics.obtain1();
   private PPlanarIKLimb leftLegLimb, leftArmLimb;
   private PLegPlacer.Leg leftLegPlacerLeg, rightLegPlacerLeg;
   private PLegPlacer legPlacer;
   private PModelInstance modelInstance;
   private PPlanarIKLimb rightLegLimb, rightArmLimb;
-  /** Below this speed, the hip rotation from velocity will be reduced */
+  /** Below this speed, the hip rotation from velocity will be reduced. */
   private float speedForMaxHipRotation = 2;
   private PSODynamics.PSODynamics1 walkCycleTSpring = PSODynamics.obtain1().setGoalFlat(.5f);
   private PSODynamics.PSODynamics3 weaponPosEulRotSpring = PSODynamics.obtain3();
   private PSODynamics.PSODynamics3 weaponPosOffsetSpring = PSODynamics.obtain3();
+  /** The vcol index buffer. */
+  private final PVColIndexBuffer vColors = new PVColIndexBuffer();
 
   public PlayerCharacterEntity() {
     super();
@@ -66,22 +69,22 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       modelInstance = PModelInstance.obtain(PAssetManager.model("model/player/female.glb", true));
       final PVec4 hairCol = PVec4.obtain().set(64f / 255f, 51f / 255f, 39f / 255f, 1.0f);
+      vColors.registerName("skin", 0);
+      vColors.registerName("eyewhites", 1);
+      vColors.registerName("mouth", 2);
+      vColors.registerName("iris", 3);
+      vColors.registerName("pupil", 4);
+      vColors.registerName("eyelashes", 5);
+      vColors.registerName("eyebrows", 6);
+      vColors.setDiffuse("skin", 1, 224f / 255f, 189f / 255f);
+      vColors.setDiffuse("eyewhites",.95f, .95f, .95f);
+      vColors.setDiffuse("mouth",.65f, .4f, .4f);
+      vColors.setDiffuse("iris",52f / 255f, 136f / 255f, 232f / 255f);
+      vColors.setDiffuse("pupil",.1f, .1f, .1f);
+      vColors.setDiffuse("eyelashes", hairCol, false);
+      vColors.setDiffuse("eyebrows", hairCol, false);
       modelInstance.setDataBufferEmitter(renderContext -> {
-        PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
-        vColIndexBuffer.addData(1, 224f / 255f, 189f / 255f, 1); // Skin color diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .9f); // Skin color emissiveI.
-        vColIndexBuffer.addData(.95f, .95f, .95f, 1); // Eye whites diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .2f); // Eye whites emissiveI.
-        vColIndexBuffer.addData(.65f, .4f, .4f, 1); // Mouth diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Mouth emissiveI.
-        vColIndexBuffer.addData(52f / 255f, 136f / 255f, 232f / 255f, 1); // Iris diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .1f); // Iris emissiveI.
-        vColIndexBuffer.addData(.1f, .1f, .1f, 1); // Pupil diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, .05f); // Pupil emissiveI.
-        vColIndexBuffer.addData(hairCol); // Eyelashes diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eyelashes emissiveI.
-        vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
-        vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveI.
+        vColors.emitColorData(renderContext);
       });
       modelInstance.material("matBase").useVColIndex(true);
       modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);

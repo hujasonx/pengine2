@@ -107,6 +107,9 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
   }
 
   public PList<E> fillToCapacityWithPooledValues(int capacity) {
+    if (size() >= capacity) {
+      return this;
+    }
     PAssert.isNotNull(genedValuesPool, "The new item pool wasn't set.");
     while (size() < capacity) {
       genPooledAndAdd();

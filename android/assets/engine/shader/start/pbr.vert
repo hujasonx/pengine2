@@ -1,5 +1,6 @@
 v_diffuseM = vec4(1.0);
 v_emissiveI = vec4(0.0);
+
 #ifdef a_col0Flag
 #ifdef vColIndexFlag
 // Find the lookup index using the vertex color attribute.
