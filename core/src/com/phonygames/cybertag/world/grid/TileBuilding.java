@@ -24,7 +24,7 @@ public class TileBuilding implements PRenderContext.DataBufferEmitter {
   /** The tiles in this building. */
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private static final TileGrid tileGrid = new TileGrid();
+  private final TileGrid tileGrid = new TileGrid();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PList<PIntAABB> excludedTileBounds = new PList<>();

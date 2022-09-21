@@ -32,8 +32,8 @@ public class TileGrid {
 
   /** Adds the given tile to the list of tiles managed by this grid. */
   public void trackTile(GridTile tile) {
-    PAssert.isFalse(hasTileAt(tile.x(),tile.y(),tile.z()));
-    tiles.put(tile.x(), tile.y(), tile.z(), tile);
+    PAssert.isFalse(hasTileAt(tile.x,tile.y,tile.z));
+    tiles.put(tile.x, tile.y, tile.z, tile);
   }
 
   /** Tracks all tiles from the other tile grid. */
