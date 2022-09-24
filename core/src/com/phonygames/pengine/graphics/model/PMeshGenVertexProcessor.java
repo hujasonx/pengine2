@@ -14,7 +14,7 @@ public class PMeshGenVertexProcessor {
   }
 
   /** Processes the normal vector in place. Make sure the parameter can be modified! */
-  public PVec3 processNor(PVec3 inNor) {
+  public PVec3 processNor(PVec3 rawPos, PVec3 inNor) {
     return inNor;
   }
 

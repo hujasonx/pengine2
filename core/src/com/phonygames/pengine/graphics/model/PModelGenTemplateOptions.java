@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+/** Helper class for emitting PModelGenTemplates. */
 public class PModelGenTemplateOptions implements PPool.Poolable {
   // #pragma mark - PPool.Poolable
   @Getter

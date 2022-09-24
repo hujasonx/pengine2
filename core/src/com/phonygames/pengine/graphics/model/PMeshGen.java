@@ -49,6 +49,13 @@ public class PMeshGen {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final String name;
+  /**
+   * The raw position data used for vertex processors to calculate normals, etc. This usually isn't used, unless you are
+   * are using FLATQUAD or WALL type vertex processing.
+   */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PVec3 rawPosForVertexProcessor = PVec3.obtain();
   /** The vertex attributes. */
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -115,6 +122,18 @@ public class PMeshGen {
     latestIndices().addInt(index);
     return this;
   }
+
+  public PVec1 get(PVec1 out, String alias) {
+    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
+    int ind = vertexAttributes().indexForVertexAttribute(alias);
+    return out.x(currentVertexValues()[ind + 0]);
+  }
+
+  public PVec2 get(PVec2 out, String alias) {
+    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
+    int ind = vertexAttributes().indexForVertexAttribute(alias);
+    return out.x(currentVertexValues()[ind + 0]).y(currentVertexValues()[ind + 1]);
+  }
   //  public PMeshGen emit(@NonNull PMesh mesh, @Nullable PModelGen.StaticPhysicsPart staticPhysicsPart,
   //  PMeshGenVertexProcessor processor,
   //                             @NonNull PVertexAttributes attributesToCopy) {
@@ -171,18 +190,6 @@ public class PMeshGen {
   //    }
   //    return this;
   //  }
-
-  public PVec1 get(PVec1 out, String alias) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
-    int ind = vertexAttributes().indexForVertexAttribute(alias);
-    return out.x(currentVertexValues()[ind + 0]);
-  }
-
-  public PVec2 get(PVec2 out, String alias) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
-    int ind = vertexAttributes().indexForVertexAttribute(alias);
-    return out.x(currentVertexValues()[ind + 0]).y(currentVertexValues()[ind + 1]);
-  }
 
   public PVec3 get(PVec3 out, String alias) {
     PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
@@ -278,7 +285,7 @@ public class PMeshGen {
                    Math.max(maxPos().z(), __tmp3.z()));
     } else if (alias.equals(PVertexAttributes.Attribute.Keys.nor)) {
       if (vertexProcessor != null) {
-        vertexProcessor.processNor(__tmp3);
+        vertexProcessor.processNor(__tmp3, rawPosForVertexProcessor);
       }
     } else {
       if (vertexProcessor != null) {
@@ -302,6 +309,18 @@ public class PMeshGen {
       vertexProcessor.processOther(__tmp4, PVertexAttributes.Attribute.get(alias));
     }
     __tmp4.emit(currentVertexValues(), ind);
+    return this;
+  }
+
+  /** Sets the raw position for the vertex processor, used for WALL and FLADQUAD vertex processing types. */
+  public PMeshGen setRawPosForVertexProcessor(float x, float y, float z) {
+    rawPosForVertexProcessor.set(x, y, z);
+    return this;
+  }
+
+  /** Sets the raw position for the vertex processor, used for WALL and FLADQUAD vertex processing types. */
+  public PMeshGen setRawPosForVertexProcessor(PVec3 v) {
+    rawPosForVertexProcessor.set(v.x(), v.y(), v.z());
     return this;
   }
 

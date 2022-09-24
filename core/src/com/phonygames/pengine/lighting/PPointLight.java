@@ -3,8 +3,9 @@ package com.phonygames.pengine.lighting;
 import com.badlogic.gdx.utils.Pool;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PMesh;
+import com.phonygames.pengine.graphics.model.PMeshGen;
+import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
-import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.graphics.model.gen.PUVSphereGen;
 import com.phonygames.pengine.graphics.texture.PFloat4Texture;
 import com.phonygames.pengine.math.PMat4;
@@ -39,20 +40,20 @@ public class PPointLight extends PLight implements Pool.Poolable {
   }
 
   public static void initMesh() {
-    new PModelGenOld() {
-      PModelGenOld.Part basePart;
+    new PModelGen() {
+      PMeshGen baseMeshGen;
 
       @Override protected void modelIntro() {
-        basePart = addPart("base", PVertexAttributes.getPOS());
+        baseMeshGen = addMesh("base", PVertexAttributes.getPOS());
       }
 
       @Override protected void modelMiddle() {
         PUVSphereGen.getShared().setSetNormals(false);
-        PUVSphereGen.getShared().genSphere(20, 20, PVec3.ZERO, 1, basePart);
+        PUVSphereGen.getShared().genSphere(20, 20, PVec3.ZERO, 1, baseMeshGen);
       }
 
       @Override protected void modelEnd() {
-        MESH = basePart.getMesh();
+        MESH = baseMeshGen.getMesh();
       }
     }.buildSynchronous();
   }
