@@ -4,11 +4,13 @@ import com.phonygames.cybertag.world.World;
 import com.phonygames.cybertag.world.grid.gen.TileBuildingGen;
 import com.phonygames.cybertag.world.grid.gen.TileRoomParameters;
 import com.phonygames.cybertag.world.lasertag.LasertagWorld;
+import com.phonygames.pengine.util.PBlockingTaskTracker;
 
 public class LasertagGridWorldGen {
-  public static LasertagWorld gen(World world) {
+  /** Generates the world. */
+  public static LasertagWorld gen(PBlockingTaskTracker taskTracker, World world) {
     // Generate a building.
-    TileBuilding tileBuilding = new TileBuilding();
+    TileBuilding tileBuilding = new TileBuilding(taskTracker, world);
     tileBuilding.tileBounds().set(5, 3, 5,15,6, 15);
     TileBuildingGen.onFinishedSettingBuildingBounds(tileBuilding);
     for (int a = 0; a < 10; a++) {

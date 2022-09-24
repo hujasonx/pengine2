@@ -61,7 +61,7 @@ public class LasertagWorldGen extends PBuilder {
   }
 
   private void onGenFinished() {
-    float[] physicsVs = PArrayUtils.floatListToArray(lasertagWorld.world.physicsVertexPositions);
+    float[] physicsVs = lasertagWorld.world.physicsVertexPositions.emit();
     int[] physicsIs = PArrayUtils.intListToArray(lasertagWorld.world.physicsVertexIndices);
     PRecastMeshBuilder recastBuilder = new PRecastMeshBuilder(new SimpleInputGeomProvider(physicsVs, physicsIs));
     lasertagWorld.world.tileCache = recastBuilder.getTileCache();

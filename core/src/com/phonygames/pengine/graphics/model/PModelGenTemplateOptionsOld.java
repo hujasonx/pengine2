@@ -13,15 +13,15 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /** Helper class for emitting PModelGenTemplates. */
-public class PModelGenTemplateOptions implements PPool.Poolable {
+public class PModelGenTemplateOptionsOld implements PPool.Poolable {
   // #pragma mark - PPool.Poolable
   @Getter
   @Setter
   private PPool ownerPool, sourcePool;
   // #pragma end - PPool.Poolable
-  private static final PPool<PModelGenTemplateOptions> staticPool = new PPool<PModelGenTemplateOptions>() {
-    @Override protected PModelGenTemplateOptions newObject() {
-      return new PModelGenTemplateOptions();
+  private static final PPool<PModelGenTemplateOptionsOld> staticPool = new PPool<PModelGenTemplateOptionsOld>() {
+    @Override protected PModelGenTemplateOptionsOld newObject() {
+      return new PModelGenTemplateOptionsOld();
     }
   };
   @Getter(value = AccessLevel.PUBLIC)
@@ -39,20 +39,20 @@ public class PModelGenTemplateOptions implements PPool.Poolable {
   private final PMat4 defaultTransform = PMat4.obtain();
 
 
-  public static PModelGenTemplateOptions obtainDefault() {
-    PModelGenTemplateOptions options = staticPool.obtain();
+  public static PModelGenTemplateOptionsOld obtainDefault() {
+    PModelGenTemplateOptionsOld options = staticPool.obtain();
     options.type = Type.DEFAULT;
     return options;
   }
 
-  public static PModelGenTemplateOptions obtainFlatQuad() {
-    PModelGenTemplateOptions options = staticPool.obtain();
+  public static PModelGenTemplateOptionsOld obtainFlatQuad() {
+    PModelGenTemplateOptionsOld options = staticPool.obtain();
     options.type = Type.FLATQUAD;
     return options;
   }
 
-  public static PModelGenTemplateOptions obtainWall() {
-    PModelGenTemplateOptions options = staticPool.obtain();
+  public static PModelGenTemplateOptionsOld obtainWall() {
+    PModelGenTemplateOptionsOld options = staticPool.obtain();
     options.type = Type.WALL;
     return options;
   }
@@ -179,7 +179,7 @@ public class PModelGenTemplateOptions implements PPool.Poolable {
     return out.set(x, y, z).nor();
   }
 
-  public PModelGenTemplateOptions setFlatQuad(PVec3 v00, PVec3 v10, PVec3 v11, PVec3 v01) {
+  public PModelGenTemplateOptionsOld setFlatQuad(PVec3 v00, PVec3 v10, PVec3 v11, PVec3 v01) {
     this.flatQuad00().set(v00);
     this.flatQuad10().set(v10);
     this.flatQuad11().set(v11);
@@ -188,8 +188,8 @@ public class PModelGenTemplateOptions implements PPool.Poolable {
     return this;
   }
 
-  public PModelGenTemplateOptions setFlatQuad(float x00, float y00, float z00, float x10, float y10, float z10, float x11,
-                                                    float y11, float z11, float x01, float y01, float z01) {
+  public PModelGenTemplateOptionsOld setFlatQuad(float x00, float y00, float z00, float x10, float y10, float z10, float x11,
+                                                 float y11, float z11, float x01, float y01, float z01) {
     this.flatQuad00().set(x00, y00, z00);
     this.flatQuad10().set(x10, y10, z10);
     this.flatQuad11().set(x11, y11, z11);
@@ -198,13 +198,13 @@ public class PModelGenTemplateOptions implements PPool.Poolable {
     return this;
   }
 
-  public PModelGenTemplateOptions setTransform(PMat4 mat4) {
+  public PModelGenTemplateOptionsOld setTransform(PMat4 mat4) {
     this.defaultTransform.set(mat4);
     type = Type.DEFAULT;
     return this;
   }
 
-  public PModelGenTemplateOptions setWall(PVec3 v0, float height0, PVec3 v1, float height1) {
+  public PModelGenTemplateOptionsOld setWall(PVec3 v0, float height0, PVec3 v1, float height1) {
     this.wallPos0.set(v0.x(), v0.y(), v0.z());
     this.wallHeight0.set(height0);
     this.wallPos1.set(v1.x(), v1.y(), v1.z());
@@ -213,8 +213,8 @@ public class PModelGenTemplateOptions implements PPool.Poolable {
     return this;
   }
 
-  public PModelGenTemplateOptions setWall(float x0, float y0, float z0, float height0, float x1, float y1, float z1,
-                                                float height1) {
+  public PModelGenTemplateOptionsOld setWall(float x0, float y0, float z0, float height0, float x1, float y1, float z1,
+                                             float height1) {
     this.wallPos0.set(x0, y0, z0);
     this.wallHeight0.set(height0);
     this.wallPos1.set(x1, y1, z1);

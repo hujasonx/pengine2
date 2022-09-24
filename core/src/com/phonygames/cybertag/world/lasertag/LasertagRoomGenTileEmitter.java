@@ -2,8 +2,8 @@ package com.phonygames.cybertag.world.lasertag;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PModelGenOld;
-import com.phonygames.pengine.graphics.model.PModelGenTemplate;
-import com.phonygames.pengine.graphics.model.PModelGenTemplateOptions;
+import com.phonygames.pengine.graphics.model.PModelGenTemplateOld;
+import com.phonygames.pengine.graphics.model.PModelGenTemplateOptionsOld;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
@@ -29,7 +29,7 @@ public class LasertagRoomGenTileEmitter {
     tile.tileVColIndexStart = tileVColIndex;
     LasertagRoom lasertagRoom = tile.room;
     PAssert.isNotNull(lasertagRoom, "Tiles without owner rooms are not supported yet!");
-    PModelGenTemplateOptions options = PModelGenTemplateOptions.obtainDefault();
+    PModelGenTemplateOptionsOld options = PModelGenTemplateOptionsOld.obtainDefault();
     PPool.PoolBuffer pool = PPool.getBuffer();
     PVec3 tile000 = pool.vec3(), tile100 = pool.vec3(), tile010 = pool.vec3(), tile110 = pool.vec3(), tile001 =
         pool.vec3(), tile101 = pool.vec3(), tile011 = pool.vec3(), tile111 = pool.vec3();
@@ -40,12 +40,14 @@ public class LasertagRoomGenTileEmitter {
       tile001.add(floorUp);
       tile101.add(floorUp);
       tile100.add(floorUp);
-      PModelGenTemplate floorTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.floorTemplate(tileGen));
+      PModelGenTemplateOld
+          floorTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.floorTemplate(tileGen));
       options.setFlatQuad(tile000, tile100, tile101, tile001);
       floorTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     if (tile.hasCeiling) {
-      PModelGenTemplate ceilingTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.ceilingTemplate(tileGen));
+      PModelGenTemplateOld
+          ceilingTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.ceilingTemplate(tileGen));
       options.setFlatQuad(tile010, tile110, tile111, tile011);
       ceilingTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
@@ -55,10 +57,12 @@ public class LasertagRoomGenTileEmitter {
       tile001.add(floorUp);
       tile101.add(floorUp);
       tile100.add(floorUp);
-      PModelGenTemplate floorTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.walkwayTemplateFloor(tileGen));
+      PModelGenTemplateOld
+          floorTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.walkwayTemplateFloor(tileGen));
       options.setFlatQuad(tile000, tile100, tile101, tile001);
       floorTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
-      PModelGenTemplate ceilingTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.walkwayTemplateCeiling(tileGen));
+      PModelGenTemplateOld
+          ceilingTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.walkwayTemplateCeiling(tileGen));
       ceilingTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     emitWall(tileGen, tile.wallX, modelGen, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts, options, pool);
@@ -73,7 +77,7 @@ public class LasertagRoomGenTileEmitter {
 
   private static void emitWall(LasertagTileGen tileGen, LasertagTileWall wall, PModelGenOld modelGen, PModelGenOld.Part basePart,
                                PModelGenOld.StaticPhysicsPart staticPhysicsPart, int tileVColIndex,
-                               PList<PModelGenOld.Part> alphaBlendParts, PModelGenTemplateOptions options,
+                               PList<PModelGenOld.Part> alphaBlendParts, PModelGenTemplateOptionsOld options,
                                PPool.PoolBuffer pool) {
     if (!wall.hasWall) {return;}
     PAssert.isTrue(wall.isValid);
@@ -96,29 +100,34 @@ public class LasertagRoomGenTileEmitter {
     }
     String wallExtraTemplateName = tileGen.roomGen.templateSelector.wallTemplateExtras(tileGen);
     if (wallExtraTemplateName != null) {
-      PModelGenTemplate extraTemplate = PModelGenTemplate.get(wallExtraTemplateName);
+      PModelGenTemplateOld extraTemplate = PModelGenTemplateOld.get(wallExtraTemplateName);
       extraTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     if (wall.isWindow) {
       if (tileGen.x == 0 && tileGen.z == 0 && wall.facing == LasertagTileWall.Facing.X && tileGen.roomGen.buildingGen.building.id.equals("building0")) {
         System.out.println(tileGen.tile.tileVColIndexStart);
       }
-      PModelGenTemplate windowTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.windowTemplate(tileGen));
+      PModelGenTemplateOld
+          windowTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.windowTemplate(tileGen));
       windowTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     } else if (wall.isSolidWall) {
-      PModelGenTemplate wallTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.wallTemplate(tileGen));
+      PModelGenTemplateOld
+          wallTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.wallTemplate(tileGen));
       wallTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     if (wall.hasDoorframeR) {
-      PModelGenTemplate doorframeRTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.doorFrameRTemplate(tileGen));
+      PModelGenTemplateOld
+          doorframeRTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.doorFrameRTemplate(tileGen));
       doorframeRTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     if (wall.hasDoorframeL) {
-      PModelGenTemplate doorframeLTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.doorFrameLTemplate(tileGen));
+      PModelGenTemplateOld
+          doorframeLTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.doorFrameLTemplate(tileGen));
       doorframeLTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
     if (wall.hasDoorframeT) {
-      PModelGenTemplate doorframeTTemplate = PModelGenTemplate.get(tileGen.roomGen.templateSelector.doorFrameTTemplate(tileGen));
+      PModelGenTemplateOld
+          doorframeTTemplate = PModelGenTemplateOld.get(tileGen.roomGen.templateSelector.doorFrameTTemplate(tileGen));
       doorframeTTemplate.emit(modelGen, options, basePart, staticPhysicsPart, tileVColIndex, alphaBlendParts);
     }
   }

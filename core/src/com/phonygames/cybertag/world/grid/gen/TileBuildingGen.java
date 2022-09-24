@@ -31,9 +31,14 @@ public class TileBuildingGen {
       PIntAABB roomBounds = generatePotentialRoomBounds(building, parameters);
       TileGrid roomTiles = validatePotentialRoomLocation(roomBounds, building, parameters);
       if (roomTiles == null) {continue;}
-      room = TileRoom.builder().hasOpenCeiling(parameters.openCeiling).build();
+      room = TileRoom.builder().parameters(parameters).genTaskTracker(building.genTaskTracker()).building(building).build();
       room.tileGrid().trackAll(roomTiles);
     } while (room == null && attemptsLeft > 0);
+    // If the room will be generated, add it as a blocker.
+    if (room != null) {
+      building.rooms().add(room);
+      room.genTaskTracker().addBlocker(room);
+    }
     return room;
   }
 
@@ -121,5 +126,6 @@ public class TileBuildingGen {
       TileRoom room = building.rooms().get(a);
       TileRoomGen.onNeighborsAndDoorsReady(room);
     }
+    building.unblockTaskTracker();
   }
 }

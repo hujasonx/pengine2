@@ -39,14 +39,6 @@ public class PMesh {
     this.vertexAttributes = vertexAttributes;
   }
 
-  public ShortBuffer getIndicesBuffer() {
-    return backingMesh.getIndicesBuffer();
-  }
-
-  public FloatBuffer getVerticesBuffer() {
-    return backingMesh.getVerticesBuffer();
-  }
-
   /**
    * Generates a new PMesh, doing any necessary renaming.
    *
@@ -66,6 +58,8 @@ public class PMesh {
           attr.alias = PVertexAttributes.Attribute.Keys.uv[attr.unit];
           break;
         case VertexAttributes.Usage.ColorPacked:
+          attr.alias = PVertexAttributes.Attribute.Keys.colPacked[attr.unit];
+          break;
         case VertexAttributes.Usage.ColorUnpacked:
           attr.alias = PVertexAttributes.Attribute.Keys.col[attr.unit];
           break;
@@ -85,11 +79,6 @@ public class PMesh {
          vertexAttributes);
   }
 
-  public PMesh(boolean isStatic, PFloatList vertexData, PList<Short> indexData, PVertexAttributes vertexAttributes) {
-    this(isStatic, vertexData.emitTo(new float[vertexData.size()], 0), PCollectionUtils.toShortArray(indexData),
-         vertexAttributes);
-  }
-
   public PMesh(boolean isStatic, float[] vertexData, short[] indexData, PVertexAttributes vertexAttributes) {
     this(isStatic, vertexData.length, indexData.length, vertexAttributes);
     backingMesh.setVertices(vertexData);
@@ -101,12 +90,17 @@ public class PMesh {
     this.vertexAttributes = vertexAttributes;
   }
 
+  public PMesh(boolean isStatic, PFloatList vertexData, PList<Short> indexData, PVertexAttributes vertexAttributes) {
+    this(isStatic, vertexData.emitTo(new float[vertexData.size()], 0), PCollectionUtils.toShortArray(indexData),
+         vertexAttributes);
+  }
+
   public static void init() {
     new PModelGen() {
       PMeshGen baseMeshGen;
 
       @Override protected void modelIntro() {
-        baseMeshGen = addMesh("base", PVertexAttributes.getPOS());
+        baseMeshGen = getOrAddOpaqueMesh("base", PVertexAttributes.getPOS());
       }
 
       @Override protected void modelMiddle() {
@@ -181,6 +175,14 @@ public class PMesh {
     return backingMeshShorts;
   }
 
+  public ShortBuffer getIndicesBuffer() {
+    return backingMesh.getIndicesBuffer();
+  }
+
+  public FloatBuffer getVerticesBuffer() {
+    return backingMesh.getVerticesBuffer();
+  }
+
   public void glRenderInstanced(PShader shader, int numInstances) {
     if (shader.checkValid()) {
       backingMesh.bind(shader.getShaderProgram());
@@ -200,26 +202,30 @@ public class PMesh {
   }
 
   public PMesh setIndices(short[] indices) {
-    backingMesh.setIndices(indices);
-    backingMeshShorts = null;
-    return this;
+    return setIndices(indices, 0, indices.length);
   }
 
   public PMesh setIndices(short[] indices, int offset, int count) {
     backingMesh.setIndices(indices, offset, count);
     backingMeshShorts = null;
+    if (center != null) {
+      center.free();
+      center = null;
+    }
     return this;
   }
 
   public PMesh setVertices(float[] vertices) {
-    backingMesh.setVertices(vertices);
-    backingMeshFloats = null;
-    return this;
+    return setVertices(vertices,0,vertices.length);
   }
 
   public PMesh setVertices(float[] vertices, int offset, int count) {
     backingMesh.setVertices(vertices, offset, count);
     backingMeshFloats = null;
+    if (center != null) {
+      center.free();
+      center = null;
+    }
     return this;
   }
 

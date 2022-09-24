@@ -156,7 +156,7 @@ public class PModelGenOld implements PPostableTask {
       for (int meshVIndex = 0; meshVIndex < meshShorts.length; meshVIndex++) { // Loop through all vertices in the mesh.
         // Get the raw position.
         int posLookupI = meshShorts[meshVIndex] * meshFloatsPerVert +
-                         mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+                         mesh.vertexAttributes().floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
         float rawPosX = meshVerts[posLookupI + 0];
         float rawPosY = meshVerts[posLookupI + 1];
         float rawPosZ = meshVerts[posLookupI + 2];
@@ -167,7 +167,7 @@ public class PModelGenOld implements PPostableTask {
             PAssert.isFalse(vertexAttribute.usage == VertexAttribute.ColorUnpacked().usage);
             // Process the attribute data.
             int lookupIndexStart = meshShorts[meshVIndex] * meshFloatsPerVert +
-                                   mesh.vertexAttributes().indexForVertexAttribute(vertexAttribute);
+                                   mesh.vertexAttributes().floatIndexForVertexAttribute(vertexAttribute);
             switch (vertexAttribute.numComponents) {
               case 1:
                 set(vertexAttribute.alias, meshVerts[lookupIndexStart]);
@@ -203,14 +203,14 @@ public class PModelGenOld implements PPostableTask {
 
     public Part set(String alias, float x) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
       currentVertexValues()[ind + 0] = x;
       return this;
     }
 
     public Part set(String alias, float x, float y) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
       currentVertexValues()[ind + 0] = x;
       currentVertexValues()[ind + 1] = y;
       return this;
@@ -222,7 +222,7 @@ public class PModelGenOld implements PPostableTask {
         minPos().set(Math.min(minPos().x(), vec.x()), Math.min(minPos().y(), vec.y()), Math.min(minPos().z(), vec.z()));
         maxPos().set(Math.max(maxPos().x(), vec.x()), Math.max(maxPos().y(), vec.y()), Math.max(maxPos().z(), vec.z()));
       }
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      int ind = vertexAttributes.floatIndexForVertexAttribute(alias);
       currentVertexValues()[ind + 0] = vec.x();
       currentVertexValues()[ind + 1] = vec.y();
       currentVertexValues()[ind + 2] = vec.z();
@@ -231,7 +231,7 @@ public class PModelGenOld implements PPostableTask {
 
     public Part set(String alias, float x, float y, float z, float w) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
       currentVertexValues()[ind + 0] = x;
       currentVertexValues()[ind + 1] = y;
       currentVertexValues()[ind + 2] = z;
@@ -286,19 +286,19 @@ public class PModelGenOld implements PPostableTask {
 
     public PVec2 get(PVec2 out, String alias) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
       return out.x(ind + 0).y(ind + 1);
     }
 
     public PVec3 get(PVec3 out, String alias) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
       return out.x(ind + 0).y(ind + 1).z(ind + 2);
     }
 
     public PVec4 get(PVec4 out, String alias) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
       return out.x(ind + 0).y(ind + 1).z(ind + 2).w(ind + 3);
     }
 
@@ -338,7 +338,7 @@ public class PModelGenOld implements PPostableTask {
         minPos().set(Math.min(minPos().x(), x), Math.min(minPos().y(), y), Math.min(minPos().z(), z));
         maxPos().set(Math.max(maxPos().x(), x), Math.max(maxPos().y(), y), Math.max(maxPos().z(), z));
       }
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
       currentVertexValues()[ind + 0] = x;
       currentVertexValues()[ind + 1] = y;
       currentVertexValues()[ind + 2] = z;
@@ -347,7 +347,7 @@ public class PModelGenOld implements PPostableTask {
 
     public Part set(String alias, PVec2 vec) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
-      int ind = vertexAttributes().indexForVertexAttribute(alias);
+      int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
       currentVertexValues()[ind + 0] = vec.x();
       currentVertexValues()[ind + 1] = vec.y();
       return this;
@@ -355,7 +355,7 @@ public class PModelGenOld implements PPostableTask {
 
     public Part set(String alias, PVec4 vec) {
       PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
-      int ind = vertexAttributes.indexForVertexAttribute(alias);
+      int ind = vertexAttributes.floatIndexForVertexAttribute(alias);
       currentVertexValues()[ind + 0] = vec.x();
       currentVertexValues()[ind + 1] = vec.y();
       currentVertexValues()[ind + 2] = vec.z();
@@ -580,7 +580,7 @@ public class PModelGenOld implements PPostableTask {
 
     private StaticPhysicsPart copyLastTri(Part part) {
       int indexOfPosAttrInPartVertexFloatArray =
-          part.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+          part.vertexAttributes().floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
       int partFloatsPerVertex = part.vertexAttributes().getNumFloatsPerVertex();
       float x, y, z;
       x = part.vertices().get(partFloatsPerVertex * part.indices().get(-3) + indexOfPosAttrInPartVertexFloatArray + 0);
@@ -630,11 +630,11 @@ public class PModelGenOld implements PPostableTask {
            meshVIndex += 3) { // Loop through all triangles in the mesh.
         // Get the raw position.
         int posLookupI0 = meshShorts[meshVIndex + 0] * meshFloatsPerVert +
-                          mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+                          mesh.vertexAttributes().floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
         int posLookupI1 = meshShorts[meshVIndex + 1] * meshFloatsPerVert +
-                          mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+                          mesh.vertexAttributes().floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
         int posLookupI2 = meshShorts[meshVIndex + 2] * meshFloatsPerVert +
-                          mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+                          mesh.vertexAttributes().floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
         PPool.PoolBuffer pool = PPool.getBuffer();
         PVec3 pos0 =
             pool.vec3().set(meshVerts[posLookupI0 + 0], meshVerts[posLookupI0 + 1], meshVerts[posLookupI0 + 2]);

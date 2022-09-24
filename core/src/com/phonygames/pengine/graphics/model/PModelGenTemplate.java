@@ -1,240 +1,149 @@
 package com.phonygames.pengine.graphics.model;
 
-import com.badlogic.gdx.graphics.VertexAttribute;
-import com.phonygames.pengine.PAssetManager;
-import com.phonygames.pengine.math.PVec3;
+import android.support.annotation.Nullable;
+
+import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.math.PInt;
 import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.collection.PMap;
-import com.phonygames.pengine.util.PPool;
-import com.phonygames.pengine.util.PStringUtils;
+import com.phonygames.pengine.util.collection.PPooledIterable;
+import com.phonygames.pengine.util.collection.PStringMap;
 
-import lombok.val;
+import lombok.Builder;
 
 /**
- * A template model that can be copied into a modelGen.
- *
- * Material ID's should be named as follows:
- * id is separated by periods. Options are:
- * alphaBlend: the part will generate a unique alphablend part.
- * alsoStaticBody will cause this part to generate both a normal and static body.
- * onlyStaticBody will cause this part to only affect physics.
+ * A special form of PModel that is designed to be used by a model gen to emit copies.
+ * <p>
+ * Materials should be named in blender as follows: [sp=name] [op:name] [ab:name] At least one of the above must be
+ * included, but multiple can be included as well. staticphysics parts will be combined if they share name. opaque parts
+ * will be combined if they share name. If they do, they MUST have the same vertex attributes! alphablend parts will
+ * never be combined.
+ * <p>
+ * [matid=*] The material id. Optional.
+ * <p>
+ * [vcio=*] The name used to lookup the vColIndexOffset. Optional.
  */
 public class PModelGenTemplate {
-  private static final PMap<String, PModelGenTemplate> staticTemplates = new PMap<>();
-  public final PList<Boolean> emitMesh = new PList<>();
-  public final PList<Boolean> emitPhysics = new PList<>();
-  public final PList<Boolean> isAlphaBlend = new PList<>();
-  public final PList<PMesh> meshes = new PList<>();
-  public final PMap<PMesh, PList<Triangle>> triangleMap = new PMap<PMesh, PList<Triangle>>() {
-    @Override public PList<Triangle> newUnpooled(PMesh mesh) {
-      return new PList<>();
-    }
-  };
-  public final PList<Integer> vColIndexBaseOffsets = new PList<>();
-  public final PList<Integer> vColIndexOffsets = new PList<>();
+  private final PModel model;
+  private final PList<Part> parts = new PList<>();
+  /** The vColIndexOffsets map to use. Should only be used temporarily to allow parts to access it during emitting. */
+  private PStringMap<PInt> __tmpVColIndexOffsets;
 
-  private PModelGenTemplate(String name) {
-    PModel model = PAssetManager.model(name, true);
-    try (val it = model.glNodes().obtainIterator()) {
+  public PModelGenTemplate(PModel model) {
+    this.model = model;
+    __genFromModel();
+  }
+
+  /** Sets up this template from the model. */
+  private void __genFromModel() {
+    try (PPooledIterable.PPoolableIterator<PMap.Entry<String, PGlNode>> it = model.glNodes().obtainIterator()) {
       while (it.hasNext()) {
-        val e = it.next();
-        PMesh mesh = e.v().drawCall().mesh();
-        meshes.add(mesh);
-        String materialId = e.v().drawCall().material().id();
-        // Determine the vCol index from the material.
-        String vColIBaseString = PStringUtils.extract(materialId, ".vColBase", ".", true);
-        vColIndexBaseOffsets.add(vColIBaseString == null ? -1 : Integer.parseInt(vColIBaseString));
-        if (vColIBaseString == null) {
-          String vColIString = PStringUtils.extract(materialId, ".vCol", ".", true);
-          vColIndexOffsets.add(vColIString == null ? -1 : Integer.parseInt(vColIString));
-        } else {
-          vColIndexOffsets.add(-1);
+        PMap.Entry<String, PGlNode> e = it.next();
+        String originalMaterialId = e.v().drawCall().material().id();
+        // Split the material id into parts separated by square brackets.
+        String[] matIdSplit = originalMaterialId.split("[\\[\\]]");
+        String opaqueName = dataForMaterialType(matIdSplit, "op");
+        String physicsName = dataForMaterialType(matIdSplit, "sp");
+        String alphaBlendName = dataForMaterialType(matIdSplit, "ab");
+        String matId = dataForMaterialType(matIdSplit, "matid");
+        String vcio = dataForMaterialType(matIdSplit, "vcio");
+        if (opaqueName != null) {
+          Part.PartBuilder partBuilder = Part.builder();//
+          partBuilder.baseName(opaqueName);
+          partBuilder.matid(matId);
+          partBuilder.mesh(e.v().drawCall().mesh());
+          partBuilder.type(Part.Type.OPAQUE);
+          partBuilder.vColIndexOffsetName(vcio);
+          parts.add(partBuilder.build());
         }
-        isAlphaBlend.add(materialId.contains(".alphaBlend"));
-        if (materialId.contains(".alsoStaticBody")) {
-          emitPhysics.add(true);
-          emitMesh.add(true);
-        } else if (materialId.contains(".onlyStaticBody")) {
-          emitPhysics.add(true);
-          emitMesh.add(false);
-        } else {
-          emitPhysics.add(false);
-          emitMesh.add(true);
-        }
-        short[] meshShorts = mesh.getBackingMeshShorts();
-        for (int a = 0; a < meshShorts.length; a += 3) {
-          triangleMap.genUnpooled(mesh)
-                     .add(new Triangle(mesh, meshShorts[a + 0], meshShorts[a + 1], meshShorts[a + 2]));
-        }
+        System.out.println("Genfrommodel " + e.k());//TODO: actually implement this shit
       }
     }
   }
 
-  public static PModelGenTemplate get(String name) {
-    if (staticTemplates.has(name)) {
-      return staticTemplates.get(name);
+  /** If the materialIdParts contains the data with type, returns the value. E.g. [a=b] if type == a, then return b. */
+  private static @Nullable String dataForMaterialType(String[] materialIdParts, String type) {
+    for (int a = 0; a < materialIdParts.length; a++) {
+      String s = materialIdParts[a];
+      String[] splitByEquals = s.split("=");
+      if (splitByEquals.length != 2) {continue;}
+      if (splitByEquals[0].equals(type)) {
+        return splitByEquals[1];
+      }
     }
-    PModelGenTemplate ret = new PModelGenTemplate(name);
-    staticTemplates.put(name, ret);
-    return ret;
+    return null;
   }
 
-  /**
-   * @param modelGen
-   * @param options
-   * @param basePart
-   * @param staticPhysicsPart
-   * @param vColIndexOffset
-   */
-  public void emit(PModelGenOld modelGen, PModelGenTemplateOptions options, PModelGenOld.Part basePart,
-                   PModelGenOld.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
-                   PList<PModelGenOld.Part> alphaBlendParts) {
-    for (int a = 0; a < this.meshes.size(); a++) {
-      PList<Triangle> meshTriangles = triangleMap.get(meshes.get(a));
-      boolean emitMesh = this.emitMesh.get(a);
-      boolean emitPhysics = this.emitPhysics.get(a);
-      if (emitMesh) {
-        boolean isAlphaBlend = this.isAlphaBlend.get(a);
-        int vColOffset = this.vColIndexOffsets.get(a);
-        int vColBaseOffset = this.vColIndexBaseOffsets.get(a);
-        int vColIndex = vColOffset == -1 ? (vColBaseOffset == -1 ? 0 : vColBaseOffset) : (vColIndexOffset + vColOffset);
-        PModelGenOld.Part part = basePart;
-        if (isAlphaBlend) {
-          part = modelGen.addPart(basePart.name() + ".alphaBlend" + ".id" + a + "_" + alphaBlendParts.size() + "",
-                                  basePart.vertexAttributes());
-          alphaBlendParts.add(part);
-        }
-        for (int b = 0; b < meshTriangles.size(); b++) {
-          meshTriangles.get(b).emit(options, part, emitPhysics ? staticPhysicsPart : null, vColIndex);
-        }
-      } else {
-        for (int b = 0; b < meshTriangles.size(); b++) {
-          meshTriangles.get(b).emit(options, null, staticPhysicsPart, 0);
-        }
-      }
+  /** Emits this template to the modelGen using the given vertex processor. */
+  public void emit(PModelGen modelGen, @Nullable PMeshGenVertexProcessor vertexProcessor,
+                   @Nullable PStringMap<PInt> vColIndexOffsets) {
+    __tmpVColIndexOffsets = vColIndexOffsets;
+    for (int a = 0; a < parts.size(); a++) {
+      parts.get(a).emit(modelGen, vertexProcessor);
     }
+    __tmpVColIndexOffsets = null;
   }
 
-  private static class Triangle {
-    final boolean hasNormal;
-    final short index0, index1, index2;
-    final PMesh mesh;
-    final PVec3 nor[] = new PVec3[3];
-    final PVec3 pos[] = new PVec3[3];
-    private final short[] indices = new short[3];
-    //    public final PList<Boolean> emitMesh = new PList<>();
-    //    public final PList<Boolean> emitPhysics = new PList<>();
-    //    public final PList<Boolean> isAlphaBlend = new PList<>();
-    //    public final PList<PMesh> meshes = new PList<>();
-    //    public final PList<Integer> vColIndexBaseOffsets = new PList<>();
-    //    public final PList<Integer> vColIndexOffsets = new PList<>();
+  @Builder private static class Part {
+    /** The base name of the part. */
+    private final String baseName;
+    // Used to modify the vColIndices based on the offsets.
+    private final PMeshGen.FinalPassVertexProcessor finalPassVertexProcessor = new PMeshGen.FinalPassVertexProcessor() {
+      @Override public void process(float[] vertexFloats) {
+        // TODO: shift vColIndex based on the offsets stored in __tmpVColIndexOffsets.
+        PAssert.warnNotImplemented("process"); // TODO: FIXME
+      }
+    };
+    /** The material id. */
+    private final @Nullable
+    String matid;
+    /** The backing mesh of this part. */
+    private final PMesh mesh;
+    /** The template that owns this part. */
+    private final PModelGenTemplate ownerTemplate;
+    private final Type type;
+    /** The name used to retrieve vColIndex offsets from the offsetMap. */
+    private final @Nullable
+    String vColIndexOffsetName;
 
-    public Triangle(PMesh mesh, short index0, short index1, short index2) {
-      this.mesh = mesh;
-      this.index0 = index0;
-      this.index1 = index1;
-      this.index2 = index2;
-      indices[0] = index0;
-      indices[1] = index1;
-      indices[2] = index2;
-      float[] meshFloats = mesh.getBackingMeshFloats();
-      int idxOForPos = mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
-      int idxOForNor = mesh.vertexAttributes().indexForVertexAttribute(PVertexAttributes.Attribute.Keys.nor);
-      int fsPerVertex = mesh.vertexAttributes().getNumFloatsPerVertex();
-      pos[0] = PVec3.obtain().set(meshFloats[index0 * fsPerVertex + idxOForPos + 0],
-                                  meshFloats[index0 * fsPerVertex + idxOForPos + 1],
-                                  meshFloats[index0 * fsPerVertex + idxOForPos + 2]);
-      pos[1] = PVec3.obtain().set(meshFloats[index1 * fsPerVertex + idxOForPos + 0],
-                                  meshFloats[index1 * fsPerVertex + idxOForPos + 1],
-                                  meshFloats[index1 * fsPerVertex + idxOForPos + 2]);
-      pos[2] = PVec3.obtain().set(meshFloats[index2 * fsPerVertex + idxOForPos + 0],
-                                  meshFloats[index2 * fsPerVertex + idxOForPos + 1],
-                                  meshFloats[index2 * fsPerVertex + idxOForPos + 2]);
-      if (idxOForNor != -1) {
-        nor[0] = PVec3.obtain().set(meshFloats[index0 * fsPerVertex + idxOForNor + 0],
-                                    meshFloats[index0 * fsPerVertex + idxOForNor + 1],
-                                    meshFloats[index0 * fsPerVertex + idxOForNor + 2]);
-        nor[1] = PVec3.obtain().set(meshFloats[index1 * fsPerVertex + idxOForNor + 0],
-                                    meshFloats[index1 * fsPerVertex + idxOForNor + 1],
-                                    meshFloats[index1 * fsPerVertex + idxOForNor + 2]);
-        nor[2] = PVec3.obtain().set(meshFloats[index2 * fsPerVertex + idxOForNor],
-                                    meshFloats[index2 * fsPerVertex + idxOForNor + 1],
-                                    meshFloats[index2 * fsPerVertex + idxOForNor + 2]);
-        hasNormal = true;
-      } else {
-        hasNormal = false;
+    /** Emits this part to the modelGen. */
+    private void emit(PModelGen modelGen, @Nullable PMeshGenVertexProcessor vertexProcessor) {
+      switch (type) {
+        case STATICPHYSICS:
+          emitStaticPhysics(modelGen, vertexProcessor);
+          break;
+        case OPAQUE:
+          emitOpaque(modelGen, vertexProcessor);
+          break;
+        case ALPHABLEND:
+          //          emitOpaque(modelGen, vertexProcessor); // TODO: not supported yet
+          break;
+        default:
+          PAssert.fail("Should not reach!");
+          break;
       }
     }
 
-    /**
-     * @param options
-     * @param part              either the main part, or the alpha blend part.
-     * @param staticPhysicsPart
-     * @param vColIndex         the *raw* vCol index. If -1, then no overriding will occur.
-     */
-    public void emit(PModelGenTemplateOptions options, PModelGenOld.Part part,
-                     PModelGenOld.StaticPhysicsPart staticPhysicsPart, int vColIndex) {
-      boolean partHasCol0 =
-          part == null ? false : part.vertexAttributes().hasAttributeWithName(PVertexAttributes.Attribute.Keys.col[0]);
-      try (PPool.PoolBuffer pool = PPool.getBuffer()) {
-        if (part != null) {
-          for (int a = 0; a < 3; a++) {
-            short index = indices[a];
-            // Process position, normal, and vCol separately.
-            PVec3 transformedPos = options.processPosition(pool.vec3(pos[a]));
-            part.set(PVertexAttributes.Attribute.Keys.pos, transformedPos);
-            if (hasNormal) {
-              PVec3 transformedNor = options.processNormal(pos[a], pool.vec3(nor[a]));
-              part.set(PVertexAttributes.Attribute.Keys.nor, transformedNor);
-            }
-            if (vColIndex != -1 && partHasCol0) {
-              part.set(PVertexAttributes.Attribute.Keys.col[0], PMesh.vColForIndex(pool.vec4(), vColIndex));
-            }
-            // For each vertex, loop through the vertex attributes and emit accordingly.
-            for (int b = 0; b < mesh.vertexAttributes().getBackingVertexAttributes().size(); b++) {
-              VertexAttribute va = mesh.vertexAttributes().getBackingVertexAttributes().get(b);
-              if (va.alias.equals(PVertexAttributes.Attribute.Keys.pos)) {
-                // Pos. Skip.
-              } else if (va.alias.equals(PVertexAttributes.Attribute.Keys.nor)) {
-                // Nor. Skip.
-              } else if (va.alias.equals(PVertexAttributes.Attribute.Keys.col[0]) && vColIndex != -1) {
-                // Col 0 was overriden so skip.
-              } else {
-                // Just emit the info like normal.
-                int fPerV = mesh.vertexAttributes().getNumFloatsPerVertex();
-                int offsetI = mesh.vertexAttributes().indexForVertexAttribute(va.alias);
-                switch (va.getSizeInBytes() / 4) {
-                  case 4:
-                    part.set(va.alias, mesh.getBackingMeshFloats()[index * fPerV + offsetI + 0],
-                             mesh.getBackingMeshFloats()[index * fPerV + offsetI + 1],
-                             mesh.getBackingMeshFloats()[index * fPerV + offsetI + 2],
-                             mesh.getBackingMeshFloats()[index * fPerV + offsetI + 3]);
-                    break;
-                  case 3:
-                    part.set(va.alias, mesh.getBackingMeshFloats()[index * fPerV + offsetI + 0],
-                             mesh.getBackingMeshFloats()[index * fPerV + offsetI + 1],
-                             mesh.getBackingMeshFloats()[index * fPerV + offsetI + 2]);
-                    break;
-                  case 2:
-                    part.set(va.alias, mesh.getBackingMeshFloats()[index * fPerV + offsetI + 0],
-                             mesh.getBackingMeshFloats()[index * fPerV + offsetI + 1]);
-                    break;
-                  case 1:
-                    part.set(va.alias, mesh.getBackingMeshFloats()[index * fPerV + offsetI + 0]);
-                    break;
-                }
-              }
-            }
-            part.emitVertex();
-          }
-          part.tri(false);
-        }
-        if (staticPhysicsPart != null) {
-          staticPhysicsPart.addTri(options.processPosition(pool.vec3(pos[0])),
-                                   options.processPosition(pool.vec3(pos[1])),
-                                   options.processPosition(pool.vec3(pos[2])));
-        }
-      }
+    /** Emits this part as a static physics part to the modelGen. */
+    private void emitStaticPhysics(PModelGen modelGen, @Nullable PMeshGenVertexProcessor vertexProcessor) {
+      PMeshGen meshGen = modelGen.getOrAddStaticPhysicsMesh(baseName);
+      meshGen.vertexProcessor(vertexProcessor);
+      meshGen.addMeshCopy(mesh);
+      meshGen.vertexProcessor(null);
+    }
+
+    /** Emits this part as an opaque part to the modelGen. */
+    private void emitOpaque(PModelGen modelGen, @Nullable PMeshGenVertexProcessor vertexProcessor) {
+      PMeshGen meshGen = modelGen.getOrAddOpaqueMesh(baseName, mesh.vertexAttributes());
+      meshGen.finalPassVertexProcessor(finalPassVertexProcessor);
+      meshGen.vertexProcessor(vertexProcessor);
+      meshGen.addMeshCopy(mesh);
+      meshGen.vertexProcessor(null);
+      meshGen.finalPassVertexProcessor(null);
+    }
+
+    enum Type {
+      STATICPHYSICS, OPAQUE, ALPHABLEND;
     }
   }
 }

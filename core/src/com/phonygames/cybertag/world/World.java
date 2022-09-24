@@ -17,6 +17,8 @@ import com.phonygames.pengine.graphics.particles.PBillboardParticleSource;
 import com.phonygames.pengine.input.PKeyboard;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.navmesh.PTileCache;
+import com.phonygames.pengine.util.PBlockingTaskTracker;
+import com.phonygames.pengine.util.collection.PFloatList;
 import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
 
@@ -27,10 +29,12 @@ public class World {
   public HeadGunnerEntity headGunnerEntity;
   public PTileCache tileCache;
   public final PList<Integer> physicsVertexIndices = new PList<>();
-  public final PList<Float> physicsVertexPositions = new PList<>();
+  public final PFloatList physicsVertexPositions = PFloatList.obtain();
+  /** The tasktracker that tracks this world being generated. */
+  private final PBlockingTaskTracker taskTracker = new PBlockingTaskTracker();
 
   public World() {
-    lasertagWorld = LasertagGridWorldGen.gen(this);
+    lasertagWorld = LasertagGridWorldGen.gen(taskTracker, this);
     playerCharacter = new PlayerCharacterEntity();
     npcHumanoidEntity = new NpcHumanoidEntity(this);
     headGunnerEntity = new HeadGunnerEntity(this);

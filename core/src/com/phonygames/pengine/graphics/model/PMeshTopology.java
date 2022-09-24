@@ -29,8 +29,8 @@ public class PMeshTopology {
 
   public void apply(PList<PVec3> canonicalPositions, PFloatList verticesToModify, PVertexAttributes vertexAttributes) {
     // Set the positions of the canonical vertices using the canonicalPositions list.
-    int posOffset = vertexAttributes.indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
-    int norOffset = vertexAttributes.indexForVertexAttribute(PVertexAttributes.Attribute.Keys.nor);
+    int posOffset = vertexAttributes.floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+    int norOffset = vertexAttributes.floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.nor);
     int floatsPV = vertexAttributes.getNumFloatsPerVertex();
     int numVerticesInMesh = verticesToModify.size() / floatsPV;
     for (int indexInCanonicalIndicesArray = 0, canonicalIndexIndex = 0;
@@ -78,8 +78,8 @@ public class PMeshTopology {
    */
   public static PFloatList recalcSmoothNormals(PFloatList vertices, short[] indices, int minVertexIndex,
                                                int vertexCount, PVertexAttributes vertexAttributes) {
-    int posOffset = vertexAttributes.indexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
-    int norOffset = vertexAttributes.indexForVertexAttribute(PVertexAttributes.Attribute.Keys.nor);
+    int posOffset = vertexAttributes.floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+    int norOffset = vertexAttributes.floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.nor);
     if (posOffset == -1 || norOffset == -1) {
       PAssert.warn("recalcSmoothNormals called on a mesh with no positions or normals");
       return vertices;

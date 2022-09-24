@@ -16,8 +16,8 @@ import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBvhTriangleMeshShape;
 import com.phonygames.pengine.util.PBuilder;
-import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.PPool;
+import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.collection.PStringMap;
 
 import lombok.AccessLevel;
@@ -42,6 +42,10 @@ public class PModel {
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   @Accessors(fluent = true)
   private final PStringMap<PPhysicsBvhTriangleMeshShape> staticCollisionShapes = new PStringMap<>();
+  /** The modelGenTemplate associated with this model. Lazy loaded.*/
+  @Getter(value = AccessLevel.PUBLIC, lazy = true)
+  @Accessors(fluent = true)
+  private final PModelGenTemplate modelGenTemplate = new PModelGenTemplate(this);
 
   private PModel() {
   }

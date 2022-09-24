@@ -127,7 +127,8 @@ public class LasertagRoomGen extends PBuilder {
         //        .Layer.PBR,
         //                    true, false);
         emitStaticPhysicsPartIntoModelBuilder(builder);
-        emitStaticPhysicsPartIntoVerticesAndIndices(buildingGen.worldGen.lasertagWorld.world.physicsVertexPositions, buildingGen.worldGen.lasertagWorld.world.physicsVertexIndices);
+        // TODO: Wrong.
+//        emitStaticPhysicsPartIntoVerticesAndIndices(buildingGen.worldGen.lasertagWorld.world.physicsVertexPositions, buildingGen.worldGen.lasertagWorld.world.physicsVertexIndices);
         builder.addNode(basePart.name(), null, glNodes, PMat4.IDT);
         for (int a = 0; a < alphaBlendParts.size(); a++) {
           Part part = alphaBlendParts.get(a);

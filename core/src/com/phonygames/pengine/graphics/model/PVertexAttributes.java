@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Getter;
-import lombok.val;
 
 public class PVertexAttributes {
   @Getter
@@ -51,7 +50,7 @@ public class PVertexAttributes {
     int floatsPerVertex = 0;
     StringBuilder prefix = new StringBuilder();
     for (int a = 0; a < vertexAttributes.length; a++) {
-      val va = vertexAttributes[a];
+      VertexAttribute va = vertexAttributes[a];
       vertexAttributeFloatIndexInVertex.put(va.alias, floatsPerVertex);
       prefix.append("#define ").append(va.alias).append("Flag\n");
       floatsPerVertex += va.getSizeInBytes() / 4;
@@ -91,19 +90,19 @@ public class PVertexAttributes {
 
   @Override public boolean equals(Object o) {
     if (o instanceof PVertexAttributes) {
-      val other = (PVertexAttributes) o;
+      PVertexAttributes other = (PVertexAttributes) o;
       return backingVertexAttributes.equals(other.backingVertexAttributes);
     }
     return false;
   }
 
   /** Returns the index in a float buffer for each vertex where the vertex attribute begins. */
-  public int indexForVertexAttribute(VertexAttribute vertexAttribute) {
-    return indexForVertexAttribute(vertexAttribute.alias);
+  public int floatIndexForVertexAttribute(VertexAttribute vertexAttribute) {
+    return floatIndexForVertexAttribute(vertexAttribute.alias);
   }
 
   /** Returns the index in a float buffer for each vertex where the vertex attribute begins. */
-  public int indexForVertexAttribute(String alias) {
+  public int floatIndexForVertexAttribute(String alias) {
     PAssert.isTrue(vertexAttributeFloatIndexInVertex.containsKey(alias),
                    alias + " not found in vertexAttributeFloatIndexInVertex");
     if (!vertexAttributeFloatIndexInVertex.containsKey(alias)) {return -1;}

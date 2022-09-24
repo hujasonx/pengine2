@@ -7,7 +7,7 @@ import com.phonygames.pengine.util.collection.PPooledIterable;
 /**
  * Represents a world that uses a 3d grid representation.
  */
-public class TileGrid {
+public class TileGrid extends PPooledIterable<PIntMap3d.Entry<GridTile>> {
   /** The grid tiles managed by this grid. */
   private final PIntMap3d<GridTile> tiles = new PIntMap3d<GridTile>() {
     @Override
@@ -28,6 +28,10 @@ public class TileGrid {
   /** Returns true if there is a tile at the coordinates. */
   public boolean hasTileAt(int x, int y, int z) {
     return getTileAt(x, y, z) != null;
+  }
+
+  @Override public PPoolableIterator<PIntMap3d.Entry<GridTile>> obtainIterator() {
+    return tiles.obtainIterator();
   }
 
   /** Adds the given tile to the list of tiles managed by this grid. */

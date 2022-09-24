@@ -131,7 +131,7 @@ public class PPipeParticle extends PParticle {
 
   public PPipeParticle applyColorToVertices() {
     int verticesPerRing = ringSteps + 1;
-    int colOffset = vertexAttributes.indexForVertexAttribute(PVertexAttributes.Attribute.Keys.col[0]);
+    int colOffset = vertexAttributes.floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.col[0]);
     int fPerV = vertexAttributes.getNumFloatsPerVertex();
     PVec4 tempCol = PVec4.obtain();
     for (int ringStep = 0; ringStep < verticesPerRing; ringStep++) {
