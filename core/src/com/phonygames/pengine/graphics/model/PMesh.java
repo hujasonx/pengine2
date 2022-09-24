@@ -9,6 +9,7 @@ import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.collection.PCollectionUtils;
+import com.phonygames.pengine.util.collection.PFloatList;
 import com.phonygames.pengine.util.collection.PList;
 
 import java.nio.FloatBuffer;
@@ -81,6 +82,11 @@ public class PMesh {
 
   public PMesh(boolean isStatic, PList<Float> vertexData, PList<Short> indexData, PVertexAttributes vertexAttributes) {
     this(isStatic, PCollectionUtils.toFloatArray(vertexData), PCollectionUtils.toShortArray(indexData),
+         vertexAttributes);
+  }
+
+  public PMesh(boolean isStatic, PFloatList vertexData, PList<Short> indexData, PVertexAttributes vertexAttributes) {
+    this(isStatic, vertexData.emitTo(new float[vertexData.size()], 0), PCollectionUtils.toShortArray(indexData),
          vertexAttributes);
   }
 

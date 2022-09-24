@@ -1,7 +1,9 @@
 package com.phonygames.pengine.math;
 
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.PStringUtils;
+import com.phonygames.pengine.util.collection.PFloatList;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,6 +25,7 @@ public class PVec2 extends PVec<PVec2> {
 
   /**
    * Adds other to caller into caller.
+   *
    * @param other
    * @return caller for chaining
    */
@@ -32,13 +35,9 @@ public class PVec2 extends PVec<PVec2> {
     return this;
   }
 
-  @Override public String toString() {
-    return "<" + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(x), 7) +
-           ", " + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(y), 7) + ">";
-  }
-
   /**
    * Adds scale * other to caller into caller.
+   *
    * @param other
    * @param scale
    * @return caller for chaining
@@ -46,12 +45,6 @@ public class PVec2 extends PVec<PVec2> {
   @Override public PVec2 add(PVec2 other, float scale) {
     x += scale * other.x;
     y += scale * other.y;
-    return this;
-  }
-
-  public PVec2 add(float x, float y) {
-    this.x += x;
-    this.y += y;
     return this;
   }
 
@@ -65,6 +58,7 @@ public class PVec2 extends PVec<PVec2> {
 
   /**
    * Performs a dot product.
+   *
    * @param other
    * @return caller (dot) other
    */
@@ -84,6 +78,7 @@ public class PVec2 extends PVec<PVec2> {
 
   /**
    * Multiplies other with caller into caller.
+   *
    * @param other
    * @return caller for chaining
    */
@@ -133,6 +128,33 @@ public class PVec2 extends PVec<PVec2> {
     return y;
   }
 
+  public PVec2 add(float x, float y) {
+    this.x += x;
+    this.y += y;
+    return this;
+  }
+
+  public float[] emit(float[] out) {
+    PAssert.isTrue(out.length == 2);
+    out[0] = x;
+    out[1] = y;
+    return out;
+  }
+
+  public float[] emit(float[] out, int offset) {
+    PAssert.isTrue(out.length >= offset + 2);
+    out[offset + 0] = x;
+    out[offset + 1] = y;
+    return out;
+  }
+
+  public PFloatList emit(PFloatList out, int offset) {
+    PAssert.isTrue(out.size() >= offset + 2);
+    out.set(offset + 0, x);
+    out.set(offset + 1, y);
+    return out;
+  }
+
   @Override public boolean equalsT(PVec2 vec2) {
     return PNumberUtils.epsilonEquals(x, vec2.x) && PNumberUtils.epsilonEquals(y, vec2.y);
   }
@@ -157,6 +179,11 @@ public class PVec2 extends PVec<PVec2> {
     this.x = other.x;
     this.y = other.y;
     return this;
+  }
+
+  @Override public String toString() {
+    return "<" + PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(x), 7) + ", " +
+           PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(y), 7) + ">";
   }
 
   public float u() {

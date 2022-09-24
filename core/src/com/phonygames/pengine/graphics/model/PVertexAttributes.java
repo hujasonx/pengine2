@@ -97,10 +97,12 @@ public class PVertexAttributes {
     return false;
   }
 
+  /** Returns the index in a float buffer for each vertex where the vertex attribute begins. */
   public int indexForVertexAttribute(VertexAttribute vertexAttribute) {
     return indexForVertexAttribute(vertexAttribute.alias);
   }
 
+  /** Returns the index in a float buffer for each vertex where the vertex attribute begins. */
   public int indexForVertexAttribute(String alias) {
     PAssert.isTrue(vertexAttributeFloatIndexInVertex.containsKey(alias),
                    alias + " not found in vertexAttributeFloatIndexInVertex");

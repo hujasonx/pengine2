@@ -40,6 +40,23 @@ public class PFloatList implements PPool.Poolable {
     return this;
   }
 
+  /** Adds all floats from the array to the list. */
+  public PFloatList addAll(float[] ar) {
+    ensureCapacity(size + ar.length);
+    System.arraycopy(ar,0, values,size,ar.length);
+    size += ar.length;
+    return this;
+  }
+
+  /** Deletes the first n floats from the list. */
+  public PFloatList delFirstN(int n) {
+    for (int a = 0; a < size - n; a++) {
+      values[a] = values[a + n];
+    }
+    size -= n;
+    return this;
+  }
+
   public float sum() {
     float sum = 0;
     for (int a = 0; a < size; a++) {
