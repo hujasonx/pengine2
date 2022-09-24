@@ -96,23 +96,23 @@ public class PMesh {
   }
 
   public static void init() {
-    new PModelGenOld() {
-      PModelGenOld.Part basePart;
+    new PModelGen() {
+      PMeshGen baseMeshGen;
 
       @Override protected void modelIntro() {
-        basePart = addPart("base", PVertexAttributes.getPOS());
+        baseMeshGen = addMesh("base", PVertexAttributes.getPOS());
       }
 
       @Override protected void modelMiddle() {
-        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, -1, 0).emitVertex();
-        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, -1, 0).emitVertex();
-        basePart.set(PVertexAttributes.Attribute.Keys.pos, 1, 1, 0).emitVertex();
-        basePart.set(PVertexAttributes.Attribute.Keys.pos, -1, 1, 0).emitVertex();
-        basePart.quad(false);
+        baseMeshGen.set(PVertexAttributes.Attribute.Keys.pos, -1, -1, 0).emitVertex();
+        baseMeshGen.set(PVertexAttributes.Attribute.Keys.pos, 1, -1, 0).emitVertex();
+        baseMeshGen.set(PVertexAttributes.Attribute.Keys.pos, 1, 1, 0).emitVertex();
+        baseMeshGen.set(PVertexAttributes.Attribute.Keys.pos, -1, 1, 0).emitVertex();
+        baseMeshGen.quad(false);
       }
 
       @Override protected void modelEnd() {
-        FULLSCREEN_QUAD_MESH = basePart.getMesh();
+        FULLSCREEN_QUAD_MESH = baseMeshGen.getMesh();
       }
     }.buildSynchronous();
   }
