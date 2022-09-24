@@ -9,7 +9,7 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PModel;
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.collection.PList;
@@ -36,9 +36,9 @@ public class LasertagWorldGenOld {
 
   public void gen(@NonNull final OnFinishedCallback onFinishedCallback) {
     PAssert.isFalse(wasGenned);
-    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
-      PModelGen.Part basePart;
-      PModelGen.StaticPhysicsPart basePhysicsPart;
+    PModelGenOld.getPostableTaskQueue().enqueue(new PModelGenOld() {
+      PModelGenOld.Part basePart;
+      PModelGenOld.StaticPhysicsPart basePhysicsPart;
 
       @Override protected void modelIntro() {
         basePart = addPart("base", new PVertexAttributes(
@@ -164,7 +164,7 @@ public class LasertagWorldGenOld {
     public final int buildingIndex;
     // Center location (for sorting alphablend), modelgenPart, layer.
     public final PSet<Part> modelgenParts = new PSet<>();
-    public final PSet<PModelGen.StaticPhysicsPart> modelgenStaticPhysicsParts = new PSet<>();
+    public final PSet<PModelGenOld.StaticPhysicsPart> modelgenStaticPhysicsParts = new PSet<>();
     public final int roomIndex, vColIndex, vColIndexLength;
 
     private RoomPartData(int buildingIndex, int roomIndex, int vColIndex, int vColIndexLength) {
@@ -178,9 +178,9 @@ public class LasertagWorldGenOld {
       final String layer;
       final PMaterial material;
       final PVec3 origin;
-      final PModelGen.Part part;
+      final PModelGenOld.Part part;
 
-      public Part(@NonNull PVec3 origin, @NonNull PModelGen.Part part, @NonNull String layer,
+      public Part(@NonNull PVec3 origin, @NonNull PModelGenOld.Part part, @NonNull String layer,
                   @NonNull PMaterial material) {
         this.origin = origin;
         this.part = part;

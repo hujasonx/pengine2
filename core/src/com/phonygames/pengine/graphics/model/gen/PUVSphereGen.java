@@ -2,7 +2,7 @@ package com.phonygames.pengine.graphics.model.gen;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool;
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PPool;
@@ -30,7 +30,7 @@ public abstract class PUVSphereGen implements Pool.Poolable {
     setNormals = true;
   }
 
-  public void genSphere(int lat, int lon, PVec3 center, float radius, PModelGen.Part part) {
+  public void genSphere(int lat, int lon, PVec3 center, float radius, PModelGenOld.Part part) {
     val pool = PPool.getBuffer();
     PVec3 n00 = pool.vec3();
     PVec3 n01 = pool.vec3();

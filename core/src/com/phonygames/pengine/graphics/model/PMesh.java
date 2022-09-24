@@ -96,8 +96,8 @@ public class PMesh {
   }
 
   public static void init() {
-    new PModelGen() {
-      PModelGen.Part basePart;
+    new PModelGenOld() {
+      PModelGenOld.Part basePart;
 
       @Override protected void modelIntro() {
         basePart = addPart("base", PVertexAttributes.getPOS());

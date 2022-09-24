@@ -1,7 +1,7 @@
 package com.phonygames.cybertag.world.lasertag;
 
 import com.phonygames.pengine.exception.PAssert;
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.graphics.model.PModelGenTemplate;
 import com.phonygames.pengine.graphics.model.PModelGenTemplateOptions;
 import com.phonygames.pengine.math.PVec3;
@@ -22,9 +22,9 @@ public class LasertagRoomGenTileEmitter {
    * @param alphaBlendParts
    * @return The new tileVColIndex.
    */
-  public static int emit(LasertagTileGen tileGen, PModelGen modelGen, PModelGen.Part basePart,
-                         PModelGen.StaticPhysicsPart staticPhysicsPart, int tileVColIndex,
-                         PList<PModelGen.Part> alphaBlendParts) {
+  public static int emit(LasertagTileGen tileGen, PModelGenOld modelGen, PModelGenOld.Part basePart,
+                         PModelGenOld.StaticPhysicsPart staticPhysicsPart, int tileVColIndex,
+                         PList<PModelGenOld.Part> alphaBlendParts) {
     LasertagTile tile = tileGen.tile;
     tile.tileVColIndexStart = tileVColIndex;
     LasertagRoom lasertagRoom = tile.room;
@@ -71,9 +71,9 @@ public class LasertagRoomGenTileEmitter {
     return tileVColIndex;
   }
 
-  private static void emitWall(LasertagTileGen tileGen, LasertagTileWall wall, PModelGen modelGen, PModelGen.Part basePart,
-                               PModelGen.StaticPhysicsPart staticPhysicsPart, int tileVColIndex,
-                               PList<PModelGen.Part> alphaBlendParts, PModelGenTemplateOptions options,
+  private static void emitWall(LasertagTileGen tileGen, LasertagTileWall wall, PModelGenOld modelGen, PModelGenOld.Part basePart,
+                               PModelGenOld.StaticPhysicsPart staticPhysicsPart, int tileVColIndex,
+                               PList<PModelGenOld.Part> alphaBlendParts, PModelGenTemplateOptions options,
                                PPool.PoolBuffer pool) {
     if (!wall.hasWall) {return;}
     PAssert.isTrue(wall.isValid);

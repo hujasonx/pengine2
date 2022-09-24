@@ -86,9 +86,9 @@ public class PModelGenTemplate {
    * @param staticPhysicsPart
    * @param vColIndexOffset
    */
-  public void emit(PModelGen modelGen, PModelGenTemplateOptions options, PModelGen.Part basePart,
-                   PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
-                   PList<PModelGen.Part> alphaBlendParts) {
+  public void emit(PModelGenOld modelGen, PModelGenTemplateOptions options, PModelGenOld.Part basePart,
+                   PModelGenOld.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
+                   PList<PModelGenOld.Part> alphaBlendParts) {
     for (int a = 0; a < this.meshes.size(); a++) {
       PList<Triangle> meshTriangles = triangleMap.get(meshes.get(a));
       boolean emitMesh = this.emitMesh.get(a);
@@ -98,7 +98,7 @@ public class PModelGenTemplate {
         int vColOffset = this.vColIndexOffsets.get(a);
         int vColBaseOffset = this.vColIndexBaseOffsets.get(a);
         int vColIndex = vColOffset == -1 ? (vColBaseOffset == -1 ? 0 : vColBaseOffset) : (vColIndexOffset + vColOffset);
-        PModelGen.Part part = basePart;
+        PModelGenOld.Part part = basePart;
         if (isAlphaBlend) {
           part = modelGen.addPart(basePart.name() + ".alphaBlend" + ".id" + a + "_" + alphaBlendParts.size() + "",
                                   basePart.vertexAttributes());
@@ -172,8 +172,8 @@ public class PModelGenTemplate {
      * @param staticPhysicsPart
      * @param vColIndex         the *raw* vCol index. If -1, then no overriding will occur.
      */
-    public void emit(PModelGenTemplateOptions options, PModelGen.Part part,
-                     PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndex) {
+    public void emit(PModelGenTemplateOptions options, PModelGenOld.Part part,
+                     PModelGenOld.StaticPhysicsPart staticPhysicsPart, int vColIndex) {
       boolean partHasCol0 =
           part == null ? false : part.vertexAttributes().hasAttributeWithName(PVertexAttributes.Attribute.Keys.col[0]);
       try (PPool.PoolBuffer pool = PPool.getBuffer()) {

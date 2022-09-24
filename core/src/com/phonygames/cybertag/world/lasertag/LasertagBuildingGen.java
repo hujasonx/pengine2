@@ -1,6 +1,6 @@
 package com.phonygames.cybertag.world.lasertag;
 
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.util.PBuilder;
 import com.phonygames.pengine.util.collection.PIntMap3d;
@@ -86,7 +86,7 @@ public class LasertagBuildingGen extends PBuilder {
   }
 
   private void buildModelInstance() {
-    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
+    PModelGenOld.getPostableTaskQueue().enqueue(new PModelGenOld() {
       @Override protected void modelEnd() {
 
         worldGen.clearBlockingTask(LasertagBuildingGen.this);

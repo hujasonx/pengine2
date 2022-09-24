@@ -3,7 +3,7 @@ package com.phonygames.cybertag.world.lasertag;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.model.PMesh;
 import com.phonygames.pengine.graphics.model.PModel;
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.collection.PList;
@@ -68,9 +68,9 @@ public class MeshTemplate {
    * @param staticPhysicsPart
    * @param vColIndexOffset
    */
-  public void emit(PModelGen modelGen, PModelGen.Part.VertexProcessor vertexProcessor, PModelGen.Part basePart,
-                   PModelGen.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
-                   PList<PModelGen.Part> alphaBlendParts) {
+  public void emit(PModelGenOld modelGen, PModelGenOld.Part.VertexProcessor vertexProcessor, PModelGenOld.Part basePart,
+                   PModelGenOld.StaticPhysicsPart staticPhysicsPart, int vColIndexOffset,
+                   PList<PModelGenOld.Part> alphaBlendParts) {
     PVec4 temp = PVec4.obtain();
     for (int a = 0; a < this.meshes.size(); a++) {
       PMesh mesh = this.meshes.get(a);
@@ -81,7 +81,7 @@ public class MeshTemplate {
         int vColOffset = this.vColIndexOffsets.get(a);
         int vColBaseOffset = this.vColIndexBaseOffsets.get(a);
         int vColIndex = vColOffset == -1 ? (vColBaseOffset == -1 ? 0 : vColBaseOffset) : (vColIndexOffset + vColOffset);
-        PModelGen.Part part;
+        PModelGenOld.Part part;
         if (isAlphaBlend) {
           part = modelGen.addPart(basePart.name() + ".alphaBlend" + ".id" + a + "_" + vColIndexOffset + "",
                                   basePart.vertexAttributes());

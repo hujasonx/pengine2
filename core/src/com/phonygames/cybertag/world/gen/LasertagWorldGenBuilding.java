@@ -1,7 +1,7 @@
 package com.phonygames.cybertag.world.gen;
 
 import com.badlogic.gdx.math.MathUtils;
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.math.PVec3;
@@ -58,7 +58,7 @@ public class LasertagWorldGenBuilding {
     return ret;
   }
 
-  protected void emit(PModelGen modelGen, LasertagWorldGenOld.Context context) {
+  protected void emit(PModelGenOld modelGen, LasertagWorldGenOld.Context context) {
     for (int a = 0; a < rooms.size(); a++) {
       LasertagWorldGenRoom room = rooms.get(a);
       room.emit(modelGen, context);

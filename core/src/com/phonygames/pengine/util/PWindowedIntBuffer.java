@@ -21,6 +21,12 @@ public class PWindowedIntBuffer {
     }
   }
 
+  public PWindowedIntBuffer clear() {
+    head = 0;
+    tail = 0;
+    return this;
+  }
+
   public int get(int indexFromHead) {
     if (indexFromHead > filledSize()) {
       PLog.w("PIntWindowedBuffer indexFromHead " + indexFromHead + " is greater than size: " + filledSize()).pEngine();

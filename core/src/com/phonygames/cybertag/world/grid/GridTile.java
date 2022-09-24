@@ -10,8 +10,16 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 
 @Builder public class GridTile {
+  /** The index used for the lower x, lower z corner in array fields. */
+  public static final int CORNER00 = 0;
+  /** The index used for the lower x, higher z corner in array fields. */
+  public static final int CORNER01 = 3;
+  /** The index used for the higher x, lower z corner in array fields. */
+  public static final int CORNER10 = 1;
+  /** The index used for the higher x, higher z corner in array fields. */
+  public static final int CORNER11 = 2;
   /** The emit options for this tile. */
-  public final EmitOptions emitOptions = new EmitOptions();
+  public final EmitOptions emitOptions = new EmitOptions(this);
   /** The coordinates of the GridTile in grid space. */
   public final int x, y, z;
 
@@ -22,14 +30,8 @@ import lombok.experimental.Accessors;
 
   /** Options for the model emit. The fields in this class can be freely modified until it is finalized. */
   public static class EmitOptions {
-    /** The index used for the lower x, lower z corner in array fields. */
-    public static final int CORNER00 = 0;
-    /** The index used for the lower x, higher z corner in array fields. */
-    public static final int CORNER01 = 3;
-    /** The index used for the higher x, lower z corner in array fields. */
-    public static final int CORNER10 = 1;
-    /** The index used for the higher x, higher z corner in array fields. */
-    public static final int CORNER11 = 2;
+    /** The owner GridTile object. */
+    private final GridTile gridTile;
     /** The height offsets of the ceiling model at the corners, in grid space. */
     public final float[] ceilingCornerVerticalOffsets = new float[4];
     /** The height offsets of the floor model at the corners, in grid space. */
@@ -49,8 +51,12 @@ import lombok.experimental.Accessors;
     @Accessors(fluent = true)
     private boolean isFinalized = false;
 
+    private EmitOptions(GridTile tile) {
+      this.gridTile = tile;
+    }
+
     /**
-     * /** Options for an individual wall edge of the tile.
+     * Options for an individual wall edge of the tile.
      */
     public static class Wall {
       /**

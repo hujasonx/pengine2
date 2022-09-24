@@ -7,7 +7,7 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMesh;
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
 import com.phonygames.pengine.math.PVec3;
@@ -53,12 +53,12 @@ public class LasertagWorldGenRoom {
     }
   }
 
-  protected void emit(PModelGen modelGen, LasertagWorldGenOld.Context context) {
+  protected void emit(PModelGenOld modelGen, LasertagWorldGenOld.Context context) {
     //
     // Init parts and templates.
     final String partNamePrefix = partNamePrefix();
-    PModelGen.Part basePart = modelGen.addPart(partNamePrefix + "Part", PVertexAttributes.getPOS_NOR_UV0_COL0());
-    PModelGen.StaticPhysicsPart basePhysicsPart = modelGen.addStaticPhysicsPart(partNamePrefix + "StaticPhysicsPart");
+    PModelGenOld.Part basePart = modelGen.addPart(partNamePrefix + "Part", PVertexAttributes.getPOS_NOR_UV0_COL0());
+    PModelGenOld.StaticPhysicsPart basePhysicsPart = modelGen.addStaticPhysicsPart(partNamePrefix + "StaticPhysicsPart");
     LasertagWorldGenOld.RoomPartData roomPartData = context.addRoomPartData(building.index, index);
     roomPartData.modelgenParts.add(new LasertagWorldGenOld.RoomPartData.Part(
         PVec3.obtain().set(roomX + roomSizeX / 2, roomY + roomSizeY / 2, roomZ + roomSizeZ / 2), basePart,
@@ -68,7 +68,7 @@ public class LasertagWorldGenRoom {
     int maxVColIndex = roomPartData.vColIndex + roomPartData.vColIndexLength - 1;
     //
     // Set up the vertex processor and temp variables.
-    PModelGen.Part.VertexProcessor vertexProcessor = PModelGen.Part.VertexProcessor.staticPool().obtain();
+    PModelGenOld.Part.VertexProcessor vertexProcessor = PModelGenOld.Part.VertexProcessor.staticPool().obtain();
     PPool.PoolBuffer pool = PPool.getBuffer();
     PMat4 emitTransform = pool.mat4();
     PVec3 tile000 = pool.vec3(), tile100 = pool.vec3(), tile010 = pool.vec3(), tile001 = pool.vec3();
@@ -167,7 +167,7 @@ public class LasertagWorldGenRoom {
       }
     }
     pool.free();
-    PModelGen.Part.VertexProcessor.staticPool().free(vertexProcessor);
+    PModelGenOld.Part.VertexProcessor.staticPool().free(vertexProcessor);
   }
 
   // Keep in sync with the equivalent function in LasertagWorldRoom.
@@ -175,11 +175,11 @@ public class LasertagWorldGenRoom {
     return new StringBuilder().append("building").append(building.index).append("_room").append(index).toString();
   }
 
-  protected void emitTemplate(@NonNull PModelGen.Part basePart, @Nullable String alphaBlendPartName,
-                              @Nullable PModelGen.StaticPhysicsPart staticPhysicsPart,
+  protected void emitTemplate(@NonNull PModelGenOld.Part basePart, @Nullable String alphaBlendPartName,
+                              @Nullable PModelGenOld.StaticPhysicsPart staticPhysicsPart,
                               @NonNull LasertagWorldGenOld.Context context,
                               @NonNull LasertagWorldGenOld.MeshTemplate template,
-                              @NonNull PModelGen.Part.VertexProcessor vertexProcessor, int vColIndexStart) {
+                              @NonNull PModelGenOld.Part.VertexProcessor vertexProcessor, int vColIndexStart) {
     for (int a = 0; a < template.meshes.size(); a++) {
       PMesh mesh = template.meshes.get(a);
       boolean emitMesh = template.emitMesh.get(a);

@@ -10,7 +10,7 @@ import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModel;
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.math.PMat4;
@@ -96,7 +96,7 @@ public class LasertagRoomGen extends PBuilder {
     if (templateSelector == null) {
       createTemplateSelectorDefault();
     }
-    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
+    PModelGenOld.getPostableTaskQueue().enqueue(new PModelGenOld() {
       PList<Part> alphaBlendParts = new PList<>();
       Part basePart;
       StaticPhysicsPart staticPhysicsPart;

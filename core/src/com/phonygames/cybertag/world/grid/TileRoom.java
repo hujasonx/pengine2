@@ -2,6 +2,7 @@ package com.phonygames.cybertag.world.grid;
 
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
+import com.phonygames.pengine.graphics.color.PVColIndexBuffer;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.util.collection.PList;
@@ -24,13 +25,22 @@ public class TileRoom  implements PRenderContext.DataBufferEmitter{
   @Accessors(fluent = true)
   /** Whether or not the room should have an open ceiling. */
   private final boolean hasOpenCeiling;
+  /** The vcol index buffer. */
+  private final PVColIndexBuffer vColors = new PVColIndexBuffer();
 
 
   /** The model instance. */
   private PModelInstance modelInstance;
 
+  // TODO: This is temporary, figure out whre to put this.
+  private void initColors() {
+
+    vColors.registerName("skin", 0);
+    vColors.setDiffuse("skin", 1, 1, 1);
+  }
+
   @Override public void emitDataBuffersInto(PRenderContext renderContext) {
-    PAssert.failNotImplemented("emitDataBuffersInto"); // TODO: FIXME
+    vColors.emitColorData(renderContext);
   }
 
   public void frameUpdate() {

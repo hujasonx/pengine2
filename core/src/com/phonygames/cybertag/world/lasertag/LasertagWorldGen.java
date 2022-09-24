@@ -3,7 +3,7 @@ package com.phonygames.cybertag.world.lasertag;
 import android.support.annotation.NonNull;
 
 import com.phonygames.cybertag.world.World;
-import com.phonygames.pengine.graphics.model.PModelGen;
+import com.phonygames.pengine.graphics.model.PModelGenOld;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.navmesh.recast.PRecastMeshBuilder;
 import com.phonygames.pengine.util.collection.PArrayUtils;
@@ -42,7 +42,7 @@ public class LasertagWorldGen extends PBuilder {
   }
 
   private void buildModelInstance() {
-    PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
+    PModelGenOld.getPostableTaskQueue().enqueue(new PModelGenOld() {
       @Override protected void modelEnd() {
         clearBlockingTask(LasertagWorldGen.this);
       }
