@@ -184,7 +184,7 @@ public class PBillboardParticleSource implements PPool.Poolable {
     if (modelInstance != null) {
       return;
     }
-    mesh = new PMesh(false, maxCapacity * FLOATS_PER_PARTICLE, maxCapacity * 6, PVertexAttributes.getPOS_UV0_COL0());
+    mesh = new PMesh(false, maxCapacity * FLOATS_PER_PARTICLE, maxCapacity * 6, PVertexAttributes.Templates.POS_UV0_COL0);
     int len = maxCapacity * 6;
     short[] indices = new short[len];
     short j = 0;
@@ -197,8 +197,6 @@ public class PBillboardParticleSource implements PPool.Poolable {
       indices[i + 5] = (short) (j + 3);
     }
     mesh.setIndices(indices);
-    ModelBuilder modelBuilder = new ModelBuilder();
-    modelBuilder.begin();
     PList<PGlNode> glNodes = new PList<>();
     PModel.Builder builder = new PModel.Builder();
     builder.chainGlNode(glNodes, PARTICLES, mesh, new PMaterial(PARTICLES, null).noModelTransform(true), null,

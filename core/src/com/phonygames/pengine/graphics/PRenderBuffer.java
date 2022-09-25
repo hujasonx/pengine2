@@ -133,7 +133,7 @@ public class PRenderBuffer implements Disposable, PApplicationWindow.ResizeListe
   }
 
   public PShader getQuadShader(FileHandle frag) {
-    return new PShader("", fragmentLayout(), PVertexAttributes.getPOS(),
+    return new PShader("", fragmentLayout(), PVertexAttributes.Templates.POS,
                        Gdx.files.local("engine/shader/quad.vert.glsl"), frag, null);
   }
 

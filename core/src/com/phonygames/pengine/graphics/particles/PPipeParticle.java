@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.pengine.PEngine;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PMeshTopology;
+import com.phonygames.pengine.graphics.model.PVertexAttribute;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.texture.PTexture;
 import com.phonygames.pengine.math.PVec3;
@@ -102,7 +103,7 @@ public class PPipeParticle extends PParticle {
   private PPipeParticle() {
     reset();
     previousPositionTracker.trackedVec(pos);
-    vertexAttributes = PVertexAttributes.getPOS_NOR_UV0_COL0();
+    vertexAttributes = PVertexAttributes.Templates.POS_NOR_UV0_COL0;
   }
 
   @Override public void reset() {
@@ -131,8 +132,8 @@ public class PPipeParticle extends PParticle {
 
   public PPipeParticle applyColorToVertices() {
     int verticesPerRing = ringSteps + 1;
-    int colOffset = vertexAttributes.floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.col[0]);
-    int fPerV = vertexAttributes.getNumFloatsPerVertex();
+    int colOffset = vertexAttributes.floatIndexForVertexAttribute(PVertexAttribute.Definitions.pos.alias);
+    int fPerV = vertexAttributes.sizeInFloats();
     PVec4 tempCol = PVec4.obtain();
     for (int ringStep = 0; ringStep < verticesPerRing; ringStep++) {
       // Apply the color to the head ring.
@@ -264,12 +265,12 @@ public class PPipeParticle extends PParticle {
         boolean isTail = vIndex == numRings + 1;
         for (float u = 0, uIndex = 0; uIndex < verticesPerRing; uIndex++, u += dU) {
           // The only things that need to be set is the uv and a default color.
-          for (int vaI = 0; vaI < vertexAttributes.getBackingVertexAttributes().size(); vaI++) {
-            VertexAttribute attr = vertexAttributes.getBackingVertexAttributes().get(vaI);
-            if (PVertexAttributes.Attribute.Keys.uv[0].equals(attr.alias)) {
+          for (int vaI = 0; vaI < vertexAttributes.backingVertexAttributes().size(); vaI++) {
+            VertexAttribute attr = vertexAttributes.backingVertexAttributes().get(vaI);
+            if (PVertexAttribute.Definitions.uv[0].alias.equals(attr.alias)) {
               newVertexData.add(u); // U.
               newVertexData.add(v); // V.
-            } else if (PVertexAttributes.Attribute.Keys.col[0].equals(attr.alias)) {
+            } else if (PVertexAttribute.Definitions.col[0].alias.equals(attr.alias)) {
               newVertexData.add(1); // Col r.
               newVertexData.add(1); // Col g.
               newVertexData.add(1); // Col b.

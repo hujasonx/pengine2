@@ -61,7 +61,7 @@ public class PShader implements Disposable, Comparable<PShader> {
 
   private PShader(@NonNull String prefix, @NonNull String fragmentLayout, @NonNull PVertexAttributes vertexAttributes,
                   FileHandle vertFH, FileHandle fragFH, String vert, String frag, String[] inputs) {
-    this.prefix = prefix + vertexAttributes.getPrefix() + "\n// PREFIX END\n\n";
+    this.prefix = prefix + vertexAttributes.prefix() + "\n// PREFIX END\n\n";
     this.fragmentLayout = fragmentLayout;
     vsSourceFH = vertFH;
     fsSourceFH = fragFH;

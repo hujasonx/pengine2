@@ -121,7 +121,7 @@ public class PPipeParticleSource implements PPool.Poolable {
 
   /** Should be called by render() */
   private boolean setVerticesForParticle(PPipeParticle particle) {
-    int floatsPerV = PVertexAttributes.getPOS_NOR_UV0_COL0().getNumFloatsPerVertex();
+    int floatsPerV = PVertexAttributes.Templates.POS_NOR_UV0_COL0.sizeInFloats();
     return particle.outputVertexAndIndexData(vertices, currentBufferVerticesIndex, currentBufferVerticesIndex / floatsPerV, indices, currentBufferIndicesIndex);
   }
 
@@ -129,7 +129,7 @@ public class PPipeParticleSource implements PPool.Poolable {
     if (modelInstance != null) {
       return;
     }
-    mesh = new PMesh(false, MAX_FLOATS, MAX_SHORTS, PVertexAttributes.getPOS_NOR_UV0_COL0());
+    mesh = new PMesh(false, MAX_FLOATS, MAX_SHORTS, PVertexAttributes.Templates.POS_NOR_UV0_COL0);
     //    mesh.setIndices(indices);
     ModelBuilder modelBuilder = new ModelBuilder();
     modelBuilder.begin();

@@ -41,7 +41,7 @@ public class PUtilGameFontGen {
     testFontRenderBuffer.begin();
     testFontRenderBuffer.prepSpriteBatchForRender(sdfSB);
     PShader renderTextShader = new PShader("#define pos2dFlag\n", testFontRenderBuffer.fragmentLayout(),
-                                           PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
+                                           PVertexAttributes.Templates.POS2D_UV0_COLPACKED0,
                                            Gdx.files.local("engine/shader/sdf/sdf.vert.glsl"),
                                            Gdx.files.local("engine/shader/sdf/sdf.frag.glsl"), new String[]{"color"});
     sdfSB.begin();

@@ -31,7 +31,7 @@ public class PBlurShader {
       frag += getBlurBodyForLayout(renderBuffer.getTextureName(a));
     }
     frag += "\n" + "    #include <engine/shader/end/shared.frag>\n" + "}\n";
-    this.shader = new PShader("", renderBuffer.fragmentLayout(), PVertexAttributes.getPOS(),
+    this.shader = new PShader("", renderBuffer.fragmentLayout(), PVertexAttributes.Templates.POS,
                               Gdx.files.local("engine/shader/quad.vert.glsl"), frag, null);
   }
 

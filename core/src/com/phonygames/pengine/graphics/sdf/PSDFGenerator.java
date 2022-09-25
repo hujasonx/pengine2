@@ -41,7 +41,7 @@ public class PSDFGenerator {
     this.sideLength = sideLength;
     this.renderBuffer =
         new PRenderBuffer.Builder().setStaticSize(sideLength, sideLength).addFloatAttachment("sdf").build();
-    this.shader = new PShader("", renderBuffer.fragmentLayout(), PVertexAttributes.getPOS2D_UV0_COLPACKED0(),
+    this.shader = new PShader("", renderBuffer.fragmentLayout(), PVertexAttributes.Templates.POS2D_UV0_COLPACKED0,
                               Gdx.files.local("engine/shader/spritebatch/default.vert.glsl"),
                               Gdx.files.local("engine/shader/sdfgen/sdfgen.frag.glsl"), new String[]{"sdf"});
     outputSheet = PSDFSheet.blank(name);

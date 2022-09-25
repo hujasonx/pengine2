@@ -7,7 +7,7 @@ import com.phonygames.cybertag.character.NpcHumanoidEntity;
 import com.phonygames.cybertag.character.PlayerCharacterEntity;
 import com.phonygames.cybertag.world.grid.LasertagGridWorldGen;
 import com.phonygames.cybertag.world.lasertag.LasertagWorld;
-import com.phonygames.cybertag.world.lasertag.WorldGen;
+//import com.phonygames.cybertag.world.lasertag.WorldGen;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.PDebugRenderer;
 import com.phonygames.pengine.graphics.PRenderContext;

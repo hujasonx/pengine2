@@ -114,7 +114,7 @@ public class PModelGen implements PPostableTask {
   public PMeshGen getOrAddStaticPhysicsMesh(String name) {
     PMeshGen p = staticPhysicsMeshGenMap.get(name);
     if (p != null) {return p;}
-    p = new PMeshGen(name, PVertexAttributes.getPHYSICS());
+    p = new PMeshGen(name, PVertexAttributes.Templates.PHYSICS);
     staticPhysicsMeshGenMap.put(name, p);
     return p;
   }

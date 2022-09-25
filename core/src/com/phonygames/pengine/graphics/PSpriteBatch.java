@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.math.Matrix4;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.model.PMesh;
+import com.phonygames.pengine.graphics.model.PVertexAttribute;
 import com.phonygames.pengine.graphics.model.PVertexAttributes;
 import com.phonygames.pengine.graphics.sdf.PSDFSheet;
 import com.phonygames.pengine.graphics.shader.PShader;
@@ -42,7 +43,7 @@ public abstract class PSpriteBatch {
   private PSpriteBatch(int capacity, PVertexAttributes vertexAttributes) {
     this.capacity = capacity;
     this.vertexAttributes = vertexAttributes;
-    floatsPerSprite = 4 * vertexAttributes.getNumFloatsPerVertex();
+    floatsPerSprite = 4 * vertexAttributes.sizeInFloats();
     vertices = new float[floatsPerSprite * capacity];
   }
 
@@ -177,7 +178,7 @@ public abstract class PSpriteBatch {
     private static final PGdxSpriteBatch staticBatch = new PGdxSpriteBatch(1000);
 
     public PGdxSpriteBatch(int capacity) {
-      super(capacity, PVertexAttributes.getPOS2D_UV0_COLPACKED0());
+      super(capacity, PVertexAttributes.Templates.POS2D_UV0_COLPACKED0);
     }
 
     public void draw(PTexture texture, float x00, float y00, PVec4 colPacked00, float x10, float y10, PVec4 colPacked10,
@@ -234,14 +235,24 @@ public abstract class PSpriteBatch {
     private static final PSDFSpriteBatch staticBatch = new PSDFSpriteBatch(1000);
 
     public static PVertexAttributes genVertexAttributes() {
-      return new PVertexAttributes(
-          new VertexAttribute[]{PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos2d),
-                                PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.uv[0]),
-                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_channel"),
-                                PVertexAttributes.Attribute.genGenericAttribute("a_threshold", 1),
-                                PVertexAttributes.Attribute.genGenericAttribute("a_borderThresholdInwardsOffset", 1),
-                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_baseColor"),
-                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_borderColor"),});
+      return new PVertexAttributes(new PVertexAttribute.Definition[] {
+          PVertexAttribute.Definitions.pos2d,
+          PVertexAttribute.Definitions.uv[0],
+          PVertexAttribute.Definitions.colPacked[0],
+          PVertexAttribute.Definition.genGenericColPacked("a_channel"),
+          PVertexAttribute.Definition.genGeneric("a_threshold", 1),
+          PVertexAttribute.Definition.genGeneric("a_borderThresholdInwardsOffset", 1),
+          PVertexAttribute.Definition.genGenericColPacked("a_baseColor"),
+          PVertexAttribute.Definition.genGenericColPacked("a_borderColor"),
+          }
+//          new VertexAttribute[]{PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.pos2d),
+//                                PVertexAttributes.Attribute.get(PVertexAttributes.Attribute.Keys.uv[0]),
+//                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_channel"),
+//                                PVertexAttributes.Attribute.genGenericAttribute("a_threshold", 1),
+//                                PVertexAttributes.Attribute.genGenericAttribute("a_borderThresholdInwardsOffset", 1),
+//                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_baseColor"),
+//                                PVertexAttributes.Attribute.genGenericColorPackedAttribute("a_borderColor"),}
+    );
     }
 
     public PSDFSpriteBatch(int capacity) {

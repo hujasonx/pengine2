@@ -62,11 +62,11 @@ public class PEngine extends ApplicationAdapter {
   }
 
   private static void initStatic() {
+    PLog.init();
     PAudio.init();
     PInput.init();
     PVertexAttributes.init();
     PLight.initMeshes();
-    PLog.init();
     PApplicationWindow.init();
     PMesh.init();
     PShaderProvider.init();

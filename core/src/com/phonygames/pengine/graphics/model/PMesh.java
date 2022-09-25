@@ -3,6 +3,7 @@ package com.phonygames.pengine.graphics.model;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.phonygames.pengine.graphics.shader.PShader;
@@ -40,38 +41,42 @@ public class PMesh {
   }
 
   /**
-   * Generates a new PMesh, doing any necessary renaming.
+   * Generates a new PMesh, doing any necessary renaming from GDX attributes to pengine2 attributes.
    *
    * @param mesh
    */
   public PMesh(Mesh mesh) {
     backingMesh = mesh;
-    for (val attr : mesh.getVertexAttributes()) {
+    PVertexAttribute.Definition[] definitions = new PVertexAttribute.Definition[mesh.getVertexAttributes().size()];
+    for (int a = 0; a < mesh.getVertexAttributes().size(); a++) {
+      VertexAttribute attr= mesh.getVertexAttributes().get(a);
+
       switch (attr.usage) {
         case VertexAttributes.Usage.Position:
-          attr.alias = PVertexAttributes.Attribute.Keys.pos;
+          attr.alias = PVertexAttribute.Definitions.pos.alias;
           break;
         case VertexAttributes.Usage.Normal:
-          attr.alias = PVertexAttributes.Attribute.Keys.nor;
+          attr.alias = PVertexAttribute.Definitions.nor.alias;
           break;
         case VertexAttributes.Usage.TextureCoordinates:
-          attr.alias = PVertexAttributes.Attribute.Keys.uv[attr.unit];
+          attr.alias = PVertexAttribute.Definitions.uv[attr.unit].alias;
           break;
         case VertexAttributes.Usage.ColorPacked:
-          attr.alias = PVertexAttributes.Attribute.Keys.colPacked[attr.unit];
+          attr.alias = PVertexAttribute.Definitions.colPacked[attr.unit].alias;
           break;
         case VertexAttributes.Usage.ColorUnpacked:
-          attr.alias = PVertexAttributes.Attribute.Keys.col[attr.unit];
+          attr.alias = PVertexAttribute.Definitions.col[attr.unit].alias;
           break;
         case VertexAttributes.Usage.BoneWeight:
-          attr.alias = PVertexAttributes.Attribute.Keys.bon[attr.unit];
+          attr.alias = PVertexAttribute.Definitions.bon[attr.unit].alias;
           break;
         default:
           // PAssert.warnNotImplemented("Vertex attribute " + attr.alias);
           break;
       }
+      definitions[a] = PVertexAttribute.Definition.fromAttribute(attr);
     }
-    this.vertexAttributes = new PVertexAttributes(backingMesh.getVertexAttributes());
+    this.vertexAttributes = new PVertexAttributes(definitions);
   }
 
   public PMesh(boolean isStatic, PList<Float> vertexData, PList<Short> indexData, PVertexAttributes vertexAttributes) {
@@ -86,7 +91,7 @@ public class PMesh {
   }
 
   public PMesh(boolean isStatic, int maxVertices, int maxIndices, PVertexAttributes vertexAttributes) {
-    backingMesh = new Mesh(isStatic, maxVertices, maxIndices, vertexAttributes.getBackingVertexAttributes());
+    backingMesh = new Mesh(isStatic, maxVertices, maxIndices, vertexAttributes.backingVertexAttributes());
     this.vertexAttributes = vertexAttributes;
   }
 
@@ -100,14 +105,14 @@ public class PMesh {
       PMeshGen baseMeshGen;
 
       @Override protected void modelIntro() {
-        baseMeshGen = getOrAddOpaqueMesh("base", PVertexAttributes.getPOS());
+        baseMeshGen = getOrAddOpaqueMesh("base", PVertexAttributes.Templates.POS);
       }
 
       @Override protected void modelMiddle() {
-        baseMeshGen.set(PVertexAttributes.Attribute.Keys.pos, -1, -1, 0).emitVertex();
-        baseMeshGen.set(PVertexAttributes.Attribute.Keys.pos, 1, -1, 0).emitVertex();
-        baseMeshGen.set(PVertexAttributes.Attribute.Keys.pos, 1, 1, 0).emitVertex();
-        baseMeshGen.set(PVertexAttributes.Attribute.Keys.pos, -1, 1, 0).emitVertex();
+        baseMeshGen.set(PVertexAttribute.Definitions.pos.alias, -1, -1, 0).emitVertex();
+        baseMeshGen.set(PVertexAttribute.Definitions.pos.alias, 1, -1, 0).emitVertex();
+        baseMeshGen.set(PVertexAttribute.Definitions.pos.alias, 1, 1, 0).emitVertex();
+        baseMeshGen.set(PVertexAttribute.Definitions.pos.alias, -1, 1, 0).emitVertex();
         baseMeshGen.quad(false);
       }
 
@@ -163,7 +168,7 @@ public class PMesh {
   public float[] getBackingMeshFloats() {
     if (backingMeshFloats == null) {
       backingMesh.getVertices(
-          backingMeshFloats = new float[backingMesh.getNumVertices() * vertexAttributes().getNumFloatsPerVertex()]);
+          backingMeshFloats = new float[backingMesh.getNumVertices() * vertexAttributes().sizeInFloats()]);
     }
     return backingMeshFloats;
   }

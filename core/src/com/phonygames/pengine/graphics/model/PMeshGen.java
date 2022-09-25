@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -104,9 +105,9 @@ public class PMeshGen {
   protected PMeshGen(@NonNull String name, @NonNull PVertexAttributes vertexAttributes) {
     this.name = name;
     this.vertexAttributes = vertexAttributes;
-    currentVertexValues = new float[vertexAttributes.getNumFloatsPerVertex()];
+    currentVertexValues = new float[vertexAttributes.sizeInFloats()];
     for (int a = 0; a < __tmpProcessingVertexValues.length; a++) {
-      __tmpProcessingVertexValues[a] = new float[vertexAttributes.getNumFloatsPerVertex()];
+      __tmpProcessingVertexValues[a] = new float[vertexAttributes.sizeInFloats()];
     }
     reset();
   }
@@ -149,11 +150,11 @@ public class PMeshGen {
         for (int triI = 0; triI < 3; triI++) {
           short indexOfVertexInMeshToCopy = meshShorts[a + triI];
           int vertexOffsetInFloatsArrayForMeshToCopy =
-              indexOfVertexInMeshToCopy * mesh.vertexAttributes().getNumFloatsPerVertex();
+              indexOfVertexInMeshToCopy * mesh.vertexAttributes().sizeInFloats();
           // Emit the vertex in self by copying data per vertex attribute.
-          for (int b = 0; b < vertexAttributes.getBackingVertexAttributes().size(); b++) {
-            VertexAttribute va = vertexAttributes.getBackingVertexAttributes().get(b);
-            if (!mesh.vertexAttributes().hasAttributeWithName(va.alias)) {continue;}
+          for (int b = 0; b < vertexAttributes.backingVertexAttributes().size(); b++) {
+            VertexAttribute va = vertexAttributes.backingVertexAttributes().get(b);
+            if (!mesh.vertexAttributes().has(va.alias)) {continue;}
             int originalIForAttr = mesh.vertexAttributes().floatIndexForVertexAttribute(va);
             /** The base index for the vertex attribute data for this vertex in the original mesh floats. */
             int copyI = vertexOffsetInFloatsArrayForMeshToCopy + originalIForAttr;
@@ -188,14 +189,12 @@ public class PMeshGen {
   }
 
   public PMeshGen set(String alias, float x) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
     int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
     currentVertexValues[ind + 0] = x;
     return this;
   }
 
   public PMeshGen set(String alias, float x, float y) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2, "Wrong number of components for " + alias);
     int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
     currentVertexValues[ind + 0] = x;
     currentVertexValues[ind + 1] = y;
@@ -203,7 +202,6 @@ public class PMeshGen {
   }
 
   public PMeshGen set(String alias, float x, float y, float z) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
     int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
     currentVertexValues[ind + 0] = x;
     currentVertexValues[ind + 1] = y;
@@ -212,7 +210,6 @@ public class PMeshGen {
   }
 
   public PMeshGen set(String alias, float x, float y, float z, float w) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
     int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
     currentVertexValues[ind + 0] = x;
     currentVertexValues[ind + 1] = y;
@@ -225,8 +222,8 @@ public class PMeshGen {
   public PMeshGen emitVertex() {
     queuedVertices.addAll(currentVertexValues);
     // Shrink the queue if it is too large.
-    while (queuedVertices.size() > vertexAttributes.getNumFloatsPerVertex() * QUEUED_VERTICES_TO_KEEP) {
-      queuedVertices.delFirstN(vertexAttributes.getNumFloatsPerVertex());
+    while (queuedVertices.size() > vertexAttributes.sizeInFloats() * QUEUED_VERTICES_TO_KEEP) {
+      queuedVertices.delFirstN(vertexAttributes.sizeInFloats());
     }
     return this;
   }
@@ -247,7 +244,7 @@ public class PMeshGen {
    * @param iOffsetFromLast2 The index offset from the end of of the queue for the third vertex of the triangle.
    */
   private PMeshGen __emitQueuedTriangle(int iOffsetFromLast0, int iOffsetFromLast1, int iOffsetFromLast2) {
-    int fPerV = vertexAttributes.getNumFloatsPerVertex();
+    int fPerV = vertexAttributes.sizeInFloats();
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       // First, process the vertices using the vertex processor.
       // Process the first vertex.
@@ -304,7 +301,7 @@ public class PMeshGen {
    */
   private float[] __processVertexWithVertexProcessor(float[] floats, @Nullable PVec3 outPos) {
     /** The index in the float array of the position. */
-    int posI = vertexAttributes.floatIndexForVertexAttribute(PVertexAttributes.Attribute.Keys.pos);
+    int posI = vertexAttributes.floatIndexForVertexAttribute(PVertexAttribute.Definitions.pos.alias);
     if (vertexProcessor == null) {
       if (outPos != null) {
         outPos.set(floats[posI + 0], floats[posI + 1], floats[posI + 2]);
@@ -314,17 +311,17 @@ public class PMeshGen {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       PVec3 rawPos = pool.vec3(floats[posI + 0], floats[posI + 1], floats[posI + 2]);
       // Loop through the vertex attributes and process each one.
-      for (int a = 0; a < vertexAttributes.getBackingVertexAttributes().size(); a++) {
-        VertexAttribute va = vertexAttributes.getBackingVertexAttributes().get(a);
+      for (int a = 0; a < vertexAttributes.backingVertexAttributes().size(); a++) {
+        VertexAttribute va = vertexAttributes.backingVertexAttributes().get(a);
         int iForAttr = vertexAttributes.floatIndexForVertexAttribute(va);
-        switch (va.alias) {
-          case PVertexAttributes.Attribute.Keys.pos: // Handle position.
+        switch (va.usage) {
+          case VertexAttributes.Usage.Position: // Handle position.
             PVec3 pos = pool.vec3(rawPos);
             vertexProcessor.processPos(pos);
             if (outPos != null) {outPos.set(pos);}
             pos.emit(floats, iForAttr);
             break;
-          case PVertexAttributes.Attribute.Keys.nor: // Handle normal.
+          case VertexAttributes.Usage.Normal: // Handle normal.
             PVec3 nor = pool.vec3(floats[iForAttr + 0], floats[iForAttr + 1], floats[iForAttr + 2]);
             vertexProcessor.processNor(rawPos, nor);
             nor.emit(floats, iForAttr);
@@ -413,9 +410,9 @@ public class PMeshGen {
       if (lookbackIndex < 0) {
         break;
       }
-      int verticesIndex = lookbackIndex * vertexAttributes().getNumFloatsPerVertex();
+      int verticesIndex = lookbackIndex * vertexAttributes().sizeInFloats();
       boolean isEqual = true;
-      for (int a = 0; a < vertexAttributes().getNumFloatsPerVertex(); a++) {
+      for (int a = 0; a < vertexAttributes().sizeInFloats(); a++) {
         if (!PNumberUtils.epsilonEquals(vertices().get(verticesIndex + a), processedVertexValues[a])) {
           isEqual = false;
           break;
@@ -429,7 +426,7 @@ public class PMeshGen {
     // Need to add a new vertex.
     if (index == numVertices) {
       numVertices++;
-      for (int a = 0; a < vertexAttributes().getNumFloatsPerVertex(); a++) {
+      for (int a = 0; a < vertexAttributes().sizeInFloats(); a++) {
         vertices().add(processedVertexValues[a]);
       }
     }
@@ -437,25 +434,21 @@ public class PMeshGen {
   }
 
   public PVec1 get(PVec1 out, String alias) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 1);
     int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
     return out.x(currentVertexValues[ind + 0]);
   }
 
   public PVec2 get(PVec2 out, String alias) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 2);
     int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
     return out.x(currentVertexValues[ind + 0]).y(currentVertexValues[ind + 1]);
   }
 
   public PVec3 get(PVec3 out, String alias) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 3);
     int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
     return out.x(currentVertexValues[ind + 0]).y(currentVertexValues[ind + 1]).z(currentVertexValues[ind + 2]);
   }
 
   public PVec4 get(PVec4 out, String alias) {
-    PAssert.equals(PVertexAttributes.Attribute.get(alias).numComponents, 4);
     int ind = vertexAttributes().floatIndexForVertexAttribute(alias);
     return out.x(currentVertexValues[ind + 0]).y(currentVertexValues[ind + 1]).z(currentVertexValues[ind + 2])
               .w(currentVertexValues[ind + 3]);
