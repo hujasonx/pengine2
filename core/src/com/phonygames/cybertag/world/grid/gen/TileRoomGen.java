@@ -1,5 +1,7 @@
 package com.phonygames.cybertag.world.grid.gen;
 
+import android.support.annotation.Nullable;
+
 import com.phonygames.cybertag.world.ColorDataEmitter;
 import com.phonygames.cybertag.world.grid.GridTile;
 import com.phonygames.cybertag.world.grid.TileRoom;
@@ -38,11 +40,11 @@ public class TileRoomGen {
   /**
    * Run this when finished adding rooms and doors to the building. It finalizes the room model.
    */
-  public static void onNeighborsAndDoorsReady(TileRoom room) {
+  public static void onNeighborsAndDoorsReady(TileRoom room, @Nullable Runnable runOnModelGenned) {
     // Process the room.
     __runProcessorForRoom(room);
     // Emit models for the room.
-    __genModelFor(room);
+    __genModelFor(room, runOnModelGenned);
   }
 
   /** Processes the room after doors have been finalized. GridTile emitOptions should be set by this call. */
@@ -58,7 +60,7 @@ public class TileRoomGen {
   }
 
   /** Generates the model for the room and sets vColIndices for gridTiles. */
-  private static void __genModelFor(TileRoom room) {
+  private static void __genModelFor(TileRoom room, @Nullable final Runnable runOnModelGenned) {
     PModelGen.getPostableTaskQueue().enqueue(new PModelGen() {
       /** Map of vColIndex offsets used to shift vColIndices of modelGenTemplate part vertices. */
       private PStringMap<PInt> vColIndexOffsets = new PStringMap<>(PInt.getStaticPool());
@@ -108,6 +110,9 @@ public class TileRoomGen {
         /** Ensure the vColor array for the room is filled for all tiles. */
         room.vColors().ensureCapacity(vColIndexOffsets.genPooled("tile").valueOf());
         room.setModelInstance(PModelInstance.obtain(builder.build()));
+        if (runOnModelGenned != null) {
+          runOnModelGenned.run();
+        }
         room.unblockTaskTracker();
       }
     });

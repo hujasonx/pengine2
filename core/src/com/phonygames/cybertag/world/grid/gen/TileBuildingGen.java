@@ -9,7 +9,11 @@ import com.phonygames.cybertag.world.grid.TileGrid;
 import com.phonygames.cybertag.world.grid.TileRoom;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.aabb.PIntAABB;
+import com.phonygames.pengine.navmesh.recast.PRecastMeshBuilder;
 import com.phonygames.pengine.util.collection.PArrayUtils;
+import com.phonygames.pengine.util.collection.PList;
+
+import org.recast4j.recast.geom.SimpleInputGeomProvider;
 
 /** Helper class for generating tile buildings. */
 public class TileBuildingGen {
@@ -31,7 +35,8 @@ public class TileBuildingGen {
       PIntAABB roomBounds = generatePotentialRoomBounds(building, parameters);
       TileGrid roomTiles = validatePotentialRoomLocation(roomBounds, building, parameters);
       if (roomTiles == null) {continue;}
-      room = TileRoom.builder().parameters(parameters).genTaskTracker(building.genTaskTracker()).building(building).build();
+      room = TileRoom.builder().parameters(parameters).genTaskTracker(building.genTaskTracker()).building(building)
+                     .build();
       room.tileGrid().trackAll(roomTiles);
     } while (room == null && attemptsLeft > 0);
     // If the room will be generated, add it as a blocker.
@@ -62,7 +67,7 @@ public class TileBuildingGen {
 
   /** Checks if the bounds and parameters represent a valid room. If so, returns the tilegrid with the tiles. */
   private static @Nullable TileGrid validatePotentialRoomLocation(PIntAABB bounds, TileBuilding building,
-                                                        TileRoomParameters parameters) {
+                                                                  TileRoomParameters parameters) {
     PLog.i(TAG + "| Validating potential room location");
     PIntAABB buildingBounds = building.tileBounds();
     TileGrid roomTiles = new TileGrid();
@@ -81,7 +86,7 @@ public class TileBuildingGen {
           if (tileFree) {
             // If the tile is free, add the tile to the grid and count it.
             roomTiles.trackTile(building.tileAtTilePosition(x, y, z));
-            consecutiveTilesInRoom ++;
+            consecutiveTilesInRoom++;
           } else {
             if (consecutiveTilesInRoom > 0 && consecutiveTilesInRoom < parameters.minimumRoomThickness) {
               PLog.i(TAG + "| Room thickness in z axis violated!");
@@ -94,6 +99,35 @@ public class TileBuildingGen {
     //    parameters.minimumRoomThickness
     PLog.i(TAG + "| Valid room location!");
     return roomTiles;
+  }
+
+  /**
+   * Run this when finished adding rooms to the building.
+   * <p>
+   * Adds hallways and places doors.
+   */
+  public static void onFinishedAddingRooms(final TileBuilding building) {
+    final PList<TileRoom> roomsStillGenerating = new PList<>();
+    roomsStillGenerating.addAll(building.rooms());
+    //
+    // Finally, notify the rooms that they should continue processing.
+    for (int a = 0; a < building.rooms().size(); a++) {
+      final TileRoom room = building.rooms().get(a);
+      TileRoomGen.onNeighborsAndDoorsReady(room, new Runnable() {
+        @Override public void run() {
+          roomsStillGenerating.removeValue(room, true);
+          if (roomsStillGenerating.isEmpty()) {
+            // When the last room is finished being generated, then finish up the building.
+            float[] physicsVs = building.world().physicsVertexPositions.emit();
+            int[] physicsIs = PArrayUtils.intListToArray(building.world().physicsVertexIndices);
+            PRecastMeshBuilder recastBuilder =
+                new PRecastMeshBuilder(new SimpleInputGeomProvider(physicsVs, physicsIs));
+            building.world().tileCache = recastBuilder.getTileCache();
+            building.unblockTaskTracker();
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -112,20 +146,5 @@ public class TileBuildingGen {
         }
       }
     }
-  }
-
-  /**
-   * Run this when finished adding rooms to the building.
-   * <p>
-   * Adds hallways and places doors.
-   */
-  public static void onFinishedAddingRooms(TileBuilding building) {
-    //
-    // Finally, notify the rooms that they should continue processing.
-    for (int a = 0; a < building.rooms().size(); a++) {
-      TileRoom room = building.rooms().get(a);
-      TileRoomGen.onNeighborsAndDoorsReady(room);
-    }
-    building.unblockTaskTracker();
   }
 }
