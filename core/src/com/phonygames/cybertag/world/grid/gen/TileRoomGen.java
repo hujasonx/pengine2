@@ -27,12 +27,16 @@ import com.phonygames.pengine.util.collection.PStringMap;
 
 /** Helper class for generating tile rooms. */
 public class TileRoomGen {
+  /** Vertex processor for flatQuads. */
+  private static PMeshGenVertexProcessor.FlatQuad __flatQuadVP = new PMeshGenVertexProcessor.FlatQuad();
   /** Vertex processor for transforms. */
   private static PMeshGenVertexProcessor.Transform __transformVP = new PMeshGenVertexProcessor.Transform();
   /** The size of a tile on a horizontal axis. */
   private static float tileScaleXZ = 3f;
   /** The size of a tile on a vertical axis. */
   private static float tileScaleY = 3f;
+  /** The offset of the floors and walkways, used to prevent walls and ceilings from clipping through. World space. */
+  private static float floorAndWalkwayVerticalOffset = .025f;
 
   /**
    * Run this when finished adding rooms and doors to the building. It finalizes the room model.
@@ -115,9 +119,7 @@ public class TileRoomGen {
       }
     });
   }
-
   /** Vertical offset for floors and walkways, to prevent visible clipping of the wall tops through the ground. */
-
   /** Emits the tile to the model gen using the gridTile options. */
   private static void __emitTileToModelGen(GridTile gridTile, PModelGen modelGen, PStringMap<PInt> vColIndexOffsets) {
     int tileVColOffset = vColIndexOffsets.genPooled("tile").valueOf();
@@ -127,9 +129,22 @@ public class TileRoomGen {
       PModelGenTemplate floorTemplate =
           PAssetManager.model(gridTile.emitOptions.floorModelTemplateID, true).modelGenTemplate();
       __transformVP.transform()
-                   .setToTranslation(gridTile.x * tileScaleXZ, gridTile.y * tileScaleY, gridTile.z * tileScaleXZ)
+                   .setToTranslation(gridTile.x * tileScaleXZ, floorAndWalkwayVerticalOffset + gridTile.y * tileScaleY, gridTile.z * tileScaleXZ)
                    .scl(tileScaleXZ, tileScaleY, tileScaleXZ);
       floorTemplate.emit(modelGen, __transformVP, vColIndexOffsets);
+    }
+    // Emit walkway.
+    if (gridTile.emitOptions.walkwayModelTemplateID != null) {
+      PModelGenTemplate walkwayTemplate =
+          PAssetManager.model(gridTile.emitOptions.walkwayModelTemplateID, true).modelGenTemplate();
+      gridTile.worldSpaceCorners(tileScaleXZ, tileScaleY, tileScaleXZ, __flatQuadVP.flatQuad00(),
+                                 __flatQuadVP.flatQuad10(), __flatQuadVP.flatQuad11(), __flatQuadVP.flatQuad01(), null,
+                                 null, null, null);
+      __flatQuadVP.flatQuad00().add(0, floorAndWalkwayVerticalOffset + tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[0], 0);
+      __flatQuadVP.flatQuad10().add(0, floorAndWalkwayVerticalOffset + tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[1], 0);
+      __flatQuadVP.flatQuad11().add(0, floorAndWalkwayVerticalOffset + tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[2], 0);
+      __flatQuadVP.flatQuad01().add(0, floorAndWalkwayVerticalOffset + tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[3], 0);
+      walkwayTemplate.emit(modelGen, __flatQuadVP, vColIndexOffsets);
     }
     // Emit walls.
     for (int a = 0; a < PFacing.count(); a++) {
@@ -139,7 +154,8 @@ public class TileRoomGen {
         // Rotate wall if the facing is not -X (the default facing).
         int modelOriginX = gridTile.x + ((wall.facing == PFacing.mZ || wall.facing == PFacing.X) ? 1 : 0);
         int modelOriginZ = gridTile.z + ((wall.facing == PFacing.X || wall.facing == PFacing.Z) ? 1 : 0);
-        float rotationRad = MathUtils.PI * (1f - .5f * wall.facing.intValue()); // TODO: Maybe this should be a subtract?
+        float rotationRad =
+            MathUtils.PI * (1f - .5f * wall.facing.intValue());
         __transformVP.transform()
                      .setToTranslation(modelOriginX * tileScaleXZ, gridTile.y * tileScaleY, modelOriginZ * tileScaleXZ)
                      .rotate(0, 1, 0, rotationRad).scl(tileScaleXZ, tileScaleY, tileScaleXZ);

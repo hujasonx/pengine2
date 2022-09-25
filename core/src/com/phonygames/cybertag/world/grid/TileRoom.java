@@ -7,8 +7,12 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.color.PVColIndexBuffer;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.math.PInt3;
 import com.phonygames.pengine.math.PVec4;
+import com.phonygames.pengine.util.Duple;
 import com.phonygames.pengine.util.PBlockingTaskTracker;
+import com.phonygames.pengine.util.PFacing;
+import com.phonygames.pengine.util.collection.PList;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -27,6 +31,7 @@ import lombok.experimental.Accessors;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final TileRoomParameters parameters;
+  private final float randTemp = MathUtils.random();
   /** The tiles in this room. */
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -43,13 +48,15 @@ import lombok.experimental.Accessors;
   private PBlockingTaskTracker genTaskTracker;
   /** The model instance. */
   private PModelInstance modelInstance;
+  /** The emit options for this tileRoom. Only useful when still building the room. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final EmitOptions emitOptions = new EmitOptions(this);
 
   @Override public void emitDataBuffersInto(PRenderContext renderContext) {
     vColors.emitColorData(renderContext);
   }
 
-
-  private final float randTemp = MathUtils.random();
   public void frameUpdate() {
     vColors.setDiffuse(0, PVec4.obtain().setHSVA(randTemp, 1, 1, 1), false);
   }
@@ -76,5 +83,15 @@ import lombok.experimental.Accessors;
     PAssert.isNotNull(genTaskTracker);
     genTaskTracker.removeBlocker(this);
     genTaskTracker = null;
+  }
+
+  /** Helper class that stores useful options for generating this room, but should not be used much afterwards. */
+  public static class EmitOptions {
+    /** The owner room. */
+    private final TileRoom owner;
+
+    public EmitOptions(TileRoom owner) {
+      this.owner = owner;
+    }
   }
 }
