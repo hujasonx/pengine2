@@ -76,7 +76,7 @@ public class HeadGunnerEntity extends CharacterEntity {
         vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
         vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveI.
       });
-      modelInstance.material("matBase").useVColIndex(true);
+//      modelInstance.material("matBase").useVColIndex(true);
       // Left Leg.
       leftLegLimb = PPlanarIKLimb.obtain(modelInstance, pool.vec3().set(0, 0, -1)).addNode("LegUpper.L")
                                  .addNode("LegMiddle.L", true).addNode("LegLower.L");

@@ -79,7 +79,7 @@ public abstract class Gun implements PRenderable {
       vColIndexBuffer.addData(.1f, .2f, .5f, 1); // Base color diffuseM.
       vColIndexBuffer.addData(0, 0, 0, .3f); // Base color emissiveI.
     });
-    modelInstance.material("matBase").useVColIndex(true);
+//    modelInstance.material("matBase").useVColIndex(true);
     muzzleParticleSource = PBillboardParticleSource.obtain();
     pipeParticleSource = PPipeParticleSource.obtain();
   }

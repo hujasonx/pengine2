@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.phonygames.pengine.graphics.color.PColor;
+import com.phonygames.pengine.graphics.color.PVColIndexBuffer;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -40,17 +42,19 @@ public class PMesh {
     this.vertexAttributes = vertexAttributes;
   }
 
+
   /**
    * Generates a new PMesh, doing any necessary renaming from GDX attributes to pengine2 attributes.
-   *
+   * Additionally, converts col[0] to vColI if vColIndexDivisions != -1.
    * @param mesh
+   * @param vColIndexDivisions the number of divisions used to specify vColIndices, or -1.
    */
-  public PMesh(Mesh mesh) {
-    backingMesh = mesh;
+  public PMesh(Mesh mesh, int vColIndexDivisions) {
+    // If we need to convert a col0 attr to vColI after the initial attributes pass, store it here.
+    VertexAttribute col0AttrToConvertToVColI = null;
     PVertexAttribute.Definition[] definitions = new PVertexAttribute.Definition[mesh.getVertexAttributes().size()];
     for (int a = 0; a < mesh.getVertexAttributes().size(); a++) {
       VertexAttribute attr= mesh.getVertexAttributes().get(a);
-
       switch (attr.usage) {
         case VertexAttributes.Usage.Position:
           attr.alias = PVertexAttribute.Definitions.pos.alias;
@@ -62,9 +66,11 @@ public class PMesh {
           attr.alias = PVertexAttribute.Definitions.uv[attr.unit].alias;
           break;
         case VertexAttributes.Usage.ColorPacked:
+          if (attr.unit == 0 && vColIndexDivisions != -1) {col0AttrToConvertToVColI = attr;}
           attr.alias = PVertexAttribute.Definitions.colPacked[attr.unit].alias;
           break;
         case VertexAttributes.Usage.ColorUnpacked:
+          if (attr.unit == 0 && vColIndexDivisions != -1) {col0AttrToConvertToVColI = attr;}
           attr.alias = PVertexAttribute.Definitions.col[attr.unit].alias;
           break;
         case VertexAttributes.Usage.BoneWeight:
@@ -74,9 +80,73 @@ public class PMesh {
           // PAssert.warnNotImplemented("Vertex attribute " + attr.alias);
           break;
       }
-      definitions[a] = PVertexAttribute.Definition.fromAttribute(attr);
+      // If we need to convert this col0, create the VertexAttribute definition.
+      if (attr == col0AttrToConvertToVColI) {
+        definitions[a] = PVertexAttribute.Definitions.vColI;
+      } else {
+        definitions[a] = PVertexAttribute.Definition.fromAttribute(attr);
+      }
     }
+    // Create the vertex attributes.
     this.vertexAttributes = new PVertexAttributes(definitions);
+    if (col0AttrToConvertToVColI != null) {
+      PVec4 tempCol0 = PVec4.obtain();
+      // Convert col0 to vColI.
+      float[] originalMeshVertices = new float[mesh.getNumVertices() * mesh.getVertexAttributes().vertexSize / 4];
+      short[] originalMeshIndices = new short[mesh.getNumIndices()];
+      mesh.getVertices(originalMeshVertices);
+      mesh.getIndices(originalMeshIndices);
+      float[] newMeshVertices = new float[mesh.getNumVertices() * this.vertexAttributes.sizeInFloats()];
+      // Create a new mesh with the new vertexAttributes.
+      this.backingMesh = new Mesh(false, mesh.getNumVertices(), originalMeshIndices.length, this.vertexAttributes.backingVertexAttributes());
+      backingMesh.setIndices(originalMeshIndices);
+      // Loop through each vertex and emit its attributes.
+      for (int b = 0; b < mesh.getNumVertices(); b++) {
+        // The float offset in the original vertex buffer that the vertex can be found at.
+        int oInO = mesh.getVertexSize() / 4 * b;
+        // The float offset in the new vertex buffer that the vertex should be put at.
+        int oInN = this.vertexAttributes.sizeInFloats() * b;
+        for (int a = 0; a < this.vertexAttributes.count(); a++) {
+          // The new vertex attribute.
+          PVertexAttribute pva = this.vertexAttributes.pva(a);
+          // The original vertex attribute.
+          VertexAttribute originalAttr = mesh.getVertexAttributes().get(a);
+          // The float offset in the original vertex buffer that the vertex attribute for this vertex can be found at.
+          int pvaOInO = oInO + originalAttr.offset / 4;
+          // The float offset in the new vertex buffer that the vertex attribute for this vertex should be put at.
+          int pvaOInN = oInN + pva.offsetInOwnerBytes() / 4;
+          if (originalAttr == col0AttrToConvertToVColI) {
+            if (originalAttr.type == GL20.GL_UNSIGNED_BYTE) {
+              PVertexAttribute.vec4FromUnsignedByteColor(tempCol0, originalMeshVertices[pvaOInO]);
+            }
+            if (originalAttr.type == GL20.GL_UNSIGNED_SHORT ) {
+              PVertexAttribute.vec4FromUnsignedShortColor(tempCol0, originalMeshVertices[pvaOInO], originalMeshVertices[pvaOInO + 1]);
+            }
+            // Convert col0 to vColI.
+            newMeshVertices[pvaOInN] = tempCol0.toVColI(vColIndexDivisions);
+          } else {
+            // Emit every other attribute normally.
+            for (int c = 0; c < pva.sizeInFloats(); c++) {
+              newMeshVertices[pvaOInN + c] = originalMeshVertices[pvaOInO + c];
+            }
+          }
+        }
+      }
+      backingMesh.setVertices(newMeshVertices);
+      tempCol0.free();
+    } else {
+      // Use the mesh as is.
+      this.backingMesh = mesh;
+    }
+  }
+
+  /**
+   * Generates a new PMesh, doing any necessary renaming from GDX attributes to pengine2 attributes.
+   *
+   * @param mesh
+   */
+  public PMesh(Mesh mesh) {
+    this(mesh, -1);
   }
 
   public PMesh(boolean isStatic, PList<Float> vertexData, PList<Short> indexData, PVertexAttributes vertexAttributes) {

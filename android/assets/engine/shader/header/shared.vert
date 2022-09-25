@@ -8,6 +8,10 @@ in vec3 a_nor;
 out vec3 v_aNor;
 out vec3 v_skinnedNor;
 #endif
+#ifdef a_vColIFlag
+in float a_vColI;
+out float v_vColI;
+#endif
 
 #include <engine/shader/header/sharedvertarray>[0]
 #include <engine/shader/header/sharedvertarray>[1]

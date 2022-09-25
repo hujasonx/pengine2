@@ -24,13 +24,13 @@ public class PVec4 extends PVec<PVec4> implements PWriteLockable<PVec4> {
   @Setter
   private boolean lockWriting = false;
   // #pragma end - PWriteLockable
+  public static final PVec4 IDT_QUATERNION = new PVec4().setIdentityQuaternion();
   public static final PVec4 ONE = new PVec4().set(1, 1, 1, 1);
   public static final PVec4 REAL = new PVec4().set(0, 0, 0, 1);
   public static final PVec4 X = new PVec4().set(1, 0, 0, 0);
   public static final PVec4 Y = new PVec4().set(0, 1, 0, 0);
   public static final PVec4 Z = new PVec4().set(0, 0, 1, 0);
   public static final PVec4 ZERO = new PVec4().set(0, 0, 0, 0);
-  public static final PVec4 IDT_QUATERNION = new PVec4().setIdentityQuaternion();
   @Getter(value = AccessLevel.PUBLIC, lazy = true)
   private static final PPool<PVec4> staticPool = new PPool<PVec4>() {
     @Override protected PVec4 newObject() {
@@ -258,6 +258,33 @@ public class PVec4 extends PVec<PVec4> implements PWriteLockable<PVec4> {
     return this;
   }
 
+  /** Sets this vector from packed float bits. */
+  public PVec4 fromFloatBits(float floatBits) {
+    int intBits = NumberUtils.floatToRawIntBits(floatBits);
+    return fromIntBits(intBits);
+  }
+
+  /** Sets this vector from packed unsigned short bits. */
+  public PVec4 fromUnsignedShortBits(float shortBits0, float shortBits1) {
+    int intBits0 = Float.floatToRawIntBits(shortBits0);
+    int intBits1 = Float.floatToRawIntBits(shortBits1);
+    int intG = (intBits0 >> 16) & 0xFFFF;
+    int intR = (intBits0 >> 0) & 0xFFFF;
+    int intA = (intBits1 >> 16) & 0xFFFF;
+    int intB = (intBits1 >> 0) & 0xFFFF;
+    return set(intR, intG, intB, intA).scl(1f / 65535f);
+  }
+
+  /** Sets this vector from packed int bits. */
+  public PVec4 fromIntBits(int intBits) {
+    // return ((int) (255 * a()) << 24) | ((int) (255 * b()) << 16) | ((int) (255 * g()) << 8) | ((int) (255 * r()));
+    int intA = (intBits >> 24) & 0xFF;
+    int intB = (intBits >> 16) & 0xFF;
+    int intG = (intBits >> 8) & 0xFF;
+    int intR = (intBits >> 0) & 0xFF;
+    return set(intR, intG, intB, intA).scl(1f / 255f);
+  }
+
   public PVec4 g(float g) {
     this.forWriting();
     backingQuaterion.y = g;
@@ -478,6 +505,18 @@ public class PVec4 extends PVec<PVec4> implements PWriteLockable<PVec4> {
            PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingQuaterion.y), 7) + ", " +
            PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingQuaterion.z), 7) + ", " +
            PStringUtils.prependSpacesToLength(PStringUtils.roundNearestThousandth(backingQuaterion.w), 7) + ">";
+  }
+
+  /**
+   * Returns the vColI this color corresponds to with the given divisions. R is least significant digit, B is most
+   * significant, A is ignored.
+   **/
+  public int toVColI(int divisions) {
+    int radix = divisions + 1;
+    int ri = Math.round(r() * divisions);
+    int gi = Math.round(g() * divisions);
+    int bi = Math.round(b() * divisions);
+    return radix * (radix * bi + gi) + ri;
   }
 
   public PVec4 w(float w) {

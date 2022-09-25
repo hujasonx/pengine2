@@ -1,19 +1,17 @@
 v_diffuseM = vec4(1.0);
 v_emissiveI = vec4(0.0);
 
-#ifdef a_col0Flag
-#ifdef vColIndexFlag
+#ifdef a_vColIFlag
 // Find the lookup index using the vertex color attribute.
-const float vColIndexLookupSteps = 16.0;
-float vColIndexLookupIndexR = round(v_col0.r * vColIndexLookupSteps);
-float vColIndexLookupIndexG = round(v_col0.g * vColIndexLookupSteps);
-float vColIndexLookupIndexB = round(v_col0.b * vColIndexLookupSteps);
-int vColIndexLookupIndex = int(vColIndexLookupIndexR + (vColIndexLookupIndexG * vColIndexLookupSteps) + (vColIndexLookupIndexB * vColIndexLookupSteps * vColIndexLookupSteps));
+int vColIndexLookupIndex = int(a_vColI);
 v_diffuseM = vColIndexVec4I(vColIndexLookupIndex * 2 + 0);
 v_emissiveI = vColIndexVec4I(vColIndexLookupIndex * 2 + 1);
 #else
 // Just use the vertex colors like normal.
+#ifdef a_col0Flag
 v_diffuseM = a_col0;
+#else
+v_diffuseM = vec4(1.0);
+#endif// a_col0Flag
 v_emissiveI = vec4(0.0);
-#endif
-#endif
+#endif// a_vColIFlag

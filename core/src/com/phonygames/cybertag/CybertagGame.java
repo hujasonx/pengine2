@@ -236,7 +236,7 @@ public class CybertagGame implements PGame {
     gbufferPreviewRenderBuffer = new PRenderBuffer.Builder().setWindowScale(1).addFloatAttachment("diffuse").build();
     gbufferPreviewShader = gbufferPreviewRenderBuffer.getQuadShader(Gdx.files.local("shader/previewgbuffer.quad.glsl"));
     testikModelInstance = PModelInstance.obtain(PAssetManager.model("model/testik.glb", true));
-    testikModelInstance.material("matBase").useVColIndex(true);
+//    testikModelInstance.material("matBase").useVColIndex(true);
     testikModelInstance.setDataBufferEmitter(renderContext -> {
       PFloat4Texture vColIndexBuffer = renderContext.genDataBuffer("vColIndex");
       // Note, we use emissiveR, but the shader will output emissiveI and normalR. But we don't want to edit

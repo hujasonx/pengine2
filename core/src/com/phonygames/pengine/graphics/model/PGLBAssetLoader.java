@@ -27,6 +27,7 @@ import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.physics.PPhysicsCollisionShape;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsBoxShape;
 import com.phonygames.pengine.physics.collisionshape.PPhysicsCompoundShape;
+import com.phonygames.pengine.util.PStringUtils;
 import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.collection.PMap;
 import com.phonygames.pengine.util.PPool;
@@ -40,6 +41,12 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset;
 
 import lombok.val;
 
+/**
+ * Loads a glb asset.
+ *
+ * If the material for a part has [vcis=n] then the vertex color vertex attribute will be converted to a vColIndex attribute
+ * with n being the spacing amount (if n = 16, blender colors are (0, 0, 0, 1), (1/16, 0, 0, 1), etc.
+ */
 public class PGLBAssetLoader extends AsynchronousAssetLoader<PModel, PGLBAssetLoader.LoaderParameters> {
   private static final Vector3 tempVector3_111 = new Vector3(1, 1, 1);
   private final PStringMap<PhysicsNode> physicsNodes = new PStringMap<PhysicsNode>() {
@@ -101,7 +108,20 @@ public class PGLBAssetLoader extends AsynchronousAssetLoader<PModel, PGLBAssetLo
       // Generate meshes if needed.
       if (!nodePlus.parts.isEmpty()) {
         for (val gdxNodePart : nodePlus.parts) {
-          PMesh mesh = new PMesh(gdxNodePart.meshPart.mesh);
+          // Check if we need to convert from vertex color 0 to vColI.
+          String vcisPrefix = "[vcis=";
+          int indexOfVcisPrefix =  gdxNodePart.material.id.indexOf(vcisPrefix);
+          PMesh mesh;
+          if (indexOfVcisPrefix == -1) {
+            // No conversion necessary.
+            mesh = new PMesh(gdxNodePart.meshPart.mesh);
+          } else {
+            // Convert vertex color to vColIndex.
+            int vcisSplitStart = PStringUtils.indexAfter(gdxNodePart.material.id, vcisPrefix);
+            int vcisSplitEnd = gdxNodePart.material.id.indexOf("]", vcisSplitStart);
+            int vcisDivisions = Integer.parseInt(gdxNodePart.material.id.substring(vcisSplitStart, vcisSplitEnd));
+            mesh = new PMesh(gdxNodePart.meshPart.mesh, vcisDivisions);
+          }
           PGlNode node = new PGlNode(gdxNodePart.meshPart.id + "[" + glNodes.size() + "]");
           node.drawCall().mesh(mesh);
           node.drawCall().material(genMaterial(gdxNodePart.material));

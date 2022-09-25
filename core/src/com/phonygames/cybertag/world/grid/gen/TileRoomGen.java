@@ -78,7 +78,7 @@ public class TileRoomGen {
           while (it.hasNext()) {
             PMap.Entry<String, PMeshGen> e = it.next();
             builder.chainGlNode(glNodes, e.k(), e.v().getMesh(),
-                                new PMaterial(e.k(), null).useVColIndex(true), null, PGltf.Layer.PBR, true,
+                                new PMaterial(e.k(), null), null, PGltf.Layer.PBR, true,
                                 false);
           }
         }
@@ -88,7 +88,7 @@ public class TileRoomGen {
         for (int a = 0; a < alphaBlendParts.size(); a++) {
           PMeshGen part = alphaBlendParts.get(a);
           glNodes.clear();
-          builder.chainGlNode(glNodes, part.name(), part.getMesh(), new PMaterial(part.name(), null).useVColIndex(true), null, PGltf.Layer.AlphaBlend,
+          builder.chainGlNode(glNodes, part.name(), part.getMesh(), new PMaterial(part.name(), null), null, PGltf.Layer.AlphaBlend,
                               true, true);
           builder.addNode(part.name(), null, glNodes, PMat4.IDT);
         }

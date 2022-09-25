@@ -1,9 +1,12 @@
 package com.phonygames.pengine.graphics.model;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.phonygames.pengine.exception.PAssert;
+import com.phonygames.pengine.math.PNumberUtils;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PImplementsEquals;
 
 import lombok.AccessLevel;
@@ -68,6 +71,11 @@ public class PVertexAttribute implements PImplementsEquals<PVertexAttribute> {
   /** Returns the size of this attribute in bytes. It should always be a multiple of 4. */
   public int sizeInBytes() {
     return definition.numComponents * definition.type.getSizeInBytes();
+  }
+
+  /** Returns the size of this attribute in floats. */
+  public int sizeInFloats() {
+    return definition.numComponents * definition.type.getSizeInBytes() / 4;
   }
 
   /** The supported underlying data types for each component of the vertex attribute. */
@@ -185,10 +193,27 @@ public class PVertexAttribute implements PImplementsEquals<PVertexAttribute> {
     public static final Definition colPacked[] = new Definition[8];
     public static final Definition nor =
         Definition.builder().alias("a_nor").numComponents(3).usage(VertexAttributes.Usage.Normal).build();
+    public static final Definition vColI =
+        Definition.builder().alias("a_vColI").numComponents(1).build();
     public static final Definition pos =
         Definition.builder().alias("a_pos").numComponents(3).usage(VertexAttributes.Usage.Position).build();
     public static final Definition pos2d =
         Definition.builder().alias("a_pos").numComponents(2).usage(VertexAttributes.Usage.Position).build();
     public static final Definition uv[] = new Definition[8];
   }
+
+  /** Converts a packed color to a PVec4. */
+  public static PVec4 vec4FromUnsignedByteColor(PVec4 out, float byteColor) {
+    out.fromFloatBits(byteColor);
+    return out;
+  }
+
+  /** Converts a packed color to a PVec4. */
+  public static PVec4 vec4FromUnsignedShortColor(PVec4 out, float float0, float float1) {
+    out.fromUnsignedShortBits(float0, float1);
+    System.out.println("CONV " + out);
+    return out;
+  }
+
+
 }

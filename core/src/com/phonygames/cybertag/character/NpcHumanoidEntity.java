@@ -78,7 +78,7 @@ public class NpcHumanoidEntity extends CharacterEntity {
         vColIndexBuffer.addData(hairCol); // Eyebrows diffuseM.
         vColIndexBuffer.addData(0, 0, 0, 1); // Eyebrows emissiveI.
       });
-      modelInstance.material("matBase").useVColIndex(true);
+//      modelInstance.material("matBase[vcis=16]").useVColIndex(true);
       modelInstance.material("matHair").set(PMaterial.UniformConstants.Vec4.u_diffuseCol, hairCol).setRoughness(1);
       // Left Leg.
       leftLegLimb =

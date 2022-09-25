@@ -20,6 +20,10 @@ public class PVertexAttributes implements PImplementsEquals<PVertexAttributes> {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PStringMap<PVertexAttribute> attributes = new PStringMap<>();
+  /** The vertex attributes. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PList<PVertexAttribute> attributesList = new PList<>();
   //  @Getter
   //  private static PVertexAttributes PHYSICS = new PVertexAttributes(new VertexAttribute[]{VertexAttribute.Position
   //  ()});
@@ -52,6 +56,11 @@ public class PVertexAttributes implements PImplementsEquals<PVertexAttributes> {
   @Accessors(fluent = true)
   private final int sizeInFloats;
 
+  /** Returns the number of vertex attributes. */
+  public int count() {
+    return attributesList.size();
+  }
+
   public PVertexAttributes(PVertexAttribute.Definition[] definitions) {
     PList<VertexAttribute> vaList = new PList<>();
     int sizeInBytes = 0;
@@ -59,6 +68,7 @@ public class PVertexAttributes implements PImplementsEquals<PVertexAttributes> {
     for (PVertexAttribute.Definition definition : definitions) {
       PVertexAttribute pva = new PVertexAttribute(definition, /* offsetInOwnerBytes */ sizeInBytes);
       attributes.put(definition.alias, pva);
+      attributesList.add(pva);
       vaList.add(pva.backingAttr());
       sizeInBytes += pva.sizeInBytes();
       prefix.append("#define ").append(pva.definition().alias).append("Flag\n");
@@ -121,6 +131,11 @@ public class PVertexAttributes implements PImplementsEquals<PVertexAttributes> {
   /** Returns the PVertexAttribute with the given alias. */
   public @Nullable PVertexAttribute pva(String alias) {
     return attributes.get(alias);
+  }
+
+  /** Returns the PVertexAttribute at the given index. */
+  public @Nullable PVertexAttribute pva(int index) {
+    return attributesList.get(index);
   }
 
   /** Returns true if this attributes has an attribute with the given alias. */

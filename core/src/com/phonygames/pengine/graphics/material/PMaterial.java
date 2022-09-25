@@ -42,7 +42,7 @@ public class PMaterial {
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
-  private boolean useVColIndex = false, noModelTransform = false;
+  private boolean noModelTransform = false;
 
   public PMaterial(String id, PModelInstance owner) {
     this.id = id;
@@ -111,16 +111,16 @@ public class PMaterial {
     ret.vec3s.tryDeepCopyAllFrom(vec3s);
     ret.vec4s.tryDeepCopyAllFrom(vec4s);
     ret.textures.tryDeepCopyAllFrom(textures);
-    ret.useVColIndex = useVColIndex;
+//    ret.useVColIndex = useVColIndex;
     ret.noModelTransform = noModelTransform;
     return ret;
   }
 
   public String getShaderPrefix() {
     String prefix = "";
-    if (useVColIndex) {
-      prefix = PStringUtils.concat(prefix, "#define vColIndexFlag\n");
-    }
+//    if (useVColIndex) {
+//      prefix = PStringUtils.concat(prefix, "#define vColIndexFlag\n");
+//    }
     if (noModelTransform) {
       prefix = PStringUtils.concat(prefix, "#define noModelTransformFlag\n");
     }

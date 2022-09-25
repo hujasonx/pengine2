@@ -6,6 +6,9 @@ v_skinnedPos = a_pos;
 v_aNor = a_nor;
 v_skinnedNor = a_nor;
 #endif
+#ifdef a_vColIFlag
+v_vColI = a_vColI;
+#endif
 
 #if defined(a_bon0Flag)
 mat4 skinning = mat4(0.0);// Skinned, so use an empty matrix that will be filled per bone weight.
