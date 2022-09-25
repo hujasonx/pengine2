@@ -6,8 +6,6 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.phonygames.pengine.graphics.color.PColor;
-import com.phonygames.pengine.graphics.color.PVColIndexBuffer;
 import com.phonygames.pengine.graphics.shader.PShader;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.math.PVec4;
@@ -21,7 +19,6 @@ import java.nio.ShortBuffer;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import lombok.val;
 
 public class PMesh {
   public static PMesh FULLSCREEN_QUAD_MESH;
@@ -42,10 +39,19 @@ public class PMesh {
     this.vertexAttributes = vertexAttributes;
   }
 
-
   /**
    * Generates a new PMesh, doing any necessary renaming from GDX attributes to pengine2 attributes.
-   * Additionally, converts col[0] to vColI if vColIndexDivisions != -1.
+   *
+   * @param mesh
+   */
+  public PMesh(Mesh mesh) {
+    this(mesh, -1);
+  }
+
+  /**
+   * Generates a new PMesh, doing any necessary renaming from GDX attributes to pengine2 attributes. Additionally,
+   * converts col[0] to vColI if vColIndexDivisions != -1.
+   *
    * @param mesh
    * @param vColIndexDivisions the number of divisions used to specify vColIndices, or -1.
    */
@@ -54,7 +60,7 @@ public class PMesh {
     VertexAttribute col0AttrToConvertToVColI = null;
     PVertexAttribute.Definition[] definitions = new PVertexAttribute.Definition[mesh.getVertexAttributes().size()];
     for (int a = 0; a < mesh.getVertexAttributes().size(); a++) {
-      VertexAttribute attr= mesh.getVertexAttributes().get(a);
+      VertexAttribute attr = mesh.getVertexAttributes().get(a);
       switch (attr.usage) {
         case VertexAttributes.Usage.Position:
           attr.alias = PVertexAttribute.Definitions.pos.alias;
@@ -98,7 +104,8 @@ public class PMesh {
       mesh.getIndices(originalMeshIndices);
       float[] newMeshVertices = new float[mesh.getNumVertices() * this.vertexAttributes.sizeInFloats()];
       // Create a new mesh with the new vertexAttributes.
-      this.backingMesh = new Mesh(false, mesh.getNumVertices(), originalMeshIndices.length, this.vertexAttributes.backingVertexAttributes());
+      this.backingMesh = new Mesh(false, mesh.getNumVertices(), originalMeshIndices.length,
+                                  this.vertexAttributes.backingVertexAttributes());
       backingMesh.setIndices(originalMeshIndices);
       // Loop through each vertex and emit its attributes.
       for (int b = 0; b < mesh.getNumVertices(); b++) {
@@ -118,9 +125,12 @@ public class PMesh {
           if (originalAttr == col0AttrToConvertToVColI) {
             if (originalAttr.type == GL20.GL_UNSIGNED_BYTE) {
               PVertexAttribute.vec4FromUnsignedByteColor(tempCol0, originalMeshVertices[pvaOInO]);
-            }
-            if (originalAttr.type == GL20.GL_UNSIGNED_SHORT ) {
-              PVertexAttribute.vec4FromUnsignedShortColor(tempCol0, originalMeshVertices[pvaOInO], originalMeshVertices[pvaOInO + 1]);
+            } else if (originalAttr.type == GL20.GL_UNSIGNED_SHORT) {
+              PVertexAttribute.vec4FromUnsignedShortColor(tempCol0, originalMeshVertices[pvaOInO],
+                                                          originalMeshVertices[pvaOInO + 1]);
+            } else {
+              tempCol0.set(originalMeshVertices[pvaOInO + 0], originalMeshVertices[pvaOInO + 1],
+                           originalMeshVertices[pvaOInO + 2], originalMeshVertices[pvaOInO + 3]);
             }
             // Convert col0 to vColI.
             newMeshVertices[pvaOInN] = tempCol0.toVColI(vColIndexDivisions);
@@ -138,15 +148,6 @@ public class PMesh {
       // Use the mesh as is.
       this.backingMesh = mesh;
     }
-  }
-
-  /**
-   * Generates a new PMesh, doing any necessary renaming from GDX attributes to pengine2 attributes.
-   *
-   * @param mesh
-   */
-  public PMesh(Mesh mesh) {
-    this(mesh, -1);
   }
 
   public PMesh(boolean isStatic, PList<Float> vertexData, PList<Short> indexData, PVertexAttributes vertexAttributes) {
@@ -291,7 +292,7 @@ public class PMesh {
   }
 
   public PMesh setVertices(float[] vertices) {
-    return setVertices(vertices,0,vertices.length);
+    return setVertices(vertices, 0, vertices.length);
   }
 
   public PMesh setVertices(float[] vertices, int offset, int count) {
