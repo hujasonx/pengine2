@@ -45,8 +45,8 @@ public class PStaticBody implements PPool.Poolable {
     ret.collisionObject = new btCollisionObject();
     ret.collisionObject.userData = ret;
     ret.collisionObject.setCollisionShape(collisionShape.collisionShape);
-    ret.collisionObject.setCollisionFlags(
-        ret.collisionObject.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_DISABLE_VISUALIZE_OBJECT);
+//    ret.collisionObject.setCollisionFlags(
+//        ret.collisionObject.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_DISABLE_VISUALIZE_OBJECT);
     ret.group = group;
     ret.mask = mask;
     return ret;

@@ -162,7 +162,7 @@ public class PMeshGen {
             VertexAttribute selfVA = vertexAttributes.backingVertexAttributes().get(b);
             PVertexAttribute meshVA = mesh.vertexAttributes().attributes().get(selfVA.alias);
             if (meshVA == null) {continue;}
-            int originalIForAttr = mesh.vertexAttributes().floatIndexForVertexAttribute(selfVA);
+            int originalIForAttr = meshVA.offsetInOwnerFloats();
             /** The base index for the vertex attribute data for this vertex in the original mesh floats. */
             int copyI = vertexOffsetInFloatsArrayForMeshToCopy + originalIForAttr;
             int vertexSizeForAttribute = selfVA.getSizeInBytes() / 4;
@@ -263,17 +263,17 @@ public class PMeshGen {
       // First, process the vertices using the vertex processor.
       // Process the first vertex.
       float[] buffer0 = __tmpProcessingVertexValues[0];
-      queuedVertices.emitTo(buffer0, 0, queuedVertices.size() - (iOffsetFromLast0 + 1) * fPerV, buffer0.length);
+      queuedVertices.emitTo(queuedVertices.size() - (iOffsetFromLast0 + 1) * fPerV, buffer0, 0, buffer0.length);
       PVec3 processedPos0 = pool.vec3();
       __processVertexWithVertexProcessor(buffer0, processedPos0);
       // Process the second vertex.
       float[] buffer1 = __tmpProcessingVertexValues[1];
-      queuedVertices.emitTo(buffer1, 0, queuedVertices.size() - (iOffsetFromLast1 + 1) * fPerV, buffer1.length);
+      queuedVertices.emitTo(queuedVertices.size() - (iOffsetFromLast1 + 1) * fPerV, buffer1, 0, buffer1.length);
       PVec3 processedPos1 = pool.vec3();
       __processVertexWithVertexProcessor(buffer1, processedPos1);
       // Process the third vertex.
       float[] buffer2 = __tmpProcessingVertexValues[2];
-      queuedVertices.emitTo(buffer2, 0, queuedVertices.size() - (iOffsetFromLast2 + 1) * fPerV, buffer2.length);
+      queuedVertices.emitTo(queuedVertices.size() - (iOffsetFromLast2 + 1) * fPerV, buffer2, 0, buffer2.length);
       PVec3 processedPos2 = pool.vec3();
       __processVertexWithVertexProcessor(buffer2, processedPos2);
       // Next, we need to slice the triangle using the clipping planes.

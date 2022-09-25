@@ -87,22 +87,24 @@ public class TileRoomGen {
         PModel.Builder builder = new PModel.Builder();
         try ( PPooledIterable.PPoolableIterator<PMap.Entry<String, PMeshGen>> it = meshGenMap.obtainIterator()){
           while (it.hasNext()) {
+            glNodes.clear();
             PMap.Entry<String, PMeshGen> e = it.next();
             builder.chainGlNode(glNodes, e.k(), e.v().getMesh(),
                                 new PMaterial(e.k(), null), null, PGltf.Layer.PBR, true,
-                                false);
+                                e.v().alphaBlend());
+            builder.addNode(e.k(), null, glNodes, PMat4.IDT);
           }
         }
         emitStaticPhysicsPartIntoModelBuilder(builder);
         emitStaticPhysicsPartIntoVerticesAndIndices(room.building().world().physicsVertexPositions, room.building().world().physicsVertexIndices);
-        builder.addNode("base", null, glNodes, PMat4.IDT);
-        for (int a = 0; a < alphaBlendParts.size(); a++) {
-          PMeshGen part = alphaBlendParts.get(a);
-          glNodes.clear();
-          builder.chainGlNode(glNodes, part.name(), part.getMesh(), new PMaterial(part.name(), null), null, PGltf.Layer.AlphaBlend,
-                              true, true);
-          builder.addNode(part.name(), null, glNodes, PMat4.IDT);
-        }
+//        builder.addNode("base", null, glNodes, PMat4.IDT);
+//        for (int a = 0; a < alphaBlendParts.size(); a++) {
+//          PMeshGen part = alphaBlendParts.get(a);
+//          glNodes.clear();
+//          builder.chainGlNode(glNodes, part.name(), part.getMesh(), new PMaterial(part.name(), null), null, PGltf.Layer.AlphaBlend,
+//                              true, true);
+//          builder.addNode(part.name(), null, glNodes, PMat4.IDT);
+//        }
         /** Ensure the vColor array for the room is filled for all tiles. */
         room.vColors().ensureCapacity(vColIndexOffsets.genPooled("tile").valueOf());
         room.setModelInstance(PModelInstance.obtain(builder.build()));
@@ -117,7 +119,7 @@ public class TileRoomGen {
     gridTile.vColIndexOffset(tileVColOffset);
     if (gridTile.emitOptions.floorModelTemplateID != null) {
       PModelGenTemplate floorTemplate = PAssetManager.model(gridTile.emitOptions.floorModelTemplateID, true).modelGenTemplate();
-      __transformVP.transform().setToTranslation(gridTile.x, gridTile.y, gridTile.z).scl(tileScaleXZ, tileScaleY, tileScaleXZ);
+      __transformVP.transform().setToTranslation(gridTile.x * tileScaleXZ, gridTile.y * tileScaleY, gridTile.z * tileScaleXZ).scl(tileScaleXZ, tileScaleY, tileScaleXZ);
       floorTemplate.emit(modelGen, __transformVP, vColIndexOffsets );
     }
 

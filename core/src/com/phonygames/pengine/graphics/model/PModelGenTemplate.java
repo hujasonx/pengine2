@@ -50,6 +50,13 @@ public class PModelGenTemplate {
         String matId = dataForMaterialType(matIdSplit, "matid");
         String vcio = dataForMaterialType(matIdSplit, "vcio");
         boolean dup = hasParamInMaterial(matIdSplit, "dup");
+        if (physicsName != null) {
+          Part.PartBuilder partBuilder = Part.builder().ownerTemplate(this);
+          partBuilder.baseName(physicsName);
+          partBuilder.mesh(e.v().drawCall().mesh());
+          partBuilder.type(Part.Type.STATICPHYSICS);
+          parts.add(partBuilder.build());
+        }
         if (opaqueName != null) {
           Part.PartBuilder partBuilder = Part.builder().ownerTemplate(this);
           partBuilder.baseName(opaqueName);
@@ -57,6 +64,17 @@ public class PModelGenTemplate {
           partBuilder.mesh(e.v().drawCall().mesh());
           partBuilder.type(Part.Type.OPAQUE);
           partBuilder.vColIndexOffsetName(vcio);
+          partBuilder.dup(dup);
+          parts.add(partBuilder.build());
+        }
+        if (alphaBlendName != null) {
+          Part.PartBuilder partBuilder = Part.builder().ownerTemplate(this);
+          partBuilder.baseName(alphaBlendName);
+          partBuilder.matid(matId);
+          partBuilder.mesh(e.v().drawCall().mesh());
+          partBuilder.type(Part.Type.ALPHABLEND);
+          partBuilder.vColIndexOffsetName(vcio);
+          partBuilder.dup(dup);
           parts.add(partBuilder.build());
         }
         System.out.println("Genfrommodel " + e.k());//TODO: actually implement this shit
@@ -136,7 +154,7 @@ public class PModelGenTemplate {
           emitOpaque(modelGen, vertexProcessor);
           break;
         case ALPHABLEND:
-          //          emitOpaque(modelGen, vertexProcessor); // TODO: not supported yet
+          emitAlphaBlend(modelGen, vertexProcessor);
           break;
         default:
           PAssert.fail("Should not reach!");
@@ -160,6 +178,22 @@ public class PModelGenTemplate {
       } else {
         meshGen = modelGen.getOrAddMeshGen(baseName, mesh.vertexAttributes());
       }
+      meshGen.finalPassVertexProcessor(finalPassVertexProcessor);
+      meshGen.vertexProcessor(vertexProcessor);
+      meshGen.addMeshCopy(mesh);
+      meshGen.vertexProcessor(null);
+      meshGen.finalPassVertexProcessor(null);
+    }
+
+    /** Emits this part as an opaque part to the modelGen. */
+    private void emitAlphaBlend(PModelGen modelGen, @Nullable PMeshGenVertexProcessor vertexProcessor) {
+      PMeshGen meshGen;
+      if (dup) {
+        meshGen = modelGen.addDupMeshGen(baseName, mesh.vertexAttributes());
+      } else {
+        meshGen = modelGen.getOrAddMeshGen(baseName, mesh.vertexAttributes());
+      }
+      meshGen.alphaBlend(true);
       meshGen.finalPassVertexProcessor(finalPassVertexProcessor);
       meshGen.vertexProcessor(vertexProcessor);
       meshGen.addMeshCopy(mesh);

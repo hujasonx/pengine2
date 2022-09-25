@@ -151,10 +151,10 @@ public class PFloatList implements PPool.Poolable {
   }
 
   public float[] emitTo(float[] arr, int offsetInArray) {
-    return emitTo(arr, offsetInArray,0,size);
+    return emitTo(0, arr, offsetInArray,size);
   }
 
-  public float[] emitTo(float[] arr, int offsetInArray, int offsetInSelf, int count) {
+  public float[] emitTo(int offsetInSelf, float[] arr, int offsetInArray, int count) {
 //    int lastIndexInSelfToEmit = Math.min(arr.length + offsetInSelf, Math.min(size, offsetInSelf + count));
 //    int indexInArray = offsetInArray;
 //    for (int a = offsetInSelf; a < lastIndexInSelfToEmit; a++) {

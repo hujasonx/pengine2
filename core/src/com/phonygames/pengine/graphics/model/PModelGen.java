@@ -24,11 +24,6 @@ public class PModelGen implements PPostableTask {
   protected final PStringMap<PMeshGen> meshGenMap = new PStringMap<>();
   /** Map containing all static physics mesh gens. */
   protected final PStringMap<PMeshGen> staticPhysicsMeshGenMap = new PStringMap<>();
-  /**
-   * A list of all the alphaBlend parts. Since alpha blend parts should be small to allow for depth sorting, it is not
-   * easy to retrieve them by id if there are multiple with the same base name.
-   */
-  protected final PList<PMeshGen> alphaBlendParts = new PList<>();
 
   /**
    * Adds a dup part to this model. Name conflicts are handled with an underscore followed by a counter that
@@ -105,6 +100,7 @@ public class PModelGen implements PPostableTask {
     PMeshGen meshGen = meshGenMap.get(name);
     if (meshGen != null) {
       PAssert.isTrue(vertexAttributes.equals(meshGen.vertexAttributes()));
+      return meshGen;
     }
     PMeshGen p = new PMeshGen(name, vertexAttributes);
     meshGenMap.put(name, p);

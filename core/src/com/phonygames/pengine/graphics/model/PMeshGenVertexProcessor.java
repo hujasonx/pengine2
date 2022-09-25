@@ -49,16 +49,22 @@ public class PMeshGenVertexProcessor {
     @Accessors(fluent = true)
     private final PMat4 transform = PMat4.obtain();
 
+    @Override public PVec3 processNor(PVec3 rawPos, PVec3 inNor) {
+      return inNor.mul(transform, 0);
+    }
+
+    @Override public PVec3 processPos(PVec3 inPos) {
+
+      System.out.println("PRE " + inPos);
+       inPos.mul(transform, 1);
+      System.out.println("POS " + inPos);
+      return inPos;
+    }
+
     /** Resets the transformation matrix. */
     public Transform reset() {
       transform.idt();
       return this;
     }
- @Override public PVec3 processPos(PVec3 inPos) {
-      return inPos.mul(transform, 1);
   }
- @Override public PVec3 processNor(PVec3 rawPos, PVec3 inNor) {
-      return inNor.mul(transform, 0);
-  }
-    }
 }
