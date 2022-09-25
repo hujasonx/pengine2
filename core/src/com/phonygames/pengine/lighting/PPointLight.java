@@ -44,7 +44,7 @@ public class PPointLight extends PLight implements Pool.Poolable {
       PMeshGen baseMeshGen;
 
       @Override protected void modelIntro() {
-        baseMeshGen = getOrAddOpaqueMesh("base", PVertexAttributes.Templates.POS);
+        baseMeshGen = getOrAddMeshGen("base", PVertexAttributes.Templates.POS);
       }
 
       @Override protected void modelMiddle() {

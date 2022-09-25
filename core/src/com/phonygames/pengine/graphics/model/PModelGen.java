@@ -18,10 +18,10 @@ public class PModelGen implements PPostableTask {
   /** Static postable task queue for asynchronous model gen jobs. */
   @Getter
   private static final PPostableTaskQueue postableTaskQueue = new PPostableTaskQueue();
-  /** A map of base part names -> the number of alphaBlend parts that have that base name. */
-  protected final PStringMap<Integer> alphaBlendPartNameCounter = new PStringMap<>();
-  /** Map containing all opaque mesh gens. */
-  protected final PStringMap<PMeshGen> opaqueMeshGenMap = new PStringMap<>();
+  /** A map of base part names -> the number of dup parts that have that base name. */
+  protected final PStringMap<Integer> dupPartNameCounter = new PStringMap<>();
+  /** Map containing all non static physics mesh gens. */
+  protected final PStringMap<PMeshGen> meshGenMap = new PStringMap<>();
   /** Map containing all static physics mesh gens. */
   protected final PStringMap<PMeshGen> staticPhysicsMeshGenMap = new PStringMap<>();
   /**
@@ -31,14 +31,15 @@ public class PModelGen implements PPostableTask {
   protected final PList<PMeshGen> alphaBlendParts = new PList<>();
 
   /**
-   * Adds an alpha blend part to this model. Name conflicts are handled with an underscore followed by a counter that
-   * starts at 1, if there already exists a part with this name.
+   * Adds a dup part to this model. Name conflicts are handled with an underscore followed by a counter that
+   * starts at 0.
    */
-  public PMeshGen addAlphaBlendPart(String baseName, PVertexAttributes vertexAttributes) {
-    int counterIndex = alphaBlendPartNameCounter.has(baseName) ? alphaBlendPartNameCounter.get(baseName) : 0;
-    PMeshGen p = new PMeshGen(counterIndex == 0 ? baseName : (baseName + "_" + counterIndex), vertexAttributes);
-    alphaBlendPartNameCounter.put(baseName, counterIndex + 1);
-    alphaBlendParts.add(p);
+  public PMeshGen addDupMeshGen(String baseName, PVertexAttributes vertexAttributes) {
+    int counterIndex = dupPartNameCounter.has(baseName) ? dupPartNameCounter.get(baseName) : 0;
+    String name = baseName + "_" + counterIndex;
+    PMeshGen p = new PMeshGen(name, vertexAttributes);
+    dupPartNameCounter.put(baseName, counterIndex + 1);
+    meshGenMap.put(name, p);
     return p;
   }
 
@@ -99,14 +100,14 @@ public class PModelGen implements PPostableTask {
   protected void modelEnd() {
   }
 
-  /** Gets or adds an opaque mesh gen with the given name. */
-  public PMeshGen getOrAddOpaqueMesh(String name, PVertexAttributes vertexAttributes) {
-    PMeshGen meshGen = opaqueMeshGenMap.get(name);
+  /** Gets or adds a non-dup mesh gen with the given name. */
+  public PMeshGen getOrAddMeshGen(String name, PVertexAttributes vertexAttributes) {
+    PMeshGen meshGen = meshGenMap.get(name);
     if (meshGen != null) {
       PAssert.isTrue(vertexAttributes.equals(meshGen.vertexAttributes()));
     }
     PMeshGen p = new PMeshGen(name, vertexAttributes);
-    opaqueMeshGenMap.put(name, p);
+    meshGenMap.put(name, p);
     return p;
   }
 

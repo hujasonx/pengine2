@@ -49,8 +49,9 @@ public class PModelGenTemplate {
         String alphaBlendName = dataForMaterialType(matIdSplit, "ab");
         String matId = dataForMaterialType(matIdSplit, "matid");
         String vcio = dataForMaterialType(matIdSplit, "vcio");
+        boolean dup = hasParamInMaterial(matIdSplit, "dup");
         if (opaqueName != null) {
-          Part.PartBuilder partBuilder = Part.builder().ownerTemplate(this);//
+          Part.PartBuilder partBuilder = Part.builder().ownerTemplate(this);
           partBuilder.baseName(opaqueName);
           partBuilder.matid(matId);
           partBuilder.mesh(e.v().drawCall().mesh());
@@ -76,6 +77,16 @@ public class PModelGenTemplate {
     return null;
   }
 
+  /** Return true if the material id has the param. */
+  private static boolean hasParamInMaterial(String[] materialIdParts, String param) {
+    for (int a = 0; a < materialIdParts.length; a++) {
+      if (materialIdParts[a].equals(param)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** Emits this template to the modelGen using the given vertex processor. */
   public void emit(PModelGen modelGen, @Nullable PMeshGenVertexProcessor vertexProcessor,
                    @Nullable PStringMap<PInt> vColIndexOffsets) {
@@ -96,6 +107,9 @@ public class PModelGenTemplate {
     private final PMesh mesh;
     /** The template that owns this part. */
     private final PModelGenTemplate ownerTemplate;
+    /** Whether or not to produce duplicate parts each time this is emitted. Parts will be named with dedup suffixes. */
+    @Builder.Default
+    private final boolean dup = false;
     private final Type type;
     /** The name used to retrieve vColIndex offsets from the offsetMap. */
     private final @Nullable
@@ -140,7 +154,12 @@ public class PModelGenTemplate {
 
     /** Emits this part as an opaque part to the modelGen. */
     private void emitOpaque(PModelGen modelGen, @Nullable PMeshGenVertexProcessor vertexProcessor) {
-      PMeshGen meshGen = modelGen.getOrAddOpaqueMesh(baseName, mesh.vertexAttributes());
+      PMeshGen meshGen;
+      if (dup) {
+        meshGen = modelGen.addDupMeshGen(baseName, mesh.vertexAttributes());
+      } else {
+        meshGen = modelGen.getOrAddMeshGen(baseName, mesh.vertexAttributes());
+      }
       meshGen.finalPassVertexProcessor(finalPassVertexProcessor);
       meshGen.vertexProcessor(vertexProcessor);
       meshGen.addMeshCopy(mesh);

@@ -36,6 +36,11 @@ import lombok.experimental.Accessors;
  * Usage:
  */
 public class PMeshGen {
+  /** Whether or not this mesh should be alpha blended. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private boolean alphaBlend;
   private static final int QUEUED_VERTICES_TO_KEEP = 6;
   /** Temp vectors. */
   private final PVec1 __tmp1 = PVec1.obtain();

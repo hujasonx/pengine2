@@ -175,7 +175,7 @@ public class PMesh {
       PMeshGen baseMeshGen;
 
       @Override protected void modelIntro() {
-        baseMeshGen = getOrAddOpaqueMesh("base", PVertexAttributes.Templates.POS);
+        baseMeshGen = getOrAddMeshGen("base", PVertexAttributes.Templates.POS);
       }
 
       @Override protected void modelMiddle() {

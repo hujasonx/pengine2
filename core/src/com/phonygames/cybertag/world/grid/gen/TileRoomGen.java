@@ -85,7 +85,7 @@ public class TileRoomGen {
       @Override protected void modelEnd() {
         PList<PGlNode> glNodes = new PList<>();
         PModel.Builder builder = new PModel.Builder();
-        try ( PPooledIterable.PPoolableIterator<PMap.Entry<String, PMeshGen>> it = opaqueMeshGenMap.obtainIterator()){
+        try ( PPooledIterable.PPoolableIterator<PMap.Entry<String, PMeshGen>> it = meshGenMap.obtainIterator()){
           while (it.hasNext()) {
             PMap.Entry<String, PMeshGen> e = it.next();
             builder.chainGlNode(glNodes, e.k(), e.v().getMesh(),
