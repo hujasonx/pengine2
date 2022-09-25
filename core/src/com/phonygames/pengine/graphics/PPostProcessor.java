@@ -1,9 +1,12 @@
 package com.phonygames.pengine.graphics;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.phonygames.pengine.graphics.gl.PGLUtils;
 import com.phonygames.pengine.graphics.shader.PShader;
+import com.phonygames.pengine.input.PKeyboard;
 
 public class PPostProcessor {
   public static float totalTexScale = 1;

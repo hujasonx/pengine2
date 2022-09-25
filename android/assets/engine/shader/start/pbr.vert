@@ -13,5 +13,9 @@ v_diffuseM = a_col0;
 #else
 v_diffuseM = vec4(1.0);
 #endif// a_col0Flag
+#ifdef a_col1Flag
+v_emissiveI = a_col1;
+#else
 v_emissiveI = vec4(0.0);
+#endif// a_col1Flag
 #endif// a_vColIFlag

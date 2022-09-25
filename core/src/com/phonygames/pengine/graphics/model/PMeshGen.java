@@ -144,6 +144,7 @@ public class PMeshGen {
     float[] meshFloats = mesh.getBackingMeshFloats();
     short[] meshShorts = mesh.getBackingMeshShorts();
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
+      PVec4 temp4 = pool.vec4();
       // Loop through all triangles and emit them.
       for (int a = 0; a < meshShorts.length; a += 3) {
         // Loop through the three vertices of the triangle.
@@ -153,25 +154,33 @@ public class PMeshGen {
               indexOfVertexInMeshToCopy * mesh.vertexAttributes().sizeInFloats();
           // Emit the vertex in self by copying data per vertex attribute.
           for (int b = 0; b < vertexAttributes.backingVertexAttributes().size(); b++) {
-            VertexAttribute va = vertexAttributes.backingVertexAttributes().get(b);
-            if (!mesh.vertexAttributes().has(va.alias)) {continue;}
-            int originalIForAttr = mesh.vertexAttributes().floatIndexForVertexAttribute(va);
+            VertexAttribute selfVA = vertexAttributes.backingVertexAttributes().get(b);
+            PVertexAttribute meshVA = mesh.vertexAttributes().attributes().get(selfVA.alias);
+            if (meshVA == null) {continue;}
+            int originalIForAttr = mesh.vertexAttributes().floatIndexForVertexAttribute(selfVA);
             /** The base index for the vertex attribute data for this vertex in the original mesh floats. */
             int copyI = vertexOffsetInFloatsArrayForMeshToCopy + originalIForAttr;
-            int vertexSizeForAttribute = va.getSizeInBytes() / 4;
+            int vertexSizeForAttribute = selfVA.getSizeInBytes() / 4;
             switch (vertexSizeForAttribute) {
               case 1:
-                set(va.alias, meshFloats[copyI]);
+                set(selfVA.alias, meshFloats[copyI]);
                 break;
               case 2:
-                set(va.alias, meshFloats[copyI + 0], meshFloats[copyI + 1]);
+                // TODO: support unsigned byte and unsigned short here as well.
+                set(selfVA.alias, meshFloats[copyI + 0], meshFloats[copyI + 1]);
                 break;
               case 3:
-                set(va.alias, meshFloats[copyI + 0], meshFloats[copyI + 1], meshFloats[copyI + 2]);
+                set(selfVA.alias, meshFloats[copyI + 0], meshFloats[copyI + 1], meshFloats[copyI + 2]);
                 break;
               case 4:
-                set(va.alias, meshFloats[copyI + 0], meshFloats[copyI + 1], meshFloats[copyI + 2],
-                    meshFloats[copyI + 3]);
+                if (meshVA.definition().type == PVertexAttribute.Type.UNSIGNED_BYTE) {
+                  PVertexAttribute.vec4FromUnsignedByteColor(temp4, meshFloats[copyI + 0]);
+                } else if (meshVA.definition().type == PVertexAttribute.Type.UNSIGNED_SHORT) {
+                  PVertexAttribute.vec4FromUnsignedShortColor(temp4, meshFloats[copyI + 0], meshFloats[copyI + 1]);
+                } else {
+                  temp4.set(meshFloats[copyI + 0], meshFloats[copyI + 1], meshFloats[copyI + 2], meshFloats[copyI + 3]);
+                }
+                set(selfVA.alias, temp4);
                 break;
               default:
                 PAssert.fail("Should not reach!");
@@ -311,7 +320,7 @@ public class PMeshGen {
     try (PPool.PoolBuffer pool = PPool.getBuffer()) {
       PVec3 rawPos = pool.vec3(floats[posI + 0], floats[posI + 1], floats[posI + 2]);
       // Loop through the vertex attributes and process each one.
-      for (int a = 0; a < vertexAttributes.backingVertexAttributes().size(); a++) {
+      for (int a = 0; a < vertexAttributes.count(); a++) {
         VertexAttribute va = vertexAttributes.backingVertexAttributes().get(a);
         int iForAttr = vertexAttributes.floatIndexForVertexAttribute(va);
         switch (va.usage) {
@@ -331,23 +340,23 @@ public class PMeshGen {
             switch (vertexSizeForAttribute) {
               case 1:
                 PVec1 v1 = pool.vec1(floats[iForAttr]);
-                vertexProcessor.processOther(v1, va);
+                vertexProcessor.processOther(v1, vertexAttributes.pva(a));
                 floats[iForAttr] = v1.x();
                 break;
               case 2:
                 PVec2 v2 = pool.vec2(floats[iForAttr + 0], floats[iForAttr + 1]);
-                vertexProcessor.processOther(v2, va);
+                vertexProcessor.processOther(v2, vertexAttributes.pva(a));
                 v2.emit(floats, iForAttr);
                 break;
               case 3:
                 PVec3 v3 = pool.vec3(floats[iForAttr + 0], floats[iForAttr + 1], floats[iForAttr + 2]);
-                vertexProcessor.processOther(v3, va);
+                vertexProcessor.processOther(v3, vertexAttributes.pva(a));
                 v3.emit(floats, iForAttr);
                 break;
               case 4:
                 PVec4 v4 =
                     pool.vec4(floats[iForAttr + 0], floats[iForAttr + 1], floats[iForAttr + 2], floats[iForAttr + 3]);
-                vertexProcessor.processOther(v4, va);
+                vertexProcessor.processOther(v4, vertexAttributes.pva(a));
                 v4.emit(floats, iForAttr);
                 break;
               default:

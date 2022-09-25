@@ -22,6 +22,8 @@ import lombok.Builder;
  * [matid=*] The material id. Optional.
  * <p>
  * [vcio=*] The name used to lookup the vColIndexOffset. Optional.
+ * <p>
+ * [dup] If this is specified, each time this template is emitted, create a new part with a new material and mesh.
  */
 public class PModelGenTemplate {
   private final PModel model;
@@ -48,7 +50,7 @@ public class PModelGenTemplate {
         String matId = dataForMaterialType(matIdSplit, "matid");
         String vcio = dataForMaterialType(matIdSplit, "vcio");
         if (opaqueName != null) {
-          Part.PartBuilder partBuilder = Part.builder();//
+          Part.PartBuilder partBuilder = Part.builder().ownerTemplate(this);//
           partBuilder.baseName(opaqueName);
           partBuilder.matid(matId);
           partBuilder.mesh(e.v().drawCall().mesh());
@@ -87,13 +89,6 @@ public class PModelGenTemplate {
   @Builder private static class Part {
     /** The base name of the part. */
     private final String baseName;
-    // Used to modify the vColIndices based on the offsets.
-    private final PMeshGen.FinalPassVertexProcessor finalPassVertexProcessor = new PMeshGen.FinalPassVertexProcessor() {
-      @Override public void process(float[] vertexFloats) {
-        // TODO: shift vColIndex based on the offsets stored in __tmpVColIndexOffsets.
-        PAssert.warnNotImplemented("process"); // TODO: FIXME
-      }
-    };
     /** The material id. */
     private final @Nullable
     String matid;
@@ -105,6 +100,17 @@ public class PModelGenTemplate {
     /** The name used to retrieve vColIndex offsets from the offsetMap. */
     private final @Nullable
     String vColIndexOffsetName;
+    // Used to modify the vColIndices based on the offsets.
+    private final PMeshGen.FinalPassVertexProcessor finalPassVertexProcessor = new PMeshGen.FinalPassVertexProcessor() {
+      @Override public void process(float[] vertexFloats) {
+        PVertexAttribute vColIPVA = mesh.vertexAttributes().pva(PVertexAttribute.Definitions.vColI.alias);
+        if (vColIPVA != null && ownerTemplate.__tmpVColIndexOffsets != null) {
+          // Shift vColIndex based on the offsets stored in __tmpVColIndexOffsets.
+          vertexFloats[vColIPVA.offsetInOwnerFloats()] +=
+              ownerTemplate.__tmpVColIndexOffsets.genPooled(vColIndexOffsetName).valueOf();
+        }
+      }
+    };
 
     /** Emits this part to the modelGen. */
     private void emit(PModelGen modelGen, @Nullable PMeshGenVertexProcessor vertexProcessor) {

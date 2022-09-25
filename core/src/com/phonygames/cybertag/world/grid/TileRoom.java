@@ -30,6 +30,8 @@ import lombok.experimental.Accessors;
   /** The room's type. */
   private final String type;
   /** The vcol index buffer. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
   private final PVColIndexBuffer vColors = new PVColIndexBuffer();
   /** The tracker that tracks this room being generated. Should be null when the room is finished. */
   @Getter(value = AccessLevel.PUBLIC)
@@ -43,12 +45,6 @@ import lombok.experimental.Accessors;
   }
 
   public void frameUpdate() {
-  }
-
-  // TODO: This is temporary, figure out whre to put this.
-  private void initColors() {
-    vColors.registerName("skin", 0);
-    vColors.setDiffuse("skin", 1, 1, 1);
   }
 
   public void logicUpdate() {

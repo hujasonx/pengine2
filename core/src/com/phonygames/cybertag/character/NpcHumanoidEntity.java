@@ -139,7 +139,9 @@ public class NpcHumanoidEntity extends CharacterEntity {
         if (followingPath != null) {
           followingPath.free();
         }
-        followingPath = world.tileCache.obtainPath(pos(), world.playerCharacter.pos(), pool.vec3(2, 4, 2));
+        if (world.tileCache != null) {
+          followingPath = world.tileCache.obtainPath(pos(), world.playerCharacter.pos(), pool.vec3(2, 4, 2));
+        }
       }
       if (followingPath != null) {
         followingPath.backingCurve().debugRender();

@@ -161,4 +161,10 @@ public class PVColIndexBuffer {
     }
     return this;
   }
+
+  /** Ensures that this buffer can hold the given number of colors. */
+  public PVColIndexBuffer ensureCapacity(int numColors) {
+    colorData.fillToCapacityWithPooledValues(numColors * VECS_PER_COL);
+    return this;
+  }
 }

@@ -51,7 +51,7 @@ public class PPhysicsEngine {
   private static boolean inited = false, enableDebugRender = false;
   private static btPersistentManifold sharedManifold;
   protected static PList<PRigidBody> rigidBodiesInSimulation = new PList<>();
-  public static float gravity = 9.81f;
+  public static float gravity = 0 * 9.81f;
 
   public static void dispose() {
     try (val it = collisionShapes().obtainIterator()) {

@@ -29,11 +29,16 @@ public class PVertexAttribute implements PImplementsEquals<PVertexAttribute> {
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final int offsetInOwnerBytes;
+  /** The offset of this vertex attribute in its owner PVertexAttributes object. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final int offsetInOwnerFloats;
 
   public PVertexAttribute(Definition definition, int offsetInOwnerBytes) {
     this.definition = definition;
     // int usage, int numComponents, int type, boolean normalized, String alias, int unit
     this.offsetInOwnerBytes = offsetInOwnerBytes;
+    this.offsetInOwnerFloats = offsetInOwnerBytes / 4;
     this.backingAttr =
         new VertexAttribute(definition.usage, definition.numComponents, definition.type.glInt(), definition.normalized,
                             definition.alias);
@@ -211,7 +216,6 @@ public class PVertexAttribute implements PImplementsEquals<PVertexAttribute> {
   /** Converts a packed color to a PVec4. */
   public static PVec4 vec4FromUnsignedShortColor(PVec4 out, float float0, float float1) {
     out.fromUnsignedShortBits(float0, float1);
-    System.out.println("CONV " + out);
     return out;
   }
 

@@ -10,6 +10,7 @@ import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PMeshGen;
+import com.phonygames.pengine.graphics.model.PMeshGenVertexProcessor;
 import com.phonygames.pengine.graphics.model.PModel;
 import com.phonygames.pengine.graphics.model.PModelGen;
 import com.phonygames.pengine.graphics.model.PModelGenTemplate;
@@ -27,6 +28,13 @@ import lombok.val;
 
 /** Helper class for generating tile rooms. */
 public class TileRoomGen {
+  /** The size of a tile on a horizontal axis. */
+  private static float tileScaleXZ = 3f;
+  /** The size of a tile on a vertical axis. */
+  private static float tileScaleY = 3f;
+  /** Vertex processor for transforms. */
+  private static PMeshGenVertexProcessor.Transform __transformVP = new PMeshGenVertexProcessor.Transform();
+
   /**
    * Run this when finished adding rooms and doors to the building. It finalizes the room model.
    */
@@ -56,6 +64,9 @@ public class TileRoomGen {
       private PStringMap<PInt> vColIndexOffsets = new PStringMap<>(PInt.getStaticPool());
 
       @Override protected void modelIntro() {
+        vColIndexOffsets.genPooled("base").set(0);
+        // Tile colors start at the end of the base colors.
+        vColIndexOffsets.genPooled("tile").set(16);
       }
 
       @Override protected void modelMiddle() {
@@ -92,6 +103,8 @@ public class TileRoomGen {
                               true, true);
           builder.addNode(part.name(), null, glNodes, PMat4.IDT);
         }
+        /** Ensure the vColor array for the room is filled for all tiles. */
+        room.vColors().ensureCapacity(vColIndexOffsets.genPooled("tile").valueOf());
         room.setModelInstance(PModelInstance.obtain(builder.build()));
         room.unblockTaskTracker();
       }
@@ -100,9 +113,15 @@ public class TileRoomGen {
 
   /** Emits the tile to the model gen using the gridTile options. */
   private static void __emitTileToModelGen(GridTile gridTile, PModelGen modelGen, PStringMap<PInt> vColIndexOffsets) {
+    int tileVColOffset = vColIndexOffsets.genPooled("tile").valueOf();
+    gridTile.vColIndexOffset(tileVColOffset);
     if (gridTile.emitOptions.floorModelTemplateID != null) {
       PModelGenTemplate floorTemplate = PAssetManager.model(gridTile.emitOptions.floorModelTemplateID, true).modelGenTemplate();
-      floorTemplate.emit(modelGen, null, vColIndexOffsets );
+      __transformVP.transform().setToTranslation(gridTile.x, gridTile.y, gridTile.z).scl(tileScaleXZ, tileScaleY, tileScaleXZ);
+      floorTemplate.emit(modelGen, __transformVP, vColIndexOffsets );
     }
+
+    // TODO: instead of hard coding 8, calculate how many colors are actually needed per tile.
+    vColIndexOffsets.genPooled("tile").set(tileVColOffset + 8);
   }
 }

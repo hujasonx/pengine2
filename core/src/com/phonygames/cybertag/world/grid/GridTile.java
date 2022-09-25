@@ -7,6 +7,7 @@ import com.phonygames.pengine.util.PFacing;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 @Builder public class GridTile {
@@ -22,6 +23,11 @@ import lombok.experimental.Accessors;
   public final EmitOptions emitOptions = new EmitOptions(this);
   /** The coordinates of the GridTile in grid space. */
   public final int x, y, z;
+  /** The vColIndex offset in the room model vColIndex buffer that corrresponds to this tile. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Setter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private int vColIndexOffset;
 
   /** Returns whether or not this gridtile has been initalized. */
   public boolean isInitialized() {
