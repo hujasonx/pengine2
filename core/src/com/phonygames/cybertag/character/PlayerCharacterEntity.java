@@ -54,7 +54,7 @@ public class PlayerCharacterEntity extends CharacterEntity implements PCharacter
     cameraController = new PCharacterCameraController(this);
     cameraController.setActive();
     characterController = PPhysicsCharacterController.obtain(1, .3f, 1.8f, .5f, .2f);
-    characterController.setPos(10, 10, 10);
+    characterController.setPos(40, 20, 40);
     characterController.addToDynamicsWorld();
     cameraController.minPitch(-MathUtils.HALF_PI + .33f);
     initModelInstance();

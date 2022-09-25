@@ -49,9 +49,17 @@ public class TileBuilding implements PRenderContext.DataBufferEmitter {
   }
 
   public void frameUpdate() {
+    for (int a = 0; a < rooms.size(); a++) {
+      TileRoom room = rooms.get(a);
+      room.frameUpdate();
+    }
   }
 
   public void logicUpdate() {
+    for (int a = 0; a < rooms.size(); a++) {
+      TileRoom room = rooms.get(a);
+      room.logicUpdate();
+    }
   }
 
   public void render(PRenderContext renderContext) {

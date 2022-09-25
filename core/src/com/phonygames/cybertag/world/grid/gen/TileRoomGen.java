@@ -2,11 +2,9 @@ package com.phonygames.cybertag.world.grid.gen;
 
 import android.support.annotation.Nullable;
 
-import com.phonygames.cybertag.world.ColorDataEmitter;
+import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.world.grid.GridTile;
 import com.phonygames.cybertag.world.grid.TileRoom;
-//import com.phonygames.cybertag.world.lasertag.LasertagRoomGen;
-import com.phonygames.cybertag.world.lasertag.LasertagTile;
 import com.phonygames.pengine.PAssetManager;
 import com.phonygames.pengine.graphics.material.PMaterial;
 import com.phonygames.pengine.graphics.model.PGlNode;
@@ -19,6 +17,7 @@ import com.phonygames.pengine.graphics.model.PModelGenTemplate;
 import com.phonygames.pengine.graphics.model.PModelInstance;
 import com.phonygames.pengine.math.PInt;
 import com.phonygames.pengine.math.PMat4;
+import com.phonygames.pengine.util.PFacing;
 import com.phonygames.pengine.util.PPool;
 import com.phonygames.pengine.util.collection.PIntMap3d;
 import com.phonygames.pengine.util.collection.PList;
@@ -26,16 +25,14 @@ import com.phonygames.pengine.util.collection.PMap;
 import com.phonygames.pengine.util.collection.PPooledIterable;
 import com.phonygames.pengine.util.collection.PStringMap;
 
-import lombok.val;
-
 /** Helper class for generating tile rooms. */
 public class TileRoomGen {
+  /** Vertex processor for transforms. */
+  private static PMeshGenVertexProcessor.Transform __transformVP = new PMeshGenVertexProcessor.Transform();
   /** The size of a tile on a horizontal axis. */
   private static float tileScaleXZ = 3f;
   /** The size of a tile on a vertical axis. */
   private static float tileScaleY = 3f;
-  /** Vertex processor for transforms. */
-  private static PMeshGenVertexProcessor.Transform __transformVP = new PMeshGenVertexProcessor.Transform();
 
   /**
    * Run this when finished adding rooms and doors to the building. It finalizes the room model.
@@ -54,7 +51,7 @@ public class TileRoomGen {
       while (it.hasNext()) {
         PIntMap3d.Entry<GridTile> e = it.next();
         GridTile tile = e.val();
-        room.parameters().processTileOptionsAfterDoorsGenned(room,tile);
+        room.parameters().processTileOptionsAfterDoorsGenned(room, tile);
       }
     }
   }
@@ -68,7 +65,7 @@ public class TileRoomGen {
       @Override protected void modelIntro() {
         vColIndexOffsets.genPooled("base").set(0);
         // Tile colors start at the end of the base colors.
-        vColIndexOffsets.genPooled("tile").set(16);
+        vColIndexOffsets.genPooled("tile").set(TileRoom.NUM_BASE_VCOLS);
       }
 
       @Override protected void modelMiddle() {
@@ -87,26 +84,27 @@ public class TileRoomGen {
       @Override protected void modelEnd() {
         PList<PGlNode> glNodes = new PList<>();
         PModel.Builder builder = new PModel.Builder();
-        try ( PPooledIterable.PPoolableIterator<PMap.Entry<String, PMeshGen>> it = meshGenMap.obtainIterator()){
+        try (PPooledIterable.PPoolableIterator<PMap.Entry<String, PMeshGen>> it = meshGenMap.obtainIterator()) {
           while (it.hasNext()) {
             glNodes.clear();
             PMap.Entry<String, PMeshGen> e = it.next();
-            builder.chainGlNode(glNodes, e.k(), e.v().getMesh(),
-                                new PMaterial(e.k(), null), null, PGltf.Layer.PBR, true,
-                                e.v().alphaBlend());
+            builder.chainGlNode(glNodes, e.k(), e.v().getMesh(), new PMaterial(e.k(), null), null, PGltf.Layer.PBR,
+                                true, e.v().alphaBlend());
             builder.addNode(e.k(), null, glNodes, PMat4.IDT);
           }
         }
         emitStaticPhysicsPartIntoModelBuilder(builder);
-        emitStaticPhysicsPartIntoVerticesAndIndices(room.building().world().physicsVertexPositions, room.building().world().physicsVertexIndices);
-//        builder.addNode("base", null, glNodes, PMat4.IDT);
-//        for (int a = 0; a < alphaBlendParts.size(); a++) {
-//          PMeshGen part = alphaBlendParts.get(a);
-//          glNodes.clear();
-//          builder.chainGlNode(glNodes, part.name(), part.getMesh(), new PMaterial(part.name(), null), null, PGltf.Layer.AlphaBlend,
-//                              true, true);
-//          builder.addNode(part.name(), null, glNodes, PMat4.IDT);
-//        }
+        emitStaticPhysicsPartIntoVerticesAndIndices(room.building().world().physicsVertexPositions,
+                                                    room.building().world().physicsVertexIndices);
+        //        builder.addNode("base", null, glNodes, PMat4.IDT);
+        //        for (int a = 0; a < alphaBlendParts.size(); a++) {
+        //          PMeshGen part = alphaBlendParts.get(a);
+        //          glNodes.clear();
+        //          builder.chainGlNode(glNodes, part.name(), part.getMesh(), new PMaterial(part.name(), null), null,
+        //          PGltf.Layer.AlphaBlend,
+        //                              true, true);
+        //          builder.addNode(part.name(), null, glNodes, PMat4.IDT);
+        //        }
         /** Ensure the vColor array for the room is filled for all tiles. */
         room.vColors().ensureCapacity(vColIndexOffsets.genPooled("tile").valueOf());
         room.setModelInstance(PModelInstance.obtain(builder.build()));
@@ -118,16 +116,36 @@ public class TileRoomGen {
     });
   }
 
+  /** Vertical offset for floors and walkways, to prevent visible clipping of the wall tops through the ground. */
+
   /** Emits the tile to the model gen using the gridTile options. */
   private static void __emitTileToModelGen(GridTile gridTile, PModelGen modelGen, PStringMap<PInt> vColIndexOffsets) {
     int tileVColOffset = vColIndexOffsets.genPooled("tile").valueOf();
     gridTile.vColIndexOffset(tileVColOffset);
+    // Emit floor.
     if (gridTile.emitOptions.floorModelTemplateID != null) {
-      PModelGenTemplate floorTemplate = PAssetManager.model(gridTile.emitOptions.floorModelTemplateID, true).modelGenTemplate();
-      __transformVP.transform().setToTranslation(gridTile.x * tileScaleXZ, gridTile.y * tileScaleY, gridTile.z * tileScaleXZ).scl(tileScaleXZ, tileScaleY, tileScaleXZ);
-      floorTemplate.emit(modelGen, __transformVP, vColIndexOffsets );
+      PModelGenTemplate floorTemplate =
+          PAssetManager.model(gridTile.emitOptions.floorModelTemplateID, true).modelGenTemplate();
+      __transformVP.transform()
+                   .setToTranslation(gridTile.x * tileScaleXZ, gridTile.y * tileScaleY, gridTile.z * tileScaleXZ)
+                   .scl(tileScaleXZ, tileScaleY, tileScaleXZ);
+      floorTemplate.emit(modelGen, __transformVP, vColIndexOffsets);
     }
-
+    // Emit walls.
+    for (int a = 0; a < PFacing.count(); a++) {
+      GridTile.EmitOptions.Wall wall = gridTile.emitOptions.walls[a];
+      if (wall.wallModelTemplateID != null) {
+        PModelGenTemplate wallTemplate = PAssetManager.model(wall.wallModelTemplateID, true).modelGenTemplate();
+        // Rotate wall if the facing is not -X (the default facing).
+        int modelOriginX = gridTile.x + ((wall.facing == PFacing.mZ || wall.facing == PFacing.X) ? 1 : 0);
+        int modelOriginZ = gridTile.z + ((wall.facing == PFacing.X || wall.facing == PFacing.Z) ? 1 : 0);
+        float rotationRad = MathUtils.PI * (1f - .5f * wall.facing.intValue()); // TODO: Maybe this should be a subtract?
+        __transformVP.transform()
+                     .setToTranslation(modelOriginX * tileScaleXZ, gridTile.y * tileScaleY, modelOriginZ * tileScaleXZ)
+                     .rotate(0, 1, 0, rotationRad).scl(tileScaleXZ, tileScaleY, tileScaleXZ);
+        wallTemplate.emit(modelGen, __transformVP, vColIndexOffsets);
+      }
+    }
     // TODO: instead of hard coding 8, calculate how many colors are actually needed per tile.
     vColIndexOffsets.genPooled("tile").set(tileVColOffset + 8);
   }

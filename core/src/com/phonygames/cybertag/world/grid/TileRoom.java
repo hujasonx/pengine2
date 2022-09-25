@@ -1,11 +1,13 @@
 package com.phonygames.cybertag.world.grid;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.phonygames.cybertag.world.grid.gen.TileRoomParameters;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.color.PVColIndexBuffer;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PBlockingTaskTracker;
 
 import lombok.AccessLevel;
@@ -15,6 +17,8 @@ import lombok.experimental.Accessors;
 
 /** A room in a building that uses a tile grid system. */
 @Builder public class TileRoom implements PRenderContext.DataBufferEmitter {
+  /** The number of shared base vcols for a tileroom before tile specific vCols kick in. */
+  public static final int NUM_BASE_VCOLS = 16;
   /** The owner building. */
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -44,7 +48,10 @@ import lombok.experimental.Accessors;
     vColors.emitColorData(renderContext);
   }
 
+
+  private final float randTemp = MathUtils.random();
   public void frameUpdate() {
+    vColors.setDiffuse(0, PVec4.obtain().setHSVA(randTemp, 1, 1, 1), false);
   }
 
   public void logicUpdate() {
@@ -61,7 +68,7 @@ import lombok.experimental.Accessors;
   public void setModelInstance(PModelInstance modelInstance) {
     PAssert.isNull(this.modelInstance, "Can only set the model instance once!");
     this.modelInstance = modelInstance;
-this.modelInstance.createAndAddStaticBodiesFromModelWithCurrentWorldTransform();
+    this.modelInstance.createAndAddStaticBodiesFromModelWithCurrentWorldTransform();
   }
 
   /** Unblocks the task tracker if it is tracking this room being generated. */

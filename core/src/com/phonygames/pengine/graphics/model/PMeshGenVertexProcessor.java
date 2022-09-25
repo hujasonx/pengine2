@@ -54,10 +54,7 @@ public class PMeshGenVertexProcessor {
     }
 
     @Override public PVec3 processPos(PVec3 inPos) {
-
-      System.out.println("PRE " + inPos);
-       inPos.mul(transform, 1);
-      System.out.println("POS " + inPos);
+      inPos.mul(transform, 1);
       return inPos;
     }
 
