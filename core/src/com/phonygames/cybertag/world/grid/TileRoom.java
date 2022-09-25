@@ -7,12 +7,8 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.color.PVColIndexBuffer;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
-import com.phonygames.pengine.math.PInt3;
 import com.phonygames.pengine.math.PVec4;
-import com.phonygames.pengine.util.Duple;
 import com.phonygames.pengine.util.PBlockingTaskTracker;
-import com.phonygames.pengine.util.PFacing;
-import com.phonygames.pengine.util.collection.PList;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -27,6 +23,10 @@ import lombok.experimental.Accessors;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final TileBuilding building;
+  /** The emit options for this tileRoom. Only useful when still building the room. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final EmitOptions emitOptions = new EmitOptions(this);
   /** The parameters that the tileRoom was generated with. */
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -48,10 +48,6 @@ import lombok.experimental.Accessors;
   private PBlockingTaskTracker genTaskTracker;
   /** The model instance. */
   private PModelInstance modelInstance;
-  /** The emit options for this tileRoom. Only useful when still building the room. */
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  private final EmitOptions emitOptions = new EmitOptions(this);
 
   @Override public void emitDataBuffersInto(PRenderContext renderContext) {
     vColors.emitColorData(renderContext);
@@ -59,6 +55,8 @@ import lombok.experimental.Accessors;
 
   public void frameUpdate() {
     vColors.setDiffuse(0, PVec4.obtain().setHSVA(randTemp, 1, 1, 1), false);
+    // Window.
+    vColors.setDiffuse(1, PVec4.obtain().setHSVA(randTemp, 1, 1, .2f), true);
   }
 
   public void logicUpdate() {

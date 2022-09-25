@@ -31,12 +31,12 @@ public class TileRoomGen {
   private static PMeshGenVertexProcessor.FlatQuad __flatQuadVP = new PMeshGenVertexProcessor.FlatQuad();
   /** Vertex processor for transforms. */
   private static PMeshGenVertexProcessor.Transform __transformVP = new PMeshGenVertexProcessor.Transform();
+  /** The offset of the floors and walkways, used to prevent walls and ceilings from clipping through. World space. */
+  private static float floorAndWalkwayVerticalOffset = .025f;
   /** The size of a tile on a horizontal axis. */
   private static float tileScaleXZ = 3f;
   /** The size of a tile on a vertical axis. */
   private static float tileScaleY = 3f;
-  /** The offset of the floors and walkways, used to prevent walls and ceilings from clipping through. World space. */
-  private static float floorAndWalkwayVerticalOffset = .025f;
 
   /**
    * Run this when finished adding rooms and doors to the building. It finalizes the room model.
@@ -92,8 +92,13 @@ public class TileRoomGen {
           while (it.hasNext()) {
             glNodes.clear();
             PMap.Entry<String, PMeshGen> e = it.next();
-            builder.chainGlNode(glNodes, e.k(), e.v().getMesh(), new PMaterial(e.k(), null), null, PGltf.Layer.PBR,
-                                true, e.v().alphaBlend());
+            boolean alphaBlend = e.v().alphaBlend();
+            if (alphaBlend) {
+              System.out.println();
+            }
+            builder.chainGlNode(glNodes, e.k(), e.v().getMesh(), new PMaterial(e.k(), null), null,
+                                alphaBlend ? PGltf.Layer.AlphaBlend : PGltf.Layer.PBR, true,
+                                alphaBlend);
             builder.addNode(e.k(), null, glNodes, PMat4.IDT);
           }
         }
@@ -129,8 +134,8 @@ public class TileRoomGen {
       PModelGenTemplate floorTemplate =
           PAssetManager.model(gridTile.emitOptions.floorModelTemplateID, true).modelGenTemplate();
       __transformVP.transform()
-                   .setToTranslation(gridTile.x * tileScaleXZ, floorAndWalkwayVerticalOffset + gridTile.y * tileScaleY, gridTile.z * tileScaleXZ)
-                   .scl(tileScaleXZ, tileScaleY, tileScaleXZ);
+                   .setToTranslation(gridTile.x * tileScaleXZ, floorAndWalkwayVerticalOffset + gridTile.y * tileScaleY,
+                                     gridTile.z * tileScaleXZ).scl(tileScaleXZ, tileScaleY, tileScaleXZ);
       floorTemplate.emit(modelGen, __transformVP, vColIndexOffsets);
     }
     // Emit walkway.
@@ -140,10 +145,14 @@ public class TileRoomGen {
       gridTile.worldSpaceCorners(tileScaleXZ, tileScaleY, tileScaleXZ, __flatQuadVP.flatQuad00(),
                                  __flatQuadVP.flatQuad10(), __flatQuadVP.flatQuad11(), __flatQuadVP.flatQuad01(), null,
                                  null, null, null);
-      __flatQuadVP.flatQuad00().add(0, floorAndWalkwayVerticalOffset + tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[0], 0);
-      __flatQuadVP.flatQuad10().add(0, floorAndWalkwayVerticalOffset + tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[1], 0);
-      __flatQuadVP.flatQuad11().add(0, floorAndWalkwayVerticalOffset + tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[2], 0);
-      __flatQuadVP.flatQuad01().add(0, floorAndWalkwayVerticalOffset + tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[3], 0);
+      __flatQuadVP.flatQuad00().add(0, floorAndWalkwayVerticalOffset +
+                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[0], 0);
+      __flatQuadVP.flatQuad10().add(0, floorAndWalkwayVerticalOffset +
+                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[1], 0);
+      __flatQuadVP.flatQuad11().add(0, floorAndWalkwayVerticalOffset +
+                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[2], 0);
+      __flatQuadVP.flatQuad01().add(0, floorAndWalkwayVerticalOffset +
+                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[3], 0);
       walkwayTemplate.emit(modelGen, __flatQuadVP, vColIndexOffsets);
     }
     // Emit walls.
@@ -154,8 +163,7 @@ public class TileRoomGen {
         // Rotate wall if the facing is not -X (the default facing).
         int modelOriginX = gridTile.x + ((wall.facing == PFacing.mZ || wall.facing == PFacing.X) ? 1 : 0);
         int modelOriginZ = gridTile.z + ((wall.facing == PFacing.X || wall.facing == PFacing.Z) ? 1 : 0);
-        float rotationRad =
-            MathUtils.PI * (1f - .5f * wall.facing.intValue());
+        float rotationRad = MathUtils.PI * (1f - .5f * wall.facing.intValue());
         __transformVP.transform()
                      .setToTranslation(modelOriginX * tileScaleXZ, gridTile.y * tileScaleY, modelOriginZ * tileScaleXZ)
                      .rotate(0, 1, 0, rotationRad).scl(tileScaleXZ, tileScaleY, tileScaleXZ);

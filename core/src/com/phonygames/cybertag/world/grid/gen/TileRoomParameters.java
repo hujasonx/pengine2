@@ -62,7 +62,12 @@ public abstract class TileRoomParameters {
       for (int a = 0; a < PFacing.count(); a++) {
         GridTile.EmitOptions.Wall wall = tile.emitOptions.walls[a];
         if (!room.tileGrid().hasTileAt(tile.x + wall.facing.forwardX(), tile.y, tile.z + wall.facing.forwardZ())) {
-          wall.wallModelTemplateID = "model/template/wall/basic.glb";
+          if (!room.building().tilePositionInBuilding(tile.x + wall.facing.forwardX(), tile.y, tile.z + wall.facing.forwardZ())) {
+            // If the room is at the edge of the building, emit a window instead.
+            wall.wallModelTemplateID = "model/template/window/basic.glb";
+          } else {
+            wall.wallModelTemplateID = "model/template/wall/basic.glb";
+          }
         }
 
       }
