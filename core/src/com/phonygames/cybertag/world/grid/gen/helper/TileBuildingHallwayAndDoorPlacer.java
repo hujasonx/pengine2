@@ -51,7 +51,7 @@ public class TileBuildingHallwayAndDoorPlacer {
     while (actualDoorWidth < resultingDoorWidth) {
       // Attempt to find neighboring tiles that can be doors, up until the resultingDoorWidth or there are no free wall
       // tiles that can be made into doors.
-      PossibleDoorOrigin leftOrigin = null, rightOrigin = null, addedOrigin = null;
+      PossibleDoorOrigin leftOrigin = null, rightOrigin = null, addedOrigin;
       GridTile leftGridTile = building.tileAtTilePosition(
           doorOrigin.wall0.owner.x + doorOrigin.wall0.facing.left().forwardX() * lookupLeftOffset,
           doorOrigin.wall0.owner.y,
@@ -115,9 +115,9 @@ public class TileBuildingHallwayAndDoorPlacer {
     }
   }
 
-  /** Goes through all the walls and generates possible door origins. */
-  private static PList<PossibleDoorOrigin> __initialPossibleDoors(TileBuilding building) {
-    PList<PossibleDoorOrigin> ret = new PList<>();
+  /** Goes through all the walls and generates possible door origins. Adds to the given list. Will not regenerate if origin already exists. */
+  private static PList<PossibleDoorOrigin> __initialPossibleDoors(@Nullable PList<PossibleDoorOrigin> out, TileBuilding building) {
+    if (out == null) { out = new PList<>();}
     try (PPooledIterable.PPoolableIterator<PIntMap3d.Entry<GridTile>> it = building.tileGrid().obtainIterator()) {
       while (it.hasNext()) {
         PIntMap3d.Entry<GridTile> e = it.next();
@@ -126,8 +126,12 @@ public class TileBuildingHallwayAndDoorPlacer {
         if (room0 == null) {continue;}
         for (int a = 0; a < PFacing.count(); a++) {
           GridTile.EmitOptions.Wall wall0 = tile0.emitOptions.walls[a];
+          // Skip if the existing origin if it exists. This origin will be the shared for both wall1 and wall0.
+          if (wall0.__possibleDoorOrigin != null) {
+            continue;
+          }
           // Tile0's wall at this facing must support a door and not already have one.
-          if (wall0.doorPlacementScore <= 0 || wall0.door != null || wall0.__possibleDoorOrigin != null) {continue;}
+          if (wall0.doorPlacementScore <= 0 || wall0.door != null) {continue;}
           GridTile tile1 = building.tileAtTilePosition(tile0.x + wall0.facing.forwardX(), tile0.y,
                                                        tile0.z + wall0.facing.forwardZ());
           if (tile1 == null) {continue;}
@@ -136,7 +140,7 @@ public class TileBuildingHallwayAndDoorPlacer {
           // The rooms on each side of this wall are different and exist at this point.
           GridTile.EmitOptions.Wall wall1 = tile1.emitOptions.walls[PFacing.get(a).opposite().intValue()];
           // Tile1's wall on the corresponding side to wall0 must be able to have a door and not have one.
-          if (wall1.doorPlacementScore <= 0 || wall1.door != null || wall1.__possibleDoorOrigin != null) {continue;}
+          if (wall1.doorPlacementScore <= 0 || wall1.door != null) {continue;}
           // Add a possibleDoorOrigin.
           PossibleDoorOrigin added =
               PossibleDoorOrigin.builder().wall0(wall0).wall1(wall1).room0(room0).room1(room1).tileBuilding(building)
@@ -144,11 +148,11 @@ public class TileBuildingHallwayAndDoorPlacer {
           wall0.__possibleDoorOrigin = added;
           wall1.__possibleDoorOrigin = added;
           added.recalcScore();
-          ret.add(added);
+          out.add(added);
         }
       }
     }
-    return ret;
+    return out;
   }
 
   /** Places doors that connect adjacent rooms. This should be run before hallways are generated. */
@@ -210,9 +214,13 @@ public class TileBuildingHallwayAndDoorPlacer {
       TileRoom room = building.rooms().get(a);
       room.parameters().emitPossibleDoorLocations(room);
     }
-    PList<PossibleDoorOrigin> doorLocations = __initialPossibleDoors(building);
+    PList<PossibleDoorOrigin> doorLocations = __initialPossibleDoors(null, building);
     __placeAdjacentDoors(building, doorLocations);
     // Now, generate hallways.
+    // Emit the possible door locations for the hallways.
+    // Redo door placing, now that the hallways have been generated.
+    __initialPossibleDoors(doorLocations, building);
+    __placeAdjacentDoors(building, doorLocations);
   }
 
   /** Class that stores a possible door origin. (a wall, with both sides.) */
@@ -236,7 +244,7 @@ public class TileBuildingHallwayAndDoorPlacer {
 
     /** Recalculates the score of this door. */
     private void recalcScore() {
-      if (wall0.doorPlacementScore == 0 || wall1.doorPlacementScore == 0 || wasEmitted) {
+      if (wall0.doorPlacementScore == 0 || wall1.doorPlacementScore == 0 || wasEmitted || room1.directlyConnectedRooms().has(room0,true)) {
         __score = 0;
         return;
       }
@@ -248,7 +256,8 @@ public class TileBuildingHallwayAndDoorPlacer {
         return;
       }
       // Penalize scores based on how many doors are between the two rooms. If it's 1 door, use the max penalty.
-      // If it's maxRoomSeparationForPenalty (mrs) the penalty is maxPenalty / mrs.
+      // If it's maxRoomSeparationForPenalty (mrs) the penalty is maxPenalty / mrs. However, 1 will never occur since
+      // directly connected rooms can't have multiple doors connecting them.
       __score -= tileBuilding.parameters().doorScorePenaltyForAlreadyDirectlyConnectedRooms / roomDoorSeparation;
     }
 
