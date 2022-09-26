@@ -2,8 +2,11 @@ package com.phonygames.cybertag.world.grid;
 
 import android.support.annotation.Nullable;
 
+import com.phonygames.cybertag.world.grid.gen.helper.TileBuildingHallwayAndDoorPlacer;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PFacing;
+import com.phonygames.pengine.util.collection.PList;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,20 +23,25 @@ import lombok.experimental.Accessors;
   public static final int CORNER10 = 1;
   /** The index used for the higher x, higher z corner in array fields. */
   public static final int CORNER11 = 2;
-  /** The emit options for this tile. */
-  public final EmitOptions emitOptions = new EmitOptions(this);
   /** The coordinates of the GridTile in grid space. */
   public final int x, y, z;
+  /** The emit options for this tile. */
+  public final EmitOptions emitOptions = new EmitOptions(this);
   /** The vColIndex offset in the room model vColIndex buffer that corrresponds to this tile. */
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private int vColIndexOffset;
 
+  /** Returns whether or not this gridtile has been initalized. */
+  public boolean isInitialized() {
+    return emitOptions.isFinalized();
+  }
+
   /** Helper class for getting the corners of this tile in world space. Vector params can be null. */
   public void worldSpaceCorners(float scaleX, float scaleY, float scaleZ, @Nullable PVec3 p000, @Nullable PVec3 p100,
-                                   @Nullable PVec3 p101, @Nullable PVec3 p001, @Nullable PVec3 p010,
-                                   @Nullable PVec3 p110, @Nullable PVec3 p111, @Nullable PVec3 p011) {
+                                @Nullable PVec3 p101, @Nullable PVec3 p001, @Nullable PVec3 p010, @Nullable PVec3 p110,
+                                @Nullable PVec3 p111, @Nullable PVec3 p011) {
     if (p000 != null) {p000.set((x + 0) * scaleX, (y + 0) * scaleY, (z + 0) * scaleZ);}
     if (p100 != null) {p100.set((x + 1) * scaleX, (y + 0) * scaleY, (z + 0) * scaleZ);}
     if (p101 != null) {p101.set((x + 1) * scaleX, (y + 0) * scaleY, (z + 1) * scaleZ);}
@@ -44,23 +52,16 @@ import lombok.experimental.Accessors;
     if (p011 != null) {p011.set((x + 0) * scaleX, (y + 1) * scaleY, (z + 1) * scaleZ);}
   }
 
-  /** Returns whether or not this gridtile has been initalized. */
-  public boolean isInitialized() {
-    return emitOptions.isFinalized();
-  }
-
   /** Options for the model emit. The fields in this class can be freely modified until it is finalized. */
   public static class EmitOptions {
     /** The height offsets of the ceiling model at the corners, in grid space. */
     public final float[] ceilingCornerVerticalOffsets = new float[4];
+    /** The owner GridTile object. */
+    public final GridTile gridTile;
     /** The height offsets of the walkway model at the corners, in grid space. */
     public final float[] walkwayCornerVerticalOffsets = new float[4];
     /** The wall options. */
-    public final Wall[] walls =
-        new Wall[]{new Wall(this, PFacing.get(0)), new Wall(this, PFacing.get(1)), new Wall(this, PFacing.get(2)),
-                   new Wall(this, PFacing.get(3))};
-    /** The owner GridTile object. */
-    private final GridTile gridTile;
+    public final Wall[] walls = new Wall[4];
     /** The id of the ceiling model template. */
     public @Nullable
     String ceilingModelTemplateID;
@@ -77,6 +78,9 @@ import lombok.experimental.Accessors;
 
     private EmitOptions(GridTile tile) {
       this.gridTile = tile;
+      for (int a = 0; a < 4; a++) {
+        walls[a] = new Wall(this, PFacing.get(a));
+      }
     }
 
     /**
@@ -88,15 +92,26 @@ import lombok.experimental.Accessors;
        * facing.
        */
       public final PFacing facing;
+      /** The owner GridTile. */
+      public final GridTile owner;
+      /** The ids of the wall model template. */
+      public final PList<String> wallModelTemplateIDs = new PList<>();
       /** The owner emitOptions object. */
       private final EmitOptions emitOptions;
-      /** The whether this wall is a valid door location. */
-      public boolean validDoorPlacement;
-      /** The id of the wall model template. */
-      public String wallModelTemplateID;
+      /**
+       * The possibleDoorOrigin object associated with this wall. Will only be generated if this wall could have a door,
+       * and is only generated once.
+       */
+      public @Nullable
+      TileBuildingHallwayAndDoorPlacer.PossibleDoorOrigin __possibleDoorOrigin;
+      /** The door at this wall location, if any. */
+      public TileDoor door;
+      /** The score for door placement here. If zero, doors cannot be placed at this spot. */
+      public float doorPlacementScore;
 
       public Wall(EmitOptions emitOptions, PFacing facing) {
         this.emitOptions = emitOptions;
+        this.owner = emitOptions.gridTile;
         this.facing = facing;
       }
     }

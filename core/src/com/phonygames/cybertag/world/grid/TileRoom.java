@@ -7,8 +7,12 @@ import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.color.PVColIndexBuffer;
 import com.phonygames.pengine.graphics.model.PGltf;
 import com.phonygames.pengine.graphics.model.PModelInstance;
+import com.phonygames.pengine.math.PInt;
 import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PBlockingTaskTracker;
+import com.phonygames.pengine.util.collection.PList;
+import com.phonygames.pengine.util.collection.PMap;
+import com.phonygames.pengine.util.collection.PSet;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -48,6 +52,10 @@ import lombok.experimental.Accessors;
   private PBlockingTaskTracker genTaskTracker;
   /** The model instance. */
   private PModelInstance modelInstance;
+  /** The doors that this room has. The room does not own the door objects. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PList<TileDoor> doors = new PList<>();
 
   @Override public void emitDataBuffersInto(PRenderContext renderContext) {
     vColors.emitColorData(renderContext);
@@ -82,6 +90,15 @@ import lombok.experimental.Accessors;
     genTaskTracker.removeBlocker(this);
     genTaskTracker = null;
   }
+
+  /** The rooms that are directly connected to this one via a door. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PList<TileRoom> directlyConnectedRooms = new PList<>();
+  /** A map storing how many doors are between this room and the key room. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PMap<TileRoom, PInt> doorsBetween = new PMap<>(PInt.getStaticPool());
 
   /** Helper class that stores useful options for generating this room, but should not be used much afterwards. */
   public static class EmitOptions {

@@ -25,7 +25,7 @@ import lombok.NonNull;
 import lombok.val;
 
 public class PShader implements Disposable, Comparable<PShader> {
-  public static final String GL_VERSION = "330";
+  public static final String GL_VERSION = "430";
   private static final String PSHADER_COMMENT_END = " */ ";
   private static final String PSHADER_COMMENT_START = "/** PSHADER ";
   private static final PFileHandleUtils.RecursiveLoadProcessor RECURSIVE_LOAD_PROCESSOR =

@@ -1,6 +1,7 @@
 package com.phonygames.cybertag.world.grid;
 
 import com.phonygames.cybertag.world.World;
+import com.phonygames.cybertag.world.grid.gen.TileBuildingParameters;
 import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.graphics.PRenderContext;
 import com.phonygames.pengine.graphics.model.PGltf;
@@ -15,9 +16,17 @@ import lombok.experimental.Accessors;
 
 /** Contains one or more TileRooms. */
 public class TileBuilding implements PRenderContext.DataBufferEmitter {
+  /** The doors that this buliding has. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final PList<TileDoor> doors = new PList<>();
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final PList<PIntAABB> excludedTileBounds = new PList<>();
+  /** The parameters that this building was generated with. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final TileBuildingParameters parameters;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   /** The rooms. */ private final PList<TileRoom> rooms = new PList<>();
@@ -39,9 +48,10 @@ public class TileBuilding implements PRenderContext.DataBufferEmitter {
   /** The model instance. */
   private PModelInstance modelInstance;
 
-  public TileBuilding(PBlockingTaskTracker genTaskTracker, World world) {
+  public TileBuilding(PBlockingTaskTracker genTaskTracker, TileBuildingParameters parameters, World world) {
     this.genTaskTracker = genTaskTracker;
     genTaskTracker.addBlocker(this);
+    this.parameters = parameters;
     this.world = world;
   }
 

@@ -158,8 +158,9 @@ public class TileRoomGen {
     // Emit walls.
     for (int a = 0; a < PFacing.count(); a++) {
       GridTile.EmitOptions.Wall wall = gridTile.emitOptions.walls[a];
-      if (wall.wallModelTemplateID != null) {
-        PModelGenTemplate wallTemplate = PAssetManager.model(wall.wallModelTemplateID, true).modelGenTemplate();
+      for (int b = 0; b < wall.wallModelTemplateIDs.size(); b++) {
+        String wallModelTemplateID = wall.wallModelTemplateIDs.get(b);
+        PModelGenTemplate wallTemplate = PAssetManager.model(wallModelTemplateID, true).modelGenTemplate();
         // Rotate wall if the facing is not -X (the default facing).
         int modelOriginX = gridTile.x + ((wall.facing == PFacing.mZ || wall.facing == PFacing.X) ? 1 : 0);
         int modelOriginZ = gridTile.z + ((wall.facing == PFacing.X || wall.facing == PFacing.Z) ? 1 : 0);

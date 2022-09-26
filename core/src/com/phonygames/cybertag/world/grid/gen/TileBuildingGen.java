@@ -7,6 +7,7 @@ import com.phonygames.cybertag.world.grid.GridTile;
 import com.phonygames.cybertag.world.grid.TileBuilding;
 import com.phonygames.cybertag.world.grid.TileGrid;
 import com.phonygames.cybertag.world.grid.TileRoom;
+import com.phonygames.cybertag.world.grid.gen.helper.TileBuildingHallwayAndDoorPlacer;
 import com.phonygames.pengine.logging.PLog;
 import com.phonygames.pengine.math.aabb.PIntAABB;
 import com.phonygames.pengine.navmesh.recast.PRecastMeshBuilder;
@@ -109,7 +110,8 @@ public class TileBuildingGen {
   public static void onFinishedAddingRooms(final TileBuilding building) {
     final PList<TileRoom> roomsStillGenerating = new PList<>();
     roomsStillGenerating.addAll(building.rooms());
-    //
+    // Add hallways and doors.
+    TileBuildingHallwayAndDoorPlacer.addHallwaysAndPlaceDoors(building);
     // Finally, notify the rooms that they should continue processing.
     for (int a = 0; a < building.rooms().size(); a++) {
       final TileRoom room = building.rooms().get(a);
