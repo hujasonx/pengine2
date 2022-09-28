@@ -3,7 +3,6 @@ package com.phonygames.cybertag.world.grid;
 import android.support.annotation.Nullable;
 
 import com.phonygames.cybertag.world.grid.gen.helper.TileBuildingHallwayAndDoorPlacer;
-import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PFacing;
 import com.phonygames.pengine.util.collection.PList;
@@ -23,10 +22,10 @@ import lombok.experimental.Accessors;
   public static final int CORNER10 = 1;
   /** The index used for the higher x, higher z corner in array fields. */
   public static final int CORNER11 = 2;
-  /** The coordinates of the GridTile in grid space. */
-  public final int x, y, z;
   /** The emit options for this tile. */
   public final EmitOptions emitOptions = new EmitOptions(this);
+  /** The coordinates of the GridTile in grid space. */
+  public final int x, y, z;
   /** The vColIndex offset in the room model vColIndex buffer that corrresponds to this tile. */
   @Getter(value = AccessLevel.PUBLIC)
   @Setter(value = AccessLevel.PUBLIC)
@@ -113,6 +112,18 @@ import lombok.experimental.Accessors;
         this.emitOptions = emitOptions;
         this.owner = emitOptions.gridTile;
         this.facing = facing;
+      }
+
+      /** Returns the GridTile on the other side of this wall in the given grid. */
+      public @Nullable GridTile tileOnOtherSideIn(TileGrid grid) {
+        return grid.getTileAt(owner.x + facing.forwardX(), owner.y, owner.z + facing.forwardZ());
+      }
+
+      /** Returns the wall on the other side of this wall in the given grid. */
+      public @Nullable Wall wallOnOtherSideIn(TileGrid grid) {
+        GridTile tile = tileOnOtherSideIn(grid);
+        if (tile == null) { return null;}
+        return tile.emitOptions.walls[facing.opposite().intValue()];
       }
     }
   }

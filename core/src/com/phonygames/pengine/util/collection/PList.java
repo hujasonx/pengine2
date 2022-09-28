@@ -5,6 +5,8 @@ import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.math.PNumberUtils;
 import com.phonygames.pengine.util.PPool;
 
+import java.util.Comparator;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -106,6 +108,20 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
     return this;
   }
 
+  public PList<E> addIfNotPresent(E e, boolean identity) {
+    if (!backingArray.contains(e, identity)) {
+      backingArray.add(e);
+    }
+    return this;
+  }
+
+  public PList<E> addAllIfNotPresent(PList<E> from, boolean identity) {
+    for (int a = 0 ; a < from.size(); a++) {
+      addIfNotPresent(from.get(a),identity);
+    }
+    return this;
+  }
+
   public PList<E> fillToCapacityWithPooledValues(int capacity) {
     if (size() >= capacity) {
       return this;
@@ -179,6 +195,11 @@ public class PList<E> extends PPooledIterable<E> implements PPool.Poolable {
 
   public PList<E> sort() {
     backingArray.sort();
+    return this;
+  }
+
+  public PList<E> sort(Comparator<E> comparator) {
+    backingArray.sort(comparator);
     return this;
   }
 

@@ -111,7 +111,7 @@ public class TileBuildingGen {
     final PList<TileRoom> roomsStillGenerating = new PList<>();
     roomsStillGenerating.addAll(building.rooms());
     // Add hallways and doors.
-    TileBuildingHallwayAndDoorPlacer.addHallwaysAndPlaceDoors(building);
+    TileBuildingHallwayAndDoorPlacer.addHallwaysAndPlaceDoors(building, roomsStillGenerating);
     // Finally, notify the rooms that they should continue processing.
     for (int a = 0; a < building.rooms().size(); a++) {
       final TileRoom room = building.rooms().get(a);

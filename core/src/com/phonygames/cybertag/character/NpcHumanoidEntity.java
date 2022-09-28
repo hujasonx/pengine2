@@ -50,7 +50,7 @@ public class NpcHumanoidEntity extends CharacterEntity {
     super();
     this.world = world;
     characterController = PPhysicsCharacterController.obtain(1, .3f, 1.8f, .5f, .2f);
-    characterController.setPos(10, 10, 10);
+    characterController.setPos(40, 20, 40);
     characterController.addToDynamicsWorld();
     initModelInstance();
     walkCycleTSpring.setDynamicsParams(2, 1, 0);
