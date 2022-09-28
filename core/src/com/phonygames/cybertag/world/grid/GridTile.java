@@ -2,7 +2,7 @@ package com.phonygames.cybertag.world.grid;
 
 import android.support.annotation.Nullable;
 
-import com.phonygames.cybertag.world.grid.gen.helper.TileBuildingHallwayAndDoorPlacer;
+import com.phonygames.cybertag.world.grid.gen.helper.TileRoomPossibleDoor;
 import com.phonygames.pengine.math.PVec3;
 import com.phonygames.pengine.util.PFacing;
 import com.phonygames.pengine.util.collection.PList;
@@ -97,16 +97,16 @@ import lombok.experimental.Accessors;
       public final PList<String> wallModelTemplateIDs = new PList<>();
       /** The owner emitOptions object. */
       private final EmitOptions emitOptions;
-      /**
-       * The possibleDoorOrigin object associated with this wall. Will only be generated if this wall could have a door,
-       * and is only generated once.
-       */
-      public @Nullable
-      TileBuildingHallwayAndDoorPlacer.PossibleDoorOrigin __possibleDoorOrigin;
       /** The door at this wall location, if any. */
       public TileDoor door;
       /** The score for door placement here. If zero, doors cannot be placed at this spot. */
       public float doorPlacementScore;
+      /**
+       * The TileRoomPossibleDoor object associated with this wall. Will only be generated if this wall could have a
+       * door, and is only generated once.
+       */
+      public @Nullable
+      TileRoomPossibleDoor possibleDoor;
 
       public Wall(EmitOptions emitOptions, PFacing facing) {
         this.emitOptions = emitOptions;
@@ -114,16 +114,16 @@ import lombok.experimental.Accessors;
         this.facing = facing;
       }
 
-      /** Returns the GridTile on the other side of this wall in the given grid. */
-      public @Nullable GridTile tileOnOtherSideIn(TileGrid grid) {
-        return grid.getTileAt(owner.x + facing.forwardX(), owner.y, owner.z + facing.forwardZ());
-      }
-
       /** Returns the wall on the other side of this wall in the given grid. */
       public @Nullable Wall wallOnOtherSideIn(TileGrid grid) {
         GridTile tile = tileOnOtherSideIn(grid);
-        if (tile == null) { return null;}
+        if (tile == null) {return null;}
         return tile.emitOptions.walls[facing.opposite().intValue()];
+      }
+
+      /** Returns the GridTile on the other side of this wall in the given grid. */
+      public @Nullable GridTile tileOnOtherSideIn(TileGrid grid) {
+        return grid.getTileAt(owner.x + facing.forwardX(), owner.y, owner.z + facing.forwardZ());
       }
     }
   }

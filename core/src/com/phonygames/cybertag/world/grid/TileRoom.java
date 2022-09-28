@@ -12,7 +12,6 @@ import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PBlockingTaskTracker;
 import com.phonygames.pengine.util.collection.PList;
 import com.phonygames.pengine.util.collection.PMap;
-import com.phonygames.pengine.util.collection.PSet;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -27,6 +26,10 @@ import lombok.experimental.Accessors;
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
   private final TileBuilding building;
+  /** The settings about the doors that this room has. */
+  @Getter(value = AccessLevel.PUBLIC)
+  @Accessors(fluent = true)
+  private final Doors doors = new Doors();
   /** The emit options for this tileRoom. Only useful when still building the room. */
   @Getter(value = AccessLevel.PUBLIC)
   @Accessors(fluent = true)
@@ -52,10 +55,6 @@ import lombok.experimental.Accessors;
   private PBlockingTaskTracker genTaskTracker;
   /** The model instance. */
   private PModelInstance modelInstance;
-  /** The doors that this room has. The room does not own the door objects. */
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  private final PList<TileDoor> doors = new PList<>();
 
   @Override public void emitDataBuffersInto(PRenderContext renderContext) {
     vColors.emitColorData(renderContext);
@@ -91,15 +90,6 @@ import lombok.experimental.Accessors;
     genTaskTracker = null;
   }
 
-  /** The rooms that are directly connected to this one via a door. */
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  private final PList<TileRoom> directlyConnectedRooms = new PList<>();
-  /** A map storing how many doors are between this room and the key room. */
-  @Getter(value = AccessLevel.PUBLIC)
-  @Accessors(fluent = true)
-  private final PMap<TileRoom, PInt> doorsBetween = new PMap<>(PInt.getStaticPool());
-
   /** Helper class that stores useful options for generating this room, but should not be used much afterwards. */
   public static class EmitOptions {
     /** The owner room. */
@@ -108,5 +98,25 @@ import lombok.experimental.Accessors;
     public EmitOptions(TileRoom owner) {
       this.owner = owner;
     }
+  }
+
+  /** Helper class to store information about the doors this room has. */
+  public class Doors {
+    /** A map of rooms -> number of doors that DIRECTLY connect from this room to the room. */
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private final PMap<TileRoom, PList<TileDoor>> doors = new PMap<TileRoom, PList<TileDoor>>() {
+      @Override public PList<TileDoor> newUnpooled(TileRoom room) {
+        return new PList<>();
+      }
+    };
+//    /** A list of all the directly connected rooms; should be the keys of doors. */
+//    @Getter(value = AccessLevel.PUBLIC)
+//    @Accessors(fluent = true)
+//    private final PList<TileRoom> directlyConnectedRooms = new PList<>();
+    /** A map storing how many doors are between this room and the key room. */
+    @Getter(value = AccessLevel.PUBLIC)
+    @Accessors(fluent = true)
+    private final PMap<TileRoom, PInt> doorsBetween = new PMap<>(PInt.getStaticPool());
   }
 }
