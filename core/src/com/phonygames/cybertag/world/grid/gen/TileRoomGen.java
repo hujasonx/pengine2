@@ -43,13 +43,13 @@ public class TileRoomGen {
    */
   public static void onNeighborsAndDoorsReady(TileRoom room, @Nullable Runnable runOnModelGenned) {
     // Process the room.
-    __runProcessorForRoom(room);
+    __runTileProcessorForRoom(room);
     // Emit models for the room.
     __genModelFor(room, runOnModelGenned);
   }
 
   /** Processes the room after doors have been finalized. GridTile emitOptions should be set by this call. */
-  private static void __runProcessorForRoom(TileRoom room) {
+  private static void __runTileProcessorForRoom(TileRoom room) {
     room.parameters().processRoomAfterDoorsGenned(room);
     try (PPooledIterable.PPoolableIterator<PIntMap3d.Entry<GridTile>> it = room.tileGrid().obtainIterator()) {
       while (it.hasNext()) {
@@ -146,13 +146,13 @@ public class TileRoomGen {
                                  __flatQuadVP.flatQuad10(), __flatQuadVP.flatQuad11(), __flatQuadVP.flatQuad01(), null,
                                  null, null, null);
       __flatQuadVP.flatQuad00().add(0, floorAndWalkwayVerticalOffset +
-                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[0], 0);
+                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets.x(), 0);
       __flatQuadVP.flatQuad10().add(0, floorAndWalkwayVerticalOffset +
-                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[1], 0);
+                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets.y(), 0);
       __flatQuadVP.flatQuad11().add(0, floorAndWalkwayVerticalOffset +
-                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[2], 0);
+                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets.z(), 0);
       __flatQuadVP.flatQuad01().add(0, floorAndWalkwayVerticalOffset +
-                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets[3], 0);
+                                       tileScaleY * gridTile.emitOptions.walkwayCornerVerticalOffsets.w(), 0);
       walkwayTemplate.emit(modelGen, __flatQuadVP, vColIndexOffsets);
     }
     // Emit walls.

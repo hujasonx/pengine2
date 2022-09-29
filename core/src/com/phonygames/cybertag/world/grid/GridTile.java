@@ -4,7 +4,9 @@ import android.support.annotation.Nullable;
 
 import com.phonygames.cybertag.world.grid.gen.helper.TileRoomPossibleDoor;
 import com.phonygames.pengine.math.PVec3;
+import com.phonygames.pengine.math.PVec4;
 import com.phonygames.pengine.util.PFacing;
+import com.phonygames.pengine.util.PSortableByScore;
 import com.phonygames.pengine.util.collection.PList;
 
 import lombok.AccessLevel;
@@ -54,11 +56,11 @@ import lombok.experimental.Accessors;
   /** Options for the model emit. The fields in this class can be freely modified until it is finalized. */
   public static class EmitOptions {
     /** The height offsets of the ceiling model at the corners, in grid space. */
-    public final float[] ceilingCornerVerticalOffsets = new float[4];
+    public final PVec4 ceilingCornerVerticalOffsets = PVec4.obtain();
     /** The owner GridTile object. */
     public final GridTile gridTile;
     /** The height offsets of the walkway model at the corners, in grid space. */
-    public final float[] walkwayCornerVerticalOffsets = new float[4];
+    public final PVec4 walkwayCornerVerticalOffsets = PVec4.obtain();
     /** The wall options. */
     public final Wall[] walls = new Wall[4];
     /** The id of the ceiling model template. */
@@ -83,9 +85,9 @@ import lombok.experimental.Accessors;
     }
 
     /**
-     * Options for an individual wall edge of the tile.
+     * Options for an individual wall edge of the tile. Can be sorted by door placement scores.
      */
-    public static class Wall {
+    public static class Wall implements PSortableByScore<Wall> {
       /**
        * The edge of the tile that this wall is associated with. The normal of the wall should be the opposite of the
        * facing.
@@ -112,6 +114,10 @@ import lombok.experimental.Accessors;
         this.emitOptions = emitOptions;
         this.owner = emitOptions.gridTile;
         this.facing = facing;
+      }
+
+      @Override public float score() {
+        return doorPlacementScore;
       }
 
       /** Returns the wall on the other side of this wall in the given grid. */

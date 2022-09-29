@@ -108,11 +108,11 @@ public class TileBuildingGen {
    * Adds hallways and places doors.
    */
   public static void onFinishedAddingRooms(final TileBuilding building) {
+    // Add hallways and doors.
+    TileBuildingHallwayAndDoorPlacer.addHallwaysAndPlaceDoors(building);
+    // Finally, notify the rooms that they should continue processing.
     final PList<TileRoom> roomsStillGenerating = new PList<>();
     roomsStillGenerating.addAll(building.rooms());
-    // Add hallways and doors.
-    TileBuildingHallwayAndDoorPlacer.addHallwaysAndPlaceDoors(building, roomsStillGenerating);
-    // Finally, notify the rooms that they should continue processing.
     for (int a = 0; a < building.rooms().size(); a++) {
       final TileRoom room = building.rooms().get(a);
       TileRoomGen.onNeighborsAndDoorsReady(room, new Runnable() {

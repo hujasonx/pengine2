@@ -64,6 +64,9 @@ import lombok.experimental.Accessors;
     vColors.setDiffuse(0, PVec4.obtain().setHSVA(randTemp, 1, 1, 1), false);
     // Window.
     vColors.setDiffuse(1, PVec4.obtain().setHSVA(randTemp, 1, 1, .2f), true);
+    if (parameters.isHallway) {
+      vColors.setDiffuse(0, PVec4.obtain().setHSVA(randTemp, 1, .1f, 1), false);
+    }
   }
 
   public void logicUpdate() {
@@ -110,10 +113,6 @@ import lombok.experimental.Accessors;
         return new PList<>();
       }
     };
-//    /** A list of all the directly connected rooms; should be the keys of doors. */
-//    @Getter(value = AccessLevel.PUBLIC)
-//    @Accessors(fluent = true)
-//    private final PList<TileRoom> directlyConnectedRooms = new PList<>();
     /** A map storing how many doors are between this room and the key room. */
     @Getter(value = AccessLevel.PUBLIC)
     @Accessors(fluent = true)

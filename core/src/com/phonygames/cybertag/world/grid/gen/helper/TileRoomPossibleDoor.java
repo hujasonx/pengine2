@@ -110,9 +110,10 @@ import lombok.Builder;
         if (doorOnRight0 == null) {
           // Add the door on the left
           doorsToInclude.add(doorOnLeft0);
+        } else {
+          // Choose the better of the two doors.
+          doorsToInclude.add(doorOnRight0.score() > doorOnLeft0.score() ? doorOnRight0 : doorOnLeft0);
         }
-        // Choose the better of the two doors.
-        doorsToInclude.add(doorOnRight0.score() > doorOnLeft0.score() ? doorOnRight0 : doorOnLeft0);
       }
     }
     // Finally, create the door in the first place.
@@ -139,6 +140,7 @@ import lombok.Builder;
   }
 
   @Override public float score() {
+    recalcScore();
     return cachedScore.x();
   }
 

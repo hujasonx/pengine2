@@ -2,6 +2,7 @@ package com.phonygames.cybertag.world.grid.gen;
 
 import com.phonygames.cybertag.world.grid.GridTile;
 import com.phonygames.cybertag.world.grid.TileRoom;
+import com.phonygames.pengine.exception.PAssert;
 import com.phonygames.pengine.util.PFacing;
 import com.phonygames.pengine.util.collection.PIntMap3d;
 import com.phonygames.pengine.util.collection.PList;
@@ -58,88 +59,10 @@ public abstract class TileRoomParameters {
      * because doorPlacementScore will be used to combine hallway rooms.
      */
     @Override public void emitPossibleDoorLocations(TileRoom room) {
-      //      // Loop through all tiles and walls and say that any spots that don't have a walkway in front can have
-      //      doors.
-      //      try (PPooledIterable.PPoolableIterator<PIntMap3d.Entry<GridTile>> it = room.tileGrid().obtainIterator()) {
-      //        // Holding array for the current working value for door status, one for each facing.
-      //        boolean[] canEmitDoorAt = new boolean[4];
-      //        while (it.hasNext()) {
-      //          Arrays.fill(canEmitDoorAt, false);
-      //          PIntMap3d.Entry<GridTile> e = it.next();
-      //          GridTile tile = e.val();
-      //          if (tile.emitOptions.walkwayModelTemplateID == null) {
-      //            // If there is no walkway at this tile, it either must have have a floor or a walkway below it.
-      //            if (tile.emitOptions.floorModelTemplateID != null) {
-      //              Arrays.fill(canEmitDoorAt, true);
-      //            } else {
-      //              // The tile below must be part of this room and have a walkway.
-      //              GridTile tileBelow = room.tileGrid().getTileAt(tile.x, tile.y - 1, tile.z);
-      //              if (tileBelow == null || tileBelow.emitOptions.walkwayModelTemplateID == null) {
-      //                // Bust; this tile can't have a floor anywhere.
-      //              } else {
-      //                // Check if there is a walkway that reaches any edges on the tile below.
-      //                if (tileBelow.emitOptions.walkwayCornerVerticalOffsets[0] == 1) { // 00 is at top.
-      //                  if (tileBelow.emitOptions.walkwayCornerVerticalOffsets[1] == 1) { // 10 is at top.
-      //                    canEmitDoorAt[PFacing.mZ.intValue()] = true;
-      //                  }
-      //                  if (tileBelow.emitOptions.walkwayCornerVerticalOffsets[3] == 1) { // 01 is at top.
-      //                    canEmitDoorAt[PFacing.mX.intValue()] = true;
-      //                  }
-      //                }
-      //                if (tileBelow.emitOptions.walkwayCornerVerticalOffsets[0] == 1) { // 11 is at top.
-      //                  if (tileBelow.emitOptions.walkwayCornerVerticalOffsets[1] == 1) { // 10 is at top.
-      //                    canEmitDoorAt[PFacing.X.intValue()] = true;
-      //                  }
-      //                  if (tileBelow.emitOptions.walkwayCornerVerticalOffsets[3] == 1) { // 01 is at top.
-      //                    canEmitDoorAt[PFacing.Z.intValue()] = true;
-      //                  }
-      //                }
-      //              }
-      //            }
-      //          } else { // Tile has a walkway.
-      //            // If the tile has a walkway, the walkway must be pointing directly at the ground..
-      //            // Check if there is a walkway that reaches any edges.
-      //            if (tile.emitOptions.walkwayCornerVerticalOffsets[0] == 0) { // 00 is at bottom.
-      //              if (tile.emitOptions.walkwayCornerVerticalOffsets[1] == 0) { // 10 is at bottom.
-      //                canEmitDoorAt[PFacing.mZ.intValue()] = true;
-      //              }
-      //              if (tile.emitOptions.walkwayCornerVerticalOffsets[3] == 0) { // 01 is at bottom.
-      //                canEmitDoorAt[PFacing.mX.intValue()] = true;
-      //              }
-      //            }
-      //            if (tile.emitOptions.walkwayCornerVerticalOffsets[0] == 0) { // 11 is at bottom.
-      //              if (tile.emitOptions.walkwayCornerVerticalOffsets[1] == 0) { // 10 is at bottom.
-      //                canEmitDoorAt[PFacing.X.intValue()] = true;
-      //              }
-      //              if (tile.emitOptions.walkwayCornerVerticalOffsets[3] == 0) { // 01 is at bottom.
-      //                canEmitDoorAt[PFacing.Z.intValue()] = true;
-      //              }
-      //            }
-      //          }
-      //          // Check the possible walls and set the door placement score if it is at the edge of the room.
-      //          for (int a = 0; a < PFacing.count(); a++) {
-      //            GridTile.EmitOptions.Wall wall = tile.emitOptions.walls[a];
-      //            wall.doorPlacementScore = 0;
-      //            if (!canEmitDoorAt[a]) {continue;}
-      //            if (!room.tileGrid().hasTileAt(tile.x + wall.facing.forwardX(), tile.y, tile.z + wall.facing
-      //            .forwardZ())) {
-      //              wall.doorPlacementScore = 1;
-      //            }
-      //          }
-      //        }
-      //      }
       /**
        * Actually, this is a noop. Doors should be explicitly generated by TileBuildingGen.
        *
        */
-      //      for (int a = 0; a < __wallsThatCanHaveDoors.size(); a++) {
-//        GridTile.EmitOptions.Wall wall = __wallsThatCanHaveDoors.get(a);
-//        GridTile otherTileInRoom = wall.tileOnOtherSideIn(room.tileGrid());
-//        if (otherTileInRoom == null) {
-//          wall.doorPlacementScore = 1;
-//        }
-//
-//      }
     }
 
     @Override public void processRoomAfterDoorsGenned(TileRoom room) {
@@ -148,6 +71,11 @@ public abstract class TileRoomParameters {
 
     /** Returns the walkway template id for a traversed tile. */
     public String walkwayTemplateForTraversedTile(TileRoom room, GridTile tile) {
+      return "model/template/floor/basic.glb";
+    }
+
+    /** Returns the ceiling template id for a traversed tile. */
+    public String ceilingTemplateForTraversedTile(TileRoom room, GridTile tile) {
       return "model/template/floor/basic.glb";
     }
 
@@ -160,38 +88,7 @@ public abstract class TileRoomParameters {
     }
 
     @Override public void processTileOptionsAfterDoorsGenned(TileRoom room, GridTile tile) {
-//      // Set the floor to a basic floor if it is at the bottom of the room.
-//      if (!room.tileGrid().hasTileAt(tile.x, tile.y - 1, tile.z)) {
-//        tile.emitOptions.floorModelTemplateID = "model/template/floor/basic.glb";
-//      }
-//      if (Math.random() < .15) {
-//        tile.emitOptions.walkwayModelTemplateID = "model/template/floor/basic.glb";
-//        tile.emitOptions.walkwayCornerVerticalOffsets[0] = 0; // 00;
-//        tile.emitOptions.walkwayCornerVerticalOffsets[1] = 0; // 10;
-//        tile.emitOptions.walkwayCornerVerticalOffsets[2] = 1; // 11;
-//        tile.emitOptions.walkwayCornerVerticalOffsets[3] = 1; // 01;
-//      }
-//      for (int a = 0; a < PFacing.count(); a++) {
-//        GridTile.EmitOptions.Wall wall = tile.emitOptions.walls[a];
-//        if (!room.tileGrid().hasTileAt(tile.x + wall.facing.forwardX(), tile.y, tile.z + wall.facing.forwardZ())) {
-//          if (!room.building()
-//                   .tilePositionInBuilding(tile.x + wall.facing.forwardX(), tile.y, tile.z + wall.facing.forwardZ())) {
-//            // If the room is at the edge of the building, emit a window instead.
-//            wall.wallModelTemplateIDs.add("model/template/window/basic.glb");
-//          } else if (wall.door != null) {
-//            // TODO: Emit a door.
-//          } else {
-//            wall.wallModelTemplateIDs.add("model/template/wall/basic.glb");
-//          }
-//        }
-//      }
     }
-//
-//    /** Tracks a wall as being a possible door location, if the other side is not in this room. */
-//    public HallwayParameters trackPossibleDoorWall(GridTile.EmitOptions.Wall wall) {
-//      __wallsThatCanHaveDoors.addIfNotPresent(wall, true);
-//      return this;
-//    }
   }
 
   /** Reference implementation. */
@@ -222,13 +119,13 @@ public abstract class TileRoomParameters {
       if (!room.tileGrid().hasTileAt(tile.x, tile.y - 1, tile.z)) {
         tile.emitOptions.floorModelTemplateID = "model/template/floor/basic.glb";
       }
-      if (Math.random() < .15) {
-        tile.emitOptions.walkwayModelTemplateID = "model/template/floor/basic.glb";
-        tile.emitOptions.walkwayCornerVerticalOffsets[0] = 0; // 00;
-        tile.emitOptions.walkwayCornerVerticalOffsets[1] = 0; // 10;
-        tile.emitOptions.walkwayCornerVerticalOffsets[2] = 1; // 11;
-        tile.emitOptions.walkwayCornerVerticalOffsets[3] = 1; // 01;
-      }
+//      if (Math.random() < .15) {
+//        tile.emitOptions.walkwayModelTemplateID = "model/template/floor/basic.glb";
+//        tile.emitOptions.walkwayCornerVerticalOffsets[0] = 0; // 00;
+//        tile.emitOptions.walkwayCornerVerticalOffsets[1] = 0; // 10;
+//        tile.emitOptions.walkwayCornerVerticalOffsets[2] = 1; // 11;
+//        tile.emitOptions.walkwayCornerVerticalOffsets[3] = 1; // 01;
+//      }
       for (int a = 0; a < PFacing.count(); a++) {
         GridTile.EmitOptions.Wall wall = tile.emitOptions.walls[a];
         if (!room.tileGrid().hasTileAt(tile.x + wall.facing.forwardX(), tile.y, tile.z + wall.facing.forwardZ())) {

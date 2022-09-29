@@ -69,6 +69,12 @@ public class PVec4 extends PVec<PVec4> implements PWriteLockable<PVec4> {
     return this;
   }
 
+  public PVec4 add(float x, float y, float z, float w) {
+    this.forWriting();
+    backingQuaterion.set(x, y, z, w);
+    return this;
+  }
+
   @Override public float len2() {
     return backingQuaterion.len2();
   }
